@@ -34,7 +34,7 @@
   --iris-editor-cursor: var(--blue-6);
 
   --iris-sidebar-width: 300px;
-  --iris-sidebar-collapsed-width: 10px;
+  --iris-sidebar-collapsed-width: 0px;
 
   /* Typography */
   --iris-font-family: var(--font-sans);

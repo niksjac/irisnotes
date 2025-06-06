@@ -286,7 +286,7 @@ export function RichTextEditor({
       doc,
       plugins: [
         myKeymap,
-        history(),
+        history({ newGroupDelay: 20 }),
         dropCursor(),
         gapCursor(),
         currentLineHighlightPlugin
