@@ -1,0 +1,496 @@
+/* Import Open Props */
+@import "open-props/style";
+@import "open-props/normalize";
+
+/*
+ * IrisNotes Theme Architecture
+ * This file defines the default theme using CSS custom properties.
+ * Users can override these variables in their config/theme.css file.
+ */
+
+:root {
+  /* App-specific theme variables - users can override these */
+  --iris-primary: var(--blue-6);
+  --iris-primary-hover: var(--blue-7);
+  --iris-primary-active: var(--blue-8);
+
+  --iris-surface: var(--gray-0);
+  --iris-surface-2: var(--gray-1);
+  --iris-surface-3: var(--gray-2);
+
+  --iris-text: var(--gray-9);
+  --iris-text-2: var(--gray-7);
+  --iris-text-3: var(--gray-6);
+
+  --iris-border: var(--gray-3);
+  --iris-border-hover: var(--gray-4);
+
+  --iris-success: var(--green-6);
+  --iris-warning: var(--yellow-6);
+  --iris-error: var(--red-6);
+
+  --iris-editor-bg: var(--gray-0);
+  --iris-editor-selection: var(--blue-2);
+  --iris-editor-cursor: var(--blue-6);
+
+  --iris-sidebar-width: 300px;
+  --iris-sidebar-collapsed-width: 10px;
+
+  /* Typography */
+  --iris-font-family: var(--font-sans);
+  --iris-font-mono: var(--font-mono);
+  --iris-font-size-base: var(--font-size-1);
+  --iris-font-size-lg: var(--font-size-2);
+  --iris-font-size-xl: var(--font-size-3);
+
+  /* Editor-specific typography */
+  --iris-editor-font-family: 'Consolas', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Liberation Mono', 'Courier New', monospace;
+  --iris-editor-font-size: 11px;
+
+  /* Spacing */
+  --iris-space-xs: var(--size-1);
+  --iris-space-sm: var(--size-2);
+  --iris-space-md: var(--size-3);
+  --iris-space-lg: var(--size-4);
+  --iris-space-xl: var(--size-5);
+
+  /* Radius */
+  --iris-radius-sm: var(--radius-2);
+  --iris-radius-md: var(--radius-3);
+  --iris-radius-lg: var(--radius-4);
+
+  /* Shadows */
+  --iris-shadow-sm: var(--shadow-2);
+  --iris-shadow-md: var(--shadow-3);
+  --iris-shadow-lg: var(--shadow-4);
+}
+
+/* Dark theme */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --iris-surface: var(--gray-9);
+    --iris-surface-2: var(--gray-8);
+    --iris-surface-3: var(--gray-7);
+
+    --iris-text: var(--gray-1);
+    --iris-text-2: var(--gray-3);
+    --iris-text-3: var(--gray-4);
+
+    --iris-border: var(--gray-7);
+    --iris-border-hover: var(--gray-6);
+
+    --iris-editor-bg: var(--gray-9);
+    --iris-editor-selection: var(--blue-8);
+  }
+}
+
+/* Base app styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--iris-font-family);
+  font-size: var(--iris-font-size-base);
+  line-height: 1.6;
+  color: var(--iris-text);
+  background-color: var(--iris-surface);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* App Layout */
+.app {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--iris-surface);
+}
+
+.sidebar {
+  width: var(--iris-sidebar-width);
+  background-color: var(--iris-surface-2);
+  border-right: 1px solid var(--iris-border);
+  transition: width 0.3s ease;
+  flex-shrink: 0;
+}
+
+.sidebar.collapsed {
+  width: var(--iris-sidebar-collapsed-width);
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.toolbar {
+  height: 60px;
+  background-color: var(--iris-surface-2);
+  border-bottom: 1px solid var(--iris-border);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--iris-space-md);
+  gap: var(--iris-space-sm);
+}
+
+.editor-container {
+  flex: 1;
+  overflow: auto;
+  background-color: var(--iris-editor-bg);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .app {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--iris-border);
+  }
+
+  .sidebar.collapsed {
+    width: 100%;
+    height: 60px;
+    overflow: hidden;
+  }
+}
+
+/* Component styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--iris-space-xs);
+  padding: var(--iris-space-sm) var(--iris-space-md);
+  border: 1px solid var(--iris-border);
+  border-radius: var(--iris-radius-sm);
+  background-color: var(--iris-surface-2);
+  color: var(--iris-text);
+  font-family: inherit;
+  font-size: var(--iris-font-size-base);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn:hover {
+  background-color: var(--iris-surface-3);
+  border-color: var(--iris-border-hover);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn.primary {
+  background-color: var(--iris-primary);
+  border-color: var(--iris-primary);
+  color: white;
+}
+
+.btn.primary:hover {
+  background-color: var(--iris-primary-hover);
+  border-color: var(--iris-primary-hover);
+}
+
+.btn.primary:active {
+  background-color: var(--iris-primary-active);
+}
+
+.input {
+  padding: var(--iris-space-sm);
+  border: 1px solid var(--iris-border);
+  border-radius: var(--iris-radius-sm);
+  background-color: var(--iris-surface);
+  color: var(--iris-text);
+  font-family: inherit;
+  font-size: var(--iris-font-size-base);
+  transition: border-color 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--iris-primary);
+  box-shadow: 0 0 0 2px hsla(var(--iris-primary), 0.2);
+}
+
+/* Rich Text Editor Styles */
+.iris-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.iris-editor-container {
+  flex: 1;
+  padding: var(--iris-space-lg);
+  overflow-y: auto;
+  position: relative;
+  background-color: var(--iris-editor-bg);
+}
+
+.iris-editor-container[data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  position: absolute;
+  top: var(--iris-space-lg);
+  left: var(--iris-space-lg);
+  color: var(--iris-text-3);
+  pointer-events: none;
+  font-style: italic;
+  font-family: var(--iris-editor-font-family);
+  font-size: var(--iris-editor-font-size);
+  font-weight: 400;
+}
+
+.iris-editor-content {
+  outline: none;
+  min-height: 100%;
+  font-family: var(--iris-editor-font-family);
+  font-size: var(--iris-editor-font-size);
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--iris-text);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  /* Improve font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Higher specificity selectors to override ProseMirror defaults */
+.iris-editor .iris-editor-container .iris-editor-content,
+.iris-editor .iris-editor-container .iris-editor-content p,
+.iris-editor .iris-editor-container .iris-editor-content div {
+  font-size: var(--iris-editor-font-size);
+  font-family: var(--iris-editor-font-family);
+}
+
+/* Force font inheritance for all text content */
+.iris-editor-content * {
+  font-family: inherit;
+}
+
+/* ProseMirror content styles - Consistent line spacing */
+.iris-editor-content p {
+  margin: 0;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.iris-editor-content p + p {
+  /* Only add minimal spacing between consecutive paragraphs */
+  margin-top: 0em;
+}
+
+.iris-editor-content p:empty {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.iris-editor-content h1,
+.iris-editor-content h2,
+.iris-editor-content h3,
+.iris-editor-content h4,
+.iris-editor-content h5,
+.iris-editor-content h6 {
+  margin: 1.5em 0 0.5em 0;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.iris-editor-content h1:first-child,
+.iris-editor-content h2:first-child,
+.iris-editor-content h3:first-child,
+.iris-editor-content h4:first-child,
+.iris-editor-content h5:first-child,
+.iris-editor-content h6:first-child {
+  margin-top: 0;
+}
+
+.iris-editor .iris-editor-container .iris-editor-content h1 {
+  font-size: calc(var(--iris-editor-font-size) * 1.45);
+  color: var(--iris-text);
+}
+
+.iris-editor .iris-editor-container .iris-editor-content h2 {
+  font-size: calc(var(--iris-editor-font-size) * 1.27);
+  color: var(--iris-text);
+}
+
+.iris-editor .iris-editor-container .iris-editor-content h3 {
+  font-size: calc(var(--iris-editor-font-size) * 1.18);
+  color: var(--iris-text);
+}
+
+.iris-editor .iris-editor-container .iris-editor-content h4 {
+  font-size: calc(var(--iris-editor-font-size) * 1.09);
+  color: var(--iris-text);
+}
+
+.iris-editor .iris-editor-container .iris-editor-content h5 {
+  font-size: var(--iris-editor-font-size);
+  color: var(--iris-text);
+}
+
+.iris-editor .iris-editor-container .iris-editor-content h6 {
+  font-size: calc(var(--iris-editor-font-size) * 0.91);
+  color: var(--iris-text-2);
+}
+
+.iris-editor-content strong {
+  font-weight: 600;
+}
+
+.iris-editor-content em {
+  font-style: italic;
+  font-weight: 400;
+}
+
+.iris-editor-content code {
+  background-color: var(--iris-surface-2);
+  border: 1px solid var(--iris-border);
+  border-radius: var(--iris-radius-sm);
+  padding: 0.125em 0.25em;
+  font-family: var(--iris-editor-font-family);
+  font-size: calc(var(--iris-editor-font-size) * 0.91);
+  font-weight: 400;
+  color: var(--iris-text);
+}
+
+.iris-editor-content blockquote {
+  margin: 1em 0;
+  padding: 0.75em 1em;
+  border-left: 4px solid var(--iris-primary);
+  background-color: var(--iris-surface-2);
+  border-radius: 0 var(--iris-radius-sm) var(--iris-radius-sm) 0;
+  color: var(--iris-text-2);
+  font-weight: 400;
+}
+
+.iris-editor-content blockquote p {
+  margin: 0;
+}
+
+.iris-editor-content ul,
+.iris-editor-content ol {
+  margin: 0.75em 0;
+  padding-left: 1.5em;
+}
+
+.iris-editor-content li {
+  margin: 0.25em 0;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.iris-editor-content ul {
+  list-style-type: disc;
+}
+
+.iris-editor-content ol {
+  list-style-type: decimal;
+}
+
+.iris-editor-content ul ul,
+.iris-editor-content ol ol,
+.iris-editor-content ul ol,
+.iris-editor-content ol ul {
+  margin: 0.25em 0;
+}
+
+/* Hard break styling - same line height as paragraphs */
+.iris-editor-content br {
+  line-height: 1.4;
+}
+
+/* Selection styles */
+.iris-editor-content .ProseMirror-selectednode {
+  outline: 2px solid var(--iris-primary);
+  border-radius: var(--iris-radius-sm);
+}
+
+.iris-editor-content ::selection {
+  background-color: var(--iris-editor-selection);
+}
+
+.iris-editor-content::-moz-selection {
+  background-color: var(--iris-editor-selection);
+}
+
+/* Drop cursor */
+.iris-editor-content .ProseMirror-dropcursor {
+  border-left: 2px solid var(--iris-primary);
+  pointer-events: none;
+  position: absolute;
+}
+
+/* Gap cursor */
+.iris-editor-content .ProseMirror-gapcursor {
+  display: none;
+  pointer-events: none;
+  position: absolute;
+}
+
+.iris-editor-content .ProseMirror-gapcursor:after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: -2px;
+  width: 20px;
+  border-top: 1px solid var(--iris-primary);
+  animation: ProseMirror-cursor-blink 1.1s steps(2, start) infinite;
+}
+
+@keyframes ProseMirror-cursor-blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+.iris-editor-content .ProseMirror-focused .ProseMirror-gapcursor {
+  display: block;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--iris-surface-2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--iris-text-3);
+  border-radius: var(--iris-radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--iris-text-2);
+}
+
+/* User theme override placeholder */
+/* This is where dynamically loaded user themes will be injected */
+#user-theme-styles {
+  /* User CSS will be injected here */
+}
