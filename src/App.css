@@ -138,7 +138,7 @@ body {
 }
 
 .toolbar {
-  height: 60px;
+  height: 30px;
   background-color: var(--iris-surface-2);
   border-bottom: 1px solid var(--iris-border);
   display: flex;
@@ -500,6 +500,7 @@ body {
   background-color: rgba(74, 144, 226, 0.1);
   border-radius: 3px;
   transition: background-color 0.15s ease;
+  min-width: 100%;
 }
 
 .iris-editor-content:focus-within .iris-current-line-highlight {
