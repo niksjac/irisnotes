@@ -250,7 +250,7 @@ function App() {
               onClick={toggleSidebar}
               title="Show sidebar"
             >
-              <Menu size={16} />
+              {/* <Menu size={16} /> */}
             </button>
           )}
 
@@ -262,7 +262,7 @@ function App() {
                 value={selectedNote.title}
                 onChange={(e) => updateNoteTitle(selectedNote.id, e.target.value)}
                 style={{
-                  fontSize: 'var(--iris-font-size-lg)',
+                  fontSize: 'var(--iris-font-size-sm)',
                   fontWeight: 'bold',
                   border: 'none',
                   background: 'transparent',
@@ -279,10 +279,10 @@ function App() {
               onClick={toggleDarkMode}
               title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
             >
-              {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+              {/* {darkMode ? <Sun size={16} /> : <Moon size={16} />} */}
             </button>
             <button className="btn" title="Settings">
-              <Settings size={16} />
+              {/* <Settings size={16} /> */}
             </button>
           </div>
         </div>
