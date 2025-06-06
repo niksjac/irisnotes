@@ -38,7 +38,7 @@ function App() {
     updated_at: new Date().toISOString()
   };
 
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [notes, setNotes] = useState<Note[]>([defaultNote]);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>("default-hot-note");

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { EditorState, Transaction } from 'prosemirror-state';
+import { EditorState, Transaction, Plugin } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { Schema, DOMParser, DOMSerializer, MarkSpec } from 'prosemirror-model';
 import { schema } from 'prosemirror-schema-basic';
@@ -10,6 +10,7 @@ import { baseKeymap, toggleMark, setBlockType, wrapIn, splitBlock } from 'prosem
 import { wrapInList, splitListItem, liftListItem, sinkListItem } from 'prosemirror-schema-list';
 import { dropCursor } from 'prosemirror-dropcursor';
 import { gapCursor } from 'prosemirror-gapcursor';
+import { Decoration, DecorationSet } from 'prosemirror-view';
 
 // Define color mark
 const colorMark: MarkSpec = {
@@ -71,7 +72,7 @@ const clearColor = (state: any, dispatch: any) => {
 
 // Move block up
 const moveLineUp = (state: any, dispatch: any) => {
-  const { selection, doc, tr } = state;
+  const { selection, tr } = state;
   const { $from } = selection;
   const depth = $from.depth;
   const parent = $from.node(depth - 1);
@@ -80,7 +81,6 @@ const moveLineUp = (state: any, dispatch: any) => {
   if (index === 0) return false; // Already at top
 
   const blockPos = $from.before(depth);
-  const prevBlockPos = parent.childBefore(blockPos - 1).offset;
   const prevBlock = parent.child(index - 1);
   const currBlock = parent.child(index);
 
@@ -101,7 +101,7 @@ const moveLineUp = (state: any, dispatch: any) => {
 
 // Move block down
 const moveLineDown = (state: any, dispatch: any) => {
-  const { selection, doc, tr } = state;
+  const { selection, tr } = state;
   const { $from } = selection;
   const depth = $from.depth;
   const parent = $from.node(depth - 1);
@@ -127,6 +127,47 @@ const moveLineDown = (state: any, dispatch: any) => {
   }
   return true;
 };
+
+// Current line highlight plugin
+const currentLineHighlightPlugin = new Plugin({
+  state: {
+    init() {
+      return DecorationSet.empty;
+    },
+    apply(tr, decorationSet) {
+      // Update decorations on selection change
+      if (tr.selectionSet || tr.docChanged) {
+        const { selection } = tr;
+        const { $from } = selection;
+
+        // Find the current block position
+        let blockStart = $from.start($from.depth);
+        let blockEnd = $from.end($from.depth);
+
+        // For block-level nodes, use their full range
+        if ($from.parent.isBlock) {
+          blockStart = $from.before($from.depth);
+          blockEnd = $from.after($from.depth);
+        }
+
+        // Create decoration for the current block
+        const decoration = Decoration.node(blockStart, blockEnd, {
+          class: 'iris-current-line-highlight'
+        });
+
+        return DecorationSet.create(tr.doc, [decoration]);
+      }
+
+      // Map existing decorations through the transaction
+      return decorationSet.map(tr.mapping, tr.doc);
+    }
+  },
+  props: {
+    decorations(state) {
+      return this.getState(state);
+    }
+  }
+});
 
 interface RichTextEditorProps {
   content: string;
@@ -247,7 +288,8 @@ export function RichTextEditor({
         myKeymap,
         history(),
         dropCursor(),
-        gapCursor()
+        gapCursor(),
+        currentLineHighlightPlugin
       ]
     });
 

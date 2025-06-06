@@ -494,3 +494,14 @@ body {
 #user-theme-styles {
   /* User CSS will be injected here */
 }
+
+/* Current line highlighting */
+.iris-current-line-highlight {
+  background-color: rgba(74, 144, 226, 0.1);
+  border-radius: 3px;
+  transition: background-color 0.15s ease;
+}
+
+.iris-editor-content:focus-within .iris-current-line-highlight {
+  background-color: rgba(74, 144, 226, 0.15);
+}
