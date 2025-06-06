@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { EditorState, Transaction } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { Schema, DOMParser, DOMSerializer, MarkSpec } from 'prosemirror-model';
@@ -49,8 +49,7 @@ const toggleColor = (color: string) => (state: any, dispatch: any) => {
     const existingMark = hasColor && state.doc.resolve(from).marks().find((m: any) => m.type === mySchema.marks.color);
 
     if (existingMark && existingMark.attrs.color === color) {
-      // Remove the color if it's the same
-      dispatch(state.tr.removeMark(from, to, mySchema.marks.color));
+      // Remove the color if it's the same dispatch(state.tr.removeMark(from, to, mySchema.marks.color));
     } else {
       // Remove any existing color marks first, then add the new one
       const tr = state.tr.removeMark(from, to, mySchema.marks.color);
@@ -70,112 +69,63 @@ const clearColor = (state: any, dispatch: any) => {
   return true;
 };
 
-// Move cursor up by one visual line using coordinate-based positioning
-const moveSelectionUpVisualLine = (state: any, dispatch: any, view?: EditorView) => {
-  const { selection } = state;
+// Move block up
+const moveLineUp = (state: any, dispatch: any) => {
+  const { selection, doc, tr } = state;
+  const { $from } = selection;
+  const depth = $from.depth;
+  const parent = $from.node(depth - 1);
+  const index = $from.index(depth - 1);
 
-  console.log('moveSelectionUpVisualLine called', { view: !!view, selection });
+  if (index === 0) return false; // Already at top
 
-  // If view is available, try coordinate-based positioning
-  if (view) {
-    try {
-      // Get current cursor coordinates
-      const coords = view.coordsAtPos(selection.from);
-      const lineHeight = 20; // Approximate line height in pixels
-      const targetY = coords.top - lineHeight;
+  const blockPos = $from.before(depth);
+  const prevBlockPos = parent.childBefore(blockPos - 1).offset;
+  const prevBlock = parent.child(index - 1);
+  const currBlock = parent.child(index);
 
-      // Find position at target coordinates
-      const pos = view.posAtCoords({ left: coords.left, top: targetY });
+  if (!prevBlock || !currBlock) return false;
 
-      if (pos && pos.pos >= 0 && pos.pos !== selection.from) {
-        if (dispatch) {
-          const tr = state.tr;
-          tr.setSelection(state.selection.constructor.near(state.doc.resolve(pos.pos)));
-          dispatch(tr);
-        }
-        return true;
-      }
-    } catch (error) {
-      console.log('Coordinate-based movement failed:', error);
-    }
+  const prevBlockStart = blockPos - prevBlock.nodeSize;
+  const currBlockStart = blockPos;
+  const currBlockEnd = currBlockStart + currBlock.nodeSize;
+
+  if (dispatch) {
+    let t = tr
+      .delete(prevBlockStart, currBlockStart)
+      .insert(currBlockEnd - prevBlock.nodeSize, prevBlock.copy(prevBlock.content));
+    dispatch(t.scrollIntoView());
   }
-
-  // Fallback: move to beginning of previous block
-  const { from } = selection;
-  const $from = state.doc.resolve(from);
-
-  // Find start of current block
-  const blockStart = $from.start($from.depth);
-
-  if (blockStart > 0) {
-    // Move to previous block
-    const prevPos = Math.max(0, blockStart - 1);
-    const $prev = state.doc.resolve(prevPos);
-    const prevBlockStart = $prev.start($prev.depth);
-
-    if (dispatch) {
-      const tr = state.tr;
-      tr.setSelection(state.selection.constructor.near(state.doc.resolve(prevBlockStart)));
-      dispatch(tr);
-    }
-    return true;
-  }
-
-  return false;
+  return true;
 };
 
-// Move cursor down by one visual line using coordinate-based positioning
-const moveSelectionDownVisualLine = (state: any, dispatch: any, view?: EditorView) => {
-  const { selection } = state;
+// Move block down
+const moveLineDown = (state: any, dispatch: any) => {
+  const { selection, doc, tr } = state;
+  const { $from } = selection;
+  const depth = $from.depth;
+  const parent = $from.node(depth - 1);
+  const index = $from.index(depth - 1);
 
-  console.log('moveSelectionDownVisualLine called', { view: !!view, selection });
+  if (index >= parent.childCount - 1) return false; // Already at bottom
 
-  // If view is available, try coordinate-based positioning
-  if (view) {
-    try {
-      // Get current cursor coordinates
-      const coords = view.coordsAtPos(selection.from);
-      const lineHeight = 20; // Approximate line height in pixels
-      const targetY = coords.top + lineHeight;
+  const blockPos = $from.before(depth);
+  const currBlock = parent.child(index);
+  const nextBlock = parent.child(index + 1);
 
-      // Find position at target coordinates
-      const pos = view.posAtCoords({ left: coords.left, top: targetY });
+  if (!currBlock || !nextBlock) return false;
 
-      if (pos && pos.pos <= state.doc.content.size && pos.pos !== selection.from) {
-        if (dispatch) {
-          const tr = state.tr;
-          tr.setSelection(state.selection.constructor.near(state.doc.resolve(pos.pos)));
-          dispatch(tr);
-        }
-        return true;
-      }
-    } catch (error) {
-      console.log('Coordinate-based movement failed:', error);
-    }
+  const currBlockStart = blockPos;
+  const currBlockEnd = currBlockStart + currBlock.nodeSize;
+  const nextBlockEnd = currBlockEnd + nextBlock.nodeSize;
+
+  if (dispatch) {
+    let t = tr
+      .delete(currBlockEnd, nextBlockEnd)
+      .insert(currBlockStart, nextBlock.copy(nextBlock.content));
+    dispatch(t.scrollIntoView());
   }
-
-  // Fallback: move to beginning of next block
-  const { from } = selection;
-  const $from = state.doc.resolve(from);
-
-  // Find end of current block
-  const blockEnd = $from.end($from.depth);
-
-  if (blockEnd < state.doc.content.size) {
-    // Move to next block
-    const nextPos = Math.min(state.doc.content.size, blockEnd + 1);
-    const $next = state.doc.resolve(nextPos);
-    const nextBlockStart = $next.start($next.depth);
-
-    if (dispatch) {
-      const tr = state.tr;
-      tr.setSelection(state.selection.constructor.near(state.doc.resolve(nextBlockStart)));
-      dispatch(tr);
-    }
-    return true;
-  }
-
-  return false;
+  return true;
 };
 
 interface RichTextEditorProps {
@@ -193,6 +143,10 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
+  const [lineWrapping, setLineWrapping] = useState(false); // default: no wrapping
+
+  // Toggle line wrapping handler
+  const toggleLineWrapping = () => setLineWrapping(w => !w);
 
   useEffect(() => {
     if (!editorRef.current) return;
@@ -246,23 +200,13 @@ export function RichTextEditor({
       'Mod-i': toggleMark(mySchema.marks.em),
       'Mod-`': toggleMark(mySchema.marks.code),
 
-                  // Color shortcuts
+      // Color shortcuts
       'Mod-Shift-r': toggleColor('#e74c3c'), // Red
       'Mod-Shift-g': toggleColor('#27ae60'), // Green
       'Mod-Shift-l': toggleColor('#3498db'), // Blue (changed from 'b' to avoid conflict with bold)
       'Mod-Shift-y': toggleColor('#f39c12'), // Yellow/Orange
       'Mod-Shift-p': toggleColor('#9b59b6'), // Purple
       'Mod-Shift-c': clearColor, // Clear color (remove color mark)
-
-      // Move cursor up and down by visual lines (instead of moving blocks)
-      'Alt-ArrowUp': (state: any, dispatch: any, view?: EditorView) => {
-        console.log('Alt-ArrowUp pressed');
-        return moveSelectionUpVisualLine(state, dispatch, view);
-      },
-      'Alt-ArrowDown': (state: any, dispatch: any, view?: EditorView) => {
-        console.log('Alt-ArrowDown pressed');
-        return moveSelectionDownVisualLine(state, dispatch, view);
-      },
 
       // Heading shortcuts
       'Mod-Shift-1': setBlockType(mySchema.nodes.heading, { level: 1 }),
@@ -285,7 +229,15 @@ export function RichTextEditor({
       // History
       'Mod-z': undo,
       'Mod-y': redo,
-      'Mod-Shift-z': redo
+      'Mod-Shift-z': redo,
+
+      // Move line/block up
+      'Shift-Alt-ArrowUp': moveLineUp,
+      'Shift-Alt-ArrowDown': moveLineDown,
+      'Alt-Shift-ArrowUp': moveLineUp,
+      'Alt-Shift-ArrowDown': moveLineDown,
+      'Alt-ArrowUp': moveLineUp,
+      'Alt-ArrowDown': moveLineDown
     });
 
     // Create editor state
@@ -328,8 +280,18 @@ export function RichTextEditor({
 
     viewRef.current = view;
 
+    // Add Alt+Z hotkey for toggling line wrapping
+    const altZHandler = (event: KeyboardEvent) => {
+      if (event.altKey && event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        toggleLineWrapping();
+      }
+    };
+    window.addEventListener('keydown', altZHandler);
+
     return () => {
       view.destroy();
+      window.removeEventListener('keydown', altZHandler);
     };
   }, [readOnly]);
 
@@ -381,7 +343,11 @@ export function RichTextEditor({
         ref={editorRef}
         className="iris-editor-container"
         data-placeholder={placeholder}
-        style={{ minHeight: '100%' }}
+        style={{
+          minHeight: '100%',
+          whiteSpace: lineWrapping ? 'pre-wrap' : 'pre',
+          overflowX: lineWrapping ? 'auto' : 'scroll'
+        }}
       />
     </div>
   );
