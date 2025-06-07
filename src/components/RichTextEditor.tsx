@@ -11,6 +11,7 @@ import { wrapInList, splitListItem, liftListItem, sinkListItem } from 'prosemirr
 import { dropCursor } from 'prosemirror-dropcursor';
 import { gapCursor } from 'prosemirror-gapcursor';
 import { Decoration, DecorationSet } from 'prosemirror-view';
+import { openUrl } from '@tauri-apps/plugin-opener';
 
 // Define color mark
 const colorMark: MarkSpec = {
@@ -169,6 +170,23 @@ const currentLineHighlightPlugin = new Plugin({
   }
 });
 
+// Open hyperlink at cursor position
+const openLinkAtCursor = (state: any, _dispatch: any) => {
+  const { selection } = state;
+  const { $from } = selection;
+
+  // Check if cursor is inside a link mark
+  const linkMark = $from.marks().find((mark: any) => mark.type.name === 'link');
+
+  if (linkMark && linkMark.attrs.href) {
+    // Open the URL in system browser
+    openUrl(linkMark.attrs.href).catch(console.error);
+    return true;
+  }
+
+  return false;
+};
+
 interface RichTextEditorProps {
   content: string;
   onChange: (content: string) => void;
@@ -278,7 +296,10 @@ export function RichTextEditor({
       'Alt-Shift-ArrowUp': moveLineUp,
       'Alt-Shift-ArrowDown': moveLineDown,
       'Alt-ArrowUp': moveLineUp,
-      'Alt-ArrowDown': moveLineDown
+      'Alt-ArrowDown': moveLineDown,
+
+      // Open hyperlink at cursor
+      'Mod-Enter': openLinkAtCursor
     });
 
     // Create editor state
