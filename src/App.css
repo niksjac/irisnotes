@@ -506,3 +506,34 @@ body {
 .iris-editor-content:focus-within .iris-current-line-highlight {
   background-color: rgba(74, 144, 226, 0.15);
 }
+
+/* Add to existing styles */
+
+.iris-source-editor {
+  height: 100%;
+  min-height: 100%;
+}
+
+.iris-source-editor .cm-editor {
+  height: 100%;
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+}
+
+.iris-editor-header {
+  padding: 8px 0;
+  border-bottom: 1px solid #333;
+}
+
+.iris-editor-header button {
+  background: #444;
+  color: white;
+  border: 1px solid #666;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.iris-editor-header button:hover {
+  background: #555;
+}

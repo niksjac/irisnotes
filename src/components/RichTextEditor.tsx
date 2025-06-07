@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { EditorState, Transaction, Plugin } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { Schema, DOMParser, DOMSerializer, MarkSpec } from 'prosemirror-model';
@@ -12,6 +12,7 @@ import { dropCursor } from 'prosemirror-dropcursor';
 import { gapCursor } from 'prosemirror-gapcursor';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import { openUrl } from '@tauri-apps/plugin-opener';
+import { SourceView } from './SourceView';
 
 // Define color mark
 const colorMark: MarkSpec = {
@@ -202,13 +203,16 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
-  const [lineWrapping, setLineWrapping] = useState(false); // default: no wrapping
+  const [lineWrapping, setLineWrapping] = useState(false);
+  const [showSourceView, setShowSourceView] = useState(false);
 
-  // Toggle line wrapping handler
-  const toggleLineWrapping = () => setLineWrapping(w => !w);
+  // Wrap in useCallback to prevent unnecessary re-renders
+  const toggleSourceView = useCallback(() => {
+    setShowSourceView(prev => !prev);
+  }, []);
 
   useEffect(() => {
-    if (!editorRef.current) return;
+    if (!editorRef.current || showSourceView) return;
 
     // Parse initial content or create empty document
     let doc;
@@ -299,7 +303,13 @@ export function RichTextEditor({
       'Alt-ArrowDown': moveLineDown,
 
       // Open hyperlink at cursor
-      'Mod-Enter': openLinkAtCursor
+      'Mod-Enter': openLinkAtCursor,
+
+      // Keep the toggle in ProseMirror keymap
+      'Mod-Shift-s': () => {
+        toggleSourceView();
+        return true;
+      },
     });
 
     // Create editor state
@@ -343,11 +353,14 @@ export function RichTextEditor({
 
     viewRef.current = view;
 
+    // Focus the editor after creation
+    setTimeout(() => view.focus(), 0);
+
     // Add Alt+Z hotkey for toggling line wrapping
     const altZHandler = (event: KeyboardEvent) => {
       if (event.altKey && event.key.toLowerCase() === 'z') {
         event.preventDefault();
-        toggleLineWrapping();
+        setLineWrapping(w => !w);
       }
     };
     window.addEventListener('keydown', altZHandler);
@@ -356,7 +369,7 @@ export function RichTextEditor({
       view.destroy();
       window.removeEventListener('keydown', altZHandler);
     };
-  }, [readOnly]);
+  }, [readOnly, showSourceView]);
 
   // Update content when it changes externally (but avoid infinite loops)
   useEffect(() => {
@@ -399,6 +412,19 @@ export function RichTextEditor({
       return '';
     }
   };
+
+  if (showSourceView) {
+    return (
+      <div className="iris-editor">
+        <SourceView
+          content={content}
+          onChange={onChange}
+          readOnly={readOnly}
+          onToggleView={toggleSourceView}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="iris-editor">
