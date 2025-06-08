@@ -73,59 +73,77 @@ const clearColor = (state: any, dispatch: any) => {
   return true;
 };
 
-// Move block up
+// Move block(s) up - improved version supporting multi-block selection
 const moveLineUp = (state: any, dispatch: any) => {
   const { selection, tr } = state;
-  const { $from } = selection;
-  const depth = $from.depth;
-  const parent = $from.node(depth - 1);
-  const index = $from.index(depth - 1);
+  const { $from, $to } = selection;
 
-  if (index === 0) return false; // Already at top
+  // Find the range of blocks to move
+  const fromDepth = $from.depth;
+  const toDepth = $to.depth;
 
-  const blockPos = $from.before(depth);
-  const prevBlock = parent.child(index - 1);
-  const currBlock = parent.child(index);
+  // Get the parent and find block indices
+  const parent = $from.node(fromDepth - 1);
+  const startBlockIndex = $from.index(fromDepth - 1);
+  const endBlockIndex = $to.index(toDepth - 1);
 
-  if (!prevBlock || !currBlock) return false;
+  // Can't move if first block is already at top
+  if (startBlockIndex === 0) return false;
 
-  const prevBlockStart = blockPos - prevBlock.nodeSize;
-  const currBlockStart = blockPos;
-  const currBlockEnd = currBlockStart + currBlock.nodeSize;
+  // Calculate positions for the block range
+  const firstBlockPos = $from.before(fromDepth);
+  const lastBlockPos = $to.after(toDepth);
+
+  // Get the block that will be swapped
+  const prevBlock = parent.child(startBlockIndex - 1);
+  const prevBlockStart = firstBlockPos - prevBlock.nodeSize;
 
   if (dispatch) {
+    // Move the previous block to after the selected range
+    const blocksToMove = [];
+    for (let i = startBlockIndex; i <= endBlockIndex; i++) {
+      blocksToMove.push(parent.child(i));
+    }
+
     let t = tr
-      .delete(prevBlockStart, currBlockStart)
-      .insert(currBlockEnd - prevBlock.nodeSize, prevBlock.copy(prevBlock.content));
+      .delete(prevBlockStart, firstBlockPos) // Remove previous block
+      .insert(lastBlockPos - prevBlock.nodeSize, prevBlock.copy(prevBlock.content)); // Insert it after selected range
+
     dispatch(t.scrollIntoView());
   }
   return true;
 };
 
-// Move block down
+// Move block(s) down - improved version supporting multi-block selection
 const moveLineDown = (state: any, dispatch: any) => {
   const { selection, tr } = state;
-  const { $from } = selection;
-  const depth = $from.depth;
-  const parent = $from.node(depth - 1);
-  const index = $from.index(depth - 1);
+  const { $from, $to } = selection;
 
-  if (index >= parent.childCount - 1) return false; // Already at bottom
+  // Find the range of blocks to move
+  const fromDepth = $from.depth;
+  const toDepth = $to.depth;
 
-  const blockPos = $from.before(depth);
-  const currBlock = parent.child(index);
-  const nextBlock = parent.child(index + 1);
+  // Get the parent and find block indices
+  const parent = $from.node(fromDepth - 1);
+  const endBlockIndex = $to.index(toDepth - 1);
 
-  if (!currBlock || !nextBlock) return false;
+  // Can't move if last block is already at bottom
+  if (endBlockIndex >= parent.childCount - 1) return false;
 
-  const currBlockStart = blockPos;
-  const currBlockEnd = currBlockStart + currBlock.nodeSize;
-  const nextBlockEnd = currBlockEnd + nextBlock.nodeSize;
+  // Calculate positions for the block range
+  const firstBlockPos = $from.before(fromDepth);
+  const lastBlockPos = $to.after(toDepth);
+
+  // Get the block that will be swapped
+  const nextBlock = parent.child(endBlockIndex + 1);
+  const nextBlockEnd = lastBlockPos + nextBlock.nodeSize;
 
   if (dispatch) {
+    // Move the next block to before the selected range
     let t = tr
-      .delete(currBlockEnd, nextBlockEnd)
-      .insert(currBlockStart, nextBlock.copy(nextBlock.content));
+      .delete(lastBlockPos, nextBlockEnd) // Remove next block
+      .insert(firstBlockPos, nextBlock.copy(nextBlock.content)); // Insert it before selected range
+
     dispatch(t.scrollIntoView());
   }
   return true;
