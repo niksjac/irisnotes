@@ -13,6 +13,7 @@ import { gapCursor } from 'prosemirror-gapcursor';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { SourceView } from './SourceView';
+import { inputRules, InputRule } from 'prosemirror-inputrules';
 
 // Define color mark
 const colorMark: MarkSpec = {
@@ -188,6 +189,19 @@ const openLinkAtCursor = (state: any, _dispatch: any) => {
   return false;
 };
 
+// Add URL input rules after the schema definition
+const urlInputRule = new InputRule(
+  /(?:^|\s)((?:https?:\/\/|www\.)[^\s]+)(\s|\n|$)/,
+  (state, match, start, end) => {
+    const url = match[1];
+    const href = url.startsWith('www.') ? `https://${url}` : url;
+    const linkMark = mySchema.marks.link.create({ href });
+    const textNode = mySchema.text(url, [linkMark]);
+    const tr = state.tr.replaceWith(start + match[0].indexOf(url), end - (match[2] ? 1 : 0), textNode);
+    return tr;
+  }
+);
+
 interface RichTextEditorProps {
   content: string;
   onChange: (content: string) => void;
@@ -316,6 +330,7 @@ export function RichTextEditor({
     const state = EditorState.create({
       doc,
       plugins: [
+        inputRules({ rules: [urlInputRule] }),
         myKeymap,
         history({ newGroupDelay: 20 }),
         dropCursor(),

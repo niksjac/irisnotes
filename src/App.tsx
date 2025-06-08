@@ -7,10 +7,6 @@ import {
   FileText,
   Search,
   Plus,
-  Settings,
-  Moon,
-  Sun,
-  Menu
 } from "lucide-react";
 import clsx from "clsx";
 import { RichTextEditor } from "./components/RichTextEditor";
@@ -33,6 +29,7 @@ function App() {
       <p><span style="color: #e74c3c;">This is a red paragraph.</span></p>
       <p><span style="color: #27ae60;">This is a green paragraph.</span></p>
       <p><span style="color: #3498db;">This is a blue paragraph.</span></p>
+      <p><a href="https://www.google.com">This is a link</a></p>
     `,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()

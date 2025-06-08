@@ -537,3 +537,16 @@ body {
 .iris-editor-header button:hover {
   background: #555;
 }
+
+.iris-editor-content a {
+  color: var(--iris-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--iris-primary);
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.iris-editor-content a:hover {
+  color: var(--iris-primary-hover);
+}
