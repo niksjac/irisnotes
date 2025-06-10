@@ -1,13 +1,7 @@
 import { useState, useEffect } from "react";
-// import { invoke } from "@tauri-apps/api/core";
 import { appConfigDir } from "@tauri-apps/api/path";
 import { readTextFile, exists } from "@tauri-apps/plugin-fs";
-import {
-  PanelLeft,
-  FileText,
-  Search,
-  Plus,
-} from "lucide-react";
+import { PanelLeft, FileText, Search, Plus, } from "lucide-react";
 import clsx from "clsx";
 import { RichTextEditor } from "./components/RichTextEditor";
 import "./App.css";
@@ -251,7 +245,7 @@ function App() {
             </button>
           )}
 
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, border: '1px solid red' }}>
             {selectedNote && (
               <input
                 className="input"
