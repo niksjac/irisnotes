@@ -35,6 +35,7 @@
 
   --iris-sidebar-width: 300px;
   --iris-sidebar-collapsed-width: 0px;
+  --iris-activity-bar-width: 48px;
 
   /* Typography */
   --iris-font-family: var(--font-sans);
@@ -118,12 +119,110 @@ body {
   background-color: var(--iris-surface);
 }
 
-.sidebar {
-  width: var(--iris-sidebar-width);
+/* Activity Bar */
+.activity-bar {
+  width: var(--iris-activity-bar-width);
+  background-color: var(--iris-surface-3);
+  border-right: 1px solid var(--iris-border);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-bar-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.activity-bar-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--iris-space-xs);
+  padding: var(--iris-space-sm);
+}
+
+.activity-bar-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--iris-radius-sm);
+  background-color: transparent;
+  color: var(--iris-text-2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: var(--iris-font-size-lg);
+  font-weight: 600;
+}
+
+.activity-bar-item:hover {
+  background-color: var(--iris-surface-2);
+  color: var(--iris-text);
+}
+
+.activity-bar-item.active {
+  background-color: var(--iris-primary);
+  color: white;
+}
+
+/* Resizable Sidebar */
+.resizable-sidebar {
   background-color: var(--iris-surface-2);
   border-right: 1px solid var(--iris-border);
-  transition: width 0.3s ease;
   flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.resizable-sidebar.resizing {
+  transition: none;
+}
+
+.resizable-sidebar.collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  border-right: none;
+}
+
+.sidebar-content {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 4px;
+  height: 100%;
+  cursor: col-resize;
+  background-color: transparent;
+  transition: background-color 0.1s ease;
+}
+
+.sidebar-resizer:hover,
+.resizable-sidebar.resizing .sidebar-resizer {
+  background-color: var(--iris-primary);
+}
+
+.sidebar-resizer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -2px;
+  right: -2px;
+  bottom: 0;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .sidebar.collapsed {
@@ -137,20 +236,48 @@ body {
   overflow: hidden;
 }
 
-.toolbar {
-  height: 30px;
-  background-color: var(--iris-surface-2);
-  border-bottom: 1px solid var(--iris-border);
+.title-bar {
+  height: 50px;
+  background-color: var(--iris-editor-bg);
   display: flex;
   align-items: center;
   padding: 0 var(--iris-space-md);
-  gap: var(--iris-space-sm);
+}
+
+.title-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--iris-text);
+  font-size: var(--iris-font-size-lg);
+  font-weight: 600;
+  font-family: var(--iris-font-family);
+  outline: none;
+  padding: var(--iris-space-sm) 0;
+}
+
+.title-input::placeholder {
+  color: var(--iris-text-3);
+  font-style: italic;
 }
 
 .editor-container {
   flex: 1;
-  overflow: auto;
+  padding: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
   background-color: var(--iris-editor-bg);
+  margin: 0;
+}
+
+.iris-editor-container::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+.iris-editor-container::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* Mobile responsive */
@@ -159,17 +286,43 @@ body {
     flex-direction: column;
   }
 
-  .sidebar {
+  .activity-bar {
     width: 100%;
+    height: var(--iris-activity-bar-width);
+    border-right: none;
+    border-bottom: 1px solid var(--iris-border);
+  }
+
+  .activity-bar-content {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 var(--iris-space-md);
+  }
+
+  .activity-bar-items {
+    flex-direction: row;
+  }
+
+  .activity-bar-bottom {
+    margin: 0;
+    padding: 0;
+  }
+
+  .resizable-sidebar {
+    width: 100% !important;
     height: auto;
     border-right: none;
     border-bottom: 1px solid var(--iris-border);
   }
 
-  .sidebar.collapsed {
-    width: 100%;
-    height: 60px;
+  .resizable-sidebar.collapsed {
+    height: 0 !important;
     overflow: hidden;
+  }
+
+  .sidebar-resizer {
+    display: none;
   }
 }
 
@@ -241,7 +394,7 @@ body {
 
 .iris-editor-container {
   flex: 1;
-  padding: var(--iris-space-lg);
+  padding: 0;
   overflow-y: auto;
   position: relative;
   background-color: var(--iris-editor-bg);
@@ -250,8 +403,8 @@ body {
 .iris-editor-container[data-placeholder]:empty::before {
   content: attr(data-placeholder);
   position: absolute;
-  top: var(--iris-space-lg);
-  left: var(--iris-space-lg);
+  top: 0;
+  left: 0;
   color: var(--iris-text-3);
   pointer-events: none;
   font-style: italic;
@@ -497,10 +650,22 @@ body {
 
 /* Current line highlighting */
 .iris-current-line-highlight {
+  position: relative;
   background-color: rgba(74, 144, 226, 0.1);
-  border-radius: 3px;
   transition: background-color 0.15s ease;
-  min-width: 100%;
+  border-radius: 0;
+}
+
+.iris-current-line-highlight::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -9999px;
+  right: -9999px;
+  background-color: inherit;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .iris-editor-content:focus-within .iris-current-line-highlight {
@@ -517,25 +682,6 @@ body {
 .iris-source-editor .cm-editor {
   height: 100%;
   font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
-}
-
-.iris-editor-header {
-  padding: 8px 0;
-  border-bottom: 1px solid #333;
-}
-
-.iris-editor-header button {
-  background: #444;
-  color: white;
-  border: 1px solid #666;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.iris-editor-header button:hover {
-  background: #555;
 }
 
 .iris-editor-content a {

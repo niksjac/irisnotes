@@ -4,6 +4,8 @@ import { readTextFile, exists } from "@tauri-apps/plugin-fs";
 import { PanelLeft, FileText, Search, Plus, } from "lucide-react";
 import clsx from "clsx";
 import { RichTextEditor } from "./components/RichTextEditor";
+import { ActivityBar } from "./components/ActivityBar";
+import { ResizableSidebar } from "./components/ResizableSidebar";
 import "./App.css";
 
 interface Note {
@@ -30,6 +32,8 @@ function App() {
   };
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [activityBarVisible, setActivityBarVisible] = useState(true);
+  const [selectedView, setSelectedView] = useState("1");
   const [darkMode, setDarkMode] = useState(false);
   const [notes, setNotes] = useState<Note[]>([defaultNote]);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>("default-hot-note");
@@ -39,6 +43,27 @@ function App() {
   useEffect(() => {
     initializeApp();
     loadUserTheme();
+  }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case 'b':
+            e.preventDefault();
+            setSidebarCollapsed(prev => !prev);
+            break;
+          case 'j':
+            e.preventDefault();
+            setActivityBarVisible(prev => !prev);
+            break;
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const initializeApp = async () => {
@@ -82,6 +107,21 @@ function App() {
     setSidebarCollapsed(!sidebarCollapsed);
   };
 
+  const handleSidebarCollapsedChange = (collapsed: boolean) => {
+    setSidebarCollapsed(collapsed);
+  };
+
+  const toggleActivityBar = () => {
+    setActivityBarVisible(!activityBarVisible);
+  };
+
+  const handleViewChange = (view: string) => {
+    setSelectedView(view);
+    if (sidebarCollapsed) {
+      setSidebarCollapsed(false);
+    }
+  };
+
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
     document.documentElement.setAttribute('data-theme', darkMode ? 'light' : 'dark');
@@ -117,168 +157,52 @@ function App() {
 
   const selectedNote = notes.find(note => note.id === selectedNoteId);
 
-    return (
+  return (
     <div className="app">
-      {/* Sidebar */}
-      <div className={clsx("sidebar", { collapsed: sidebarCollapsed })}>
-        <div className="sidebar-header" style={{
-          padding: 'var(--iris-space-md)',
-          borderBottom: '1px solid var(--iris-border)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--iris-space-sm)'
-        }}>
-          {!sidebarCollapsed && (
-            <>
-              <FileText size={20} />
-              <h2 style={{ margin: 0, fontSize: 'var(--iris-font-size-lg)' }}>
-                IrisNotes
-              </h2>
-            </>
-          )}
-          <button
-            className="btn"
-            onClick={toggleSidebar}
-            style={{ marginLeft: 'auto' }}
-            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            <PanelLeft size={16} />
-          </button>
+      {/* Activity Bar */}
+      <ActivityBar
+        isVisible={activityBarVisible}
+        selectedView={selectedView}
+        onViewChange={handleViewChange}
+      />
+
+      {/* Resizable Sidebar */}
+      <ResizableSidebar
+        isCollapsed={sidebarCollapsed}
+        onCollapsedChange={handleSidebarCollapsedChange}
+        minWidth={200}
+        maxWidth={600}
+        defaultWidth={300}
+      >
+        <div className="sidebar">
+                    <div style={{
+            padding: 'var(--iris-space-md)',
+            borderBottom: '1px solid var(--iris-border)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <h2 style={{ margin: 0, fontSize: 'var(--iris-font-size-lg)' }}>
+              Section {selectedView}
+            </h2>
+          </div>
         </div>
-
-        {!sidebarCollapsed && (
-          <>
-            {/* Search */}
-            <div style={{ padding: 'var(--iris-space-md)' }}>
-              <div style={{ position: 'relative' }}>
-                <Search
-                  size={16}
-                  style={{
-                    position: 'absolute',
-                    left: 'var(--iris-space-sm)',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: 'var(--iris-text-2)'
-                  }}
-                />
-                <input
-                  className="input"
-                  type="text"
-                  placeholder="Search notes..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{ paddingLeft: '2.5rem', width: '100%' }}
-                />
-              </div>
-            </div>
-
-            {/* Notes List */}
-            <div style={{
-              flex: 1,
-              overflowY: 'auto',
-              padding: '0 var(--iris-space-md)'
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 'var(--iris-space-sm)'
-              }}>
-                <h3 style={{ margin: 0, color: 'var(--iris-text-2)' }}>Notes</h3>
-                <button
-                  className="btn primary"
-                  onClick={createNewNote}
-                  title="Create new note"
-                >
-                  <Plus size={16} />
-                </button>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--iris-space-xs)' }}>
-                {notes.map((note) => (
-                    <div
-                      key={note.id}
-                      className={clsx("note-item", { active: selectedNoteId === note.id })}
-                      onClick={() => setSelectedNoteId(note.id)}
-                      style={{
-                        padding: 'var(--iris-space-sm)',
-                        border: '1px solid var(--iris-border)',
-                        borderRadius: 'var(--iris-radius-sm)',
-                        cursor: 'pointer',
-                        backgroundColor: selectedNoteId === note.id ? 'var(--iris-primary)' : 'var(--iris-surface)',
-                        color: selectedNoteId === note.id ? 'white' : 'var(--iris-text)',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      <h4 style={{ margin: '0 0 4px 0', fontSize: 'var(--iris-font-size-base)' }}>
-                        {note.title}
-                      </h4>
-                      <p style={{
-                        margin: 0,
-                        fontSize: 'var(--iris-font-size-base)',
-                        opacity: 0.7,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
-                      }}>
-                        {note.content || "No content"}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-            </div>
-          </>
-        )}
-      </div>
+      </ResizableSidebar>
 
       {/* Main Content */}
       <div className="main-content">
-        {/* Toolbar */}
-        <div className="toolbar">
-          {sidebarCollapsed && (
-            <button
-              className="btn"
-              onClick={toggleSidebar}
-              title="Show sidebar"
-            >
-              {/* <Menu size={16} /> */}
-            </button>
+        <div className="title-bar">
+          {selectedNote && (
+            <input
+              className="title-input"
+              type="text"
+              value={selectedNote.title}
+              onChange={(e) => updateNoteTitle(selectedNote.id, e.target.value)}
+              placeholder="Untitled Note"
+            />
           )}
-
-          <div style={{ flex: 1, border: '1px solid red' }}>
-            {selectedNote && (
-              <input
-                className="input"
-                type="text"
-                value={selectedNote.title}
-                onChange={(e) => updateNoteTitle(selectedNote.id, e.target.value)}
-                style={{
-                  fontSize: 'var(--iris-font-size-sm)',
-                  fontWeight: 'bold',
-                  border: 'none',
-                  background: 'transparent',
-                  width: '300px'
-                }}
-                placeholder="Note title..."
-              />
-            )}
-          </div>
-
-          <div style={{ display: 'flex', gap: 'var(--iris-space-sm)' }}>
-            <button
-              className="btn"
-              onClick={toggleDarkMode}
-              title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              {/* {darkMode ? <Sun size={16} /> : <Moon size={16} />} */}
-            </button>
-            <button className="btn" title="Settings">
-              {/* <Settings size={16} /> */}
-            </button>
-          </div>
         </div>
 
-        {/* Editor Container */}
         <div className="editor-container">
           {selectedNote && (
             <RichTextEditor

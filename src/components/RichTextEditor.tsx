@@ -156,31 +156,26 @@ const currentLineHighlightPlugin = new Plugin({
       return DecorationSet.empty;
     },
     apply(tr, decorationSet) {
-      // Update decorations on selection change
-      if (tr.selectionSet || tr.docChanged) {
-        const { selection } = tr;
-        const { $from } = selection;
+      // Always update decorations to ensure proper clearing and re-application
+      const { selection } = tr;
+      const { $from } = selection;
 
-        // Find the current block position
-        let blockStart = $from.start($from.depth);
-        let blockEnd = $from.end($from.depth);
+      // Find the current block position
+      let blockStart = $from.start($from.depth);
+      let blockEnd = $from.end($from.depth);
 
-        // For block-level nodes, use their full range
-        if ($from.parent.isBlock) {
-          blockStart = $from.before($from.depth);
-          blockEnd = $from.after($from.depth);
-        }
-
-        // Create decoration for the current block
-        const decoration = Decoration.node(blockStart, blockEnd, {
-          class: 'iris-current-line-highlight'
-        });
-
-        return DecorationSet.create(tr.doc, [decoration]);
+      // For block-level nodes, use their full range
+      if ($from.parent.isBlock) {
+        blockStart = $from.before($from.depth);
+        blockEnd = $from.after($from.depth);
       }
 
-      // Map existing decorations through the transaction
-      return decorationSet.map(tr.mapping, tr.doc);
+      // Create decoration for the current block
+      const decoration = Decoration.node(blockStart, blockEnd, {
+        class: 'iris-current-line-highlight'
+      });
+
+      return DecorationSet.create(tr.doc, [decoration]);
     }
   },
   props: {
