@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { RichTextEditor } from './rich-editor/rich-editor';
-import { SourceView } from './source-editor/source-editor';
+import { RichEditor } from './rich-editor/rich-editor';
+import { SourceEditor } from './source-editor/source-editor';
 
 interface EditorContainerProps {
   content: string;
@@ -25,7 +25,7 @@ export function EditorContainer({
 
   if (showSourceView) {
     return (
-      <SourceView
+      <SourceEditor
         content={content}
         onChange={onChange}
         readOnly={readOnly}
@@ -35,7 +35,7 @@ export function EditorContainer({
   }
 
   return (
-    <RichTextEditor
+    <RichEditor
       content={content}
       onChange={onChange}
       placeholder={placeholder}

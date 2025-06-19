@@ -1,0 +1,284 @@
+/* Rich Text Editor Styles */
+.iris-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.iris-editor-container {
+  flex: 1;
+  padding: 0;
+  overflow-y: auto;
+  position: relative;
+  background-color: var(--iris-editor-bg);
+}
+
+.iris-editor-container::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+.iris-editor-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.iris-editor-container[data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--iris-text-3);
+  pointer-events: none;
+  font-style: italic;
+  font-family: var(--iris-editor-font-family);
+  font-size: var(--iris-editor-font-size);
+  font-weight: 400;
+}
+
+.iris-editor-content {
+  outline: none;
+  min-height: 100%;
+  font-family: var(--iris-editor-font-family);
+  font-size: var(--iris-editor-font-size);
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--iris-text);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  /* Improve font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Higher specificity selectors to override ProseMirror defaults */
+.iris-editor .iris-editor-container .iris-editor-content,
+.iris-editor .iris-editor-container .iris-editor-content p,
+.iris-editor .iris-editor-container .iris-editor-content div {
+  font-size: var(--iris-editor-font-size);
+  font-family: var(--iris-editor-font-family);
+}
+
+/* Force font inheritance for all text content */
+.iris-editor-content * {
+  font-family: inherit;
+}
+
+/* ProseMirror content styles - Consistent line spacing */
+.iris-editor-content p {
+  margin: 0;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.iris-editor-content p + p {
+  /* Only add minimal spacing between consecutive paragraphs */
+  margin-top: 0em;
+}
+
+.iris-editor-content p:empty {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.iris-editor-content h1,
+.iris-editor-content h2,
+.iris-editor-content h3,
+.iris-editor-content h4,
+.iris-editor-content h5,
+.iris-editor-content h6 {
+  margin: 1.5em 0 0.5em 0;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.iris-editor-content h1:first-child,
+.iris-editor-content h2:first-child,
+.iris-editor-content h3:first-child,
+.iris-editor-content h4:first-child,
+.iris-editor-content h5:first-child,
+.iris-editor-content h6:first-child {
+  margin-top: 0;
+}
+
+.iris-editor .iris-editor-container .iris-editor-content h1 {
+  font-size: calc(var(--iris-editor-font-size) * 1.45);
+  color: var(--iris-text);
+}
+
+.iris-editor .iris-editor-container .iris-editor-content h2 {
+  font-size: calc(var(--iris-editor-font-size) * 1.27);
+  color: var(--iris-text);
+}
+
+.iris-editor .iris-editor-container .iris-editor-content h3 {
+  font-size: calc(var(--iris-editor-font-size) * 1.18);
+  color: var(--iris-text);
+}
+
+.iris-editor .iris-editor-container .iris-editor-content h4 {
+  font-size: calc(var(--iris-editor-font-size) * 1.09);
+  color: var(--iris-text);
+}
+
+.iris-editor .iris-editor-container .iris-editor-content h5 {
+  font-size: var(--iris-editor-font-size);
+  color: var(--iris-text);
+}
+
+.iris-editor .iris-editor-container .iris-editor-content h6 {
+  font-size: calc(var(--iris-editor-font-size) * 0.91);
+  color: var(--iris-text-2);
+}
+
+.iris-editor-content strong {
+  font-weight: 600;
+}
+
+.iris-editor-content em {
+  font-style: italic;
+  font-weight: 400;
+}
+
+.iris-editor-content code {
+  background-color: var(--iris-surface-2);
+  border: 1px solid var(--iris-border);
+  border-radius: var(--iris-radius-sm);
+  padding: 0.125em 0.25em;
+  font-family: var(--iris-editor-font-family);
+  font-size: calc(var(--iris-editor-font-size) * 0.91);
+  font-weight: 400;
+  color: var(--iris-text);
+}
+
+.iris-editor-content blockquote {
+  margin: 1em 0;
+  padding: 0.75em 1em;
+  border-left: 4px solid var(--iris-primary);
+  background-color: var(--iris-surface-2);
+  border-radius: 0 var(--iris-radius-sm) var(--iris-radius-sm) 0;
+  color: var(--iris-text-2);
+  font-weight: 400;
+}
+
+.iris-editor-content blockquote p {
+  margin: 0;
+}
+
+.iris-editor-content ul,
+.iris-editor-content ol {
+  margin: 0.75em 0;
+  padding-left: 1.5em;
+}
+
+.iris-editor-content li {
+  margin: 0.25em 0;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.iris-editor-content ul {
+  list-style-type: disc;
+}
+
+.iris-editor-content ol {
+  list-style-type: decimal;
+}
+
+.iris-editor-content ul ul,
+.iris-editor-content ol ol,
+.iris-editor-content ul ol,
+.iris-editor-content ol ul {
+  margin: 0.25em 0;
+}
+
+/* Hard break styling - same line height as paragraphs */
+.iris-editor-content br {
+  line-height: 1.4;
+}
+
+.iris-editor-content a {
+  color: var(--iris-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--iris-primary);
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.iris-editor-content a:hover {
+  color: var(--iris-primary-hover);
+}
+
+/* Selection styles */
+.iris-editor-content .ProseMirror-selectednode {
+  outline: 2px solid var(--iris-primary);
+  border-radius: var(--iris-radius-sm);
+}
+
+.iris-editor-content ::selection {
+  background-color: var(--iris-editor-selection);
+}
+
+.iris-editor-content::-moz-selection {
+  background-color: var(--iris-editor-selection);
+}
+
+/* Drop cursor */
+.iris-editor-content .ProseMirror-dropcursor {
+  border-left: 2px solid var(--iris-primary);
+  pointer-events: none;
+  position: absolute;
+}
+
+/* Gap cursor */
+.iris-editor-content .ProseMirror-gapcursor {
+  display: none;
+  pointer-events: none;
+  position: absolute;
+}
+
+.iris-editor-content .ProseMirror-gapcursor:after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: -2px;
+  width: 20px;
+  border-top: 1px solid var(--iris-primary);
+  animation: ProseMirror-cursor-blink 1.1s steps(2, start) infinite;
+}
+
+@keyframes ProseMirror-cursor-blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+.iris-editor-content .ProseMirror-focused .ProseMirror-gapcursor {
+  display: block;
+}
+
+/* Current line highlighting */
+.iris-current-line-highlight {
+  position: relative;
+  background-color: rgba(74, 144, 226, 0.1);
+  transition: background-color 0.15s ease;
+  border-radius: 0;
+}
+
+.iris-current-line-highlight::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -9999px;
+  right: -9999px;
+  background-color: inherit;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.iris-editor-content:focus-within .iris-current-line-highlight {
+  background-color: rgba(74, 144, 226, 0.15);
+}

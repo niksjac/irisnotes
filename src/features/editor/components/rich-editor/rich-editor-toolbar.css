@@ -1,0 +1,107 @@
+/* Rich Editor Toolbar Styles */
+.iris-editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--iris-space-sm);
+  padding: var(--iris-space-sm) var(--iris-space-md);
+  background-color: var(--iris-surface-2);
+  border-bottom: 1px solid var(--iris-border);
+  flex-wrap: wrap;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: var(--iris-space-xs);
+}
+
+.toolbar-separator {
+  width: 1px;
+  height: 20px;
+  background-color: var(--iris-border);
+  margin: 0 var(--iris-space-xs);
+}
+
+.toolbar-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 28px;
+  padding: 0 var(--iris-space-xs);
+  border: 1px solid transparent;
+  border-radius: var(--iris-radius-sm);
+  background-color: transparent;
+  color: var(--iris-text-2);
+  font-family: inherit;
+  font-size: var(--iris-font-size-base);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.toolbar-button:hover {
+  background-color: var(--iris-surface-3);
+  border-color: var(--iris-border);
+  color: var(--iris-text);
+}
+
+.toolbar-button:active {
+  transform: translateY(1px);
+}
+
+.toolbar-button.active {
+  background-color: var(--iris-primary);
+  border-color: var(--iris-primary);
+  color: white;
+}
+
+/* Specific toolbar button styles */
+.toolbar-bold {
+  font-weight: 600;
+}
+
+.toolbar-italic {
+  font-style: italic;
+}
+
+.toolbar-code {
+  font-family: var(--iris-font-mono);
+}
+
+.toolbar-h1 {
+  font-size: calc(var(--iris-font-size-base) * 1.1);
+  font-weight: 600;
+}
+
+.toolbar-h2 {
+  font-size: var(--iris-font-size-base);
+  font-weight: 600;
+}
+
+.toolbar-h3 {
+  font-size: calc(var(--iris-font-size-base) * 0.9);
+  font-weight: 600;
+}
+
+/* Color button styles */
+.toolbar-color-red {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+.toolbar-color-green {
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.toolbar-color-blue {
+  color: #3498db;
+  font-weight: 600;
+}
+
+.toolbar-color-clear {
+  text-decoration: line-through;
+  color: var(--iris-text-3);
+}

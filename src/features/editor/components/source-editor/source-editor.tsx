@@ -10,20 +10,21 @@ import { foldGutter, foldKeymap, indentOnInput, bracketMatching } from '@codemir
 import { highlightActiveLine } from '@codemirror/view';
 
 import { formatHtml } from './formatters/html-formatter';
+import './source-editor.css';
 
-interface SourceViewProps {
+interface SourceEditorProps {
   content: string;
   onChange: (content: string) => void;
   readOnly?: boolean;
   onToggleView?: () => void;
 }
 
-export function SourceView({
+export function SourceEditor({
   content,
   onChange,
   readOnly = false,
   onToggleView
-}: SourceViewProps) {
+}: SourceEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
 

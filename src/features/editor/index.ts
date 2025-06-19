@@ -1,3 +1,3 @@
 export { EditorContainer } from './components/editor-container';
-export { RichTextEditor } from './components/rich-editor/rich-editor';
-export { SourceView } from './components/source-editor/source-editor';
+export { RichEditor } from './components/rich-editor/rich-editor';
+export { SourceEditor } from './components/source-editor/source-editor';

@@ -2,6 +2,7 @@ import { EditorView } from 'prosemirror-view';
 import { toggleMark, setBlockType, wrapIn } from 'prosemirror-commands';
 import { wrapInList } from 'prosemirror-schema-list';
 import { toggleColor, clearColor } from './plugins/color-plugin';
+import './rich-editor-toolbar.css';
 
 interface RichEditorToolbarProps {
   editorView: EditorView | null;

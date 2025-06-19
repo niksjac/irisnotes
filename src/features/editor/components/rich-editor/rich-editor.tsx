@@ -14,6 +14,7 @@ import { inputRules, InputRule } from 'prosemirror-inputrules';
 import { colorMark, colorKeymap } from './plugins/color-plugin';
 import { createBaseKeymap } from './plugins/keyboard-plugin';
 import { currentLineHighlightPlugin } from './plugins/line-highlight-plugin';
+import './rich-editor.css';
 
 // Create extended schema with lists and color
 const mySchema = new Schema({
@@ -34,7 +35,7 @@ const urlInputRule = new InputRule(
   }
 );
 
-interface RichTextEditorProps {
+interface RichEditorProps {
   content: string;
   onChange: (content: string) => void;
   placeholder?: string;
@@ -42,13 +43,13 @@ interface RichTextEditorProps {
   onToggleView?: () => void;
 }
 
-export function RichTextEditor({
+export function RichEditor({
   content,
   onChange,
   placeholder = "Start writing...",
   readOnly = false,
   onToggleView
-}: RichTextEditorProps) {
+}: RichEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const [lineWrapping, setLineWrapping] = useState(false);
