@@ -8,7 +8,8 @@ import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { foldGutter, foldKeymap, indentOnInput, bracketMatching } from '@codemirror/language';
 import { highlightActiveLine } from '@codemirror/view';
-import { html_beautify } from 'js-beautify';
+
+import { formatHtml } from './formatters/html-formatter';
 
 interface SourceViewProps {
   content: string;
@@ -16,20 +17,6 @@ interface SourceViewProps {
   readOnly?: boolean;
   onToggleView?: () => void;
 }
-
-// Replace the manual formatting function with:
-const formatHtml = (html: string): string => {
-  if (!html.trim()) return '';
-
-  return html_beautify(html, {
-    indent_size: 2,
-    indent_char: ' ',
-    max_preserve_newlines: 1,
-    preserve_newlines: true,
-    wrap_line_length: 120,
-    end_with_newline: false
-  });
-};
 
 export function SourceView({
   content,
@@ -98,7 +85,7 @@ export function SourceView({
     return () => {
       view.destroy();
     };
-  }, [readOnly]);
+  }, [readOnly, onToggleView]);
 
   // Update content when it changes externally
   useEffect(() => {
