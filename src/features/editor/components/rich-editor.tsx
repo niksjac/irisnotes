@@ -12,7 +12,7 @@ import { dropCursor } from 'prosemirror-dropcursor';
 import { gapCursor } from 'prosemirror-gapcursor';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import { openUrl } from '@tauri-apps/plugin-opener';
-import { SourceView } from './SourceView';
+import { SourceView } from './source-editor';
 import { inputRules, InputRule } from 'prosemirror-inputrules';
 
 // Define color mark

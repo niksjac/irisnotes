@@ -3,7 +3,7 @@ import { appConfigDir } from "@tauri-apps/api/path";
 import { readTextFile, exists } from "@tauri-apps/plugin-fs";
 import { PanelLeft, FileText, Search, Plus, } from "lucide-react";
 import clsx from "clsx";
-import { RichTextEditor } from "./components/RichTextEditor";
+import { RichTextEditor } from "./features/editor";
 import { ActivityBar } from "./components/ActivityBar";
 import { ResizableSidebar } from "./components/ResizableSidebar";
 import "./App.css";
