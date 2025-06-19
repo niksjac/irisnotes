@@ -155,7 +155,7 @@ const currentLineHighlightPlugin = new Plugin({
     init() {
       return DecorationSet.empty;
     },
-    apply(tr, decorationSet) {
+    apply(tr, _decorationSet) {
       // Always update decorations to ensure proper clearing and re-application
       const { selection } = tr;
       const { $from } = selection;
