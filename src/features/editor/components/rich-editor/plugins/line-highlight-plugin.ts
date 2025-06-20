@@ -24,7 +24,7 @@ export const currentLineHighlightPlugin = new Plugin({
 
       // Create decoration for the current block
       const decoration = Decoration.node(blockStart, blockEnd, {
-        class: 'iris-current-line-highlight'
+        class: 'editor-current-line-highlight'
       });
 
       return DecorationSet.create(tr.doc, [decoration]);

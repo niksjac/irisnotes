@@ -45,8 +45,8 @@
   --iris-font-size-xl: var(--font-size-3);
 
   /* Editor-specific typography */
-  --iris-editor-font-family: 'Consolas', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Liberation Mono', 'Courier New', monospace;
-  --iris-editor-font-size: 11px;
+  /* --iris-editor-font-family: 'Consolas', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Liberation Mono', 'Courier New', monospace; */
+  /* --iris-editor-font-size: 11px; */
 
   /* Spacing */
   --iris-space-xs: var(--size-1);
@@ -91,11 +91,11 @@
 }
 
 html {
-  font-family: var(--iris-font-family);
-  font-size: var(--iris-font-size-base);
-  line-height: 1.6;
-  color: var(--iris-text);
-  background-color: var(--iris-surface);
+  /* font-family: var(--iris-font-family); */
+  /* font-size: var(--iris-font-size-base); */
+  /* line-height: 1.6; */
+  /* color: var(--iris-text); */
+  /* background-color: var(--iris-surface); */
 }
 
 body {
@@ -116,7 +116,7 @@ body {
 .app {
   display: flex;
   min-height: 100vh;
-  background-color: var(--iris-surface);
+  /* background-color: var(--iris-surface); */
 }
 
 /* Activity Bar */
@@ -262,13 +262,16 @@ body {
 }
 
 .editor-container {
-  flex: 1;
-  padding: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  position: relative;
-  background-color: var(--iris-editor-bg);
-  margin: 0;
+  /* flex: 1; */
+  /* overflow: hidden; */
+  /* padding: 0; */
+  /* overflow-y: auto; */
+  /* overflow-x: hidden; */
+  /* position: relative; */
+  /* background-color: var(--iris-editor-bg); */
+  /* margin: 0; */
+  border: 5px solid pink;
+  height: 100%;
 }
 
 

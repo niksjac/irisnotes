@@ -108,8 +108,12 @@ export function SourceEditor({
   }, [content]);
 
   return (
-    <div className="iris-source-editor">
-      <div ref={editorRef} style={{ height: '100%', minHeight: '100%' }} />
+    <div className="source-editor">
+      <div
+        ref={editorRef}
+        className="source-editor-container"
+        // style={{ height: '100%', minHeight: '100%' }}
+      />
     </div>
   );
 }

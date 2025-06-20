@@ -175,7 +175,7 @@ function App() {
         defaultWidth={300}
       >
         <div className="sidebar">
-                    <div style={{
+          <div style={{
             padding: 'var(--iris-space-md)',
             borderBottom: '1px solid var(--iris-border)',
             display: 'flex',
