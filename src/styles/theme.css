@@ -91,31 +91,34 @@
 }
 
 html {
-  /* font-family: var(--iris-font-family); */
-  /* font-size: var(--iris-font-size-base); */
-  /* line-height: 1.6; */
-  /* color: var(--iris-text); */
-  /* background-color: var(--iris-surface); */
+  /* border: 5px solid red; */
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
   margin: 0;
   padding: 0;
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  height: 100%;
+  overflow: hidden;
+  /* border:5px solid yellow; */
 }
 
 #root {
-  min-height: 100vh;
+  overflow: hidden;
+  height: 100%;
+  /* border:5px solid blue; */
   display: flex;
   flex-direction: column;
 }
 
 /* App Layout */
 .app {
+  overflow: hidden;
+  height: 100%;
+  /* border:5px solid green; */
   display: flex;
-  min-height: 100vh;
+  /* min-height: 100vh; */
   /* background-color: var(--iris-surface); */
 }
 

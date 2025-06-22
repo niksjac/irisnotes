@@ -4,12 +4,14 @@ interface UseShortcutsProps {
   onToggleSidebar: () => void;
   onToggleActivityBar: () => void;
   onReloadNote?: () => void;
+  onToggleLineWrapping?: () => void;
 }
 
 export const useShortcuts = ({
   onToggleSidebar,
   onToggleActivityBar,
-  onReloadNote
+  onReloadNote,
+  onToggleLineWrapping
 }: UseShortcutsProps) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -24,6 +26,9 @@ export const useShortcuts = ({
             onToggleActivityBar();
             break;
         }
+      } else if (e.altKey && e.key === 'z' && onToggleLineWrapping) {
+        e.preventDefault();
+        onToggleLineWrapping();
       } else if (e.key === 'F5' && onReloadNote) {
         e.preventDefault();
         onReloadNote();
@@ -32,5 +37,5 @@ export const useShortcuts = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onToggleSidebar, onToggleActivityBar, onReloadNote]);
+  }, [onToggleSidebar, onToggleActivityBar, onReloadNote, onToggleLineWrapping]);
 };

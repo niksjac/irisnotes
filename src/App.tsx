@@ -6,6 +6,7 @@ import { useNotes } from "./features/notes";
 import { useTheme } from "./features/theme";
 import { useLayout } from "./features/layout";
 import { useShortcuts } from "./features/shortcuts";
+import { useLineWrapping } from "./features/editor/hooks/use-line-wrapping";
 import "./styles/theme.css";
 import "./styles/layout.css";
 import "./styles/components.css";
@@ -36,6 +37,8 @@ function App() {
     handleViewChange
   } = useLayout();
 
+  const { toggleLineWrapping } = useLineWrapping();
+
   // Initialize app
   const initializeApp = async () => {
     try {
@@ -50,7 +53,8 @@ function App() {
   useShortcuts({
     onToggleSidebar: toggleSidebar,
     onToggleActivityBar: toggleActivityBar,
-    onReloadNote: reloadDefaultNote
+    onReloadNote: reloadDefaultNote,
+    onToggleLineWrapping: toggleLineWrapping
   });
 
   // Initialize app and load user theme
