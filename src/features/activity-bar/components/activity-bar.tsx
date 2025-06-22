@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import "./activity-bar.css";
 
 interface ActivityBarProps {
   isVisible: boolean;

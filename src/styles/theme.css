@@ -1,0 +1,145 @@
+/* Import Open Props */
+@import "open-props/style";
+@import "open-props/normalize";
+
+/*
+ * IrisNotes Theme Architecture
+ * This file defines the default theme using CSS custom properties.
+ * Users can override these variables in their config/theme.css file.
+ */
+
+:root {
+  /* App-specific theme variables - users can override these */
+  --iris-primary: var(--blue-6);
+  --iris-primary-hover: var(--blue-7);
+  --iris-primary-active: var(--blue-8);
+
+  --iris-surface: var(--gray-0);
+  --iris-surface-2: var(--gray-1);
+  --iris-surface-3: var(--gray-2);
+
+  --iris-text: var(--gray-9);
+  --iris-text-2: var(--gray-7);
+  --iris-text-3: var(--gray-6);
+
+  --iris-border: var(--gray-3);
+  --iris-border-hover: var(--gray-4);
+
+  --iris-success: var(--green-6);
+  --iris-warning: var(--yellow-6);
+  --iris-error: var(--red-6);
+
+  --iris-editor-bg: var(--gray-0);
+  --iris-editor-selection: var(--blue-2);
+  --iris-editor-cursor: var(--blue-6);
+
+  --iris-sidebar-width: 300px;
+  --iris-sidebar-collapsed-width: 0px;
+  --iris-activity-bar-width: 48px;
+
+  /* Typography */
+  --iris-font-family: var(--font-sans);
+  --iris-font-mono: var(--font-mono);
+  --iris-font-size-base: var(--font-size-1);
+  --iris-font-size-lg: var(--font-size-2);
+  --iris-font-size-xl: var(--font-size-3);
+
+  /* Editor-specific typography */
+  /* --iris-editor-font-family: 'Consolas', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Liberation Mono', 'Courier New', monospace; */
+  /* --iris-editor-font-size: 11px; */
+
+  /* Spacing */
+  --iris-space-xs: var(--size-1);
+  --iris-space-sm: var(--size-2);
+  --iris-space-md: var(--size-3);
+  --iris-space-lg: var(--size-4);
+  --iris-space-xl: var(--size-5);
+
+  /* Radius */
+  --iris-radius-sm: var(--radius-2);
+  --iris-radius-md: var(--radius-3);
+  --iris-radius-lg: var(--radius-4);
+
+  /* Shadows */
+  --iris-shadow-sm: var(--shadow-2);
+  --iris-shadow-md: var(--shadow-3);
+  --iris-shadow-lg: var(--shadow-4);
+}
+
+/* Dark theme */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --iris-surface: var(--gray-9);
+    --iris-surface-2: var(--gray-8);
+    --iris-surface-3: var(--gray-7);
+
+    --iris-text: var(--gray-1);
+    --iris-text-2: var(--gray-3);
+    --iris-text-3: var(--gray-4);
+
+    --iris-border: var(--gray-7);
+    --iris-border-hover: var(--gray-6);
+
+    --iris-editor-bg: var(--gray-9);
+    --iris-editor-selection: var(--blue-8);
+  }
+}
+
+/* Base app styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* font-family: var(--iris-font-family); */
+  /* font-size: var(--iris-font-size-base); */
+  /* line-height: 1.6; */
+  /* color: var(--iris-text); */
+  /* background-color: var(--iris-surface); */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* App Layout */
+.app {
+  display: flex;
+  min-height: 100vh;
+  /* background-color: var(--iris-surface); */
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--iris-surface-2);
+}
+
+::-webkit-scrollbar-thumb {
+  /* background: var(--iris-text-3); */
+  border-radius: var(--iris-radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--iris-text-2);
+}
+
+/* User theme override placeholder */
+/* This is where dynamically loaded user themes will be injected */
+#user-theme-styles {
+  /* User CSS will be injected here */
+}

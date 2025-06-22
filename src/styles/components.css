@@ -1,0 +1,57 @@
+/* Component styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--iris-space-xs);
+  padding: var(--iris-space-sm) var(--iris-space-md);
+  border: 1px solid var(--iris-border);
+  border-radius: var(--iris-radius-sm);
+  background-color: var(--iris-surface-2);
+  color: var(--iris-text);
+  font-family: inherit;
+  font-size: var(--iris-font-size-base);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn:hover {
+  background-color: var(--iris-surface-3);
+  border-color: var(--iris-border-hover);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn.primary {
+  background-color: var(--iris-primary);
+  border-color: var(--iris-primary);
+  color: white;
+}
+
+.btn.primary:hover {
+  background-color: var(--iris-primary-hover);
+  border-color: var(--iris-primary-hover);
+}
+
+.btn.primary:active {
+  background-color: var(--iris-primary-active);
+}
+
+.input {
+  padding: var(--iris-space-sm);
+  border: 1px solid var(--iris-border);
+  border-radius: var(--iris-radius-sm);
+  background-color: var(--iris-surface);
+  color: var(--iris-text);
+  font-family: inherit;
+  font-size: var(--iris-font-size-base);
+  transition: border-color 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--iris-primary);
+  box-shadow: 0 0 0 2px hsla(var(--iris-primary), 0.2);
+}

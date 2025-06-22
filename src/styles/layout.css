@@ -1,0 +1,39 @@
+/* Main Content */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.title-bar {
+  height: 50px;
+  background-color: var(--iris-editor-bg);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--iris-space-md);
+}
+
+.title-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--iris-text);
+  font-size: var(--iris-font-size-lg);
+  font-weight: 600;
+  font-family: var(--iris-font-family);
+  outline: none;
+  padding: var(--iris-space-sm) 0;
+}
+
+.title-input::placeholder {
+  color: var(--iris-text-3);
+  font-style: italic;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .app {
+    flex-direction: column;
+  }
+}

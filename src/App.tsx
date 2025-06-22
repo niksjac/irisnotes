@@ -6,7 +6,9 @@ import clsx from "clsx";
 import { EditorContainer } from "./features/editor";
 import { ActivityBar } from "./features/activity-bar";
 import { ResizableSidebar } from "./features/sidebar";
-import "./App.css";
+import "./styles/theme.css";
+import "./styles/layout.css";
+import "./styles/components.css";
 
 interface Note {
   id: string;

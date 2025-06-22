@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import clsx from "clsx";
+import "./resizable-sidebar.css";
 
 interface ResizableSidebarProps {
   isCollapsed: boolean;
