@@ -1,0 +1,1 @@
+export { parseTextWithColors } from './text-parser';
