@@ -4,8 +4,8 @@ import { readTextFile, exists } from "@tauri-apps/plugin-fs";
 import { PanelLeft, FileText, Search, Plus, } from "lucide-react";
 import clsx from "clsx";
 import { EditorContainer } from "./features/editor";
-import { ActivityBar } from "./components/ActivityBar";
-import { ResizableSidebar } from "./components/ResizableSidebar";
+import { ActivityBar } from "./features/activity-bar";
+import { ResizableSidebar } from "./features/sidebar";
 import "./App.css";
 
 interface Note {

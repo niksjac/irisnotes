@@ -1,0 +1,1 @@
+export { ActivityBar } from './components/activity-bar';

@@ -1,0 +1,1 @@
+export { ResizableSidebar } from './components/resizable-sidebar';
