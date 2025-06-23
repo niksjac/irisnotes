@@ -1,27 +1,25 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useConfig } from '../../../hooks/use-config';
 
 export const useLineWrapping = () => {
-  const [isWrapping, setIsWrapping] = useState(false);
+  const { config, updateConfig, loading } = useConfig();
 
   const toggleLineWrapping = useCallback(() => {
-    const newWrappingState = !isWrapping;
-    setIsWrapping(newWrappingState);
+    const newWrappingState = !config.editor.lineWrapping;
 
-    // Toggle CSS class on the rich editor container
-    const richEditorView = document.querySelector('.rich-editor-view');
-    if (richEditorView) {
-      if (newWrappingState) {
-        richEditorView.classList.remove('no-line-wrapping');
-        richEditorView.classList.add('line-wrapping');
-      } else {
-        richEditorView.classList.remove('line-wrapping');
-        richEditorView.classList.add('no-line-wrapping');
+    console.log('Toggling line wrapping from', config.editor.lineWrapping, 'to', newWrappingState);
+
+    // Update config - this will trigger the useEffect in RichEditor component
+    updateConfig({
+      editor: {
+        lineWrapping: newWrappingState
       }
-    }
-  }, [isWrapping]);
+    });
+  }, [config.editor.lineWrapping, updateConfig]);
 
   return {
-    isWrapping,
-    toggleLineWrapping
+    isWrapping: config.editor.lineWrapping,
+    toggleLineWrapping,
+    loading
   };
 };
