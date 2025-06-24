@@ -79,6 +79,95 @@ export const moveLineDown = (state: any, dispatch: any) => {
   return true;
 };
 
+// Copy selection up - duplicates the current selection or line above
+export const copySelectionUp = (state: any, dispatch: any) => {
+  const { selection, tr } = state;
+  const { $from, $to, empty } = selection;
+
+  if (empty) {
+    // If no selection, copy the current line/block up
+    const blockRange = $from.blockRange();
+    if (!blockRange) return false;
+
+    const block = blockRange.parent.child(blockRange.startIndex);
+    const blockStart = blockRange.start;
+    const blockEnd = blockRange.end;
+    const cursorOffset = selection.from - blockStart;
+
+    if (dispatch) {
+      const duplicatedBlock = block.copy(block.content);
+
+      dispatch(
+        tr.insert(blockStart, duplicatedBlock)
+          .setSelection(selection.constructor.near(tr.doc.resolve(blockStart + duplicatedBlock.nodeSize + cursorOffset)))
+          .scrollIntoView()
+      );
+    }
+    return true;
+  } else {
+    // If there's a selection, copy it above the selection
+    const content = tr.doc.slice(selection.from, selection.to);
+    const originalFrom = selection.from;
+    const originalTo = selection.to;
+
+    if (dispatch) {
+      const newTr = tr.insert(originalFrom, content.content);
+      // Keep selection on the original content (now moved down)
+      const adjustedFrom = originalFrom + content.size;
+      const adjustedTo = originalTo + content.size;
+
+      dispatch(
+        newTr.setSelection(selection.constructor.create(newTr.doc, adjustedFrom, adjustedTo))
+          .scrollIntoView()
+      );
+    }
+    return true;
+  }
+};
+
+// Copy selection down - duplicates the current selection or line below
+export const copySelectionDown = (state: any, dispatch: any) => {
+  const { selection, tr } = state;
+  const { $from, $to, empty } = selection;
+
+  if (empty) {
+    // If no selection, copy the current line/block down
+    const blockRange = $from.blockRange();
+    if (!blockRange) return false;
+
+    const block = blockRange.parent.child(blockRange.startIndex);
+    const blockStart = blockRange.start;
+    const blockEnd = blockRange.end;
+    const cursorOffset = selection.from - blockStart;
+
+    if (dispatch) {
+      const duplicatedBlock = block.copy(block.content);
+
+      dispatch(
+        tr.insert(blockEnd, duplicatedBlock)
+          .setSelection(selection.constructor.near(tr.doc.resolve(blockStart + cursorOffset)))
+          .scrollIntoView()
+      );
+    }
+    return true;
+  } else {
+    // If there's a selection, copy it below the selection
+    const content = tr.doc.slice(selection.from, selection.to);
+    const originalFrom = selection.from;
+    const originalTo = selection.to;
+
+    if (dispatch) {
+      const newTr = tr.insert(originalTo, content.content);
+      // Keep selection on the original content (position unchanged)
+      dispatch(
+        newTr.setSelection(selection.constructor.create(newTr.doc, originalFrom, originalTo))
+          .scrollIntoView()
+      );
+    }
+    return true;
+  }
+};
+
 // Open hyperlink at cursor position
 export const openLinkAtCursor = (state: any, _dispatch: any) => {
   const { selection } = state;
@@ -161,6 +250,10 @@ export const createBaseKeymap = (schema: any, colorKeymap: any, toggleSourceView
   'Alt-Shift-ArrowDown': moveLineDown,
   'Alt-ArrowUp': moveLineUp,
   'Alt-ArrowDown': moveLineDown,
+
+  // Copy selection/line up and down (Ctrl+Shift+Alt+Up/Down)
+  'Mod-Shift-Alt-ArrowUp': copySelectionUp,
+  'Mod-Shift-Alt-ArrowDown': copySelectionDown,
 
   // Open hyperlink at cursor
   'Mod-Enter': openLinkAtCursor,
