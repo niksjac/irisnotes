@@ -7,6 +7,8 @@ interface ActivityBarProps {
   onViewChange: (view: string) => void;
   isDualPaneMode?: boolean;
   onToggleDualPane?: () => void;
+  isLineWrapping?: boolean;
+  onToggleLineWrapping?: () => void;
 }
 
 export function ActivityBar({
@@ -14,7 +16,9 @@ export function ActivityBar({
   selectedView,
   onViewChange,
   isDualPaneMode = false,
-  onToggleDualPane
+  onToggleDualPane,
+  isLineWrapping = false,
+  onToggleLineWrapping
 }: ActivityBarProps) {
   const activities = [
     { id: "1", label: "Section 1" },
@@ -43,8 +47,20 @@ export function ActivityBar({
           ))}
         </div>
 
-        {onToggleDualPane && (
-          <div className="activity-bar-separator">
+        <div className="activity-bar-separator">
+          {onToggleLineWrapping && (
+            <button
+              className={clsx("activity-bar-item", {
+                active: isLineWrapping,
+              })}
+              onClick={onToggleLineWrapping}
+              title={`${isLineWrapping ? 'Disable' : 'Enable'} line wrapping (Ctrl+Alt+W)`}
+            >
+              {isLineWrapping ? '↲' : '→'}
+            </button>
+          )}
+
+          {onToggleDualPane && (
             <button
               className={clsx("activity-bar-item dual-pane-toggle", {
                 active: isDualPaneMode,
@@ -54,8 +70,8 @@ export function ActivityBar({
             >
               {isDualPaneMode ? '⚏' : '⚌'}
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

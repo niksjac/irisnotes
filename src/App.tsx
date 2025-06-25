@@ -43,7 +43,7 @@ function App() {
     setActivePane
   } = useLayout();
 
-  const { toggleLineWrapping } = useLineWrapping();
+  const { isWrapping, toggleLineWrapping } = useLineWrapping();
 
   // Initialize app
   const initializeApp = async () => {
@@ -83,6 +83,8 @@ function App() {
         onViewChange={handleViewChange}
         isDualPaneMode={isDualPaneMode}
         onToggleDualPane={toggleDualPaneMode}
+        isLineWrapping={isWrapping}
+        onToggleLineWrapping={toggleLineWrapping}
       />
 
       {/* Resizable Sidebar */}

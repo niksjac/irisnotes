@@ -51,6 +51,12 @@
   margin-top: auto;
   padding-top: var(--iris-space-md);
   border-top: 1px solid var(--iris-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--iris-space-xs);
+  padding-left: var(--iris-space-sm);
+  padding-right: var(--iris-space-sm);
+  padding-bottom: var(--iris-space-sm);
 }
 
 .dual-pane-toggle {
@@ -78,8 +84,12 @@
     flex-direction: row;
   }
 
-  .activity-bar-bottom {
+  .activity-bar-separator {
     margin: 0;
     padding: 0;
+    flex-direction: row;
+    border-top: none;
+    border-left: 1px solid var(--iris-border);
+    padding-left: var(--iris-space-md);
   }
 }
