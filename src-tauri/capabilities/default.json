@@ -7,7 +7,11 @@
     "core:default",
     "opener:default",
     "core:path:default",
+    "window-state:default",
     "fs:allow-read-text-file",
+    "fs:allow-write-text-file",
+    "fs:allow-read-dir",
+    "fs:allow-mkdir",
     "fs:allow-exists",
     {
       "identifier": "fs:scope",

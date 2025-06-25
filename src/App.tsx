@@ -27,7 +27,7 @@ function App() {
     updateNoteContent
   } = useNotes();
 
-  const { darkMode, loadUserTheme, toggleDarkMode } = useTheme();
+  const { loadUserTheme } = useTheme();
 
   const {
     sidebarCollapsed,
@@ -71,8 +71,8 @@ function App() {
   }, []);
 
   // Get notes for dual-pane mode
-  const leftNote = getSelectedNoteForPane('left');
-  const rightNote = getSelectedNoteForPane('right');
+  const leftNote = getSelectedNoteForPane('left') || null;
+  const rightNote = getSelectedNoteForPane('right') || null;
 
   return (
     <div className="app">

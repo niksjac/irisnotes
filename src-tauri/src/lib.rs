@@ -23,12 +23,15 @@ async fn read_config(app_handle: tauri::AppHandle, filename: String) -> Result<S
         return Err("Config file does not exist".to_string());
     }
 
-    std::fs::read_to_string(config_path)
-        .map_err(|e| format!("Failed to read config file: {}", e))
+    std::fs::read_to_string(config_path).map_err(|e| format!("Failed to read config file: {}", e))
 }
 
 #[tauri::command]
-async fn write_config(app_handle: tauri::AppHandle, filename: String, content: String) -> Result<(), String> {
+async fn write_config(
+    app_handle: tauri::AppHandle,
+    filename: String,
+    content: String,
+) -> Result<(), String> {
     let app_config_dir = app_handle
         .path()
         .app_config_dir()
@@ -40,8 +43,7 @@ async fn write_config(app_handle: tauri::AppHandle, filename: String, content: S
 
     let config_path = app_config_dir.join(filename);
 
-    std::fs::write(config_path, content)
-        .map_err(|e| format!("Failed to write config file: {}", e))
+    std::fs::write(config_path, content).map_err(|e| format!("Failed to write config file: {}", e))
 }
 
 #[tauri::command]
@@ -62,25 +64,24 @@ async fn setup_config_watcher(app_handle: AppHandle) -> Result<(), String> {
 
     // Create a watcher object, delivering debounced events
     let mut watcher = RecommendedWatcher::new(
-        move |res: Result<Event, notify::Error>| {
-            match res {
-                Ok(event) => {
-                    if let Err(e) = tx.send(event) {
-                        eprintln!("Failed to send file event: {}", e);
-                    }
+        move |res: Result<Event, notify::Error>| match res {
+            Ok(event) => {
+                if let Err(e) = tx.send(event) {
+                    eprintln!("Failed to send file event: {}", e);
                 }
-                Err(e) => eprintln!("File watch error: {:?}", e),
             }
+            Err(e) => eprintln!("File watch error: {:?}", e),
         },
         Config::default(),
-    ).map_err(|e| format!("Failed to create file watcher: {}", e))?;
+    )
+    .map_err(|e| format!("Failed to create file watcher: {}", e))?;
 
     // Watch the config directory
     watcher
         .watch(&app_config_dir, RecursiveMode::NonRecursive)
         .map_err(|e| format!("Failed to watch config directory: {}", e))?;
 
-        // Spawn a thread to handle file events
+    // Spawn a thread to handle file events
     let app_handle_clone = app_handle.clone();
     thread::spawn(move || {
         // Keep the watcher alive
@@ -117,7 +118,17 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_sql::Builder::default().build())
-        .invoke_handler(tauri::generate_handler![greet, read_config, write_config, setup_config_watcher])
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(tauri_plugin_global_shortcut::Builder::default().build())
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            read_config,
+            write_config,
+            setup_config_watcher
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

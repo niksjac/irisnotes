@@ -83,7 +83,7 @@ export const moveLineDown = (state: any, dispatch: any) => {
 // Copy selection up - duplicates the current selection or line above
 export const copySelectionUp = (state: any, dispatch: any) => {
   const { selection, tr } = state;
-  const { $from, $to, empty } = selection;
+  const { $from, empty } = selection;
 
   if (empty) {
     // If no selection, copy the current line/block up
@@ -92,7 +92,6 @@ export const copySelectionUp = (state: any, dispatch: any) => {
 
     const block = blockRange.parent.child(blockRange.startIndex);
     const blockStart = blockRange.start;
-    const blockEnd = blockRange.end;
     const cursorOffset = selection.from - blockStart;
 
     if (dispatch) {
@@ -129,7 +128,7 @@ export const copySelectionUp = (state: any, dispatch: any) => {
 // Copy selection down - duplicates the current selection or line below
 export const copySelectionDown = (state: any, dispatch: any) => {
   const { selection, tr } = state;
-  const { $from, $to, empty } = selection;
+  const { $from, empty } = selection;
 
   if (empty) {
     // If no selection, copy the current line/block down

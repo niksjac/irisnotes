@@ -7,7 +7,7 @@ interface LinkClickState {
   activeEffect?: {
     from: number;
     to: number;
-    timeout: NodeJS.Timeout;
+    timeout: ReturnType<typeof setTimeout>;
   };
 }
 

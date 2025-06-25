@@ -24,8 +24,7 @@ export function DualPaneEditor({
   const [leftPaneWidth, setLeftPaneWidth] = useState(50); // percentage
 
   const handleResize = useCallback((e: React.MouseEvent) => {
-    const startX = e.clientX;
-    const startWidth = leftPaneWidth;
+    e.preventDefault();
 
     const handleMouseMove = (e: MouseEvent) => {
       const container = document.querySelector('.dual-pane-container');

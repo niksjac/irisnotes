@@ -16,7 +16,7 @@ export const parseTextWithColors = (text: string): string => {
   // Replace color markup with HTML spans
   let htmlContent = text.replace(
     /\{color:([^}]+)\}(.*?)\{\/color\}/g,
-    (match, colorName, content) => {
+    (_match, colorName, content) => {
       const color = colorMap[colorName.toLowerCase()] || colorName;
       return `<span style="color: ${color}">${content}</span>`;
     }
