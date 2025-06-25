@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 interface UseShortcutsProps {
   onToggleSidebar: () => void;
   onToggleActivityBar: () => void;
+  onToggleDualPane?: () => void;
   onReloadNote?: () => void;
   onToggleLineWrapping?: () => void;
 }
@@ -10,6 +11,7 @@ interface UseShortcutsProps {
 export const useShortcuts = ({
   onToggleSidebar,
   onToggleActivityBar,
+  onToggleDualPane,
   onReloadNote,
   onToggleLineWrapping
 }: UseShortcutsProps) => {
@@ -25,6 +27,12 @@ export const useShortcuts = ({
             e.preventDefault();
             onToggleActivityBar();
             break;
+          case 'd':
+            if (onToggleDualPane) {
+              e.preventDefault();
+              onToggleDualPane();
+            }
+            break;
         }
       } else if (e.altKey && e.key === 'z' && onToggleLineWrapping) {
         e.preventDefault();
@@ -37,5 +45,5 @@ export const useShortcuts = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onToggleSidebar, onToggleActivityBar, onReloadNote, onToggleLineWrapping]);
+  }, [onToggleSidebar, onToggleActivityBar, onToggleDualPane, onReloadNote, onToggleLineWrapping]);
 };

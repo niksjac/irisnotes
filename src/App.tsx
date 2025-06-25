@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { EditorContainer } from "./features/editor";
+import { EditorContainer, DualPaneEditor } from "./features/editor";
 import { ActivityBar } from "./features/activity-bar";
 import { ResizableSidebar } from "./features/sidebar";
 import { useNotes } from "./features/notes";
@@ -18,6 +18,8 @@ function App() {
     selectedNote,
     selectedNoteId,
     setSelectedNoteId,
+    getSelectedNoteForPane,
+    openNoteInPane,
     loadDefaultNote,
     reloadDefaultNote,
     createNewNote,
@@ -31,10 +33,14 @@ function App() {
     sidebarCollapsed,
     activityBarVisible,
     selectedView,
+    isDualPaneMode,
+    activePaneId,
     toggleSidebar,
     handleSidebarCollapsedChange,
     toggleActivityBar,
-    handleViewChange
+    handleViewChange,
+    toggleDualPaneMode,
+    setActivePane
   } = useLayout();
 
   const { toggleLineWrapping } = useLineWrapping();
@@ -53,6 +59,7 @@ function App() {
   useShortcuts({
     onToggleSidebar: toggleSidebar,
     onToggleActivityBar: toggleActivityBar,
+    onToggleDualPane: toggleDualPaneMode,
     onReloadNote: reloadDefaultNote,
     onToggleLineWrapping: toggleLineWrapping
   });
@@ -63,6 +70,10 @@ function App() {
     loadUserTheme();
   }, []);
 
+  // Get notes for dual-pane mode
+  const leftNote = getSelectedNoteForPane('left');
+  const rightNote = getSelectedNoteForPane('right');
+
   return (
     <div className="app">
       {/* Activity Bar */}
@@ -70,6 +81,8 @@ function App() {
         isVisible={activityBarVisible}
         selectedView={selectedView}
         onViewChange={handleViewChange}
+        isDualPaneMode={isDualPaneMode}
+        onToggleDualPane={toggleDualPaneMode}
       />
 
       {/* Resizable Sidebar */}
@@ -92,32 +105,134 @@ function App() {
               Section {selectedView}
             </h2>
           </div>
+
+          {/* Notes list with pane selection for dual-mode */}
+          <div style={{ padding: 'var(--iris-space-md)' }}>
+            {notes.map(note => (
+              <div
+                key={note.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: 'var(--iris-space-sm)',
+                  margin: 'var(--iris-space-xs) 0',
+                  background: (selectedNoteId === note.id ||
+                             (leftNote?.id === note.id || rightNote?.id === note.id))
+                             ? 'var(--iris-bg-secondary)' : 'transparent',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+                onClick={() => {
+                  if (isDualPaneMode) {
+                    openNoteInPane(note.id, activePaneId);
+                  } else {
+                    setSelectedNoteId(note.id);
+                  }
+                }}
+              >
+                <span style={{ flex: 1, fontSize: 'var(--iris-font-size-sm)' }}>
+                  {note.title}
+                </span>
+                {isDualPaneMode && (
+                  <div style={{ display: 'flex', gap: 'var(--iris-space-xs)' }}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openNoteInPane(note.id, 'left');
+                      }}
+                      style={{
+                        padding: '2px 6px',
+                        fontSize: '10px',
+                        border: '1px solid var(--iris-border)',
+                        background: leftNote?.id === note.id ? 'var(--iris-accent)' : 'transparent',
+                        color: leftNote?.id === note.id ? 'white' : 'var(--iris-text)',
+                        borderRadius: '2px',
+                        cursor: 'pointer'
+                      }}
+                      title="Open in left pane"
+                    >
+                      L
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openNoteInPane(note.id, 'right');
+                      }}
+                      style={{
+                        padding: '2px 6px',
+                        fontSize: '10px',
+                        border: '1px solid var(--iris-border)',
+                        background: rightNote?.id === note.id ? 'var(--iris-accent)' : 'transparent',
+                        color: rightNote?.id === note.id ? 'white' : 'var(--iris-text)',
+                        borderRadius: '2px',
+                        cursor: 'pointer'
+                      }}
+                      title="Open in right pane"
+                    >
+                      R
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            <button
+              onClick={() => createNewNote(isDualPaneMode ? activePaneId : undefined)}
+              style={{
+                width: '100%',
+                padding: 'var(--iris-space-sm)',
+                margin: 'var(--iris-space-sm) 0',
+                border: '1px dashed var(--iris-border)',
+                background: 'transparent',
+                color: 'var(--iris-text-muted)',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: 'var(--iris-font-size-sm)'
+              }}
+            >
+              + New Note {isDualPaneMode ? `(${activePaneId === 'left' ? 'Left' : 'Right'} pane)` : ''}
+            </button>
+          </div>
         </div>
       </ResizableSidebar>
 
       {/* Main Content */}
       <div className="main-content">
-        <div className="title-bar">
-          {selectedNote && (
-            <input
-              className="title-input"
-              type="text"
-              value={selectedNote.title}
-              onChange={(e) => updateNoteTitle(selectedNote.id, e.target.value)}
-              placeholder="Untitled Note"
-            />
-          )}
-        </div>
+        {isDualPaneMode ? (
+          <DualPaneEditor
+            leftNote={leftNote}
+            rightNote={rightNote}
+            activePaneId={activePaneId}
+            onNoteContentChange={updateNoteContent}
+            onNoteTitleChange={updateNoteTitle}
+            onPaneClick={setActivePane}
+          />
+        ) : (
+          <>
+            <div className="title-bar">
+              {selectedNote && (
+                <input
+                  className="title-input"
+                  type="text"
+                  value={selectedNote.title}
+                  onChange={(e) => updateNoteTitle(selectedNote.id, e.target.value)}
+                  placeholder="Untitled Note"
+                />
+              )}
+            </div>
 
-        <div className="editor-container">
-          {selectedNote && (
-            <EditorContainer
-              content={selectedNote.content}
-              onChange={(content) => updateNoteContent(selectedNote.id, content)}
-              placeholder="Start writing your note..."
-            />
-          )}
-        </div>
+            <div className="editor-container">
+              {selectedNote && (
+                <EditorContainer
+                  content={selectedNote.content}
+                  onChange={(content) => updateNoteContent(selectedNote.id, content)}
+                  placeholder="Start writing your note..."
+                />
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -5,9 +5,17 @@ interface ActivityBarProps {
   isVisible: boolean;
   selectedView: string;
   onViewChange: (view: string) => void;
+  isDualPaneMode?: boolean;
+  onToggleDualPane?: () => void;
 }
 
-export function ActivityBar({ isVisible, selectedView, onViewChange }: ActivityBarProps) {
+export function ActivityBar({
+  isVisible,
+  selectedView,
+  onViewChange,
+  isDualPaneMode = false,
+  onToggleDualPane
+}: ActivityBarProps) {
   const activities = [
     { id: "1", label: "Section 1" },
     { id: "2", label: "Section 2" },
@@ -35,7 +43,19 @@ export function ActivityBar({ isVisible, selectedView, onViewChange }: ActivityB
           ))}
         </div>
 
-
+        {onToggleDualPane && (
+          <div className="activity-bar-separator">
+            <button
+              className={clsx("activity-bar-item dual-pane-toggle", {
+                active: isDualPaneMode,
+              })}
+              onClick={onToggleDualPane}
+              title={`${isDualPaneMode ? 'Disable' : 'Enable'} dual-pane mode (Ctrl+D)`}
+            >
+              {isDualPaneMode ? '⚏' : '⚌'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

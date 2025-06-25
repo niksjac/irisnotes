@@ -4,9 +4,31 @@ import { readTextFile, exists } from "@tauri-apps/plugin-fs";
 import { Note } from '../../../types';
 import { parseTextWithColors } from '../../../utils/text-parser';
 
+export type PaneId = 'left' | 'right';
+
 export const useNotes = () => {
   const [notes, setNotes] = useState<Note[]>([]);
-  const [selectedNoteId, setSelectedNoteId] = useState<string | null>("default-hot-note");
+  const [selectedNoteIds, setSelectedNoteIds] = useState<{
+    left: string | null;
+    right: string | null;
+  }>({
+    left: "default-hot-note",
+    right: null
+  });
+
+  // Legacy support - returns left pane note for backward compatibility
+  const selectedNoteId = selectedNoteIds.left;
+  const setSelectedNoteId = (noteId: string | null) => {
+    setSelectedNoteIds(prev => ({ ...prev, left: noteId }));
+  };
+
+  const setSelectedNoteIdForPane = (paneId: PaneId, noteId: string | null) => {
+    setSelectedNoteIds(prev => ({ ...prev, [paneId]: noteId }));
+  };
+
+  const openNoteInPane = (noteId: string, paneId: PaneId) => {
+    setSelectedNoteIds(prev => ({ ...prev, [paneId]: noteId }));
+  };
 
   const loadDefaultNote = async () => {
     try {
@@ -115,7 +137,7 @@ export const useNotes = () => {
     }
   };
 
-  const createNewNote = () => {
+  const createNewNote = (targetPane?: PaneId) => {
     const newNote: Note = {
       id: Date.now().toString(),
       title: "Untitled Note",
@@ -124,7 +146,12 @@ export const useNotes = () => {
       updated_at: new Date().toISOString()
     };
     setNotes(prev => [newNote, ...prev]);
-    setSelectedNoteId(newNote.id);
+
+    if (targetPane) {
+      setSelectedNoteIdForPane(targetPane, newNote.id);
+    } else {
+      setSelectedNoteId(newNote.id);
+    }
   };
 
   const updateNoteTitle = (noteId: string, title: string) => {
@@ -143,13 +170,23 @@ export const useNotes = () => {
     ));
   };
 
+  const getSelectedNoteForPane = (paneId: PaneId) => {
+    const noteId = selectedNoteIds[paneId];
+    return noteId ? notes.find(note => note.id === noteId) : null;
+  };
+
+  // Legacy support
   const selectedNote = notes.find(note => note.id === selectedNoteId);
 
   return {
     notes,
     selectedNote,
     selectedNoteId,
+    selectedNoteIds,
     setSelectedNoteId,
+    setSelectedNoteIdForPane,
+    openNoteInPane,
+    getSelectedNoteForPane,
     loadDefaultNote,
     reloadDefaultNote,
     createNewNote,
