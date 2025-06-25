@@ -2,6 +2,7 @@ import { toggleMark, setBlockType, wrapIn, splitBlock } from 'prosemirror-comman
 import { wrapInList, splitListItem, liftListItem, sinkListItem } from 'prosemirror-schema-list';
 import { undo, redo } from 'prosemirror-history';
 import { openUrl } from '@tauri-apps/plugin-opener';
+import { triggerLinkClickEffect } from './link-click-plugin';
 
 // Move block(s) up - improved version supporting multi-block selection
 export const moveLineUp = (state: any, dispatch: any) => {
@@ -169,7 +170,7 @@ export const copySelectionDown = (state: any, dispatch: any) => {
 };
 
 // Open hyperlink at cursor position
-export const openLinkAtCursor = (state: any, _dispatch: any) => {
+export const openLinkAtCursor = (state: any, _dispatch: any, view?: any) => {
   const { selection } = state;
   const { $from } = selection;
 
@@ -177,6 +178,35 @@ export const openLinkAtCursor = (state: any, _dispatch: any) => {
   const linkMark = $from.marks().find((mark: any) => mark.type.name === 'link');
 
   if (linkMark && linkMark.attrs.href) {
+    // Find the full extent of the link
+    let linkStart = selection.from;
+    let linkEnd = selection.from;
+
+    // Find start of link
+    while (linkStart > 0) {
+      const prevPos = state.doc.resolve(linkStart - 1);
+      const hasLinkMark = prevPos.marks().find((mark: any) =>
+        mark.type.name === 'link' && mark.attrs.href === linkMark.attrs.href
+      );
+      if (!hasLinkMark) break;
+      linkStart--;
+    }
+
+    // Find end of link
+    while (linkEnd < state.doc.content.size) {
+      const nextPos = state.doc.resolve(linkEnd);
+      const hasLinkMark = nextPos.marks().find((mark: any) =>
+        mark.type.name === 'link' && mark.attrs.href === linkMark.attrs.href
+      );
+      if (!hasLinkMark) break;
+      linkEnd++;
+    }
+
+    // Trigger visual effect if view is available
+    if (view) {
+      triggerLinkClickEffect(view, linkStart, linkEnd);
+    }
+
     // Open the URL in system browser
     openUrl(linkMark.attrs.href).catch(console.error);
     return true;

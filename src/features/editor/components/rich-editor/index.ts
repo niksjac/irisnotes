@@ -6,3 +6,4 @@ export * from './utils/content-parser';
 export * from './plugins/color-plugin';
 export * from './plugins/keyboard-plugin';
 export * from './plugins/line-highlight-plugin';
+export * from './plugins/link-click-plugin';

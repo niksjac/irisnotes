@@ -10,6 +10,7 @@ import { Schema, Node } from 'prosemirror-model';
 import { colorKeymap } from '../plugins/color-plugin';
 import { createBaseKeymap } from '../plugins/keyboard-plugin';
 import { currentLineHighlightPlugin } from '../plugins/line-highlight-plugin';
+import { linkClickPlugin } from '../plugins/link-click-plugin';
 import { createUrlInputRule } from '../input-rules';
 
 interface CreateEditorStateOptions {
@@ -31,7 +32,8 @@ export function createEditorState({ doc, schema, onToggleView }: CreateEditorSta
     history({ newGroupDelay: 20 }),
     dropCursor(),
     gapCursor(),
-    currentLineHighlightPlugin
+    currentLineHighlightPlugin,
+    linkClickPlugin
   ];
 
   return EditorState.create({
