@@ -4,9 +4,33 @@
   flex-direction: column;
   height: 100%;
   width: 100%;
-  border: 5px solid blue;
-  /* font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace; */
-  font-family: var(--iris-editor-font-family);
-  font-size: var(--iris-editor-font-size);
-  /* font-weight: 400; */
+}
+
+.source-editor-container {
+  height: 100%;
+  width: 100%;
+  /* border: 5px solid red; */
+  background-color: var(--iris-editor-background-color);
+
+}
+
+.source-editor-container .cm-editor {
+  height: 100%;
+  width: 100%;
+  background-color: var(--iris-editor-background-color);
+
+}
+
+.source-editor-container .cm-editor .cm-line {
+  font-size: 10px;
+  font-family: Consolas;
+  font-weight: 100;
+}
+
+.source-editor-container .cm-editor .cm-line::selection {
+  background-color: blue;
+}
+
+.source-editor-container .cm-gutters {
+  background-color: var(--iris-editor-background-color);
 }

@@ -1,27 +1,24 @@
 .editor-container {
   height: 100%;
   overflow: hidden;
-  border:5px solid pink;
 }
 
 .rich-editor {
   height: 100%;
   overflow: hidden;
-  border:5px solid blue;
 }
 
 .rich-editor-container {
   height: 100%;
   overflow:hidden;
-  border: 5px solid green;
 }
 
 .rich-editor-view {
   outline: none;
   height: 100%;
-  border: 5px solid red;
   overflow-x: auto;
   overflow-y: auto;
+  padding: 10px;
 
   /* Improve font rendering */
   -webkit-font-smoothing: antialiased;
@@ -31,7 +28,7 @@
 
 .rich-editor-view p {
   white-space: nowrap;
-  line-height: 1;
+  line-height: 1.2;
   max-inline-size: none;
   width: fit-content;
   font-size: 11px;
@@ -40,7 +37,6 @@
 }
 
 .rich-editor .rich-editor-view p.editor-current-line-highlight {
-  background-color: #444444;
   width: 100%;
   white-space: normal;
   max-inline-size: 100%;
