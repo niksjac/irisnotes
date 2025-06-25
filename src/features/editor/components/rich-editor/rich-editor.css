@@ -37,10 +37,20 @@
 }
 
 .rich-editor .rich-editor-view p.editor-current-line-highlight {
+  background-color: black;
+}
+
+/* Current line highlight respects parent wrapping settings */
+.rich-editor-view.no-line-wrapping p.editor-current-line-highlight {
+  white-space: nowrap;
+  width: 100%;
+  max-inline-size: none;
+}
+
+.rich-editor-view.line-wrapping p.editor-current-line-highlight {
   width: 100%;
   white-space: normal;
   max-inline-size: 100%;
-  background-color: blue;
 }
 
 /* Line wrapping toggle classes */
