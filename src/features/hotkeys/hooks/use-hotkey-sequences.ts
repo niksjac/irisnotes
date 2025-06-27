@@ -1,4 +1,4 @@
-feat: import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 
 interface HotkeySequence {
