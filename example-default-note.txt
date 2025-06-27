@@ -1,0 +1,134 @@
+{size:xxl}{color:blue}{bold}Welcome to IrisNotes Custom Formatting!{/bold}{/color}{/size}
+
+{bg:yellow}{bold}📋 Quick Reference Guide{/bold}{/bg}
+
+{size:large}{color:green}✨ Text Formatting Examples{/color}{/size}
+
+{bold}Basic Formatting:{/bold}
+• {bold}This is bold text{/bold}
+• {italic}This is italic text{/italic}
+• {strike}This is strikethrough text{/strike}
+• {underline}This is underlined text{/underline}
+• {code}This is code/monospace text{/code}
+
+{bold}Scientific Notation:{/bold}
+• Water molecule: H{sub}2{/sub}O
+• Carbon dioxide: CO{sub}2{/sub}
+• Einstein's equation: E = mc{sup}2{/sup}
+• Quadratic formula: x = (-b ± √(b{sup}2{/sup} - 4ac)) / 2a
+
+{size:large}{color:purple}🎨 Color Showcase{/color}{/size}
+
+{bold}Text Colors:{/bold}
+{color:red}Red{/color} • {color:green}Green{/color} • {color:blue}Blue{/color} • {color:yellow}Yellow{/color} • {color:purple}Purple{/color} • {color:cyan}Cyan{/color} • {color:gray}Gray{/color} • {color:black}Black{/color}
+
+{bold}Custom Hex Colors:{/bold}
+{color:#FF6B6B}Coral{/color} • {color:#4ECDC4}Turquoise{/color} • {color:#45B7D1}Sky Blue{/color} • {color:#96CEB4}Mint{/color} • {color:#FFEAA7}Peach{/color}
+
+{bold}Background Highlights:{/bold}
+{bg:yellow}Important Info{/bg} • {bg:red}Warning{/bg} • {bg:green}Success{/bg} • {bg:blue}Information{/bg} • {bg:gray}Neutral{/bg}
+
+{size:large}{color:orange}📏 Font Size Examples{/color}{/size}
+
+{size:tiny}Tiny text for footnotes{/size}
+{size:small}Small text for details{/size}
+{size:normal}Normal text for body content{/size}
+{size:medium}Medium text for emphasis{/size}
+{size:large}Large text for subheadings{/size}
+{size:huge}Huge text for headings{/size}
+{size:xl}Extra large for titles{/size}
+{size:xxl}Double XL for banners{/size}
+
+{bold}Custom Pixel Sizes:{/bold}
+{size:10px}10px{/size} • {size:14px}14px{/size} • {size:18px}18px{/size} • {size:22px}22px{/size} • {size:28px}28px{/size}
+
+{size:large}{color:cyan}🔤 Font Family Examples{/color}{/size}
+
+{font:Arial}Arial - Clean and modern sans-serif{/font}
+{font:Georgia}Georgia - Elegant serif for reading{/font}
+{font:Times New Roman}Times New Roman - Classic serif{/font}
+{font:Courier New}Courier New - Monospace for code{/font}
+{font:Helvetica}Helvetica - Swiss design classic{/font}
+{font:Verdana}Verdana - Web-optimized sans-serif{/font}
+
+{size:large}{color:red}🔥 Complex Combinations{/color}{/size}
+
+{color:red}{bold}{bg:yellow}🚨 CRITICAL ALERT: {/bg}Important system update required{/bold}{/color}
+
+{size:large}{font:Georgia}{italic}{color:blue}Elegant large italic blue text in Georgia{/color}{/italic}{/font}{/size}
+
+{bg:green}{color:white}{bold}{size:medium}✅ SUCCESS: Operation completed successfully{/size}{/bold}{/color}{/bg}
+
+{font:Courier New}{code}{bg:gray}function calculateTotal(amount, tax) { return amount * (1 + tax); }{/bg}{/code}{/font}
+
+{size:large}{color:purple}📚 Practical Examples{/color}{/size}
+
+{bold}Meeting Notes Template:{/bold}
+{size:large}{bold}📅 Weekly Team Meeting{/bold}{/size}
+{color:gray}Date: {underline}2024-01-15{/underline} | Time: {underline}10:00 AM{/underline}{/color}
+
+{color:blue}{bold}Attendees:{/bold}{/color}
+• John Smith ({bg:green}Present{/bg})
+• Jane Doe ({bg:yellow}Remote{/bg})
+• Bob Johnson ({bg:red}Absent{/bg})
+
+{color:blue}{bold}Action Items:{/bold}{/color}
+1. {color:red}{bold}HIGH:{/bold}{/color} Complete project proposal by {underline}Friday{/underline}
+2. {color:orange}{bold}MED:{/bold}{/color} Review code changes in {code}feature-branch{/code}
+3. {color:green}{bold}LOW:{/bold}{/color} Schedule team lunch
+
+{bold}Recipe Format:{/bold}
+{size:large}{bold}🍝 Spaghetti Carbonara{/bold}{/size}
+
+{color:green}{bold}Ingredients:{/bold}{/color}
+• {code}400g{/code} spaghetti
+• {code}200g{/code} pancetta or guanciale
+• {code}4{/code} large eggs
+• {code}100g{/code} Pecorino Romano cheese
+
+{color:blue}{bold}Instructions:{/bold}{/color}
+1. {bold}Boil{/bold} salted water for pasta
+2. {italic}Slowly{/italic} cook pancetta until {bg:yellow}crispy{/bg}
+3. {underline}Whisk{/underline} eggs with cheese
+4. {strike}Don't add cream{/strike} - it's not traditional!
+
+{bold}Chemistry Notes:{/bold}
+{size:large}{bold}🧪 Acid-Base Reactions{/bold}{/size}
+
+{color:blue}{bold}Strong Acids:{/bold}{/color}
+• Hydrochloric acid: HCl
+• Sulfuric acid: H{sub}2{/sub}SO{sub}4{/sub}
+• Nitric acid: HNO{sub}3{/sub}
+
+{color:green}{bold}Neutralization Example:{/bold}{/color}
+{font:Courier New}HCl + NaOH → NaCl + H{sub}2{/sub}O{/font}
+
+{bg:yellow}{bold}💡 Remember:{/bold} pH = -log[H{sup}+{/sup}]{/bg}
+
+{size:large}{color:gray}⚡ Quick Tips{/color}{/size}
+
+{bg:blue}{color:white}{bold}💻 Keyboard Shortcuts:{/bold}{/color}{/bg}
+• {code}Ctrl+B{/code} - Toggle sidebar
+• {code}Ctrl+D{/code} - Dual pane mode
+• {code}F5{/code} - Reload note
+• {code}Alt+Z{/code} - Toggle line wrapping
+
+{bg:green}{color:white}{bold}✍️ Formatting Tips:{/bold}{/color}{/bg}
+• Use {bg:yellow}highlights{/bg} for important info
+• {bold}Bold{/bold} for headings and emphasis
+• {code}Code tags{/code} for technical terms
+• {italic}Italics{/italic} for subtle emphasis
+• {strike}Strikethrough{/strike} for corrections
+
+{bg:purple}{color:white}{bold}🎯 Best Practices:{/bold}{/color}{/bg}
+• Keep formatting {italic}semantic{/italic} and {bold}meaningful{/bold}
+• Don't {strike}over-format{/strike} - less is more
+• Test {underline}readability{/underline} in plain text
+• Use {color:blue}consistent{/color} color schemes
+
+{size:huge}{color:green}🎉 Happy Note-Taking!{/color}{/size}
+
+{color:gray}{italic}This file demonstrates all available custom formatting options.
+Modify and expand it to create your perfect quick notes template!{/italic}{/color}
+
+{size:tiny}Generated with IrisNotes Custom Format System v1.0{/size}

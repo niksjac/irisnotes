@@ -1,0 +1,41 @@
+Welcome to {color:blue}{bold}IrisNotes{/bold}{/color}!
+
+This is your {bg:yellow}quick notes{/bg} space with {bold}comprehensive formatting{/bold} support.
+
+{color:red}{bold}Getting Started:{/bold}{/color}
+- Type {code}Ctrl+B{/code} to toggle the sidebar
+- Use {code}Ctrl+D{/code} to enable dual-pane mode
+- Press {code}F5{/code} to reload this note
+
+{color:blue}{bold}Text Formatting:{/bold}{/color}
+- {bold}Bold text{/bold} for emphasis
+- {italic}Italic text{/italic} for subtle emphasis
+- {strike}Strikethrough{/strike} for corrections
+- {underline}Underlined text{/underline} for attention
+- {code}Code or monospace{/code} for technical terms
+- Chemical formulas: H{sup}2{/sup}O, CO{sub}2{/sub}
+
+{color:green}{bold}Colors Available:{/bold}{/color}
+{color:red}red{/color}, {color:green}green{/color}, {color:blue}blue{/color}, {color:yellow}yellow{/color}, {color:purple}purple{/color}, {color:cyan}cyan{/color}, {color:gray}gray{/color}, {color:black}black{/color}, {color:white}white{/color}
+
+{color:purple}{bold}Background Highlights:{/bold}{/color}
+{bg:yellow}Important notes{/bg}, {bg:red}warnings{/bg}, {bg:green}success{/bg}, {bg:blue}information{/bg}, {bg:gray}neutral{/bg}
+
+{color:orange}{bold}Font Sizes:{/bold}{/color}
+{size:tiny}tiny{/size} | {size:small}small{/size} | {size:normal}normal{/size} | {size:large}large{/size} | {size:huge}huge{/size} | {size:xl}xl{/size}
+
+{color:cyan}{bold}Font Families:{/bold}{/color}
+{font:Arial}Arial{/font}, {font:Georgia}Georgia{/font}, {font:Courier New}Courier New{/font}, {font:Verdana}Verdana{/font}
+
+{bold}Combining Formats:{/bold}
+{color:red}{bold}{bg:yellow}Critical highlighted information{/bg}{/bold}{/color}
+{italic}{color:blue}Subtle blue italic text{/color}{/italic}
+
+{color:gray}{bold}Pro Tips:{/bold}{/color}
+- Mix and match formatting for maximum impact
+- Use {code}code tags{/code} for keyboard shortcuts
+- {bg:yellow}Highlight{/bg} key concepts
+- {strike}Cross out{/strike} outdated information
+- Keep it readable in plain text format
+
+{size:large}{color:green}Start writing your formatted thoughts here...{/color}{/size}
