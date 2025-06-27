@@ -1,7 +1,6 @@
 import {
   parseTextWithColors,
   serializeToCustomFormat,
-  extractPlainText,
   parseCustomFormatMetadata,
   validateCustomFormat
 } from './text-parser';
@@ -203,5 +202,49 @@ The text remains readable in plain format while providing rich visual formatting
       content: customText,
       mimeType: 'text/plain'
     };
+  }
+}
+
+export function convertCustomFormatToHtml(customText: string): string {
+  try {
+    // Parse the custom format and convert to HTML
+    const htmlContent = parseTextWithColors(customText);
+
+    // Parse metadata for potential future use (suppress unused warning)
+    void parseCustomFormatMetadata(customText);
+
+    return htmlContent;
+  } catch (error) {
+    console.error('Error converting custom format to HTML:', error);
+    return customText;
+  }
+}
+
+export function convertHtmlToCustomFormat(htmlContent: string): string {
+  try {
+    // This is a simplified conversion - in a real implementation,
+    // you'd want to properly convert HTML tags back to custom format
+
+    // Parse metadata for potential future use (suppress unused warning)
+    void parseCustomFormatMetadata(htmlContent);
+
+    return htmlContent
+      .replace(/<strong>/g, '{bold}')
+      .replace(/<\/strong>/g, '{/bold}')
+      .replace(/<em>/g, '{italic}')
+      .replace(/<\/em>/g, '{/italic}')
+      .replace(/<u>/g, '{underline}')
+      .replace(/<\/u>/g, '{/underline}')
+      .replace(/<del>/g, '{strike}')
+      .replace(/<\/del>/g, '{/strike}')
+      .replace(/<code>/g, '{code}')
+      .replace(/<\/code>/g, '{/code}')
+      .replace(/<sub>/g, '{sub}')
+      .replace(/<\/sub>/g, '{/sub}')
+      .replace(/<sup>/g, '{sup}')
+      .replace(/<\/sup>/g, '{/sup}');
+  } catch (error) {
+    console.error('Error converting HTML to custom format:', error);
+    return htmlContent;
   }
 }

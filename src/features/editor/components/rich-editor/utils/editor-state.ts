@@ -16,14 +16,14 @@ import { createUrlInputRule } from '../input-rules';
 interface CreateEditorStateOptions {
   doc: Node;
   schema: Schema;
-  onToggleView?: () => void;
+  onToggleView: () => void;
 }
 
 export function createEditorState({ doc, schema, onToggleView }: CreateEditorStateOptions): EditorState {
   // Create keymap with plugins
   const myKeymap = keymap({
     ...baseKeymap,
-    ...createBaseKeymap(schema, colorKeymap(schema), onToggleView || (() => {}))
+    ...createBaseKeymap(schema, colorKeymap(schema), onToggleView)
   });
 
   const plugins: Plugin[] = [

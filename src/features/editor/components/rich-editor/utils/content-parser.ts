@@ -2,7 +2,11 @@ import { DOMParser, DOMSerializer, Schema } from 'prosemirror-model';
 
 export function parseHtmlContent(content: string, schema: Schema) {
   if (!content || !content.trim()) {
-    return schema.nodes.doc.create(schema.nodes.paragraph.create());
+    // Return empty document with single paragraph if parsing fails
+    if (!schema.nodes.doc || !schema.nodes.paragraph) {
+      throw new Error('Schema missing required doc or paragraph node types');
+    }
+    return schema.nodes.doc.create({}, schema.nodes.paragraph.create());
   }
 
   try {
@@ -11,7 +15,10 @@ export function parseHtmlContent(content: string, schema: Schema) {
     return DOMParser.fromSchema(schema).parse(tempDiv);
   } catch (error) {
     console.warn('Failed to parse content, using empty document:', error);
-    return schema.nodes.doc.create(schema.nodes.paragraph.create());
+    if (!schema.nodes.doc || !schema.nodes.paragraph) {
+      throw new Error('Schema missing required doc or paragraph node types');
+    }
+    return schema.nodes.doc.create({}, schema.nodes.paragraph.create());
   }
 }
 

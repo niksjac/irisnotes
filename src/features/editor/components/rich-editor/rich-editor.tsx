@@ -16,8 +16,8 @@ export function RichEditor({
   const { editorRef } = useEditorView({
     content,
     onChange,
-    readOnly,
-    onToggleView,
+    readOnly: readOnly || false,
+    onToggleView: onToggleView || (() => {}),
     schema: editorSchema
   });
 

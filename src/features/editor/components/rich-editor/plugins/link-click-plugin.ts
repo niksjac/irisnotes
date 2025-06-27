@@ -8,7 +8,7 @@ interface LinkClickState {
     from: number;
     to: number;
     timeout: ReturnType<typeof setTimeout>;
-  };
+  } | undefined;
 }
 
 export const linkClickPlugin = new Plugin<LinkClickState>({

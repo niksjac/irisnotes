@@ -180,22 +180,22 @@ export const serializeToCustomFormat = (html: string): string => {
   // Remove HTML structure and convert back to custom format
   let customText = html
     // Convert colored spans back to custom format
-    .replace(/<span style="color:\s*([^"]+)"[^>]*>(.*?)<\/span>/g, (match, color, content) => {
+    .replace(/<span style="color:\s*([^"]+)"[^>]*>(.*?)<\/span>/g, (_, color, content) => {
       const colorKey = colorMap[color.trim()] || color.trim();
       return `{color:${colorKey}}${content}{/color}`;
     })
     // Convert background colored spans back to custom format
-    .replace(/<span style="background-color:\s*([^;]+);[^"]*"[^>]*>(.*?)<\/span>/g, (match, backgroundColor, content) => {
+    .replace(/<span style="background-color:\s*([^;]+);[^"]*"[^>]*>(.*?)<\/span>/g, (_, backgroundColor, content) => {
       const bgColorKey = backgroundColorMap[backgroundColor.trim()] || backgroundColor.trim();
       return `{bg:${bgColorKey}}${content}{/bg}`;
     })
     // Convert font size spans back to custom format
-    .replace(/<span style="font-size:\s*([^"]+)"[^>]*>(.*?)<\/span>/g, (match, fontSize, content) => {
+    .replace(/<span style="font-size:\s*([^"]+)"[^>]*>(.*?)<\/span>/g, (_, fontSize, content) => {
       const sizeKey = sizeMap[fontSize.trim()] || fontSize.trim();
       return `{size:${sizeKey}}${content}{/size}`;
     })
     // Convert font family spans back to custom format
-    .replace(/<span style="font-family:\s*'([^']+)'[^"]*"[^>]*>(.*?)<\/span>/g, (match, fontFamily, content) => {
+    .replace(/<span style="font-family:\s*'([^']+)'[^"]*"[^>]*>(.*?)<\/span>/g, (_, fontFamily, content) => {
       return `{font:${fontFamily}}${content}{/font}`;
     })
     // Convert simple formatting tags
@@ -326,8 +326,8 @@ export const validateCustomFormat = (text: string): { isValid: boolean; errors: 
       }
     } else {
       // Opening tag
-      const baseName = tagName.split(':')[0];
-      if (!supportedTags.includes(baseName)) {
+      const baseName = tagName?.split(':')[0];
+      if (!baseName || !supportedTags.includes(baseName)) {
         errors.push(`Unknown tag: ${tag}`);
       }
     }

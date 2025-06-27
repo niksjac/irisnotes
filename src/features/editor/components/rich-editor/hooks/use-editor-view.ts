@@ -31,7 +31,7 @@ export function useEditorView({
     if (!editorRef.current) return;
 
     const doc = parseHtmlContent(content, schema);
-    const state = createEditorState({ doc, schema, onToggleView });
+    const state = createEditorState({ doc, schema, onToggleView: onToggleView || (() => {}) });
 
     const view = new EditorView(editorRef.current, {
       state,

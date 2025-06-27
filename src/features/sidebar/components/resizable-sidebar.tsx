@@ -95,6 +95,8 @@ export function ResizableSidebar({
         document.body.style.userSelect = "";
       };
     }
+    // Return undefined when not resizing
+    return undefined;
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
   return (

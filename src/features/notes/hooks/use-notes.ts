@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Note } from '../../../types';
 import { parseTextWithColors } from '../../../utils/text-parser';
 import { useConfig } from '../../../hooks/use-config';
@@ -70,15 +70,27 @@ Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapi
 Happy note-taking!`;
 
 export const useNotes = () => {
-  const { config } = useConfig();
+  const { config, loading } = useConfig();
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedNoteIds, setSelectedNoteIds] = useState<{
     left: string | null;
     right: string | null;
   }>({
-    left: config.debug?.enableExampleNote ? "example-debug-note" : null,
+    left: null,
     right: null
   });
+
+  // Initialize selected note after config loads
+  useEffect(() => {
+    console.log('useNotes config effect:', { loading, enableExampleNote: config.debug?.enableExampleNote });
+    if (!loading && config.debug?.enableExampleNote) {
+      console.log('Setting selected note to example-debug-note');
+      setSelectedNoteIds(prev => ({
+        ...prev,
+        left: prev.left || "example-debug-note"
+      }));
+    }
+  }, [loading, config.debug?.enableExampleNote]);
 
   // Legacy support - returns left pane note for backward compatibility
   const selectedNoteId = selectedNoteIds.left;
@@ -95,6 +107,7 @@ export const useNotes = () => {
   };
 
   const loadExampleNote = async () => {
+    console.log('loadExampleNote called with config:', config.debug?.enableExampleNote);
     if (!config.debug?.enableExampleNote) {
       console.log("Example note disabled in config");
       return;
@@ -110,12 +123,19 @@ export const useNotes = () => {
         id: "example-debug-note",
         title: "Example Note (Debug)",
         content: parsedContent,
+        content_type: 'html',
+        is_pinned: false,
+        is_archived: false,
+        word_count: parsedContent.length,
+        character_count: parsedContent.length,
+        content_plaintext: parsedContent.replace(/<[^>]*>/g, ''),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
       setNotes([exampleNote]);
-      console.log("Example note loaded successfully");
+      setSelectedNoteId("example-debug-note");
+      console.log("Example note loaded successfully, notes array length:", 1);
       console.log("=== End loading example note ===");
     } catch (error) {
       console.error("Failed to load example note:", error);
@@ -133,6 +153,12 @@ export const useNotes = () => {
         id: "example-debug-note",
         title: "Example Note (Debug)",
         content: parseTextWithColors(EXAMPLE_NOTE_CONTENT),
+        content_type: 'html',
+        is_pinned: false,
+        is_archived: false,
+        word_count: EXAMPLE_NOTE_CONTENT.length,
+        character_count: EXAMPLE_NOTE_CONTENT.length,
+        content_plaintext: EXAMPLE_NOTE_CONTENT.replace(/<[^>]*>/g, ''),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -157,6 +183,12 @@ export const useNotes = () => {
       id: Date.now().toString(),
       title: "Untitled Note",
       content: "",
+      content_type: 'html',
+      is_pinned: false,
+      is_archived: false,
+      word_count: 0,
+      character_count: 0,
+      content_plaintext: "",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };

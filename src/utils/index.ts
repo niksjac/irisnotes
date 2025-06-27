@@ -7,4 +7,8 @@ export {
   normalizeColor,
   getAvailableFormattingOptions
 } from './text-parser';
-export { CustomFormatHandler } from './custom-format-handler';
+
+export {
+  convertCustomFormatToHtml,
+  convertHtmlToCustomFormat
+} from './custom-format-handler';
