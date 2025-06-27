@@ -1,18 +1,82 @@
 import { useState } from 'react';
-import { appConfigDir } from "@tauri-apps/api/path";
-import { readTextFile, exists } from "@tauri-apps/plugin-fs";
 import { Note } from '../../../types';
 import { parseTextWithColors } from '../../../utils/text-parser';
+import { useConfig } from '../../../hooks/use-config';
 
 export type PaneId = 'left' | 'right';
 
+// Hardcoded example note content for debugging
+const EXAMPLE_NOTE_CONTENT = `{size:xxl}{color:blue}{bold}Welcome to IrisNotes Custom Formatting!{/bold}{/color}{/size}
+
+{bg:yellow}{bold}📋 Quick Reference Guide{/bold}{/bg}
+
+{size:large}{color:green}✨ Text Formatting Examples{/color}{/size}
+
+{bold}Basic Formatting:{/bold}
+• {bold}This is bold text{/bold}
+• {italic}This is italic text{/italic}
+• {strike}This is strikethrough text{/strike}
+• {underline}This is underlined text{/underline}
+• {code}This is code/monospace text{/code}
+
+{bold}Scientific Notation:{/bold}
+• Water molecule: H{sub}2{/sub}O
+• Carbon dioxide: CO{sub}2{/sub}
+• Einstein's equation: E = mc{sup}2{/sup}
+
+{size:large}{color:purple}🎨 Color Showcase{/color}{/size}
+
+{bold}Text Colors:{/bold}
+{color:red}Red{/color} • {color:green}Green{/color} • {color:blue}Blue{/color} • {color:yellow}Yellow{/color} • {color:purple}Purple{/color}
+
+{bold}Background Highlights:{/bold}
+{bg:yellow}Important Info{/bg} • {bg:red}Warning{/bg} • {bg:green}Success{/bg}
+
+{size:large}{color:red}🔥 Complex Combinations{/color}{/size}
+
+{color:red}{bold}{bg:yellow}🚨 CRITICAL ALERT{/bg}{/bold}{/color}
+
+{size:large}{font:Georgia}{italic}{color:blue}Elegant large italic blue text{/color}{/italic}{/font}{/size}
+
+{size:large}{bold}Testing All Formatting{/bold}{/size}
+
+{bold}Superscript/Subscript Test:{/bold}
+Water: H{sub}2{/sub}O
+Energy: E = mc{sup}2{/sup}
+Chemical: H{sub}2{/sub}SO{sub}4{/sub}
+
+{bold}Font Family Test:{/bold}
+{font:Arial}This should be Arial{/font}
+{font:Georgia}This should be Georgia{/font}
+{font:Courier New}This should be Courier New{/font}
+{font:Times New Roman}This should be Times New Roman{/font}
+
+{bold}Font Size Test:{/bold}
+{size:tiny}tiny{/size} {size:small}small{/size} {size:large}large{/size} {size:huge}huge{/size}
+
+{bold}Background Color Test:{/bold}
+{bg:yellow}yellow background{/bg}
+{bg:red}red background{/bg}
+{bg:green}green background{/bg}
+
+{bold}Combination Test:{/bold}
+{font:Georgia}{size:large}{color:blue}Large Blue Georgia Text{/color}{/size}{/font}
+{bg:yellow}{bold}Bold highlighted text{/bold}{/bg}
+Chemical formula: H{sub}2{/sub}SO{sub}4{/sub} + 2NaOH → Na{sub}2{/sub}SO{sub}4{/sub} + 2H{sub}2{/sub}O
+
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
+
+Happy note-taking!`;
+
 export const useNotes = () => {
+  const { config } = useConfig();
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedNoteIds, setSelectedNoteIds] = useState<{
     left: string | null;
     right: string | null;
   }>({
-    left: "default-hot-note",
+    left: config.debug?.enableExampleNote ? "example-debug-note" : null,
     right: null
   });
 
@@ -30,110 +94,61 @@ export const useNotes = () => {
     setSelectedNoteIds(prev => ({ ...prev, [paneId]: noteId }));
   };
 
-  const loadDefaultNote = async () => {
+  const loadExampleNote = async () => {
+    if (!config.debug?.enableExampleNote) {
+      console.log("Example note disabled in config");
+      return;
+    }
+
     try {
-      console.log("=== Loading default note ===");
-      const configDir = await appConfigDir();
-      const defaultNotePath = `${configDir}/default-note.txt`;
+      console.log("=== Loading example debug note ===");
 
-      console.log("Config directory:", configDir);
-      console.log("Looking for default note at:", defaultNotePath);
-
-      let defaultContent = "Start writing your quick notes here...";
-
-      console.log("Checking if file exists...");
-      const fileExists = await exists(defaultNotePath);
-      console.log("File exists:", fileExists);
-
-      if (fileExists) {
-        console.log("Attempting to read file...");
-        try {
-          defaultContent = await readTextFile(defaultNotePath);
-          console.log("File read successfully!");
-          console.log("Content length:", defaultContent.length);
-          console.log("First 200 chars:", defaultContent.substring(0, 200));
-        } catch (readError) {
-          console.error("Error reading file:", readError);
-        }
-      } else {
-        console.log("File does not exist, trying public folder fallback...");
-        try {
-          const publicPath = "default-note.txt";
-          console.log("Trying to read from public:", publicPath);
-          defaultContent = await readTextFile(publicPath);
-          console.log("Public file read successfully!");
-        } catch (publicError) {
-          console.error("Public file also failed:", publicError);
-          console.log("Using hardcoded fallback content");
-        }
-      }
-
-      const parsedContent = parseTextWithColors(defaultContent);
+      const parsedContent = parseTextWithColors(EXAMPLE_NOTE_CONTENT);
       console.log("Parsed content length:", parsedContent.length);
-      console.log("Parsed content preview:", parsedContent.substring(0, 200));
 
-      const defaultNote: Note = {
-        id: "default-hot-note",
-        title: "Quick Notes",
+      const exampleNote: Note = {
+        id: "example-debug-note",
+        title: "Example Note (Debug)",
         content: parsedContent,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
-      setNotes([defaultNote]);
-      console.log("Default note set successfully");
-      console.log("=== End loading default note ===");
+      setNotes([exampleNote]);
+      console.log("Example note loaded successfully");
+      console.log("=== End loading example note ===");
     } catch (error) {
-      console.error("Failed to load default note:", error);
-      console.error("Error details:", error instanceof Error ? error.message : String(error));
-
-      // Fallback to hardcoded default note
-      const fallbackNote: Note = {
-        id: "default-hot-note",
-        title: "Quick Notes",
-        content: "<p>Start writing your quick notes here...</p>",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      setNotes([fallbackNote]);
+      console.error("Failed to load example note:", error);
     }
   };
 
-  const reloadDefaultNote = async () => {
+  const reloadExampleNote = async () => {
+    if (!config.debug?.enableExampleNote) {
+      console.log("Example note disabled in config, skipping reload");
+      return;
+    }
+
     try {
-      const configDir = await appConfigDir();
-      const defaultNotePath = `${configDir}/default-note.txt`;
-
-      let defaultContent = "Start writing your quick notes here...";
-
-      if (await exists(defaultNotePath)) {
-        defaultContent = await readTextFile(defaultNotePath);
-        console.log("Default note content reloaded from file");
-      } else {
-        console.log("No default note file found during reload, using fallback content");
-      }
-
-      const updatedDefaultNote: Note = {
-        id: "default-hot-note",
-        title: "Quick Notes",
-        content: parseTextWithColors(defaultContent),
+      const updatedExampleNote: Note = {
+        id: "example-debug-note",
+        title: "Example Note (Debug)",
+        content: parseTextWithColors(EXAMPLE_NOTE_CONTENT),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
-      // Update the existing default note or add it if it doesn't exist
+      // Update the existing example note or add it if it doesn't exist
       setNotes(prev => {
-        const otherNotes = prev.filter(note => note.id !== "default-hot-note");
-        return [updatedDefaultNote, ...otherNotes];
+        const otherNotes = prev.filter(note => note.id !== "example-debug-note");
+        return [updatedExampleNote, ...otherNotes];
       });
 
-      // Make sure the default note is selected to see the changes
-      setSelectedNoteId("default-hot-note");
+      // Make sure the example note is selected to see the changes
+      setSelectedNoteId("example-debug-note");
 
-      console.log("Default note reloaded successfully");
+      console.log("Example note reloaded successfully");
     } catch (error) {
-      console.error("Failed to reload default note:", error);
+      console.error("Failed to reload example note:", error);
     }
   };
 
@@ -187,8 +202,8 @@ export const useNotes = () => {
     setSelectedNoteIdForPane,
     openNoteInPane,
     getSelectedNoteForPane,
-    loadDefaultNote,
-    reloadDefaultNote,
+    loadExampleNote,
+    reloadExampleNote,
     createNewNote,
     updateNoteTitle,
     updateNoteContent

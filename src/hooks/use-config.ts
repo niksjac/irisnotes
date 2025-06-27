@@ -7,6 +7,9 @@ const DEFAULT_CONFIG: AppConfig = {
   editor: {
     lineWrapping: false,
   },
+  debug: {
+    enableExampleNote: false,
+  },
 };
 
 export const useConfig = () => {
@@ -43,7 +46,8 @@ export const useConfig = () => {
     const newConfig = {
       ...config,
       ...updates,
-      editor: { ...config.editor, ...updates.editor }
+      editor: { ...config.editor, ...updates.editor },
+      debug: { ...config.debug, ...updates.debug }
     };
     await saveConfig(newConfig);
   }, [config, saveConfig]);

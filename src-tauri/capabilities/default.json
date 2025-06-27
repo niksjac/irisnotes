@@ -3,11 +3,13 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": ["main"],
-  "permissions": [
+    "permissions": [
     "core:default",
     "opener:default",
+    "opener:allow-open-path",
     "core:path:default",
     "window-state:default",
+    "notification:default",
     "fs:allow-read-text-file",
     "fs:allow-write-text-file",
     "fs:allow-read-dir",

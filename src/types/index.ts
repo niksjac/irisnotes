@@ -22,4 +22,7 @@ export interface AppConfig {
   editor: {
     lineWrapping: boolean;
   };
+  debug: {
+    enableExampleNote: boolean;
+  };
 }

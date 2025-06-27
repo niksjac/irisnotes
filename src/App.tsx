@@ -6,6 +6,7 @@ import { useNotes } from "./features/notes";
 import { useTheme } from "./features/theme";
 import { useLayout } from "./features/layout";
 import { useShortcuts } from "./features/shortcuts";
+import { useHotkeySequences, createAppConfigSequences } from "./features/hotkeys";
 import { useLineWrapping } from "./features/editor/hooks/use-line-wrapping";
 import "./styles/theme.css";
 import "./styles/layout.css";
@@ -20,8 +21,8 @@ function App() {
     setSelectedNoteId,
     getSelectedNoteForPane,
     openNoteInPane,
-    loadDefaultNote,
-    reloadDefaultNote,
+    loadExampleNote,
+    reloadExampleNote,
     createNewNote,
     updateNoteTitle,
     updateNoteContent
@@ -49,7 +50,7 @@ function App() {
   const initializeApp = async () => {
     try {
       console.log("Initializing IrisNotes...");
-      await loadDefaultNote();
+      await loadExampleNote();
     } catch (error) {
       console.error("Failed to initialize app:", error);
     }
@@ -60,8 +61,13 @@ function App() {
     onToggleSidebar: toggleSidebar,
     onToggleActivityBar: toggleActivityBar,
     onToggleDualPane: toggleDualPaneMode,
-    onReloadNote: reloadDefaultNote,
+    onReloadNote: reloadExampleNote,
     onToggleLineWrapping: toggleLineWrapping
+  });
+
+  // Setup hotkey sequences (VSCode-style)
+  useHotkeySequences({
+    sequences: createAppConfigSequences()
   });
 
   // Initialize app and load user theme

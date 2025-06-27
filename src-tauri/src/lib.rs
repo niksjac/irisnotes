@@ -11,6 +11,30 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
+async fn open_app_config_folder(app_handle: tauri::AppHandle) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+
+    let app_config_dir = app_handle
+        .path()
+        .app_config_dir()
+        .map_err(|e| format!("Failed to get app config dir: {}", e))?;
+
+    // Ensure the config directory exists
+    if !app_config_dir.exists() {
+        std::fs::create_dir_all(&app_config_dir)
+            .map_err(|e| format!("Failed to create config directory: {}", e))?;
+    }
+
+    // Open the directory using the opener plugin
+    app_handle
+        .opener()
+        .open_path(app_config_dir.to_string_lossy().to_string(), None::<&str>)
+        .map_err(|e| format!("Failed to open app config folder: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
 async fn read_config(app_handle: tauri::AppHandle, filename: String) -> Result<String, String> {
     let app_config_dir = app_handle
         .path()
@@ -127,7 +151,8 @@ pub fn run() {
             greet,
             read_config,
             write_config,
-            setup_config_watcher
+            setup_config_watcher,
+            open_app_config_folder
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
