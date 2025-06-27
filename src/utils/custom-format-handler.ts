@@ -16,7 +16,6 @@ export class CustomFormatHandler {
    * Create a note from custom format text
    */
   static createNoteFromCustomFormat(customText: string, title?: string): CreateNoteParams {
-    const metadata = parseCustomFormatMetadata(customText);
     const htmlContent = parseTextWithColors(customText);
 
     return {
@@ -31,7 +30,6 @@ export class CustomFormatHandler {
    * Update note content with custom format
    */
   static updateNoteWithCustomFormat(noteId: string, customText: string, title?: string): UpdateNoteParams {
-    const metadata = parseCustomFormatMetadata(customText);
     const htmlContent = parseTextWithColors(customText);
 
     const params: UpdateNoteParams = {
