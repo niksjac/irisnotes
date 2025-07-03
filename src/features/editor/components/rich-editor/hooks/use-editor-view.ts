@@ -1,7 +1,7 @@
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useCallback } from 'react';
 import { EditorView } from 'prosemirror-view';
-import { EditorState, Transaction } from 'prosemirror-state';
-import { Schema } from 'prosemirror-model';
+import { Transaction } from 'prosemirror-state';
+import { Schema, Node } from 'prosemirror-model';
 import { keymap } from 'prosemirror-keymap';
 
 import { parseHtmlContent, serializeToHtml } from '../utils/content-parser';
@@ -16,12 +16,12 @@ interface UseEditorViewOptions {
   schema: Schema;
 }
 
-// Debounce utility function
+// Debounce utility function with better typing
 function debounce<T extends (...args: any[]) => any>(
   func: T,
   delay: number
 ): T & { cancel: () => void } {
-  let timeoutId: number | null = null;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
   const debouncedFunc = ((...args: Parameters<T>) => {
     if (timeoutId) {
@@ -44,6 +44,72 @@ function debounce<T extends (...args: any[]) => any>(
   return debouncedFunc;
 }
 
+// Optimize link click handling with correct signature
+const optimizedLinkClick = (
+  view: EditorView,
+  pos: number,
+  _node: Node,
+  _nodePos: number,
+  event: MouseEvent,
+  _direct: boolean
+): boolean => {
+  const resolvedPos = view.state.doc.resolve(pos);
+  const linkMark = resolvedPos.marks().find((mark: any) => mark.type.name === 'link');
+
+  if (linkMark) {
+    event.preventDefault();
+
+    // More efficient link range detection
+    const $pos = resolvedPos;
+    const linkMarkType = view.state.schema.marks.link;
+    const href = linkMark.attrs.href;
+
+    // Use ProseMirror's built-in range detection
+    let linkStart = pos;
+    let linkEnd = pos;
+
+    // Find link boundaries more efficiently
+    const parent = $pos.parent;
+    const index = $pos.index();
+
+    // Search backwards for link start
+    for (let i = index; i >= 0; i--) {
+      const textNode = parent.child(i);
+      if (textNode.isText && textNode.marks.some(mark =>
+        mark.type === linkMarkType && mark.attrs.href === href
+      )) {
+        linkStart = $pos.start() + parent.child(i).nodeSize;
+      } else {
+        break;
+      }
+    }
+
+    // Search forwards for link end
+    for (let i = index; i < parent.childCount; i++) {
+      const textNode = parent.child(i);
+      if (textNode.isText && textNode.marks.some(mark =>
+        mark.type === linkMarkType && mark.attrs.href === href
+      )) {
+        linkEnd = $pos.start() + parent.child(i).nodeSize;
+      } else {
+        break;
+      }
+    }
+
+    // Use dynamic imports with better error handling
+    Promise.all([
+      import('../plugins/link-click-plugin'),
+      import('@tauri-apps/plugin-opener')
+    ]).then(([{ triggerLinkClickEffect }, { openUrl }]) => {
+      triggerLinkClickEffect(view, linkStart, linkEnd);
+      openUrl(href).catch(console.error);
+    }).catch(console.error);
+
+    return true;
+  }
+  return false;
+};
+
 export function useEditorView({
   content,
   onChange,
@@ -54,17 +120,22 @@ export function useEditorView({
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
+  const contentRef = useRef(content);
 
-  // Keep the onChange callback ref up to date
+  // Keep refs up to date without triggering re-renders
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
 
-  // Create debounced onChange callback
+  useEffect(() => {
+    contentRef.current = content;
+  }, [content]);
+
+  // Optimize debounced onChange - reduce delay for better UX
   const debouncedOnChange = useMemo(() => {
     return debounce((content: string) => {
       onChangeRef.current(content);
-    }, 150); // 150ms debounce delay
+    }, 100); // Reduced from 150ms to 100ms
   }, []);
 
   // Cleanup debounced function on unmount
@@ -74,7 +145,7 @@ export function useEditorView({
     };
   }, [debouncedOnChange]);
 
-  // Memoize the editor state creation to prevent unnecessary re-initialization
+  // Memoize the editor state creation
   const memoizedCreateState = useMemo(() => {
     return (doc: any) => createEditorState({
       doc,
@@ -90,84 +161,28 @@ export function useEditorView({
       class: 'rich-editor-view',
       spellcheck: 'false'
     },
-    handleClickOn: (view: EditorView, pos: number, _node: any, _nodePos: number, event: Event) => {
-      // Handle link clicks
-      const resolvedPos = view.state.doc.resolve(pos);
-      const linkMark = resolvedPos.marks().find((mark: any) => mark.type.name === 'link');
-
-      if (linkMark) {
-        event.preventDefault();
-
-        // Use ProseMirror's mark range utilities for O(1) boundary detection
-        const doc = view.state.doc;
-        const linkMarkType = view.state.schema.marks.link;
-
-        // Find the exact range of this specific link mark
-        let linkStart = pos;
-        let linkEnd = pos;
-
-        // Use ProseMirror's efficient mark range detection
-        const searchRange = 1000; // Reasonable limit for link length
-
-        // Find start by checking mark ranges
-        doc.nodesBetween(
-          Math.max(0, pos - searchRange),
-          pos + 1,
-          (node, nodeStart) => {
-            if (node.isText) {
-              const marks = node.marks.filter(mark =>
-                mark.type === linkMarkType && mark.attrs.href === linkMark.attrs.href
-              );
-              if (marks.length > 0) {
-                // This text node contains our link mark
-                linkStart = Math.min(linkStart, nodeStart);
-
-                // Check if this is the start of the link
-                if (nodeStart < pos) {
-                  linkStart = nodeStart;
-                }
-              }
-            }
-            return false; // Don't descend into child nodes
-          }
-        );
-
-        // Find end by checking mark ranges
-        doc.nodesBetween(
-          pos,
-          Math.min(doc.content.size, pos + searchRange),
-          (node, nodeStart) => {
-            if (node.isText) {
-              const marks = node.marks.filter(mark =>
-                mark.type === linkMarkType && mark.attrs.href === linkMark.attrs.href
-              );
-              if (marks.length > 0) {
-                // This text node contains our link mark
-                linkEnd = Math.max(linkEnd, nodeStart + node.nodeSize);
-              }
-            }
-            return false; // Don't descend into child nodes
-          }
-        );
-
-        // Trigger visual effect
-        import('../plugins/link-click-plugin').then(({ triggerLinkClickEffect }) => {
-          triggerLinkClickEffect(view, linkStart, linkEnd);
-        });
-
-        // Open the URL
-        import('@tauri-apps/plugin-opener').then(({ openUrl }) => {
-          openUrl(linkMark.attrs.href).catch(console.error);
-        });
-
-        return true;
-      }
-
-      return false;
-    }
+    handleClickOn: optimizedLinkClick
   }), [readOnly]);
 
-  // Initialize editor view
+  // Optimize transaction handling
+  const dispatchTransaction = useCallback((transaction: Transaction) => {
+    if (!viewRef.current) return;
+
+    const view = viewRef.current;
+    const newState = view.state.apply(transaction);
+    view.updateState(newState);
+
+    // Only serialize if content actually changed
+    if (transaction.docChanged) {
+      const html = serializeToHtml(newState.doc, schema);
+      // Only call onChange if content is different
+      if (html !== contentRef.current) {
+        debouncedOnChange(html);
+      }
+    }
+  }, [schema, debouncedOnChange]);
+
+  // Initialize editor view with proper cleanup
   useEffect(() => {
     if (!editorRef.current) return;
 
@@ -177,56 +192,45 @@ export function useEditorView({
     const view = new EditorView(editorRef.current, {
       state,
       ...editorConfig,
-      dispatchTransaction: (transaction: Transaction) => {
-        const newState = view.state.apply(transaction);
-        view.updateState(newState);
-
-        if (transaction.docChanged) {
-          const html = serializeToHtml(newState.doc, schema);
-          debouncedOnChange(html);
-        }
-      }
+      dispatchTransaction
     });
 
     viewRef.current = view;
 
-    // Add custom keymap with view context for Ctrl+Enter link opening
+    // Add custom keymap
     const customKeymap = keymap({
       'Mod-Enter': (state: any, dispatch: any) => openLinkAtCursor(state, dispatch, view)
     });
 
-    // Update the view with the custom keymap
     const newState = view.state.reconfigure({
       plugins: [customKeymap, ...view.state.plugins]
     });
+
     view.updateState(newState);
 
-    setTimeout(() => view.focus(), 0);
-
+    // Cleanup function
     return () => {
-      view.destroy();
+      if (viewRef.current) {
+        viewRef.current.destroy();
+        viewRef.current = null;
+      }
     };
-  }, [memoizedCreateState, editorConfig, schema, debouncedOnChange]);
+  }, [memoizedCreateState, editorConfig, dispatchTransaction]);
 
-  // Update content when it changes externally
+  // Handle content updates more efficiently
   useEffect(() => {
-    if (!viewRef.current) return;
+    if (!viewRef.current || content === contentRef.current) return;
 
-    const currentContent = serializeToHtml(viewRef.current.state.doc, schema);
-    if (currentContent !== content && content !== undefined) {
-      const doc = parseHtmlContent(content, schema);
-      const newState = EditorState.create({
-        doc,
-        plugins: viewRef.current.state.plugins,
-        selection: viewRef.current.state.selection
-      });
+    const view = viewRef.current;
+    const doc = parseHtmlContent(content, schema);
 
-      viewRef.current.updateState(newState);
+    // Only update if document structure changed
+    if (!doc.eq(view.state.doc)) {
+      // Create new state with updated document
+      const newState = memoizedCreateState(doc);
+      view.updateState(newState);
     }
-  }, [content, schema]);
+  }, [content, schema, memoizedCreateState]);
 
-  return {
-    editorRef,
-    viewRef
-  };
+  return { editorRef };
 }

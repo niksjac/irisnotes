@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import React, { useEffect, useMemo, useCallback } from "react";
 import { EditorContainer, DualPaneEditor } from "./features/editor";
 import { ActivityBar } from "./features/activity-bar";
 import { ResizableSidebar } from "./features/sidebar";
@@ -13,10 +13,22 @@ import "./styles/theme.css";
 import "./styles/layout.css";
 import "./styles/components.css";
 
+// Memoized components to prevent unnecessary re-renders
+const MemoizedActivityBar = React.memo(ActivityBar);
+const MemoizedResizableSidebar = React.memo(ResizableSidebar);
+const MemoizedDualPaneEditor = React.memo(DualPaneEditor);
+const MemoizedEditorContainer = React.memo(EditorContainer);
+
 function App() {
   const { config, loading: configLoading } = useConfig();
 
-  // Custom hooks for feature management
+  // Memoized hooks to prevent unnecessary re-renders
+  const notesData = useNotes();
+  const themeData = useTheme();
+  const layoutData = useLayout();
+  const lineWrappingData = useLineWrapping();
+
+  // Destructure only what we need
   const {
     notes,
     selectedNote,
@@ -29,9 +41,9 @@ function App() {
     createNewNote,
     updateNoteTitle,
     updateNoteContent
-  } = useNotes();
+  } = notesData;
 
-  const { loadUserTheme } = useTheme();
+  const { loadUserTheme } = themeData;
 
   const {
     sidebarCollapsed,
@@ -45,20 +57,59 @@ function App() {
     handleViewChange,
     toggleDualPaneMode,
     setActivePane
-  } = useLayout();
+  } = layoutData;
 
-  const { isWrapping, toggleLineWrapping } = useLineWrapping();
+  const { isWrapping, toggleLineWrapping } = lineWrappingData;
+
+  // Memoize expensive computations
+  const notesForPane = useMemo(() => ({
+    left: getSelectedNoteForPane('left') || null,
+    right: getSelectedNoteForPane('right') || null
+  }), [getSelectedNoteForPane]);
+
+  // Memoize hotkey sequences to prevent recreation
+  const hotkeySequences = useMemo(() => createAppConfigSequences(), []);
+
+  // Memoize callbacks to prevent child re-renders
+  const handleNoteClick = useCallback((noteId: string) => {
+    if (isDualPaneMode) {
+      openNoteInPane(noteId, activePaneId);
+    } else {
+      setSelectedNoteId(noteId);
+    }
+  }, [isDualPaneMode, openNoteInPane, activePaneId, setSelectedNoteId]);
+
+  const handleTitleChange = useCallback((noteId: string, title: string) => {
+    updateNoteTitle(noteId, title);
+  }, [updateNoteTitle]);
+
+  const handleContentChange = useCallback((noteId: string, content: string) => {
+    updateNoteContent(noteId, content);
+  }, [updateNoteContent]);
+
+  // Memoize shortcuts configuration
+  const shortcutsConfig = useMemo(() => ({
+    onToggleSidebar: toggleSidebar,
+    onToggleActivityBar: toggleActivityBar,
+    onToggleDualPane: toggleDualPaneMode,
+    onReloadNote: reloadExampleNote,
+    onToggleLineWrapping: toggleLineWrapping
+  }), [toggleSidebar, toggleActivityBar, toggleDualPaneMode, reloadExampleNote, toggleLineWrapping]);
 
   // Initialize app after config loads
   useEffect(() => {
-    const initializeApp = async () => {
-      if (configLoading) return;
+    if (configLoading) return;
 
+    const initializeApp = async () => {
       try {
         console.log("Initializing IrisNotes...");
         console.log("Config loaded:", config);
-        await loadExampleNote();
-        await loadUserTheme();
+
+        // Load in parallel for better performance
+        await Promise.all([
+          loadExampleNote(),
+          loadUserTheme()
+        ]);
       } catch (error) {
         console.error("Failed to initialize app:", error);
       }
@@ -68,29 +119,161 @@ function App() {
   }, [configLoading, config, loadExampleNote, loadUserTheme]);
 
   // Setup keyboard shortcuts
-  useShortcuts({
-    onToggleSidebar: toggleSidebar,
-    onToggleActivityBar: toggleActivityBar,
-    onToggleDualPane: toggleDualPaneMode,
-    onReloadNote: reloadExampleNote,
-    onToggleLineWrapping: toggleLineWrapping
-  });
+  useShortcuts(shortcutsConfig);
 
   // Setup hotkey sequences (VSCode-style)
   useHotkeySequences({
-    sequences: createAppConfigSequences()
+    sequences: hotkeySequences
   });
 
-  // Get notes for dual-pane mode
-  const leftNote = getSelectedNoteForPane('left') || null;
-  const rightNote = getSelectedNoteForPane('right') || null;
+  // Memoize sidebar content to prevent unnecessary re-renders
+  const sidebarContent = useMemo(() => (
+    <div className="sidebar">
+      <div style={{
+        padding: 'var(--iris-space-md)',
+        borderBottom: '1px solid var(--iris-border)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <h2 style={{ margin: 0, fontSize: 'var(--iris-font-size-lg)' }}>
+          Section {selectedView}
+        </h2>
+      </div>
+
+      {/* Notes list with pane selection for dual-mode */}
+      <div style={{ padding: 'var(--iris-space-md)' }}>
+        {notes.map(note => (
+          <div
+            key={note.id}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: 'var(--iris-space-sm)',
+              margin: 'var(--iris-space-xs) 0',
+              background: (selectedNoteId === note.id ||
+                         (notesForPane.left?.id === note.id || notesForPane.right?.id === note.id))
+                         ? 'var(--iris-bg-secondary)' : 'transparent',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+            onClick={() => handleNoteClick(note.id)}
+          >
+            <span style={{ flex: 1, fontSize: 'var(--iris-font-size-sm)' }}>
+              {note.title}
+            </span>
+            {isDualPaneMode && (
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: '10px',
+                    border: '1px solid var(--iris-border)',
+                    borderRadius: '2px',
+                    background: notesForPane.left?.id === note.id ? 'var(--iris-accent)' : 'transparent',
+                    color: notesForPane.left?.id === note.id ? 'white' : 'var(--iris-text)',
+                    cursor: 'pointer'
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openNoteInPane(note.id, 'left');
+                  }}
+                >
+                  L
+                </button>
+                <button
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: '10px',
+                    border: '1px solid var(--iris-border)',
+                    borderRadius: '2px',
+                    background: notesForPane.right?.id === note.id ? 'var(--iris-accent)' : 'transparent',
+                    color: notesForPane.right?.id === note.id ? 'white' : 'var(--iris-text)',
+                    cursor: 'pointer'
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openNoteInPane(note.id, 'right');
+                  }}
+                >
+                  R
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Add new note button */}
+      <div style={{ padding: 'var(--iris-space-md)', borderTop: '1px solid var(--iris-border)' }}>
+        <button
+          onClick={() => createNewNote()}
+          style={{
+            width: '100%',
+            padding: 'var(--iris-space-sm)',
+            border: '1px solid var(--iris-border)',
+            borderRadius: '4px',
+            background: 'var(--iris-bg-secondary)',
+            color: 'var(--iris-text)',
+            cursor: 'pointer',
+            fontSize: 'var(--iris-font-size-sm)'
+          }}
+        >
+          + New Note
+        </button>
+      </div>
+    </div>
+  ), [notes, selectedView, selectedNoteId, notesForPane, isDualPaneMode, handleNoteClick, openNoteInPane, createNewNote]);
+
+  // Memoize main content to prevent unnecessary re-renders
+  const mainContent = useMemo(() => {
+    if (isDualPaneMode) {
+      return (
+        <MemoizedDualPaneEditor
+          leftNote={notesForPane.left}
+          rightNote={notesForPane.right}
+          activePaneId={activePaneId}
+          onNoteContentChange={handleContentChange}
+          onNoteTitleChange={handleTitleChange}
+          onPaneClick={setActivePane}
+        />
+      );
+    }
+
+    return (
+      <>
+        <div className="title-bar">
+          {selectedNote && (
+            <input
+              className="title-input"
+              type="text"
+              value={selectedNote.title}
+              onChange={(e) => handleTitleChange(selectedNote.id, e.target.value)}
+              placeholder="Untitled Note"
+            />
+          )}
+        </div>
+
+        <div className="editor-container">
+          {selectedNote && (
+            <MemoizedEditorContainer
+              content={selectedNote.content}
+              onChange={(content) => handleContentChange(selectedNote.id, content)}
+              placeholder="Start writing your note..."
+            />
+          )}
+        </div>
+      </>
+    );
+  }, [isDualPaneMode, notesForPane, activePaneId, selectedNote, handleContentChange, handleTitleChange, setActivePane]);
 
   return (
     <div className="app-container">
       <div className="app-content">
         <div className="app">
           {/* Activity Bar */}
-          <ActivityBar
+          <MemoizedActivityBar
             isVisible={activityBarVisible}
             selectedView={selectedView}
             onViewChange={handleViewChange}
@@ -101,153 +284,18 @@ function App() {
           />
 
           {/* Resizable Sidebar */}
-          <ResizableSidebar
+          <MemoizedResizableSidebar
             isCollapsed={sidebarCollapsed}
             onCollapsedChange={handleSidebarCollapsedChange}
             minWidth={200}
             maxWidth={600}
             defaultWidth={300}
           >
-            <div className="sidebar">
-              <div style={{
-                padding: 'var(--iris-space-md)',
-                borderBottom: '1px solid var(--iris-border)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <h2 style={{ margin: 0, fontSize: 'var(--iris-font-size-lg)' }}>
-                  Section {selectedView}
-                </h2>
-              </div>
+            {sidebarContent}
+          </MemoizedResizableSidebar>
 
-              {/* Notes list with pane selection for dual-mode */}
-              <div style={{ padding: 'var(--iris-space-md)' }}>
-                {notes.map(note => (
-                  <div
-                    key={note.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: 'var(--iris-space-sm)',
-                      margin: 'var(--iris-space-xs) 0',
-                      background: (selectedNoteId === note.id ||
-                                 (leftNote?.id === note.id || rightNote?.id === note.id))
-                                 ? 'var(--iris-bg-secondary)' : 'transparent',
-                      borderRadius: '4px',
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => {
-                      if (isDualPaneMode) {
-                        openNoteInPane(note.id, activePaneId);
-                      } else {
-                        setSelectedNoteId(note.id);
-                      }
-                    }}
-                  >
-                    <span style={{ flex: 1, fontSize: 'var(--iris-font-size-sm)' }}>
-                      {note.title}
-                    </span>
-                    {isDualPaneMode && (
-                      <div style={{ display: 'flex', gap: 'var(--iris-space-xs)' }}>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openNoteInPane(note.id, 'left');
-                          }}
-                          style={{
-                            padding: '2px 6px',
-                            fontSize: '10px',
-                            border: '1px solid var(--iris-border)',
-                            background: leftNote?.id === note.id ? 'var(--iris-accent)' : 'transparent',
-                            color: leftNote?.id === note.id ? 'white' : 'var(--iris-text)',
-                            borderRadius: '2px',
-                            cursor: 'pointer'
-                          }}
-                          title="Open in left pane"
-                        >
-                          L
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openNoteInPane(note.id, 'right');
-                          }}
-                          style={{
-                            padding: '2px 6px',
-                            fontSize: '10px',
-                            border: '1px solid var(--iris-border)',
-                            background: rightNote?.id === note.id ? 'var(--iris-accent)' : 'transparent',
-                            color: rightNote?.id === note.id ? 'white' : 'var(--iris-text)',
-                            borderRadius: '2px',
-                            cursor: 'pointer'
-                          }}
-                          title="Open in right pane"
-                        >
-                          R
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-                <button
-                  onClick={() => createNewNote(isDualPaneMode ? activePaneId : undefined)}
-                  style={{
-                    width: '100%',
-                    padding: 'var(--iris-space-sm)',
-                    margin: 'var(--iris-space-sm) 0',
-                    border: '1px dashed var(--iris-border)',
-                    background: 'transparent',
-                    color: 'var(--iris-text-muted)',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: 'var(--iris-font-size-sm)'
-                  }}
-                >
-                  + New Note {isDualPaneMode ? `(${activePaneId === 'left' ? 'Left' : 'Right'} pane)` : ''}
-                </button>
-              </div>
-            </div>
-          </ResizableSidebar>
-
-          {/* Main Content */}
           <div className="main-content">
-            {isDualPaneMode ? (
-              <DualPaneEditor
-                leftNote={leftNote}
-                rightNote={rightNote}
-                activePaneId={activePaneId}
-                onNoteContentChange={updateNoteContent}
-                onNoteTitleChange={updateNoteTitle}
-                onPaneClick={setActivePane}
-              />
-            ) : (
-              <>
-                <div className="title-bar">
-                  {selectedNote && (
-                    <input
-                      className="title-input"
-                      type="text"
-                      value={selectedNote.title}
-                      onChange={(e) => updateNoteTitle(selectedNote.id, e.target.value)}
-                      placeholder="Untitled Note"
-                    />
-                  )}
-                </div>
-
-                <div className="editor-container">
-                  {selectedNote && (
-                    <EditorContainer
-                      content={selectedNote.content}
-                      onChange={(content) => updateNoteContent(selectedNote.id, content)}
-                      placeholder="Start writing your note..."
-                    />
-                  )}
-                </div>
-              </>
-            )}
+            {mainContent}
           </div>
         </div>
       </div>

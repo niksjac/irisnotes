@@ -10,6 +10,9 @@ export class FileStorageAdapter implements StorageAdapter {
   private notebooks: Map<string, Notebook> = new Map();
   private notes: Map<string, FileNote> = new Map();
   private initialized = false;
+  private loadingPromise: Promise<void> | null = null;
+  private metadataCache: Map<string, { mtime: number; size: number }> = new Map();
+  private loadedPaths: Set<string> = new Set();
 
   constructor(config: StorageConfig) {
     this.config = config;
@@ -17,20 +20,37 @@ export class FileStorageAdapter implements StorageAdapter {
   }
 
   async init(): Promise<StorageResult<void>> {
+    if (this.initialized) return { success: true };
+
+    // Prevent multiple initializations
+    if (this.loadingPromise) {
+      await this.loadingPromise;
+      return { success: true };
+    }
+
+    this.loadingPromise = this.performInit();
+    await this.loadingPromise;
+    this.loadingPromise = null;
+
+    return { success: true };
+  }
+
+  private async performInit(): Promise<void> {
     try {
       // Ensure base directory exists
       if (!(await exists(this.basePath, { baseDir: BaseDirectory.AppConfig }))) {
         await create(this.basePath, { baseDir: BaseDirectory.AppConfig });
       }
 
-      // Load notebooks and notes
+      // Load notebooks first (lightweight)
       await this.loadNotebooks();
-      await this.loadNotes();
+
+      // Load notes lazily - only metadata initially
+      await this.loadNoteMetadata();
 
       this.initialized = true;
-      return { success: true };
     } catch (error) {
-      return { success: false, error: `Failed to initialize file storage: ${error}` };
+      throw new Error(`Failed to initialize file storage: ${error}`);
     }
   }
 
@@ -74,45 +94,99 @@ export class FileStorageAdapter implements StorageAdapter {
     }
   }
 
-  private async loadNotes(): Promise<void> {
+  // Load only metadata initially for better performance
+  private async loadNoteMetadata(): Promise<void> {
     this.notes.clear();
 
-    // Load notes from root directory
-    await this.loadNotesFromPath('', 'root');
+    // Load metadata from root directory
+    await this.loadNoteMetadataFromPath('', 'root');
 
-    // Load notes from each notebook directory
+    // Load metadata from each notebook directory
     for (const [notebookId, notebook] of this.notebooks) {
       if (!notebook.isRoot) {
-        await this.loadNotesFromPath(notebook.path, notebookId);
+        await this.loadNoteMetadataFromPath(notebook.path, notebookId);
       }
     }
   }
 
-  private async loadNotesFromPath(relativePath: string, notebookId: string): Promise<void> {
+  private async loadNoteMetadataFromPath(relativePath: string, notebookId: string): Promise<void> {
     try {
       const fullPath = relativePath ? `${this.basePath}/${relativePath}` : this.basePath;
       const entries = await readDir(fullPath, { baseDir: BaseDirectory.AppConfig });
 
-      for (const entry of entries) {
-        if (entry.isFile && entry.name) {
-          // It's a file, not a directory
-          const extension = this.getFileExtension(entry.name).toLowerCase();
-          const format = this.getFormatFromExtension(extension);
+      // Process files in batches to avoid blocking
+      const batchSize = 10;
+      for (let i = 0; i < entries.length; i += batchSize) {
+        const batch = entries.slice(i, i + batchSize);
 
-          if (format) {
-            try {
-              const note = await this.loadNoteFromFile(entry.name, relativePath, format, notebookId);
-              if (note) {
-                this.notes.set(note.id, note);
+        await Promise.all(batch.map(async (entry) => {
+          if (entry.isFile && entry.name) {
+            const extension = this.getFileExtension(entry.name).toLowerCase();
+            const format = this.getFormatFromExtension(extension);
+
+            if (format) {
+              try {
+                // Create lightweight note with metadata only
+                const id = this.generateNoteId(entry.name, relativePath);
+                const filePath = relativePath ? `${this.basePath}/${relativePath}/${entry.name}` : `${this.basePath}/${entry.name}`;
+
+                const fileNote: FileNote = {
+                  id,
+                  title: this.getFileBasename(entry.name),
+                  content: '', // Will be loaded lazily
+                  content_type: this.mapFormatToContentType(format),
+                  content_raw: null,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                  deleted_at: null,
+                  is_pinned: false,
+                  is_archived: false,
+                  word_count: 0,
+                  character_count: 0,
+                  content_plaintext: '',
+                  file_path: filePath,
+                  file_format: format,
+                  loaded: false, // Mark as not loaded
+                  ...(notebookId !== 'root' && { notebook_id: notebookId })
+                };
+
+                this.notes.set(id, fileNote);
+              } catch (error) {
+                console.warn(`Failed to load metadata for ${entry.name}:`, error);
               }
-            } catch (error) {
-              console.warn(`Failed to load note from ${entry.name}:`, error);
             }
           }
-        }
+        }));
+
+        // Yield control between batches
+        await new Promise(resolve => setTimeout(resolve, 0));
       }
     } catch (error) {
-      console.warn(`Failed to load notes from path ${relativePath}:`, error);
+      console.warn(`Failed to load note metadata from path ${relativePath}:`, error);
+    }
+  }
+
+  // Lazy load full note content when needed
+  private async loadFullNote(noteId: string): Promise<FileNote | null> {
+    const note = this.notes.get(noteId);
+    if (!note || note.loaded) return note || null;
+
+    try {
+      const content = await readTextFile(note.file_path, { baseDir: BaseDirectory.AppConfig });
+      const handler = getFileFormatHandler(note.file_format);
+      const fullNote = await handler.deserialize(content, note.file_path);
+
+      const updatedNote: FileNote = {
+        ...note,
+        ...fullNote,
+        loaded: true
+      };
+
+      this.notes.set(noteId, updatedNote);
+      return updatedNote;
+    } catch (error) {
+      console.error(`Failed to load full note ${noteId}:`, error);
+      return null;
     }
   }
 
@@ -124,37 +198,6 @@ export class FileStorageAdapter implements StorageAdapter {
       '.json': 'json'
     };
     return formatMap[extension] || null;
-  }
-
-  private async loadNoteFromFile(
-    filename: string,
-    relativePath: string,
-    format: FileFormat,
-    notebookId: string
-  ): Promise<FileNote | null> {
-    try {
-      const filePath = relativePath ? `${this.basePath}/${relativePath}/${filename}` : `${this.basePath}/${filename}`;
-      const content = await readTextFile(filePath, { baseDir: BaseDirectory.AppConfig });
-
-      const handler = getFileFormatHandler(format);
-      const note = await handler.deserialize(content, filePath);
-
-      // Generate ID from filename and path
-      const id = this.generateNoteId(filename, relativePath);
-
-      const fileNote: FileNote = {
-        ...note,
-        id,
-        file_path: filePath,
-        file_format: format,
-        ...(notebookId !== 'root' && { notebook_id: notebookId })
-      };
-
-      return fileNote;
-    } catch (error) {
-      console.error(`Failed to load note from ${filename}:`, error);
-      return null;
-    }
   }
 
   private generateNoteId(filename: string, relativePath: string): string {
@@ -170,7 +213,7 @@ export class FileStorageAdapter implements StorageAdapter {
     try {
       let notes = Array.from(this.notes.values()) as Note[];
 
-      // Apply filters
+      // Apply filters on metadata only (fast)
       if (filters) {
         if (filters.is_pinned !== undefined) {
           notes = notes.filter(note => note.is_pinned === filters.is_pinned);
@@ -180,12 +223,29 @@ export class FileStorageAdapter implements StorageAdapter {
         }
         if (filters.search_query) {
           const query = filters.search_query.toLowerCase();
-          notes = notes.filter(note =>
-            note.title.toLowerCase().includes(query) ||
-            note.content_plaintext.toLowerCase().includes(query)
-          );
+          // Search in titles first (fast), then load content for full-text search
+          notes = notes.filter(note => note.title.toLowerCase().includes(query));
+
+          // If no title matches, search in content (slower)
+          if (notes.length === 0) {
+            const contentMatches = [];
+            for (const note of Array.from(this.notes.values())) {
+              if (!note.loaded) {
+                const fullNote = await this.loadFullNote(note.id);
+                if (fullNote && fullNote.content_plaintext.toLowerCase().includes(query)) {
+                  contentMatches.push(fullNote);
+                }
+              } else if (note.content_plaintext.toLowerCase().includes(query)) {
+                contentMatches.push(note);
+              }
+            }
+            notes = contentMatches;
+          }
         }
       }
+
+      // Sort by updated_at for better UX
+      notes.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
       return { success: true, data: notes };
     } catch (error) {
@@ -198,8 +258,12 @@ export class FileStorageAdapter implements StorageAdapter {
       await this.init();
     }
 
-    const note = this.notes.get(id);
-    return { success: true, data: note || null };
+    try {
+      const note = await this.loadFullNote(id);
+      return { success: true, data: note };
+    } catch (error) {
+      return { success: false, error: `Failed to get note: ${error}` };
+    }
   }
 
   async createNote(params: CreateNoteParams): Promise<StorageResult<Note>> {
@@ -215,7 +279,7 @@ export class FileStorageAdapter implements StorageAdapter {
 
       // Generate filename and ID
       const filename = this.sanitizeFilename(title);
-      const format = contentType === 'custom' ? 'custom' : contentType as FileFormat;
+      const format = this.mapContentTypeToFormat(contentType);
       const extension = this.getExtensionForFormat(format);
       const fullFilename = `${filename}${extension}`;
       const id = this.generateNoteId(fullFilename, '');
@@ -232,11 +296,12 @@ export class FileStorageAdapter implements StorageAdapter {
         deleted_at: null,
         is_pinned: false,
         is_archived: false,
-        word_count: content.split(/\s+/).length,
+        word_count: content.split(/\s+/).filter(word => word.length > 0).length,
         character_count: content.length,
         content_plaintext: content.replace(/<[^>]*>/g, ''),
         file_path: `${this.basePath}/${fullFilename}`,
-        file_format: format
+        file_format: format,
+        loaded: true
       };
 
       // Save to file
@@ -264,41 +329,31 @@ export class FileStorageAdapter implements StorageAdapter {
     }
 
     try {
-      const existingNote = this.notes.get(params.id);
+      const existingNote = await this.loadFullNote(params.id);
       if (!existingNote) {
         return { success: false, error: 'Note not found' };
       }
 
       // Update note properties
+      const content = params.content || existingNote.content;
       const updatedNote: FileNote = {
         ...existingNote,
         ...params,
         updated_at: new Date().toISOString(),
-        word_count: params.content ? params.content.split(/\s+/).length : existingNote.word_count,
-        character_count: params.content ? params.content.length : existingNote.character_count,
-        content_plaintext: params.content ? params.content.replace(/<[^>]*>/g, '') : existingNote.content_plaintext
+        word_count: content.split(/\s+/).filter(word => word.length > 0).length,
+        character_count: content.length,
+        content_plaintext: content.replace(/<[^>]*>/g, ''),
+        loaded: true
       };
 
-      // If title changed, we might need to rename the file
+      // Handle file renaming if title changed
       if (params.title && params.title !== existingNote.title) {
         const newFilename = this.sanitizeFilename(params.title);
         const extension = this.getExtensionForFormat(existingNote.file_format);
         const newFullFilename = `${newFilename}${extension}`;
         const newFilePath = `${this.basePath}/${newFullFilename}`;
 
-        // Remove old file
-        try {
-          await exists(existingNote.file_path, { baseDir: BaseDirectory.AppConfig }).then(async (fileExists) => {
-            if (fileExists) {
-              // Note: We'll need to handle file removal differently since remove might not be available
-              console.warn('File removal not implemented in current Tauri version');
-            }
-          });
-        } catch (error) {
-          console.warn('Could not remove old file:', error);
-        }
-
-        // Update file path
+        // Update file path and ID
         updatedNote.file_path = newFilePath;
         updatedNote.id = this.generateNoteId(newFullFilename, '');
       }
@@ -336,16 +391,11 @@ export class FileStorageAdapter implements StorageAdapter {
         return { success: false, error: 'Note not found' };
       }
 
-      // Remove file - simplified for now
-      try {
-        // Note: File removal might need to be handled differently
-        console.warn('File removal not fully implemented in current Tauri version');
-      } catch (error) {
-        console.warn('Could not remove file:', error);
-      }
-
-      // Remove from cache
+      // Remove from cache immediately
       this.notes.delete(id);
+
+      // TODO: Implement actual file removal when Tauri supports it
+      console.warn('File removal not fully implemented in current Tauri version');
 
       return { success: true };
     } catch (error) {
@@ -354,11 +404,61 @@ export class FileStorageAdapter implements StorageAdapter {
   }
 
   async searchNotes(query: string, filters?: NoteFilters): Promise<StorageResult<Note[]>> {
-    const result = await this.getNotes({
-      ...filters,
-      search_query: query
-    });
-    return result;
+    if (!this.initialized) {
+      await this.init();
+    }
+
+    try {
+      const results: Note[] = [];
+      const searchQuery = query.toLowerCase();
+
+      // Search in loaded notes first
+      for (const note of this.notes.values()) {
+        if (note.loaded) {
+          if (note.title.toLowerCase().includes(searchQuery) ||
+              note.content_plaintext.toLowerCase().includes(searchQuery)) {
+            results.push(note);
+          }
+        }
+      }
+
+      // If we need more results, search in unloaded notes
+      if (results.length < 10) {
+        const unloadedNotes = Array.from(this.notes.values()).filter(note => !note.loaded);
+
+        // Search in batches to avoid blocking
+        const batchSize = 5;
+        for (let i = 0; i < unloadedNotes.length && results.length < 10; i += batchSize) {
+          const batch = unloadedNotes.slice(i, i + batchSize);
+
+          await Promise.all(batch.map(async (note) => {
+            if (results.length >= 10) return;
+
+            const fullNote = await this.loadFullNote(note.id);
+            if (fullNote &&
+                (fullNote.title.toLowerCase().includes(searchQuery) ||
+                 fullNote.content_plaintext.toLowerCase().includes(searchQuery))) {
+              results.push(fullNote);
+            }
+          }));
+        }
+      }
+
+      // Apply additional filters
+      let filteredResults = results;
+      if (filters) {
+        if (filters.is_pinned !== undefined) {
+          filteredResults = filteredResults.filter(note => note.is_pinned === filters.is_pinned);
+        }
+        if (filters.is_archived !== undefined) {
+          filteredResults = filteredResults.filter(note => note.is_archived === filters.is_archived);
+        }
+      }
+
+      return { success: true, data: filteredResults };
+    } catch (error) {
+      return { success: false, error: `Failed to search notes: ${error}` };
+    }
   }
 
   async getNotebooks(): Promise<StorageResult<Notebook[]>> {
@@ -391,7 +491,7 @@ export class FileStorageAdapter implements StorageAdapter {
       await create(fullPath, { baseDir: BaseDirectory.AppConfig });
 
       const notebook: Notebook = {
-        id: notebookPath,
+        id: name,
         name,
         path: notebookPath,
         isRoot: false,
@@ -399,8 +499,7 @@ export class FileStorageAdapter implements StorageAdapter {
         updated_at: new Date().toISOString()
       };
 
-      this.notebooks.set(notebookPath, notebook);
-
+      this.notebooks.set(name, notebook);
       return { success: true, data: notebook };
     } catch (error) {
       return { success: false, error: `Failed to create notebook: ${error}` };
@@ -409,8 +508,14 @@ export class FileStorageAdapter implements StorageAdapter {
 
   async sync(): Promise<StorageResult<void>> {
     try {
-      await this.loadNotebooks();
-      await this.loadNotes();
+      // Clear caches and reload
+      this.notes.clear();
+      this.notebooks.clear();
+      this.metadataCache.clear();
+      this.loadedPaths.clear();
+      this.initialized = false;
+
+      await this.init();
       return { success: true };
     } catch (error) {
       return { success: false, error: `Failed to sync: ${error}` };
@@ -444,6 +549,27 @@ export class FileStorageAdapter implements StorageAdapter {
       .substring(0, 100);
   }
 
+  private mapFormatToContentType(format: FileFormat): 'html' | 'markdown' | 'plain' | 'custom' {
+    const formatMap: Record<FileFormat, 'html' | 'markdown' | 'plain' | 'custom'> = {
+      'custom': 'custom',
+      'markdown': 'markdown',
+      'html': 'html',
+      'json': 'plain',
+      'txt': 'plain'
+    };
+    return formatMap[format] || 'plain';
+  }
+
+  private mapContentTypeToFormat(contentType: 'html' | 'markdown' | 'plain' | 'custom'): FileFormat {
+    const contentTypeMap: Record<'html' | 'markdown' | 'plain' | 'custom', FileFormat> = {
+      'custom': 'custom',
+      'markdown': 'markdown',
+      'html': 'html',
+      'plain': 'txt'
+    };
+    return contentTypeMap[contentType] || 'custom';
+  }
+
   private getExtensionForFormat(format: FileFormat): string {
     const extensionMap: Record<FileFormat, string> = {
       'custom': '.txt',
@@ -456,12 +582,10 @@ export class FileStorageAdapter implements StorageAdapter {
   }
 
   private getFileExtension(filename: string): string {
-    const lastDotIndex = filename.lastIndexOf('.');
-    return lastDotIndex !== -1 ? filename.substring(lastDotIndex) : '';
+    return filename.substring(filename.lastIndexOf('.'));
   }
 
   private getFileBasename(filename: string): string {
-    const lastDotIndex = filename.lastIndexOf('.');
-    return lastDotIndex !== -1 ? filename.substring(0, lastDotIndex) : filename;
+    return filename.substring(0, filename.lastIndexOf('.'));
   }
 }

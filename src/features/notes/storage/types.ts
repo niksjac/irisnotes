@@ -21,6 +21,7 @@ export interface FileNote extends Note {
   file_path: string;
   file_format: FileFormat;
   notebook_id?: string;
+  loaded?: boolean; // Track if full content has been loaded
 }
 
 // Storage configuration
