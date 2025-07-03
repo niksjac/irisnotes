@@ -59,26 +59,26 @@
 }
 
 /* Current line highlight respects parent wrapping settings */
-.rich-editor-view.no-line-wrapping p.editor-current-line-highlight {
+[data-line-wrapping="false"] .rich-editor-view p.editor-current-line-highlight {
   white-space: nowrap;
   width: 100%;
   max-inline-size: none;
 }
 
-.rich-editor-view.line-wrapping p.editor-current-line-highlight {
+[data-line-wrapping="true"] .rich-editor-view p.editor-current-line-highlight {
   width: 100%;
   white-space: normal;
   max-inline-size: 100%;
 }
 
-/* Line wrapping toggle classes */
-.rich-editor-view.line-wrapping p {
+/* Line wrapping toggle using data attributes */
+[data-line-wrapping="true"] .rich-editor-view p {
   white-space: normal;
   width: 100%;
   max-inline-size: 100%;
 }
 
-.rich-editor-view.no-line-wrapping p {
+[data-line-wrapping="false"] .rich-editor-view p {
   white-space: nowrap;
   width: fit-content;
   max-inline-size: none;
