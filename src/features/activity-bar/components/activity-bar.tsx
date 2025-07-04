@@ -3,8 +3,14 @@ import "./activity-bar.css";
 
 interface ActivityBarProps {
   isVisible: boolean;
-  selectedView: string;
-  onViewChange: (view: string) => void;
+  sidebarCollapsed: boolean;
+  configViewActive: boolean;
+  hotkeysViewActive: boolean;
+  databaseStatusVisible: boolean;
+  onToggleSidebar: () => void;
+  onToggleConfigView: () => void;
+  onToggleHotkeysView: () => void;
+  onToggleDatabaseStatus: () => void;
   isDualPaneMode?: boolean;
   onToggleDualPane?: () => void;
   isLineWrapping?: boolean;
@@ -13,38 +19,64 @@ interface ActivityBarProps {
 
 export function ActivityBar({
   isVisible,
-  selectedView,
-  onViewChange,
+  sidebarCollapsed,
+  configViewActive,
+  hotkeysViewActive,
+  databaseStatusVisible,
+  onToggleSidebar,
+  onToggleConfigView,
+  onToggleHotkeysView,
+  onToggleDatabaseStatus,
   isDualPaneMode = false,
   onToggleDualPane,
   isLineWrapping = false,
   onToggleLineWrapping
 }: ActivityBarProps) {
-  const activities = [
-    { id: "1", label: "Section 1" },
-    { id: "2", label: "Section 2" },
-    { id: "3", label: "Section 3" },
-    { id: "4", label: "Section 4" },
-  ];
-
   if (!isVisible) return null;
 
   return (
     <div className="activity-bar">
       <div className="activity-bar-content">
         <div className="activity-bar-items">
-          {activities.map((activity) => (
-            <button
-              key={activity.id}
-              className={clsx("activity-bar-item", {
-                active: selectedView === activity.id,
-              })}
-              onClick={() => onViewChange(activity.id)}
-              title={activity.label}
-            >
-              {activity.id}
-            </button>
-          ))}
+          <button
+            className={clsx("activity-bar-item", {
+              active: !sidebarCollapsed,
+            })}
+            onClick={onToggleSidebar}
+            title="Toggle Notes Sidebar"
+          >
+            📝
+          </button>
+
+          <button
+            className={clsx("activity-bar-item", {
+              active: configViewActive,
+            })}
+            onClick={onToggleConfigView}
+            title="Configuration"
+          >
+            ⚙️
+          </button>
+
+          <button
+            className={clsx("activity-bar-item", {
+              active: hotkeysViewActive,
+            })}
+            onClick={onToggleHotkeysView}
+            title="Hotkeys Reference"
+          >
+            ⌨️
+          </button>
+
+          <button
+            className={clsx("activity-bar-item", {
+              active: databaseStatusVisible,
+            })}
+            onClick={onToggleDatabaseStatus}
+            title="Database Status"
+          >
+            🗄️
+          </button>
         </div>
 
         <div className="activity-bar-separator">

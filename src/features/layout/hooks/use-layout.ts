@@ -5,7 +5,9 @@ export type PaneId = 'left' | 'right';
 export const useLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [activityBarVisible, setActivityBarVisible] = useState(true);
-  const [selectedView, setSelectedView] = useState("1");
+  const [configViewActive, setConfigViewActive] = useState(false);
+  const [hotkeysViewActive, setHotkeysViewActive] = useState(false);
+  const [databaseStatusVisible, setDatabaseStatusVisible] = useState(false);
   const [isDualPaneMode, setIsDualPaneMode] = useState(false);
   const [activePaneId, setActivePaneId] = useState<PaneId>('left');
 
@@ -21,11 +23,30 @@ export const useLayout = () => {
     setActivityBarVisible(prev => !prev);
   };
 
-  const handleViewChange = (view: string) => {
-    setSelectedView(view);
-    if (sidebarCollapsed) {
-      setSidebarCollapsed(false);
-    }
+  const toggleConfigView = () => {
+    setConfigViewActive(prev => {
+      const newState = !prev;
+      if (newState) {
+        // Deactivate other views when activating config
+        setHotkeysViewActive(false);
+      }
+      return newState;
+    });
+  };
+
+  const toggleHotkeysView = () => {
+    setHotkeysViewActive(prev => {
+      const newState = !prev;
+      if (newState) {
+        // Deactivate other views when activating hotkeys
+        setConfigViewActive(false);
+      }
+      return newState;
+    });
+  };
+
+  const toggleDatabaseStatus = () => {
+    setDatabaseStatusVisible(prev => !prev);
   };
 
   const toggleDualPaneMode = () => {
@@ -39,13 +60,17 @@ export const useLayout = () => {
   return {
     sidebarCollapsed,
     activityBarVisible,
-    selectedView,
+    configViewActive,
+    hotkeysViewActive,
+    databaseStatusVisible,
     isDualPaneMode,
     activePaneId,
     toggleSidebar,
     handleSidebarCollapsedChange,
     toggleActivityBar,
-    handleViewChange,
+    toggleConfigView,
+    toggleHotkeysView,
+    toggleDatabaseStatus,
     toggleDualPaneMode,
     setActivePane
   };

@@ -2,6 +2,9 @@ import React, { useEffect, useMemo, useCallback } from "react";
 import { EditorContainer, DualPaneEditor } from "./features/editor";
 import { ActivityBar } from "./features/activity-bar";
 import { ResizableSidebar } from "./features/sidebar";
+import { ConfigView } from "./features/editor/components/config-view";
+import { HotkeysView } from "./features/editor/components/hotkeys-view";
+import { DatabaseStatusView } from "./features/editor/components/database-status-view";
 import { useNotes } from "./features/notes";
 import { useTheme } from "./features/theme";
 import { useLayout } from "./features/layout";
@@ -18,6 +21,9 @@ const MemoizedActivityBar = React.memo(ActivityBar);
 const MemoizedResizableSidebar = React.memo(ResizableSidebar);
 const MemoizedDualPaneEditor = React.memo(DualPaneEditor);
 const MemoizedEditorContainer = React.memo(EditorContainer);
+const MemoizedConfigView = React.memo(ConfigView);
+const MemoizedHotkeysView = React.memo(HotkeysView);
+const MemoizedDatabaseStatusView = React.memo(DatabaseStatusView);
 
 function App() {
   const { config, loading: configLoading } = useConfig();
@@ -48,13 +54,17 @@ function App() {
   const {
     sidebarCollapsed,
     activityBarVisible,
-    selectedView,
+    configViewActive,
+    hotkeysViewActive,
+    databaseStatusVisible,
     isDualPaneMode,
     activePaneId,
     toggleSidebar,
     handleSidebarCollapsedChange,
     toggleActivityBar,
-    handleViewChange,
+    toggleConfigView,
+    toggleHotkeysView,
+    toggleDatabaseStatus,
     toggleDualPaneMode,
     setActivePane
   } = layoutData;
@@ -126,7 +136,7 @@ function App() {
     sequences: hotkeySequences
   });
 
-  // Memoize sidebar content to prevent unnecessary re-renders
+  // Memoize sidebar content to prevent unnecessary re-renders - Notes only
   const sidebarContent = useMemo(() => (
     <div className="sidebar">
       <div style={{
@@ -137,7 +147,7 @@ function App() {
         justifyContent: 'center'
       }}>
         <h2 style={{ margin: 0, fontSize: 'var(--iris-font-size-lg)' }}>
-          Section {selectedView}
+          Notes
         </h2>
       </div>
 
@@ -224,10 +234,21 @@ function App() {
         </button>
       </div>
     </div>
-  ), [notes, selectedView, selectedNoteId, notesForPane, isDualPaneMode, handleNoteClick, openNoteInPane, createNewNote]);
+  ), [notes, selectedNoteId, notesForPane, isDualPaneMode, handleNoteClick, openNoteInPane, createNewNote]);
 
   // Memoize main content to prevent unnecessary re-renders
   const mainContent = useMemo(() => {
+    // Show config view if active
+    if (configViewActive) {
+      return <MemoizedConfigView />;
+    }
+
+    // Show hotkeys view if active
+    if (hotkeysViewActive) {
+      return <MemoizedHotkeysView />;
+    }
+
+    // Otherwise show normal editor content
     if (isDualPaneMode) {
       return (
         <MemoizedDualPaneEditor
@@ -266,7 +287,7 @@ function App() {
         </div>
       </>
     );
-  }, [isDualPaneMode, notesForPane, activePaneId, selectedNote, handleContentChange, handleTitleChange, setActivePane]);
+  }, [configViewActive, hotkeysViewActive, isDualPaneMode, notesForPane, activePaneId, selectedNote, handleContentChange, handleTitleChange, setActivePane]);
 
   return (
     <div className="app-container">
@@ -275,8 +296,14 @@ function App() {
           {/* Activity Bar */}
           <MemoizedActivityBar
             isVisible={activityBarVisible}
-            selectedView={selectedView}
-            onViewChange={handleViewChange}
+            sidebarCollapsed={sidebarCollapsed}
+            configViewActive={configViewActive}
+            hotkeysViewActive={hotkeysViewActive}
+            databaseStatusVisible={databaseStatusVisible}
+            onToggleSidebar={toggleSidebar}
+            onToggleConfigView={toggleConfigView}
+            onToggleHotkeysView={toggleHotkeysView}
+            onToggleDatabaseStatus={toggleDatabaseStatus}
             isDualPaneMode={isDualPaneMode}
             onToggleDualPane={toggleDualPaneMode}
             isLineWrapping={isWrapping}
@@ -299,6 +326,9 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* Database Status View - Positioned overlay */}
+      {databaseStatusVisible && <MemoizedDatabaseStatusView />}
     </div>
   );
 }
