@@ -1,39 +1,13 @@
 import type { Note, CreateNoteParams, UpdateNoteParams, NoteFilters } from '../../../types/database';
 
 // Storage backend types
-export type StorageBackend = 'sqlite' | 'file';
-
-// File format types supported for file-based storage
-export type FileFormat = 'custom' | 'markdown' | 'html' | 'json' | 'txt';
-
-// Notebook (folder) information for file-based storage
-export interface Notebook {
-  id: string;
-  name: string;
-  path: string;
-  isRoot: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-// File-based note metadata
-export interface FileNote extends Note {
-  file_path: string;
-  file_format: FileFormat;
-  notebook_id?: string;
-  loaded?: boolean; // Track if full content has been loaded
-}
+export type StorageBackend = 'sqlite';
 
 // Storage configuration
 export interface StorageConfig {
   backend: StorageBackend;
   sqlite?: {
     database_path: string;
-  };
-  file?: {
-    base_path: string; // appconfig/notes/
-    supported_formats: FileFormat[];
-    auto_sync: boolean;
   };
 }
 
@@ -59,11 +33,6 @@ export interface StorageAdapter {
 
   // Search
   searchNotes(query: string, filters?: NoteFilters): Promise<StorageResult<Note[]>>;
-
-  // Notebooks (file-based only)
-  getNotebooks?(): Promise<StorageResult<Notebook[]>>;
-  getNotebook?(id: string): Promise<StorageResult<Notebook | null>>;
-  createNotebook?(name: string, path?: string): Promise<StorageResult<Notebook>>;
 
   // Synchronization
   sync?(): Promise<StorageResult<void>>;
@@ -94,28 +63,4 @@ export interface MultiStorageManager {
   // Cross-storage operations
   moveNote(noteId: string, fromStorage: string, toStorage: string): Promise<StorageResult<void>>;
   syncAllStorages(): Promise<StorageResult<void>>;
-}
-
-// File format handlers
-export interface FileFormatHandler {
-  format: FileFormat;
-  extension: string;
-  mimeType: string;
-
-  // Convert from custom format to file format
-  serialize(note: Note): Promise<string>;
-
-  // Convert from file format to Note object
-  deserialize(content: string, filePath: string): Promise<Note>;
-
-  // Extract metadata from file content
-  extractMetadata(content: string): Promise<{
-    title?: string;
-    created_at?: string;
-    updated_at?: string;
-    tags?: string[];
-  }>;
-
-  // Check if content is valid for this format
-  validate(content: string): Promise<{ isValid: boolean; errors: string[] }>;
 }

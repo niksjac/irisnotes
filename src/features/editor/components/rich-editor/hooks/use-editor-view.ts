@@ -7,6 +7,8 @@ import { keymap } from 'prosemirror-keymap';
 import { parseHtmlContent, serializeToHtml } from '../utils/content-parser';
 import { createEditorState } from '../utils/editor-state';
 import { openLinkAtCursor } from '../plugins/keyboard-plugin';
+import { triggerLinkClickEffect } from '../plugins/link-click-plugin';
+import { openUrl } from '@tauri-apps/plugin-opener';
 
 interface UseEditorViewOptions {
   content: string;
@@ -96,14 +98,9 @@ const optimizedLinkClick = (
       }
     }
 
-    // Use dynamic imports with better error handling
-    Promise.all([
-      import('../plugins/link-click-plugin'),
-      import('@tauri-apps/plugin-opener')
-    ]).then(([{ triggerLinkClickEffect }, { openUrl }]) => {
-      triggerLinkClickEffect(view, linkStart, linkEnd);
-      openUrl(href).catch(console.error);
-    }).catch(console.error);
+    // Use static imports for better performance
+    triggerLinkClickEffect(view, linkStart, linkEnd);
+    openUrl(href).catch(console.error);
 
     return true;
   }

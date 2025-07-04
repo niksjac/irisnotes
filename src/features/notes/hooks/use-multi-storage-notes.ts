@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Note, CreateNoteParams, UpdateNoteParams, NoteFilters } from '../../../types/database';
 import {
   createMultiStorageManager,
-  createFileStorageAdapter,
+  createSQLiteStorageAdapter,
   type MultiStorageManager
 } from '../storage';
 
@@ -47,17 +47,17 @@ export const useMultiStorageNotes = () => {
       setError(null);
 
       try {
-        // Add file-based storage
-        const fileStorage = createFileStorageAdapter('notes');
-        const fileResult = await storageManager.addStorage('file', fileStorage);
+        // Add SQLite-based storage
+        const sqliteStorage = createSQLiteStorageAdapter('notes.db');
+        const sqliteResult = await storageManager.addStorage('sqlite', sqliteStorage);
 
-        if (!fileResult.success) {
-          console.error('Failed to initialize file storage:', fileResult.error);
-          setError(fileResult.error || 'Failed to initialize file storage');
+        if (!sqliteResult.success) {
+          console.error('Failed to initialize SQLite storage:', sqliteResult.error);
+          setError(sqliteResult.error || 'Failed to initialize SQLite storage');
         }
 
-        // Set file storage as default
-        storageManager.setDefaultStorage('file');
+        // Set SQLite storage as default
+        storageManager.setDefaultStorage('sqlite');
 
         // Load initial notes
         await loadAllNotes();
