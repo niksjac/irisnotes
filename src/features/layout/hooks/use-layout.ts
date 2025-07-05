@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useConfig } from '../../../hooks/use-config';
 
 export type PaneId = 'left' | 'right';
 
 export const useLayout = () => {
+  const { config, updateConfig } = useConfig();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [activityBarVisible, setActivityBarVisible] = useState(true);
   const [configViewActive, setConfigViewActive] = useState(false);
@@ -57,6 +59,16 @@ export const useLayout = () => {
     setActivePaneId(paneId);
   };
 
+  const toggleToolbar = () => {
+    const newVisibility = !config.editor.toolbarVisible;
+    updateConfig({
+      editor: {
+        ...config.editor,
+        toolbarVisible: newVisibility
+      }
+    });
+  };
+
   return {
     sidebarCollapsed,
     activityBarVisible,
@@ -65,6 +77,7 @@ export const useLayout = () => {
     databaseStatusVisible,
     isDualPaneMode,
     activePaneId,
+    toolbarVisible: config.editor.toolbarVisible,
     toggleSidebar,
     handleSidebarCollapsedChange,
     toggleActivityBar,
@@ -72,6 +85,7 @@ export const useLayout = () => {
     toggleHotkeysView,
     toggleDatabaseStatus,
     toggleDualPaneMode,
-    setActivePane
+    setActivePane,
+    toggleToolbar
   };
 };

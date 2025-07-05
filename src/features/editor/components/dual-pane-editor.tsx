@@ -11,6 +11,7 @@ interface DualPaneEditorProps {
   onNoteContentChange: (noteId: string, content: string) => void;
   onNoteTitleChange: (noteId: string, title: string) => void;
   onPaneClick: (paneId: PaneId) => void;
+  toolbarVisible?: boolean;
 }
 
 export function DualPaneEditor({
@@ -19,7 +20,8 @@ export function DualPaneEditor({
   activePaneId,
   onNoteContentChange,
   onNoteTitleChange,
-  onPaneClick
+  onPaneClick,
+  toolbarVisible = true
 }: DualPaneEditorProps) {
   const [leftPaneWidth, setLeftPaneWidth] = useState(50); // percentage
 
@@ -71,6 +73,7 @@ export function DualPaneEditor({
               content={leftNote.content}
               onChange={(content) => onNoteContentChange(leftNote.id, content)}
               placeholder="Start writing your note..."
+              toolbarVisible={toolbarVisible}
             />
           ) : (
             <div className="empty-pane">
@@ -110,6 +113,7 @@ export function DualPaneEditor({
               content={rightNote.content}
               onChange={(content) => onNoteContentChange(rightNote.id, content)}
               placeholder="Start writing your note..."
+              toolbarVisible={toolbarVisible}
             />
           ) : (
             <div className="empty-pane">

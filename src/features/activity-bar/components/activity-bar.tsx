@@ -15,6 +15,8 @@ interface ActivityBarProps {
   onToggleDualPane?: () => void;
   isLineWrapping?: boolean;
   onToggleLineWrapping?: () => void;
+  isToolbarVisible?: boolean;
+  onToggleToolbar?: () => void;
 }
 
 export function ActivityBar({
@@ -30,7 +32,9 @@ export function ActivityBar({
   isDualPaneMode = false,
   onToggleDualPane,
   isLineWrapping = false,
-  onToggleLineWrapping
+  onToggleLineWrapping,
+  isToolbarVisible = true,
+  onToggleToolbar
 }: ActivityBarProps) {
   if (!isVisible) return null;
 
@@ -80,6 +84,18 @@ export function ActivityBar({
         </div>
 
         <div className="activity-bar-separator">
+          {onToggleToolbar && (
+            <button
+              className={clsx("activity-bar-item", {
+                active: isToolbarVisible,
+              })}
+              onClick={onToggleToolbar}
+              title={`${isToolbarVisible ? 'Hide' : 'Show'} editor toolbar`}
+            >
+              🔧
+            </button>
+          )}
+
           {onToggleLineWrapping && (
             <button
               className={clsx("activity-bar-item", {

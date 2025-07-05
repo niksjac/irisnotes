@@ -1,6 +1,7 @@
 {
   "editor": {
-    "lineWrapping": false
+    "lineWrapping": false,
+    "toolbarVisible": true
   },
   "debug": {
     "enableExampleNote": true

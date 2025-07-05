@@ -6,6 +6,7 @@ import { AppConfig } from '../types';
 const DEFAULT_CONFIG: AppConfig = {
   editor: {
     lineWrapping: false,
+    toolbarVisible: true,
   },
   debug: {
     enableExampleNote: false,

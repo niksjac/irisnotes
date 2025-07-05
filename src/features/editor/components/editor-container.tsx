@@ -8,6 +8,7 @@ interface EditorContainerProps {
   placeholder?: string;
   readOnly?: boolean;
   defaultView?: 'rich' | 'source';
+  toolbarVisible?: boolean;
 }
 
 export function EditorContainer({
@@ -15,7 +16,8 @@ export function EditorContainer({
   onChange,
   placeholder = "Start writing...",
   readOnly = false,
-  defaultView = 'rich'
+  defaultView = 'rich',
+  toolbarVisible = true
 }: EditorContainerProps) {
   const [showSourceView, setShowSourceView] = useState(defaultView === 'source');
 
@@ -41,6 +43,7 @@ export function EditorContainer({
       placeholder={placeholder}
       readOnly={readOnly}
       onToggleView={toggleView}
+      toolbarVisible={toolbarVisible}
     />
   );
 }

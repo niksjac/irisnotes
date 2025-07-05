@@ -4,4 +4,5 @@ export interface RichEditorProps {
   placeholder?: string;
   readOnly?: boolean;
   onToggleView?: () => void;
+  toolbarVisible?: boolean;
 }

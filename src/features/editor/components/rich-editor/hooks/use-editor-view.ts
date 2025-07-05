@@ -229,5 +229,5 @@ export function useEditorView({
     }
   }, [content, schema, memoizedCreateState]);
 
-  return { editorRef };
+  return { editorRef, editorView: viewRef.current };
 }

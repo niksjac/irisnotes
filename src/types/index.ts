@@ -36,6 +36,7 @@ export interface StorageSettings {
 export interface AppConfig {
   editor: {
     lineWrapping: boolean;
+    toolbarVisible: boolean;
   };
   debug: {
     enableExampleNote: boolean;

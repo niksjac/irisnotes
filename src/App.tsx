@@ -58,6 +58,7 @@ function App() {
     databaseStatusVisible,
     isDualPaneMode,
     activePaneId,
+    toolbarVisible,
     toggleSidebar,
     handleSidebarCollapsedChange,
     toggleActivityBar,
@@ -65,7 +66,8 @@ function App() {
     toggleHotkeysView,
     toggleDatabaseStatus,
     toggleDualPaneMode,
-    setActivePane
+    setActivePane,
+    toggleToolbar
   } = layoutData;
 
   const { isWrapping, toggleLineWrapping } = lineWrappingData;
@@ -254,6 +256,7 @@ function App() {
           onNoteContentChange={handleContentChange}
           onNoteTitleChange={handleTitleChange}
           onPaneClick={setActivePane}
+          toolbarVisible={toolbarVisible}
         />
       );
     }
@@ -278,6 +281,7 @@ function App() {
               content={selectedNote.content}
               onChange={(content) => handleContentChange(selectedNote.id, content)}
               placeholder="Start writing your note..."
+              toolbarVisible={toolbarVisible}
             />
           )}
         </div>
@@ -304,6 +308,8 @@ function App() {
             onToggleDualPane={toggleDualPaneMode}
             isLineWrapping={isWrapping}
             onToggleLineWrapping={toggleLineWrapping}
+            isToolbarVisible={toolbarVisible}
+            onToggleToolbar={toggleToolbar}
           />
 
           {/* Resizable Sidebar */}
