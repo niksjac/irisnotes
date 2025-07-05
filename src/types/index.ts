@@ -18,11 +18,36 @@ export type {
   BackupData
 } from './database';
 
+// Storage configuration types
+export interface StorageSettings {
+  backend: 'sqlite' | 'file-system' | 'cloud'; // Available storage backends
+  sqlite?: {
+    database_path: string;
+  };
+  fileSystem?: {
+    notes_directory: string;
+  };
+  cloud?: {
+    provider: 'google-drive' | 'dropbox' | 'onedrive';
+    credentials?: any; // Provider-specific credentials
+  };
+}
+
 export interface AppConfig {
   editor: {
     lineWrapping: boolean;
   };
   debug: {
     enableExampleNote: boolean;
+  };
+  storage: StorageSettings;
+  development: {
+    useLocalConfig: boolean;
+    configPath: string;
+  };
+  production: {
+    customConfigPath?: string;
+    customDatabasePath?: string;
+    customNotesPath?: string;
   };
 }

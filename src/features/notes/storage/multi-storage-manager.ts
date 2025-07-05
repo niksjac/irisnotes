@@ -20,7 +20,7 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
         this.defaultStorageName = name;
       }
 
-      return { success: true };
+      return { success: true, data: undefined };
     } catch (error) {
       return { success: false, error: `Failed to add storage ${name}: ${error}` };
     }
@@ -39,7 +39,7 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
       this.defaultStorageName = remainingStorages.length > 0 ? (remainingStorages[0] ?? null) : null;
     }
 
-    return { success: true };
+    return { success: true, data: undefined };
   }
 
   getStorages(): string[] {
@@ -78,7 +78,7 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
             }));
             allNotes.push(...notesWithSource);
           } else {
-            errors.push(`${name}: ${result.error}`);
+            errors.push(`${name}: ${!result.success ? result.error : 'Unknown error'}`);
           }
         } catch (error) {
           errors.push(`${name}: ${error}`);
@@ -88,16 +88,11 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
       // Sort by updated_at descending
       allNotes.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
-      const result: StorageResult<Note[]> = {
-        success: true,
-        data: allNotes
-      };
-
       if (errors.length > 0) {
-        result.error = `Some storages failed: ${errors.join(', ')}`;
+        return { success: false, error: `Some storages failed: ${errors.join(', ')}` };
       }
 
-      return result;
+      return { success: true, data: allNotes };
     } catch (error) {
       return { success: false, error: `Failed to get all notes: ${error}` };
     }
@@ -118,7 +113,7 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
             }));
             allResults.push(...notesWithSource);
           } else {
-            errors.push(`${name}: ${result.error}`);
+            errors.push(`${name}: ${!result.success ? result.error : 'Unknown error'}`);
           }
         } catch (error) {
           errors.push(`${name}: ${error}`);
@@ -130,16 +125,11 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
         new Map(allResults.map(note => [note.id, note])).values()
       ).sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
-      const result: StorageResult<Note[]> = {
-        success: true,
-        data: uniqueResults
-      };
-
       if (errors.length > 0) {
-        result.error = `Some storages failed: ${errors.join(', ')}`;
+        return { success: false, error: `Some storages failed: ${errors.join(', ')}` };
       }
 
-      return result;
+      return { success: true, data: uniqueResults };
     } catch (error) {
       return { success: false, error: `Failed to search all notes: ${error}` };
     }
@@ -157,7 +147,7 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
       // Get the note from source storage
       const noteResult = await fromAdapter.getNote(noteId);
       if (!noteResult.success || !noteResult.data) {
-        return { success: false, error: `Failed to get note from ${fromStorage}: ${noteResult.error}` };
+        return { success: false, error: `Failed to get note from ${fromStorage}: ${!noteResult.success ? noteResult.error : 'Note not found'}` };
       }
 
       const note = noteResult.data;
@@ -187,7 +177,7 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
         return { success: false, error: `Failed to delete note from ${fromStorage}: ${deleteResult.error}` };
       }
 
-      return { success: true };
+      return { success: true, data: undefined };
     } catch (error) {
       return { success: false, error: `Failed to move note: ${error}` };
     }
@@ -210,15 +200,11 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
         }
       }
 
-      const result: StorageResult<void> = {
-        success: errors.length === 0
-      };
-
       if (errors.length > 0) {
-        result.error = `Some storages failed to sync: ${errors.join(', ')}`;
+        return { success: false, error: `Some storages failed to sync: ${errors.join(', ')}` };
       }
 
-      return result;
+      return { success: true, data: undefined };
     } catch (error) {
       return { success: false, error: `Failed to sync storages: ${error}` };
     }

@@ -10,6 +10,17 @@ const DEFAULT_CONFIG: AppConfig = {
   debug: {
     enableExampleNote: false,
   },
+  storage: {
+    backend: 'sqlite',
+    sqlite: {
+      database_path: 'notes.db'
+    }
+  },
+  development: {
+    useLocalConfig: false,
+    configPath: './dev/config/'
+  },
+  production: {}
 };
 
 export const useConfig = () => {
@@ -18,13 +29,63 @@ export const useConfig = () => {
 
   const loadConfig = useCallback(async () => {
     try {
-      const configString = await invoke<string>('read_config', { filename: 'app-config.json' });
+      // Check if we're in development mode by checking for local config
+      const isDevelopment = import.meta.env.DEV;
+      let configPath = 'app-config.json';
+
+      if (isDevelopment) {
+        // Try to use local config first in dev mode
+        try {
+          const localConfigString = await invoke<string>('read_config', { filename: './dev/config/app-config.json' });
+          const parsedConfig = JSON.parse(localConfigString) as AppConfig;
+
+          // Merge with defaults to ensure all required fields exist
+          const mergedConfig: AppConfig = {
+            ...DEFAULT_CONFIG,
+            ...parsedConfig,
+            editor: { ...DEFAULT_CONFIG.editor, ...parsedConfig.editor },
+            debug: { ...DEFAULT_CONFIG.debug, ...parsedConfig.debug },
+            storage: { ...DEFAULT_CONFIG.storage, ...parsedConfig.storage },
+            development: { ...DEFAULT_CONFIG.development, ...parsedConfig.development },
+            production: { ...DEFAULT_CONFIG.production, ...parsedConfig.production }
+          };
+
+          setConfig(mergedConfig);
+          return;
+        } catch {
+          // Fall back to system config in dev mode
+          console.log('Local config not found, trying system config');
+        }
+      }
+
+      const configString = await invoke<string>('read_config', { filename: configPath });
       const parsedConfig = JSON.parse(configString) as AppConfig;
-      setConfig(parsedConfig);
-    } catch (error) {
+
+      // Merge with defaults to ensure all required fields exist
+      const mergedConfig: AppConfig = {
+        ...DEFAULT_CONFIG,
+        ...parsedConfig,
+        editor: { ...DEFAULT_CONFIG.editor, ...parsedConfig.editor },
+        debug: { ...DEFAULT_CONFIG.debug, ...parsedConfig.debug },
+        storage: { ...DEFAULT_CONFIG.storage, ...parsedConfig.storage },
+        development: { ...DEFAULT_CONFIG.development, ...parsedConfig.development },
+        production: { ...DEFAULT_CONFIG.production, ...parsedConfig.production }
+      };
+
+      setConfig(mergedConfig);
+        } catch (error) {
       console.log('Config file not found, using defaults');
-      setConfig(DEFAULT_CONFIG);
-      await saveConfig(DEFAULT_CONFIG);
+      const isDevelopment = import.meta.env.DEV;
+      const defaultConfig: AppConfig = isDevelopment ? {
+        ...DEFAULT_CONFIG,
+        development: {
+          useLocalConfig: true,
+          configPath: './dev/config/'
+        }
+      } : DEFAULT_CONFIG;
+
+      setConfig(defaultConfig);
+      await saveConfig(defaultConfig);
     } finally {
       setLoading(false);
     }
@@ -47,7 +108,10 @@ export const useConfig = () => {
       ...config,
       ...updates,
       editor: { ...config.editor, ...updates.editor },
-      debug: { ...config.debug, ...updates.debug }
+      debug: { ...config.debug, ...updates.debug },
+      storage: { ...config.storage, ...updates.storage },
+      development: { ...config.development, ...updates.development },
+      production: { ...config.production, ...updates.production }
     };
     await saveConfig(newConfig);
   }, [config, saveConfig]);

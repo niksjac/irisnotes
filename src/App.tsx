@@ -5,7 +5,7 @@ import { ResizableSidebar } from "./features/sidebar";
 import { ConfigView } from "./features/editor/components/config-view";
 import { HotkeysView } from "./features/editor/components/hotkeys-view";
 import { DatabaseStatusView } from "./features/editor/components/database-status-view";
-import { useNotes } from "./features/notes";
+import { useSingleStorageNotes as useNotes } from "./features/notes/hooks/use-single-storage-notes";
 import { useTheme } from "./features/theme";
 import { useLayout } from "./features/layout";
 import { useShortcuts } from "./features/shortcuts";
@@ -42,11 +42,10 @@ function App() {
     setSelectedNoteId,
     getSelectedNoteForPane,
     openNoteInPane,
-    loadExampleNote,
-    reloadExampleNote,
     createNewNote,
     updateNoteTitle,
-    updateNoteContent
+    updateNoteContent,
+    loadAllNotes
   } = notesData;
 
   const { loadUserTheme } = themeData;
@@ -102,9 +101,9 @@ function App() {
     onToggleSidebar: toggleSidebar,
     onToggleActivityBar: toggleActivityBar,
     onToggleDualPane: toggleDualPaneMode,
-    onReloadNote: reloadExampleNote,
+    onReloadNote: () => loadAllNotes(), // Reload notes from storage
     onToggleLineWrapping: toggleLineWrapping
-  }), [toggleSidebar, toggleActivityBar, toggleDualPaneMode, reloadExampleNote, toggleLineWrapping]);
+  }), [toggleSidebar, toggleActivityBar, toggleDualPaneMode, loadAllNotes, toggleLineWrapping]);
 
   // Initialize app after config loads
   useEffect(() => {
@@ -115,18 +114,15 @@ function App() {
         console.log("Initializing IrisNotes...");
         console.log("Config loaded:", config);
 
-        // Load in parallel for better performance
-        await Promise.all([
-          loadExampleNote(),
-          loadUserTheme()
-        ]);
+        // Load user theme (notes will be loaded by the storage hook)
+        await loadUserTheme();
       } catch (error) {
         console.error("Failed to initialize app:", error);
       }
     };
 
     initializeApp();
-  }, [configLoading, config, loadExampleNote, loadUserTheme]);
+  }, [configLoading, config, loadUserTheme]);
 
   // Setup keyboard shortcuts
   useShortcuts(shortcutsConfig);

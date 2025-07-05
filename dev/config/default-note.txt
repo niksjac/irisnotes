@@ -1,0 +1,19 @@
+# Welcome to IrisNotes Development
+
+This is the default note for local development mode.
+
+## Development Features
+
+- Local configuration directory: `./dev/config/`
+- Local SQLite database: `./dev/config/notes.db`
+- Local notes directory: `./dev/config/notes/`
+- Sample data included for testing
+
+## Getting Started
+
+1. Edit this note to test the editor
+2. Create new notes using the + button
+3. Test different storage backends in settings
+4. Try switching between rich and source modes
+
+This setup keeps your development environment isolated from production data.

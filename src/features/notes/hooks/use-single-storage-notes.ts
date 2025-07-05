@@ -1,15 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Note, CreateNoteParams, UpdateNoteParams, NoteFilters } from '../../../types/database';
-import {
-  createMultiStorageManager,
-  createSQLiteStorageAdapter,
-  type MultiStorageManager
-} from '../storage';
+import type { SingleStorageManager } from '../storage/types';
+import { createSingleStorageManager } from '../storage';
+import { useConfig } from '../../../hooks/use-config';
 
 export type PaneId = 'left' | 'right';
 
-export const useMultiStorageNotes = () => {
-  const [storageManager] = useState<MultiStorageManager>(() => createMultiStorageManager());
+export const useSingleStorageNotes = () => {
+  const { config, loading: configLoading } = useConfig();
+  const [storageManager] = useState<SingleStorageManager>(() => createSingleStorageManager());
   const [notes, setNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,11 +25,11 @@ export const useMultiStorageNotes = () => {
     setError(null);
 
     try {
-      const result = await storageManager.getAllNotes(filters);
-      if (result.success && result.data) {
+      const result = await storageManager.getNotes(filters);
+      if (result.success) {
         setNotes(result.data);
       } else {
-        setError(!result.success ? result.error || 'Failed to load notes' : 'Failed to load notes');
+        setError(result.error);
       }
     } catch (err) {
       console.error('Failed to load notes:', err);
@@ -40,49 +39,55 @@ export const useMultiStorageNotes = () => {
     }
   }, [storageManager]);
 
-    // Initialize storage backends
+  // Initialize storage when config loads or changes
   useEffect(() => {
-    const initializeStorages = async () => {
+    const initializeStorage = async () => {
+      console.log('🚀 useSingleStorageNotes: Starting initialization...');
+      console.log('🔧 Config loading:', configLoading);
+      console.log('🔧 Current config:', config);
+
+      if (configLoading) {
+        console.log('⏳ Config still loading, skipping initialization');
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
 
       try {
-        // Add SQLite-based storage
-        const sqliteStorage = createSQLiteStorageAdapter('notes.db');
-        const sqliteResult = await storageManager.addStorage('sqlite', sqliteStorage);
+        // Configure storage based on config
+        const storageConfig = config.storage;
+        console.log('🔧 Setting active storage with config:', storageConfig);
+        const result = await storageManager.setActiveStorage(storageConfig);
+        console.log('🔧 setActiveStorage result:', result);
 
-        if (!sqliteResult.success) {
-          console.error('Failed to initialize SQLite storage:', sqliteResult.error);
-          setError(sqliteResult.error || 'Failed to initialize SQLite storage');
+        if (!result.success) {
+          console.error('❌ Failed to set active storage:', result.error);
+          setError(result.error);
+          return;
         }
 
-        // Set SQLite storage as default
-        storageManager.setDefaultStorage('sqlite');
-
+        console.log('✅ Active storage set successfully');
         // Load initial notes
+        console.log('🔧 Loading initial notes...');
         await loadAllNotes();
       } catch (err) {
-        console.error('Failed to initialize storage:', err);
+        console.error('❌ Failed to initialize storage:', err);
         setError(`Failed to initialize storage: ${err}`);
       } finally {
         setIsLoading(false);
       }
     };
 
-    initializeStorages();
-  }, [storageManager, loadAllNotes]);
+    initializeStorage();
+  }, [configLoading, config.storage, storageManager, loadAllNotes]);
 
   const createNote = useCallback(async (params: CreateNoteParams, targetPane?: PaneId) => {
     setError(null);
 
     try {
-      const defaultStorage = storageManager.getDefaultStorage();
-      if (!defaultStorage) {
-        throw new Error('No default storage available');
-      }
-
-      const result = await defaultStorage.createNote(params);
-      if (result.success && result.data) {
+      const result = await storageManager.createNote(params);
+      if (result.success) {
         const newNote = result.data;
         setNotes(prev => [newNote, ...prev]);
 
@@ -95,7 +100,7 @@ export const useMultiStorageNotes = () => {
 
         return { success: true, data: newNote };
       } else {
-        setError(!result.success ? result.error || 'Failed to create note' : 'Failed to create note');
+        setError(result.error);
         return result;
       }
     } catch (err) {
@@ -109,20 +114,15 @@ export const useMultiStorageNotes = () => {
     setError(null);
 
     try {
-      const defaultStorage = storageManager.getDefaultStorage();
-      if (!defaultStorage) {
-        throw new Error('No default storage available');
-      }
-
-      const result = await defaultStorage.updateNote(params);
-      if (result.success && result.data) {
+      const result = await storageManager.updateNote(params);
+      if (result.success) {
         const updatedNote = result.data;
         setNotes(prev => prev.map(note =>
           note.id === params.id ? updatedNote : note
         ));
         return { success: true, data: updatedNote };
       } else {
-        setError(!result.success ? result.error || 'Failed to update note' : 'Failed to update note');
+        setError(result.error);
         return result;
       }
     } catch (err) {
@@ -136,12 +136,7 @@ export const useMultiStorageNotes = () => {
     setError(null);
 
     try {
-      const defaultStorage = storageManager.getDefaultStorage();
-      if (!defaultStorage) {
-        throw new Error('No default storage available');
-      }
-
-      const result = await defaultStorage.deleteNote(noteId);
+      const result = await storageManager.deleteNote(noteId);
       if (result.success) {
         setNotes(prev => prev.filter(note => note.id !== noteId));
 
@@ -153,7 +148,7 @@ export const useMultiStorageNotes = () => {
 
         return { success: true };
       } else {
-        setError(result.error || 'Failed to delete note');
+        setError(result.error);
         return result;
       }
     } catch (err) {
@@ -167,11 +162,11 @@ export const useMultiStorageNotes = () => {
     setError(null);
 
     try {
-      const result = await storageManager.searchAllNotes(query, filters);
-      if (result.success && result.data) {
+      const result = await storageManager.searchNotes(query, filters);
+      if (result.success) {
         return { success: true, data: result.data };
       } else {
-        setError(!result.success ? result.error || 'Failed to search notes' : 'Failed to search notes');
+        setError(result.error);
         return result;
       }
     } catch (err) {
@@ -185,12 +180,12 @@ export const useMultiStorageNotes = () => {
     setError(null);
 
     try {
-      const result = await storageManager.syncAllStorages();
+      const result = await storageManager.sync();
       if (result.success) {
         await loadAllNotes(); // Reload notes after sync
         return { success: true };
       } else {
-        setError(result.error || 'Failed to sync storage');
+        setError(result.error);
         return result;
       }
     } catch (err) {
@@ -199,6 +194,15 @@ export const useMultiStorageNotes = () => {
       return { success: false, error: errorMsg };
     }
   }, [storageManager, loadAllNotes]);
+
+  // Get storage info
+  const getStorageInfo = useCallback(async () => {
+    try {
+      return await storageManager.getStorageInfo();
+    } catch (err) {
+      return { success: false, error: `Failed to get storage info: ${err}` };
+    }
+  }, [storageManager]);
 
   // Convenience methods for pane management
   const setSelectedNoteIdForPane = useCallback((paneId: PaneId, noteId: string | null) => {
@@ -283,8 +287,7 @@ export const useMultiStorageNotes = () => {
 
     // Storage management
     storageManager,
-    getStorages: () => storageManager.getStorages(),
-    getDefaultStorage: () => storageManager.getDefaultStorage(),
-    setDefaultStorage: (name: string) => storageManager.setDefaultStorage(name)
+    getStorageInfo,
+    activeStorageConfig: storageManager.getActiveStorageConfig()
   };
 };

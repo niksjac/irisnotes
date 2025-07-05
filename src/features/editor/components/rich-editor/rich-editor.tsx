@@ -2,6 +2,7 @@ import { RichEditorProps } from './types';
 import { editorSchema } from './schema';
 import { useEditorView } from './hooks/use-editor-view';
 import { useConfig } from '../../../../hooks/use-config';
+import 'prosemirror-view/style/prosemirror.css';
 import './rich-editor.css';
 
 export function RichEditor({

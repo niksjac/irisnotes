@@ -1,0 +1,24 @@
+{
+  "editor": {
+    "lineWrapping": false
+  },
+  "debug": {
+    "enableExampleNote": true
+  },
+  "storage": {
+    "backend": "sqlite",
+    "sqlite": {
+      "database_path": "./dev/config/notes.db"
+    },
+    "fileSystem": {
+      "notes_directory": "./dev/config/notes/"
+    },
+    "cloud": {
+      "provider": "google-drive"
+    }
+  },
+  "development": {
+    "useLocalConfig": true,
+    "configPath": "./dev/config/"
+  }
+}
