@@ -216,13 +216,17 @@ export function useEditorView({
 
   // Handle content updates more efficiently
   useEffect(() => {
-    if (!viewRef.current || content === contentRef.current) return;
+    if (!viewRef.current) return;
 
     const view = viewRef.current;
     const doc = parseHtmlContent(content, schema);
 
-    // Only update if document structure changed
-    if (!doc.eq(view.state.doc)) {
+    // Check if the new content is different from what's currently in the editor
+    const currentHtml = serializeToHtml(view.state.doc, schema);
+
+    // Only update if the content is actually different from what's currently displayed
+    // This prevents cursor jumping when the content update comes from user typing
+    if (content !== currentHtml && !doc.eq(view.state.doc)) {
       // Create new state with updated document
       const newState = memoizedCreateState(doc);
       view.updateState(newState);

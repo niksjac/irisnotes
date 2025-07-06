@@ -10,7 +10,6 @@ import {
   toggleSuperscript,
   toggleSubscript
 } from './plugins/formatting-marks';
-import { useState, useEffect, useRef } from 'react';
 import {
   Bold,
   Italic,
@@ -33,7 +32,6 @@ import {
   Minus,
   Undo2,
   Redo2,
-  ChevronDown,
   X
 } from 'lucide-react';
 import './rich-editor-toolbar.css';
@@ -44,11 +42,6 @@ interface RichEditorToolbarProps {
 }
 
 export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps) {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [visibleButtons, setVisibleButtons] = useState<number>(0);
-  const toolbarRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
   const executeCommand = (command: any) => {
     return () => {
       if (!editorView) return;
@@ -316,116 +309,12 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
     },
   ];
 
-    // Calculate visible buttons based on actual measurements
-  useEffect(() => {
-    const calculateVisibleButtons = () => {
-      if (!toolbarRef.current || allButtons.length === 0) {
-        setVisibleButtons(0);
-        return;
-      }
-
-      const container = toolbarRef.current;
-      const containerWidth = container.offsetWidth;
-
-      // If container is too small (likely not rendered yet), show basic buttons
-      if (containerWidth < 100) {
-        setVisibleButtons(Math.min(3, allButtons.length));
-        return;
-      }
-
-      // Get computed styles for accurate measurements
-      const containerStyles = getComputedStyle(container);
-      const paddingLeft = parseInt(containerStyles.paddingLeft) || 8;
-      const paddingRight = parseInt(containerStyles.paddingRight) || 8;
-      const containerPadding = paddingLeft + paddingRight;
-
-      // Reserve space for the overflow button only if we'll need it
-      const overflowButtonWidth = 40; // Slightly more conservative
-
-      // Button dimensions from CSS
-      const buttonWidth = 32; // Fixed width from CSS
-      const buttonGap = 4; // Approximate gap from CSS var(--iris-space-xs)
-
-      // Calculate maximum buttons that could theoretically fit
-      const maxPossibleButtons = Math.floor((containerWidth - containerPadding) / (buttonWidth + buttonGap));
-
-      // If we can fit all buttons, don't reserve space for overflow
-      if (maxPossibleButtons >= allButtons.length) {
-        setVisibleButtons(allButtons.length);
-        return;
-      }
-
-      // Calculate available width for buttons (reserve space for overflow)
-      const availableWidth = containerWidth - containerPadding - overflowButtonWidth;
-
-      // Calculate how many buttons can fit
-      let fittingButtons = 0;
-      let usedWidth = 0;
-
-      for (let i = 0; i < allButtons.length; i++) {
-        const buttonSpaceNeeded = buttonWidth + (i > 0 ? buttonGap : 0);
-
-        if (usedWidth + buttonSpaceNeeded <= availableWidth) {
-          fittingButtons++;
-          usedWidth += buttonSpaceNeeded;
-        } else {
-          break;
-        }
-      }
-
-      // Ensure at least some basic buttons are visible
-      if (fittingButtons < 3 && allButtons.length >= 3) {
-        fittingButtons = 3;
-      }
-
-      setVisibleButtons(fittingButtons);
-    };
-
-    // Small delay to ensure DOM is ready
-    const timer = setTimeout(calculateVisibleButtons, 0);
-
-    // Use ResizeObserver for better performance
-    const resizeObserver = new ResizeObserver(() => {
-      // Debounce calculations
-      setTimeout(calculateVisibleButtons, 10);
-    });
-
-    if (toolbarRef.current) {
-      resizeObserver.observe(toolbarRef.current);
-    }
-
-    return () => {
-      clearTimeout(timer);
-      resizeObserver.disconnect();
-    };
-  }, [allButtons.length]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
-    };
-
-    if (showDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-
-    return undefined;
-  }, [showDropdown]);
-
-  // Don't render if required props are missing
   if (!editorView || !schema) return null;
 
-  const visibleButtonsList = allButtons.slice(0, visibleButtons);
-  const dropdownButtonsList = allButtons.slice(visibleButtons);
-
   return (
-    <div className="iris-editor-toolbar" ref={toolbarRef}>
+    <div className="iris-editor-toolbar">
       <div className="toolbar-buttons-container">
-        {visibleButtonsList.map((button, index) => {
+        {allButtons.map((button, index) => {
           const IconComponent = button.icon;
           return (
             <button
@@ -438,42 +327,6 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
             </button>
           );
         })}
-
-        {dropdownButtonsList.length > 0 && (
-          <div className="toolbar-dropdown">
-            <button
-              className="toolbar-button toolbar-dropdown-toggle"
-              onClick={() => setShowDropdown(!showDropdown)}
-              title={`More formatting options (${dropdownButtonsList.length} more)`}
-            >
-              <ChevronDown size={16} />
-            </button>
-
-            {showDropdown && (
-              <div className="toolbar-dropdown-menu" ref={dropdownRef}>
-                {dropdownButtonsList.map((button, index) => {
-                  const IconComponent = button.icon;
-                  return (
-                    <button
-                      key={index}
-                      className={`toolbar-dropdown-item ${button.className}`}
-                      onClick={() => {
-                        executeCommand(button.command)();
-                        setShowDropdown(false);
-                      }}
-                      title={`${button.label} ${button.shortcut ? `(${button.shortcut})` : ''}`}
-                    >
-                      <span className="dropdown-icon">
-                        <IconComponent size={16} />
-                      </span>
-                      <span className="dropdown-label">{button.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

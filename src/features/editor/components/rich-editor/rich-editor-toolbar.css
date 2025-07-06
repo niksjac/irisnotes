@@ -4,10 +4,11 @@
   align-items: center;
   padding: var(--iris-space-sm) var(--iris-space-md);
   background-color: var(--iris-surface-2);
-  border-bottom: 1px solid var(--iris-border);
+  /* border-bottom: 1px solid var(--iris-border); */
   overflow: hidden;
-  white-space: nowrap;
+  /* white-space: nowrap; */
   min-height: 40px;
+  /* border:1px solid red; */
 }
 
 .toolbar-buttons-container {
@@ -15,7 +16,9 @@
   align-items: center;
   gap: var(--iris-space-xs);
   flex: 1;
-  overflow: hidden;
+  flex-wrap: wrap;
+  /* overflow: hidden; */
+  /* border:1px solid blue; */
 }
 
 .toolbar-button {
@@ -36,6 +39,7 @@
   transition: all 0.2s ease;
   text-decoration: none;
   user-select: none;
+  border:1px solid black;
 }
 
 .toolbar-button:hover {
