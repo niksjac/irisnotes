@@ -55,7 +55,7 @@ export class SingleStorageManagerImpl implements SingleStorageManager {
       this.activeStorage = adapter;
       this.activeConfig = config;
 
-      return { success: true, data: undefined };
+      return { success: true };
     } catch (error) {
       console.error('❌ Failed to set active storage:', error);
       return { success: false, error: `Failed to set active storage: ${error}` };

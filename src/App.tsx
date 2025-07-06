@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useCallback } from "react";
+import React, { useEffect, useMemo, useCallback, useState } from "react";
 import { EditorContainer, DualPaneEditor } from "./features/editor";
 import { ActivityBar } from "./features/activity-bar";
-import { ResizableSidebar } from "./features/sidebar";
+import { ResizableSidebar, NotesTreeView } from "./features/sidebar";
 import { ConfigView } from "./features/editor/components/config-view";
 import { HotkeysView } from "./features/editor/components/hotkeys-view";
 import { DatabaseStatusView } from "./features/editor/components/database-status-view";
@@ -12,6 +12,7 @@ import { useShortcuts } from "./features/shortcuts";
 import { useHotkeySequences, createAppConfigSequences } from "./features/hotkeys";
 import { useLineWrapping } from "./features/editor/hooks/use-line-wrapping";
 import { useConfig } from "./hooks/use-config";
+import type { Category } from "./types/database";
 import "./styles/theme.css";
 import "./styles/layout.css";
 import "./styles/components.css";
@@ -45,7 +46,9 @@ function App() {
     createNewNote,
     updateNoteTitle,
     updateNoteContent,
-    loadAllNotes
+    loadAllNotes,
+    storageManager,
+    isLoading
   } = notesData;
 
   const { loadUserTheme } = themeData;
@@ -71,6 +74,192 @@ function App() {
   } = layoutData;
 
   const { isWrapping, toggleLineWrapping } = lineWrappingData;
+
+  // Category management state
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [noteCategories, setNoteCategories] = useState<{ noteId: string; categoryId: string }[]>([]);
+
+            // Load categories when notes are loaded (indicating storage is ready)
+  useEffect(() => {
+    const loadCategories = async () => {
+      if (!storageManager || isLoading) return;
+
+      try {
+        const result = await storageManager.getCategories();
+        if (result.success) {
+          setCategories(result.data);
+        } else {
+          console.error('Failed to load categories:', result.error);
+        }
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+      }
+    };
+
+    // Only load categories after notes are loaded and storage is ready
+    if (!isLoading && notes.length >= 0) {
+      loadCategories();
+    }
+  }, [storageManager, isLoading, notes.length]); // Trigger when notes are loaded
+
+  // Load note-category relationships
+  const loadNoteCategories = useCallback(async () => {
+    if (!storageManager) return [];
+
+    try {
+      const storage = storageManager.getActiveStorage();
+      if (!storage) return [];
+
+      const relationships: { noteId: string; categoryId: string }[] = [];
+
+      // Load note categories for each category
+      for (const category of categories) {
+        const result = await storage.getCategoryNotes(category.id);
+        if (result.success) {
+          result.data.forEach(note => {
+            relationships.push({
+              noteId: note.id,
+              categoryId: category.id
+            });
+          });
+        }
+      }
+
+      setNoteCategories(relationships);
+      return relationships;
+    } catch (error) {
+      console.error('Failed to load note categories:', error);
+      return [];
+    }
+  }, [storageManager, categories]);
+
+  // Load note categories when categories change
+  useEffect(() => {
+    if (categories.length > 0) {
+      loadNoteCategories();
+    }
+  }, [categories, loadNoteCategories]);
+
+  // Category handlers
+    const handleCreateFolder = useCallback(async (parentCategoryId?: string) => {
+    if (!storageManager) return;
+
+    try {
+      const createParams = {
+        name: 'New Folder',
+        description: '',
+        ...(parentCategoryId && { parent_id: parentCategoryId })
+      };
+      const result = await storageManager.createCategory(createParams);
+
+      if (result.success) {
+        setCategories(prev => [...prev, result.data]);
+        // Reload categories to ensure consistency
+        const categoriesResult = await storageManager.getCategories();
+        if (categoriesResult.success) {
+          setCategories(categoriesResult.data);
+        }
+      } else {
+        console.error('Failed to create category:', result.error);
+      }
+    } catch (error) {
+      console.error('Failed to create category:', error);
+    }
+  }, [storageManager]);
+
+  const handleCreateNote = useCallback(async (parentCategoryId?: string) => {
+    if (!storageManager) return;
+
+    try {
+      const result = await createNewNote();
+      if (result.success && result.data && parentCategoryId) {
+        // Add the note to the category
+        const storage = storageManager.getActiveStorage();
+        if (storage) {
+          await storage.addNoteToCategory(result.data.id, parentCategoryId);
+          // Reload note categories to update the tree
+          await loadNoteCategories();
+        }
+      }
+    } catch (error) {
+      console.error('Failed to create note:', error);
+    }
+  }, [storageManager, createNewNote, loadNoteCategories]);
+
+    const handleMoveNote = useCallback(async (noteId: string, newCategoryId: string | null) => {
+    if (!storageManager) return;
+
+    try {
+      const storage = storageManager.getActiveStorage();
+      if (storage) {
+        // Remove from all categories first
+        for (const category of categories) {
+          await storage.removeNoteFromCategory(noteId, category.id);
+        }
+
+        // Add to new category if specified
+        if (newCategoryId) {
+          await storage.addNoteToCategory(noteId, newCategoryId);
+        }
+
+        // Reload note categories to update the tree
+        await loadNoteCategories();
+      }
+    } catch (error) {
+      console.error('Failed to move note:', error);
+    }
+  }, [storageManager, categories, loadNoteCategories]);
+
+  const handleDeleteNote = useCallback(async (noteId: string) => {
+    if (!storageManager) return;
+
+    try {
+      const storage = storageManager.getActiveStorage();
+      if (storage) {
+        await storage.deleteNote(noteId);
+        // Reload notes to update the UI
+        await loadAllNotes();
+      }
+    } catch (error) {
+      console.error('Failed to delete note:', error);
+    }
+  }, [storageManager, loadAllNotes]);
+
+  const handleDeleteCategory = useCallback(async (categoryId: string) => {
+    if (!storageManager) return;
+
+    try {
+      const storage = storageManager.getActiveStorage();
+      if (storage) {
+        await storage.deleteCategory(categoryId);
+        setCategories(prev => prev.filter(cat => cat.id !== categoryId));
+      }
+    } catch (error) {
+      console.error('Failed to delete category:', error);
+    }
+  }, [storageManager]);
+
+  const handleRenameNote = useCallback(async (noteId: string, newTitle: string) => {
+    await updateNoteTitle(noteId, newTitle);
+  }, [updateNoteTitle]);
+
+  const handleRenameCategory = useCallback(async (categoryId: string, newName: string) => {
+    if (!storageManager) return;
+
+    try {
+      const storage = storageManager.getActiveStorage();
+      if (storage) {
+        const result = await storage.updateCategory(categoryId, { name: newName });
+        if (result.success) {
+          setCategories(prev => prev.map(cat =>
+            cat.id === categoryId ? { ...cat, name: newName } : cat
+          ));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to rename category:', error);
+    }
+  }, [storageManager]);
 
   // Memoize expensive computations
   const notesForPane = useMemo(() => ({
@@ -134,105 +323,36 @@ function App() {
     sequences: hotkeySequences
   });
 
-  // Memoize sidebar content to prevent unnecessary re-renders - Notes only
+  // Memoize sidebar content to prevent unnecessary re-renders - Tree view
   const sidebarContent = useMemo(() => (
-    <div className="sidebar">
-      <div style={{
-        padding: 'var(--iris-space-md)',
-        borderBottom: '1px solid var(--iris-border)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <h2 style={{ margin: 0, fontSize: 'var(--iris-font-size-lg)' }}>
-          Notes
-        </h2>
-      </div>
-
-      {/* Notes list with pane selection for dual-mode */}
-      <div style={{ padding: 'var(--iris-space-md)' }}>
-        {notes.map(note => (
-          <div
-            key={note.id}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: 'var(--iris-space-sm)',
-              margin: 'var(--iris-space-xs) 0',
-              background: (selectedNoteId === note.id ||
-                         (notesForPane.left?.id === note.id || notesForPane.right?.id === note.id))
-                         ? 'var(--iris-bg-secondary)' : 'transparent',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-            onClick={() => handleNoteClick(note.id)}
-          >
-            <span style={{ flex: 1, fontSize: 'var(--iris-font-size-sm)' }}>
-              {note.title}
-            </span>
-            {isDualPaneMode && (
-              <div style={{ display: 'flex', gap: '4px' }}>
-                <button
-                  style={{
-                    padding: '2px 6px',
-                    fontSize: '10px',
-                    border: '1px solid var(--iris-border)',
-                    borderRadius: '2px',
-                    background: notesForPane.left?.id === note.id ? 'var(--iris-accent)' : 'transparent',
-                    color: notesForPane.left?.id === note.id ? 'white' : 'var(--iris-text)',
-                    cursor: 'pointer'
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openNoteInPane(note.id, 'left');
-                  }}
-                >
-                  L
-                </button>
-                <button
-                  style={{
-                    padding: '2px 6px',
-                    fontSize: '10px',
-                    border: '1px solid var(--iris-border)',
-                    borderRadius: '2px',
-                    background: notesForPane.right?.id === note.id ? 'var(--iris-accent)' : 'transparent',
-                    color: notesForPane.right?.id === note.id ? 'white' : 'var(--iris-text)',
-                    cursor: 'pointer'
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openNoteInPane(note.id, 'right');
-                  }}
-                >
-                  R
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Add new note button */}
-      <div style={{ padding: 'var(--iris-space-md)', borderTop: '1px solid var(--iris-border)' }}>
-        <button
-          onClick={() => createNewNote()}
-          style={{
-            width: '100%',
-            padding: 'var(--iris-space-sm)',
-            border: '1px solid var(--iris-border)',
-            borderRadius: '4px',
-            background: 'var(--iris-bg-secondary)',
-            color: 'var(--iris-text)',
-            cursor: 'pointer',
-            fontSize: 'var(--iris-font-size-sm)'
-          }}
-        >
-          + New Note
-        </button>
-      </div>
-    </div>
-  ), [notes, selectedNoteId, notesForPane, isDualPaneMode, handleNoteClick, openNoteInPane, createNewNote]);
+    <NotesTreeView
+      notes={notes}
+      categories={categories}
+      selectedNoteId={selectedNoteId}
+      onNoteSelect={handleNoteClick}
+      onCreateNote={handleCreateNote}
+      onCreateFolder={handleCreateFolder}
+      onMoveNote={handleMoveNote}
+      onDeleteNote={handleDeleteNote}
+      onDeleteCategory={handleDeleteCategory}
+      onRenameNote={handleRenameNote}
+      onRenameCategory={handleRenameCategory}
+      noteCategories={noteCategories}
+    />
+  ), [
+    notes,
+    categories,
+    selectedNoteId,
+    handleNoteClick,
+    handleCreateNote,
+    handleCreateFolder,
+    handleMoveNote,
+    handleDeleteNote,
+    handleDeleteCategory,
+    handleRenameNote,
+    handleRenameCategory,
+    noteCategories
+  ]);
 
   // Memoize main content to prevent unnecessary re-renders
   const mainContent = useMemo(() => {

@@ -12,7 +12,8 @@ export const useLineWrapping = () => {
     // Update config - this will trigger the useEffect in RichEditor component
     updateConfig({
       editor: {
-        lineWrapping: newWrappingState
+        lineWrapping: newWrappingState,
+        toolbarVisible: config.editor.toolbarVisible
       }
     });
   }, [config.editor.lineWrapping, updateConfig]);
