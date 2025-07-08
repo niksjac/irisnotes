@@ -80,8 +80,15 @@ export function SourceEditor({
 
     viewRef.current = view;
 
-    // Focus the editor after creation
-    setTimeout(() => view.focus(), 0);
+    // Focus the editor and position cursor at end
+    setTimeout(() => {
+      view.focus();
+      // Set cursor to end of document
+      const endPos = view.state.doc.length;
+      view.dispatch({
+        selection: { anchor: endPos, head: endPos }
+      });
+    }, 0);
 
     return () => {
       view.destroy();

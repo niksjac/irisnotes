@@ -66,9 +66,11 @@ export function NotesTreeView({
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
   const [hoistedFolderId, setHoistedFolderId] = useState<string | null>(null);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [treeHeight, setTreeHeight] = useState(400); // Default height
   const nodeRefsMap = useRef<Map<string, { startEditing: () => void }>>(new Map());
   const treeRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const treeContainerRef = useRef<HTMLDivElement>(null);
 
   // Register with focus management
   useEffect(() => {
@@ -76,6 +78,33 @@ export function NotesTreeView({
       onRegisterElement(containerRef.current);
     }
   }, [onRegisterElement]);
+
+  // Dynamic height calculation
+  useEffect(() => {
+    const updateTreeHeight = () => {
+      if (treeContainerRef.current) {
+        const containerHeight = treeContainerRef.current.clientHeight;
+        if (containerHeight > 0) {
+          setTreeHeight(containerHeight);
+        }
+      }
+    };
+
+    updateTreeHeight();
+
+    // Use ResizeObserver to watch for container size changes
+    let resizeObserver: ResizeObserver | null = null;
+    if (treeContainerRef.current) {
+      resizeObserver = new ResizeObserver(updateTreeHeight);
+      resizeObserver.observe(treeContainerRef.current);
+    }
+
+    return () => {
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    };
+  }, []); // Only run once on mount
 
   // Transform data into tree structure
   const treeData = useMemo(() => {
@@ -828,13 +857,13 @@ export function NotesTreeView({
         </div>
       )}
 
-      <div className="tree-container">
+      <div ref={treeContainerRef} className="tree-container">
         <Tree
           ref={treeRef}
           data={treeData}
           openByDefault={true}
           width="100%"
-          height={400}
+          height={treeHeight}
           indent={20}
           rowHeight={32}
           onMove={onMove}

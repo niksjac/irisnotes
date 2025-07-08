@@ -13,6 +13,7 @@
   display: flex;
   align-items: center;
   padding: 0 var(--iris-space-md);
+  border: 1px solid blue;
 }
 
 .title-input {
@@ -25,6 +26,7 @@
   font-family: var(--iris-font-family);
   outline: none;
   padding: var(--iris-space-sm) 0;
+  border: 1px solid red;
 }
 
 .title-input::placeholder {

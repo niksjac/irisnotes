@@ -205,6 +205,15 @@ export function useEditorView({
 
     view.updateState(newState);
 
+    // Focus the editor and position cursor at end
+    setTimeout(() => {
+      view.focus();
+      // Set cursor to end of document
+      const endPos = view.state.doc.content.size;
+      const tr = view.state.tr.setSelection(view.state.selection.constructor.near(view.state.doc.resolve(endPos)));
+      view.dispatch(tr);
+    }, 0);
+
     // Cleanup function
     return () => {
       if (viewRef.current) {

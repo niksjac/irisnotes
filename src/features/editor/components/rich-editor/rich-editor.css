@@ -14,17 +14,20 @@
 .editor-container {
   height: 100%;
   overflow: hidden;
+  border: 6px solid green;
 }
 
 .rich-editor {
   height: 100%;
   overflow: hidden;
+  border: 1px solid green;
 }
 
 .rich-editor-container {
   height: 100%;
   overflow:hidden;
   padding-left: 5px;
+  border: 5px solid red;
 }
 
 .rich-editor-view {
@@ -36,6 +39,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  border: 5px solid blue;
 }
 
 .rich-editor-view p {
@@ -46,6 +50,7 @@
   font-size: 11px;
   font-weight: 100;
   font-family: consolas;
+  outline: 1px dotted yellow;
 }
 
 /* Allow marks to override paragraph styling */
