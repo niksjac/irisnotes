@@ -1,6 +1,6 @@
 /* Activity Bar */
 .activity-bar {
-  width: var(--iris-activity-bar-width);
+  width: 35px;
   background-color: var(--iris-surface-3);
   border-right: 1px solid var(--iris-border);
   flex-shrink: 0;
@@ -12,51 +12,58 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  align-items: center;
+  padding: 5px 0;
 }
 
 .activity-bar-items {
   display: flex;
   flex-direction: column;
-  gap: var(--iris-space-xs);
-  padding: var(--iris-space-sm);
+  gap: var(--iris-space-sm);
+  padding: var(--iris-space-xs) 0;
+  align-items: center;
 }
 
 .activity-bar-item {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border: none;
-  border-radius: var(--iris-radius-sm);
+  border-radius: 0;
   background-color: transparent;
   color: var(--iris-text-2);
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: var(--iris-font-size-lg);
   font-weight: 600;
+  padding: 0;
 }
 
 .activity-bar-item:hover {
-  background-color: var(--iris-surface-2);
+  background-color: transparent;
   color: var(--iris-text);
+  transform: scale(1.1);
 }
 
 .activity-bar-item.active {
-  background-color: var(--iris-primary);
-  color: white;
+  background-color: transparent;
+  color: var(--iris-primary);
+  transform: scale(1.1);
 }
 
 .activity-bar-separator {
   margin-top: auto;
-  padding-top: var(--iris-space-md);
+  padding-top: var(--iris-space-sm);
   border-top: 1px solid var(--iris-border);
   display: flex;
   flex-direction: column;
-  gap: var(--iris-space-xs);
-  padding-left: var(--iris-space-sm);
-  padding-right: var(--iris-space-sm);
-  padding-bottom: var(--iris-space-sm);
+  gap: var(--iris-space-sm);
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: var(--iris-space-xs);
+  align-items: center;
 }
 
 .dual-pane-toggle {
@@ -68,7 +75,7 @@
 @media (max-width: 768px) {
   .activity-bar {
     width: 100%;
-    height: var(--iris-activity-bar-width);
+    height: 48px;
     border-right: none;
     border-bottom: 1px solid var(--iris-border);
   }

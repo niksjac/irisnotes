@@ -1,0 +1,167 @@
+/* Focus Management Styles */
+
+/* Base focus management styles */
+.focus-managed {
+  transition: all 0.2s ease;
+  position: relative;
+  cursor: pointer;
+}
+
+/* Current focus indicator */
+.focus-current {
+  background-color: var(--iris-primary-alpha);
+  border: 1px solid var(--iris-primary);
+  border-radius: 4px;
+  outline: none;
+}
+
+/* Ensure focus indicators are visible on hover too */
+.focus-managed:hover {
+  background-color: var(--iris-bg-secondary);
+}
+
+.focus-current:hover {
+  background-color: var(--iris-primary-alpha);
+  border-color: var(--iris-primary);
+}
+
+/* Tab navigation specific styling */
+.focus-tab-navigating {
+  animation: focusPulse 0.3s ease-out;
+}
+
+@keyframes focusPulse {
+  0% {
+    background-color: var(--iris-primary-alpha);
+    border-color: var(--iris-primary);
+    transform: scale(1);
+  }
+  50% {
+    background-color: var(--iris-primary);
+    border-color: var(--iris-primary);
+    transform: scale(1.01);
+  }
+  100% {
+    background-color: var(--iris-primary-alpha);
+    border-color: var(--iris-primary);
+    transform: scale(1);
+  }
+}
+
+/* Activity Bar Focus Styles */
+.activity-bar.focus-managed {
+  cursor: pointer;
+}
+
+.activity-bar.focus-tab-navigating {
+  background-color: var(--iris-surface-3);
+}
+
+.activity-bar.focus-current {
+  background-color: var(--iris-primary-alpha);
+}
+
+/* Sidebar Focus Styles */
+.sidebar-buttons.focus-current {
+  background-color: var(--iris-primary-alpha);
+  border: 1px solid var(--iris-primary);
+}
+
+.sidebar-search.focus-current {
+  background-color: var(--iris-primary-alpha);
+  border: 1px solid var(--iris-primary);
+}
+
+.sidebar-search.focus-current .tree-search-input {
+  border-color: var(--iris-primary);
+  box-shadow: 0 0 0 1px var(--iris-primary-alpha);
+}
+
+.sidebar-tree.focus-current {
+  background-color: var(--iris-primary-alpha);
+  border: 1px solid var(--iris-primary);
+}
+
+/* Editor Focus Styles */
+.editor-wrapper.focus-current {
+  background-color: var(--iris-primary-alpha);
+  border: 1px solid var(--iris-primary);
+}
+
+/* Focus indicators for mobile */
+@media (max-width: 768px) {
+  .focus-current {
+    border-width: 2px;
+  }
+
+  .focus-tab-navigating {
+    animation: focusPulseMobile 0.4s ease-out;
+  }
+
+  @keyframes focusPulseMobile {
+    0% {
+      background-color: var(--iris-primary-alpha);
+      border-color: var(--iris-primary);
+      transform: scale(1);
+    }
+    50% {
+      background-color: var(--iris-primary);
+      border-color: var(--iris-primary);
+      transform: scale(1.02);
+    }
+    100% {
+      background-color: var(--iris-primary-alpha);
+      border-color: var(--iris-primary);
+      transform: scale(1);
+    }
+  }
+}
+
+/* Ensure focus indicators are above other content */
+.focus-current {
+  z-index: 10;
+}
+
+/* Custom focus styles for tree view */
+.notes-tree-view.focus-tab-navigating {
+  background-color: var(--iris-bg-secondary);
+}
+
+/* Wrapper components */
+.sidebar-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  outline: none;
+}
+
+.editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  outline: none;
+}
+
+.editor-wrapper:focus {
+  outline: none;
+}
+
+/* Remove default focus outline for focus-managed elements */
+.focus-managed:focus {
+  outline: none;
+}
+
+.focus-managed:focus-visible {
+  outline: none;
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .focus-tab-navigating {
+    animation: none;
+  }
+
+  .focus-managed {
+    transition: none;
+  }
+}

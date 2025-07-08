@@ -1,4 +1,19 @@
 /* Component styles */
+:focus-visible {
+  outline: 0px solid transparent;
+  outline-offset: 0px;
+}
+
+:focus {
+  outline: 0px solid transparent;
+  outline-offset: 0px;
+}
+
+:target {
+  outline: 0px solid transparent;
+  outline-offset: 0px;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;

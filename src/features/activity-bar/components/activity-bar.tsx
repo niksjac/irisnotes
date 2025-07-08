@@ -1,4 +1,16 @@
+import { useRef, useEffect } from "react";
 import clsx from "clsx";
+import {
+  FileText,
+  Settings,
+  Keyboard,
+  Database,
+  Wrench,
+  WrapText,
+  ArrowRight,
+  PanelRight,
+  PanelRightOpen
+} from "lucide-react";
 import "./activity-bar.css";
 
 interface ActivityBarProps {
@@ -17,6 +29,10 @@ interface ActivityBarProps {
   onToggleLineWrapping?: () => void;
   isToolbarVisible?: boolean;
   onToggleToolbar?: () => void;
+  // Focus management props
+  focusClasses?: Record<string, boolean>;
+  onRegisterElement?: (ref: HTMLElement | null) => void;
+  onSetFocusFromClick?: () => void;
 }
 
 export function ActivityBar({
@@ -34,12 +50,36 @@ export function ActivityBar({
   isLineWrapping = false,
   onToggleLineWrapping,
   isToolbarVisible = true,
-  onToggleToolbar
+  onToggleToolbar,
+  focusClasses = {},
+  onRegisterElement,
+  onSetFocusFromClick
 }: ActivityBarProps) {
+  const activityBarRef = useRef<HTMLDivElement>(null);
+
+  // Register with focus management
+  useEffect(() => {
+    if (onRegisterElement && activityBarRef.current) {
+      onRegisterElement(activityBarRef.current);
+    }
+  }, [onRegisterElement]);
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onSetFocusFromClick) {
+      onSetFocusFromClick();
+    }
+  };
+
   if (!isVisible) return null;
 
   return (
-    <div className="activity-bar">
+    <div
+      ref={activityBarRef}
+      className={clsx("activity-bar", focusClasses)}
+      tabIndex={0}
+      onClick={handleClick}
+    >
       <div className="activity-bar-content">
         <div className="activity-bar-items">
           <button
@@ -49,7 +89,7 @@ export function ActivityBar({
             onClick={onToggleSidebar}
             title="Toggle Notes Sidebar"
           >
-            📝
+            <FileText size={20} />
           </button>
 
           <button
@@ -59,7 +99,7 @@ export function ActivityBar({
             onClick={onToggleConfigView}
             title="Configuration"
           >
-            ⚙️
+            <Settings size={20} />
           </button>
 
           <button
@@ -69,7 +109,7 @@ export function ActivityBar({
             onClick={onToggleHotkeysView}
             title="Hotkeys Reference"
           >
-            ⌨️
+            <Keyboard size={20} />
           </button>
 
           <button
@@ -79,7 +119,7 @@ export function ActivityBar({
             onClick={onToggleDatabaseStatus}
             title="Database Status"
           >
-            🗄️
+            <Database size={20} />
           </button>
         </div>
 
@@ -92,7 +132,7 @@ export function ActivityBar({
               onClick={onToggleToolbar}
               title={`${isToolbarVisible ? 'Hide' : 'Show'} editor toolbar`}
             >
-              🔧
+              <Wrench size={20} />
             </button>
           )}
 
@@ -104,7 +144,7 @@ export function ActivityBar({
               onClick={onToggleLineWrapping}
               title={`${isLineWrapping ? 'Disable' : 'Enable'} line wrapping (Ctrl+Alt+W)`}
             >
-              {isLineWrapping ? '↲' : '→'}
+              {isLineWrapping ? <WrapText size={20} /> : <ArrowRight size={20} />}
             </button>
           )}
 
@@ -116,7 +156,7 @@ export function ActivityBar({
               onClick={onToggleDualPane}
               title={`${isDualPaneMode ? 'Disable' : 'Enable'} dual-pane mode (Ctrl+D)`}
             >
-              {isDualPaneMode ? '⚏' : '⚌'}
+              {isDualPaneMode ? <PanelRightOpen size={20} /> : <PanelRight size={20} />}
             </button>
           )}
         </div>

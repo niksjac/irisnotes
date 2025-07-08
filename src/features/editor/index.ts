@@ -5,3 +5,5 @@ export { DualPaneEditor } from './components/dual-pane-editor';
 export { ConfigView } from './components/config-view';
 export { HotkeysView } from './components/hotkeys-view';
 export { DatabaseStatusView } from './components/database-status-view';
+export { EditorWrapper } from './components/editor-wrapper';
+export { WelcomeScreen } from './components/welcome-screen';

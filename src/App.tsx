@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useCallback, useState } from "react";
-import { EditorContainer, DualPaneEditor } from "./features/editor";
+import { EditorContainer, DualPaneEditor, EditorWrapper, WelcomeScreen } from "./features/editor";
 import { ActivityBar } from "./features/activity-bar";
-import { ResizableSidebar, NotesTreeView } from "./features/sidebar";
+import { ResizableSidebar, SidebarContent } from "./features/sidebar";
 import { ConfigView } from "./features/editor/components/config-view";
 import { HotkeysView } from "./features/editor/components/hotkeys-view";
 import { DatabaseStatusView } from "./features/editor/components/database-status-view";
 import { useSingleStorageNotes as useNotes } from "./features/notes/hooks/use-single-storage-notes";
 import { useTheme } from "./features/theme";
-import { useLayout } from "./features/layout";
+import { useLayout, useFocusManagement } from "./features/layout";
 import { useShortcuts } from "./features/shortcuts";
 import { useHotkeySequences, createAppConfigSequences } from "./features/hotkeys";
 import { useLineWrapping } from "./features/editor/hooks/use-line-wrapping";
@@ -16,6 +16,7 @@ import type { Category } from "./types/database";
 import "./styles/theme.css";
 import "./styles/layout.css";
 import "./styles/components.css";
+import "./styles/focus-management.css";
 
 // Memoized components to prevent unnecessary re-renders
 const MemoizedActivityBar = React.memo(ActivityBar);
@@ -25,6 +26,7 @@ const MemoizedEditorContainer = React.memo(EditorContainer);
 const MemoizedConfigView = React.memo(ConfigView);
 const MemoizedHotkeysView = React.memo(HotkeysView);
 const MemoizedDatabaseStatusView = React.memo(DatabaseStatusView);
+const MemoizedWelcomeScreen = React.memo(WelcomeScreen);
 
 function App() {
   const { config, loading: configLoading } = useConfig();
@@ -34,6 +36,25 @@ function App() {
   const themeData = useTheme();
   const layoutData = useLayout();
   const lineWrappingData = useLineWrapping();
+
+  // Focus management
+  const focusManagement = useFocusManagement({
+    onFocusChange: (element) => {
+      console.log('Focus changed to:', element);
+    },
+    onToggleSidebar: () => {
+      // Only show sidebar if it's collapsed
+      if (sidebarCollapsed) {
+        toggleSidebar();
+      }
+    },
+    onToggleActivityBar: () => {
+      // Only show activity bar if it's hidden
+      if (!activityBarVisible) {
+        toggleActivityBar();
+      }
+    }
+  });
 
   // Destructure only what we need
   const {
@@ -79,7 +100,11 @@ function App() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [noteCategories, setNoteCategories] = useState<{ noteId: string; categoryId: string }[]>([]);
 
-            // Load categories when notes are loaded (indicating storage is ready)
+  // State management
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [selectedItemType, setSelectedItemType] = useState<'note' | 'category' | null>(null);
+
+  // Load categories when notes are loaded (indicating storage is ready)
   useEffect(() => {
     const loadCategories = async () => {
       if (!storageManager || isLoading) return;
@@ -279,6 +304,18 @@ function App() {
     }
   }, [isDualPaneMode, openNoteInPane, activePaneId, setSelectedNoteId]);
 
+  const handleItemSelect = useCallback((itemId: string, itemType: 'note' | 'category') => {
+    setSelectedItemId(itemId);
+    setSelectedItemType(itemType);
+
+    // Don't automatically open notes when just selecting them
+    // Notes will be opened via Enter/Space or double-click in the tree view
+    if (itemType === 'category') {
+      // For folders, we don't load them in the editor, just select them
+      setSelectedNoteId(null);
+    }
+  }, []);
+
   const handleTitleChange = useCallback((noteId: string, title: string) => {
     updateNoteTitle(noteId, title);
   }, [updateNoteTitle]);
@@ -323,13 +360,16 @@ function App() {
     sequences: hotkeySequences
   });
 
-  // Memoize sidebar content to prevent unnecessary re-renders - Tree view
+  // Memoize sidebar content to prevent unnecessary re-renders
   const sidebarContent = useMemo(() => (
-    <NotesTreeView
+    <SidebarContent
       notes={notes}
       categories={categories}
       selectedNoteId={selectedNoteId}
+      selectedItemId={selectedItemId}
+      selectedItemType={selectedItemType}
       onNoteSelect={handleNoteClick}
+      onItemSelect={handleItemSelect}
       onCreateNote={handleCreateNote}
       onCreateFolder={handleCreateFolder}
       onMoveNote={handleMoveNote}
@@ -338,12 +378,19 @@ function App() {
       onRenameNote={handleRenameNote}
       onRenameCategory={handleRenameCategory}
       noteCategories={noteCategories}
+      registerElement={focusManagement.registerElement}
+      getFocusClasses={focusManagement.getFocusClasses}
+      focusElement={focusManagement.focusElement}
+      setFocusFromClick={focusManagement.setFocusFromClick}
     />
   ), [
     notes,
     categories,
     selectedNoteId,
+    selectedItemId,
+    selectedItemType,
     handleNoteClick,
+    handleItemSelect,
     handleCreateNote,
     handleCreateFolder,
     handleMoveNote,
@@ -351,7 +398,11 @@ function App() {
     handleDeleteCategory,
     handleRenameNote,
     handleRenameCategory,
-    noteCategories
+    noteCategories,
+    focusManagement.registerElement,
+    focusManagement.getFocusClasses,
+    focusManagement.focusElement,
+    focusManagement.setFocusFromClick
   ]);
 
   // Memoize main content to prevent unnecessary re-renders
@@ -382,32 +433,50 @@ function App() {
     }
 
     return (
-      <>
-        <div className="title-bar">
-          {selectedNote && (
-            <input
-              className="title-input"
-              type="text"
-              value={selectedNote.title}
-              onChange={(e) => handleTitleChange(selectedNote.id, e.target.value)}
-              placeholder="Untitled Note"
-            />
-          )}
-        </div>
+      <EditorWrapper
+        focusClasses={focusManagement.getFocusClasses('editor')}
+        onRegisterElement={(ref) => focusManagement.registerElement('editor', ref)}
+        onSetFocusFromClick={() => focusManagement.setFocusFromClick('editor')}
+      >
+        {selectedNote ? (
+          <>
+            <div className="title-bar">
+              <input
+                className="title-input"
+                type="text"
+                value={selectedNote.title}
+                onChange={(e) => handleTitleChange(selectedNote.id, e.target.value)}
+                placeholder="Untitled Note"
+              />
+            </div>
 
-        <div className="editor-container">
-          {selectedNote && (
-            <MemoizedEditorContainer
-              content={selectedNote.content}
-              onChange={(content) => handleContentChange(selectedNote.id, content)}
-              placeholder="Start writing your note..."
-              toolbarVisible={toolbarVisible}
-            />
-          )}
-        </div>
-      </>
+            <div className="editor-container">
+              <MemoizedEditorContainer
+                content={selectedNote.content}
+                onChange={(content) => handleContentChange(selectedNote.id, content)}
+                placeholder="Start writing your note..."
+                toolbarVisible={toolbarVisible}
+              />
+            </div>
+          </>
+        ) : (
+          <MemoizedWelcomeScreen
+            onCreateNote={() => handleCreateNote()}
+            onCreateFolder={() => handleCreateFolder()}
+            onFocusSearch={() => focusManagement.focusElement('sidebar-search')}
+          />
+        )}
+      </EditorWrapper>
     );
-  }, [configViewActive, hotkeysViewActive, isDualPaneMode, notesForPane, activePaneId, selectedNote, handleContentChange, handleTitleChange, setActivePane]);
+  }, [configViewActive, hotkeysViewActive, isDualPaneMode, notesForPane, activePaneId, selectedNote, handleContentChange, handleTitleChange, setActivePane, focusManagement.getFocusClasses, focusManagement.registerElement]);
+
+  // Sync selectedItemId with selectedNoteId when note is selected through other means
+  useEffect(() => {
+    if (selectedNoteId) {
+      setSelectedItemId(selectedNoteId);
+      setSelectedItemType('note');
+    }
+  }, [selectedNoteId]);
 
   return (
     <div className="app-container">
@@ -430,6 +499,9 @@ function App() {
             onToggleLineWrapping={toggleLineWrapping}
             isToolbarVisible={toolbarVisible}
             onToggleToolbar={toggleToolbar}
+            focusClasses={focusManagement.getFocusClasses('activity-bar')}
+            onRegisterElement={(ref) => focusManagement.registerElement('activity-bar', ref)}
+            onSetFocusFromClick={() => focusManagement.setFocusFromClick('activity-bar')}
           />
 
           {/* Resizable Sidebar */}
