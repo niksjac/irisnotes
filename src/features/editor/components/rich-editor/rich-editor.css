@@ -14,24 +14,27 @@
 .editor-container {
   height: 100%;
   overflow: hidden;
-  border: 6px solid green;
+  /* border: 6px solid green; */
 }
 
 .rich-editor {
   height: 100%;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
-  border: 1px solid green;
+  /* border: 1px solid green; */
 }
 
 .rich-editor-container {
   height: 100%;
   overflow:hidden;
-  padding-left: 5px;
-  border: 5px solid red;
+  /* padding: 10px 0px 0px 10px; */
+  /* border: 5px solid red; */
 }
 
 .rich-editor-view {
   outline: none;
+  padding: 10px 0px 0px 10px;
   height: 100%;
   overflow-x: auto;
   overflow-y: auto;
@@ -39,19 +42,19 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  border: 5px solid blue;
+  /* border: 5px solid blue; */
 }
 
 /* Base paragraph styling with dynamic font size */
 .rich-editor-view p {
   white-space: nowrap;
   line-height: 1.2;
-  max-inline-size: none;
+  /* max-inline-size: none; */
   width: fit-content;
   font-size: var(--iris-editor-font-size, 14px);
   font-weight: 100;
   font-family: consolas;
-  border: 1px dashed var(--iris-text-2);
+  /* border: 1px dashed var(--iris-text-2); */
 }
 
 /* Header styles with dynamic sizing */
@@ -111,6 +114,7 @@
 .rich-editor-view p span {
   font-family: inherit;
   font-size: inherit;
+  border: 1px dashed var(--iris-text-2);
 }
 
 /* Ensure sup/sub elements are properly styled */
@@ -127,21 +131,20 @@
 }
 
 .rich-editor .rich-editor-view p.editor-current-line-highlight {
-  background-color: var(--iris-text-2);
-  color: black!important;
+  background-color: blue;
 }
 
 /* Current line highlight respects parent wrapping settings */
 [data-line-wrapping="false"] .rich-editor-view p.editor-current-line-highlight,
 [data-line-wrapping="false"] .ProseMirror p.editor-current-line-highlight {
   white-space: nowrap;
-  width: 100%;
+  /* width: 100%; */
   max-inline-size: none;
 }
 
 [data-line-wrapping="true"] .rich-editor-view p.editor-current-line-highlight,
 [data-line-wrapping="true"] .ProseMirror p.editor-current-line-highlight {
-  width: 100%;
+  /* width: 100%; */
   white-space: normal;
   max-inline-size: 100%;
 }
@@ -150,7 +153,7 @@
 [data-line-wrapping="true"] .rich-editor-view p,
 [data-line-wrapping="true"] .ProseMirror p {
   white-space: normal;
-  width: 100%;
+  /* width: 100%; */
   max-inline-size: 100%;
 }
 
