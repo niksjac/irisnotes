@@ -32,7 +32,12 @@ export function SidebarSearch({
   // Focus the input when this component is focused via focus management
   useEffect(() => {
     if (focusClasses['focus-current'] && inputRef.current) {
-      inputRef.current.focus();
+      // Use a minimal delay to ensure smooth transitions
+      requestAnimationFrame(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      });
     }
   }, [focusClasses]);
 
@@ -40,10 +45,7 @@ export function SidebarSearch({
     if (onSetFocusFromClick) {
       onSetFocusFromClick();
     }
-    // Also focus the input for better UX
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+    // Focus management will handle the input focus
   };
 
   return (

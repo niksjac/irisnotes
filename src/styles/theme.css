@@ -13,14 +13,21 @@
   --iris-primary: var(--blue-6);
   --iris-primary-hover: var(--blue-7);
   --iris-primary-active: var(--blue-8);
+  --iris-primary-alpha: #3b82f620;
 
   --iris-surface: var(--gray-0);
   --iris-surface-2: var(--gray-1);
   --iris-surface-3: var(--gray-2);
 
+  --iris-bg-primary: var(--gray-0);
+  --iris-bg-secondary: var(--gray-1);
+  --iris-bg-tertiary: var(--gray-2);
+
   --iris-text: var(--gray-9);
   --iris-text-2: var(--gray-7);
   --iris-text-3: var(--gray-6);
+  --iris-text-primary: var(--gray-9);
+  --iris-text-secondary: var(--gray-7);
 
   --iris-border: var(--gray-3);
   --iris-border-hover: var(--gray-4);
@@ -69,13 +76,21 @@
 /* Dark theme */
 @media (prefers-color-scheme: dark) {
   :root {
+    --iris-primary-alpha: #3b82f625;
+
     --iris-surface: var(--gray-9);
     --iris-surface-2: var(--gray-8);
     --iris-surface-3: var(--gray-7);
 
+    --iris-bg-primary: var(--gray-9);
+    --iris-bg-secondary: var(--gray-8);
+    --iris-bg-tertiary: var(--gray-7);
+
     --iris-text: var(--gray-1);
     --iris-text-2: var(--gray-3);
     --iris-text-3: var(--gray-4);
+    --iris-text-primary: var(--gray-1);
+    --iris-text-secondary: var(--gray-3);
 
     --iris-border: var(--gray-7);
     --iris-border-hover: var(--gray-6);

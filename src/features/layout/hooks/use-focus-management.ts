@@ -50,21 +50,25 @@ export const useFocusManagement = (options: FocusManagementOptions = {}) => {
 
     const targetElement = elementRefs.current.get(element);
     if (targetElement) {
-      // Add visual focus indicator
+      // Add visual focus indicator immediately
       setCurrentFocus(element);
       setIsTabNavigating(byTab);
 
-      // Focus the element
-      if (targetElement.focus) {
-        targetElement.focus();
-      }
+      // Focus the element immediately
+      requestAnimationFrame(() => {
+        if (targetElement.focus) {
+          targetElement.focus();
+        }
+      });
 
       // Call the focus change callback
       options.onFocusChange?.(element);
 
-      // Remove tab navigation flag after a short delay
+      // Remove tab navigation flag immediately after next frame
       if (byTab) {
-        setTimeout(() => setIsTabNavigating(false), 100);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => setIsTabNavigating(false));
+        });
       }
     }
   }, [options]);
@@ -91,10 +95,12 @@ export const useFocusManagement = (options: FocusManagementOptions = {}) => {
     }
 
     const nextElement = tabOrder[nextIndex];
+
     if (!nextElement) return;
 
     // Skip elements that aren't registered (collapsed/hidden)
     const targetElement = elementRefs.current.get(nextElement);
+
     if (targetElement && targetElement.offsetParent !== null) {
       focusElement(nextElement, true);
     } else {
@@ -110,9 +116,10 @@ export const useFocusManagement = (options: FocusManagementOptions = {}) => {
   // Handle global keyboard events
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Handle Tab navigation
-      if (e.key === 'Tab') {
+      // Handle Tab navigation (including Shift+Tab which shows as "Unidentified")
+      if (e.key === 'Tab' || (e.key === 'Unidentified' && e.shiftKey)) {
         e.preventDefault();
+        e.stopPropagation();
         navigateTab(e.shiftKey ? 'backward' : 'forward');
         return;
       }
@@ -145,8 +152,12 @@ export const useFocusManagement = (options: FocusManagementOptions = {}) => {
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    // Main handler with capture phase for priority
+    document.addEventListener('keydown', handleKeyDown, true);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown, true);
+    };
   }, [navigateTab, focusElement, currentFocus]);
 
   // Helper to check if an element is currently focused

@@ -2,7 +2,7 @@
 
 /* Base focus management styles */
 .focus-managed {
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
   position: relative;
   cursor: pointer;
 }
@@ -10,7 +10,6 @@
 /* Current focus indicator */
 .focus-current {
   background-color: var(--iris-primary-alpha);
-  border: 1px solid var(--iris-primary);
   border-radius: 4px;
   outline: none;
 }
@@ -22,30 +21,11 @@
 
 .focus-current:hover {
   background-color: var(--iris-primary-alpha);
-  border-color: var(--iris-primary);
 }
 
-/* Tab navigation specific styling */
+/* Tab navigation - no animation, just smooth transition */
 .focus-tab-navigating {
-  animation: focusPulse 0.3s ease-out;
-}
-
-@keyframes focusPulse {
-  0% {
-    background-color: var(--iris-primary-alpha);
-    border-color: var(--iris-primary);
-    transform: scale(1);
-  }
-  50% {
-    background-color: var(--iris-primary);
-    border-color: var(--iris-primary);
-    transform: scale(1.01);
-  }
-  100% {
-    background-color: var(--iris-primary-alpha);
-    border-color: var(--iris-primary);
-    transform: scale(1);
-  }
+  /* No animation - the transition from .focus-managed handles it */
 }
 
 /* Activity Bar Focus Styles */
@@ -64,12 +44,10 @@
 /* Sidebar Focus Styles */
 .sidebar-buttons.focus-current {
   background-color: var(--iris-primary-alpha);
-  border: 1px solid var(--iris-primary);
 }
 
 .sidebar-search.focus-current {
   background-color: var(--iris-primary-alpha);
-  border: 1px solid var(--iris-primary);
 }
 
 .sidebar-search.focus-current .tree-search-input {
@@ -79,42 +57,11 @@
 
 .sidebar-tree.focus-current {
   background-color: var(--iris-primary-alpha);
-  border: 1px solid var(--iris-primary);
 }
 
 /* Editor Focus Styles */
 .editor-wrapper.focus-current {
   background-color: var(--iris-primary-alpha);
-  border: 1px solid var(--iris-primary);
-}
-
-/* Focus indicators for mobile */
-@media (max-width: 768px) {
-  .focus-current {
-    border-width: 2px;
-  }
-
-  .focus-tab-navigating {
-    animation: focusPulseMobile 0.4s ease-out;
-  }
-
-  @keyframes focusPulseMobile {
-    0% {
-      background-color: var(--iris-primary-alpha);
-      border-color: var(--iris-primary);
-      transform: scale(1);
-    }
-    50% {
-      background-color: var(--iris-primary);
-      border-color: var(--iris-primary);
-      transform: scale(1.02);
-    }
-    100% {
-      background-color: var(--iris-primary-alpha);
-      border-color: var(--iris-primary);
-      transform: scale(1);
-    }
-  }
 }
 
 /* Ensure focus indicators are above other content */
@@ -157,10 +104,6 @@
 
 /* Reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  .focus-tab-navigating {
-    animation: none;
-  }
-
   .focus-managed {
     transition: none;
   }
