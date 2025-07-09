@@ -6,6 +6,8 @@ interface UseShortcutsProps {
   onToggleDualPane?: () => void;
   onReloadNote?: () => void;
   onToggleLineWrapping?: () => void;
+  onIncreaseFontSize?: () => void;
+  onDecreaseFontSize?: () => void;
 }
 
 export const useShortcuts = ({
@@ -13,7 +15,9 @@ export const useShortcuts = ({
   onToggleActivityBar,
   onToggleDualPane,
   onReloadNote,
-  onToggleLineWrapping
+  onToggleLineWrapping,
+  onIncreaseFontSize,
+  onDecreaseFontSize
 }: UseShortcutsProps) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -33,6 +37,20 @@ export const useShortcuts = ({
               onToggleDualPane();
             }
             break;
+          case '+':
+          case '=': // Handle both + and = keys (= is unshifted + on most keyboards)
+            if (onIncreaseFontSize) {
+              e.preventDefault();
+              onIncreaseFontSize();
+            }
+            break;
+          case '-':
+          case '_': // Handle both - and _ keys
+            if (onDecreaseFontSize) {
+              e.preventDefault();
+              onDecreaseFontSize();
+            }
+            break;
         }
       } else if (e.altKey && e.key === 'z' && onToggleLineWrapping) {
         e.preventDefault();
@@ -45,5 +63,5 @@ export const useShortcuts = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onToggleSidebar, onToggleActivityBar, onToggleDualPane, onReloadNote, onToggleLineWrapping]);
+  }, [onToggleSidebar, onToggleActivityBar, onToggleDualPane, onReloadNote, onToggleLineWrapping, onIncreaseFontSize, onDecreaseFontSize]);
 };

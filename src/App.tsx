@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useCallback, useState } from "react";
-import { EditorContainer, DualPaneEditor, EditorWrapper, WelcomeScreen } from "./features/editor";
+import { EditorContainer, DualPaneEditor, EditorWrapper, WelcomeScreen, useFontSize } from "./features/editor";
 import { ActivityBar } from "./features/activity-bar";
 import { ResizableSidebar, SidebarContent } from "./features/sidebar";
 import { ConfigView } from "./features/editor/components/config-view";
@@ -36,6 +36,7 @@ function App() {
   const themeData = useTheme();
   const layoutData = useLayout();
   const lineWrappingData = useLineWrapping();
+  const fontSizeData = useFontSize(); // Add font size management
 
   // Focus management
   const focusManagement = useFocusManagement({
@@ -95,6 +96,8 @@ function App() {
   } = layoutData;
 
   const { isWrapping, toggleLineWrapping } = lineWrappingData;
+
+  const { fontSize, increaseFontSize, decreaseFontSize } = fontSizeData;
 
   // Category management state
   const [categories, setCategories] = useState<Category[]>([]);
@@ -330,8 +333,10 @@ function App() {
     onToggleActivityBar: toggleActivityBar,
     onToggleDualPane: toggleDualPaneMode,
     onReloadNote: () => loadAllNotes(), // Reload notes from storage
-    onToggleLineWrapping: toggleLineWrapping
-  }), [toggleSidebar, toggleActivityBar, toggleDualPaneMode, loadAllNotes, toggleLineWrapping]);
+    onToggleLineWrapping: toggleLineWrapping,
+    onIncreaseFontSize: increaseFontSize,
+    onDecreaseFontSize: decreaseFontSize
+  }), [toggleSidebar, toggleActivityBar, toggleDualPaneMode, loadAllNotes, toggleLineWrapping, increaseFontSize, decreaseFontSize]);
 
   // Initialize app after config loads
   useEffect(() => {
@@ -499,6 +504,7 @@ function App() {
             onToggleLineWrapping={toggleLineWrapping}
             isToolbarVisible={toolbarVisible}
             onToggleToolbar={toggleToolbar}
+            fontSize={fontSize}
             focusClasses={focusManagement.getFocusClasses('activity-bar')}
             onRegisterElement={(ref) => focusManagement.registerElement('activity-bar', ref)}
             onSetFocusFromClick={() => focusManagement.setFocusFromClick('activity-bar')}

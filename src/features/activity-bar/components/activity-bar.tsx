@@ -9,7 +9,8 @@ import {
   WrapText,
   ArrowRight,
   PanelRight,
-  PanelRightOpen
+  PanelRightOpen,
+  Type
 } from "lucide-react";
 import "./activity-bar.css";
 
@@ -29,6 +30,7 @@ interface ActivityBarProps {
   onToggleLineWrapping?: () => void;
   isToolbarVisible?: boolean;
   onToggleToolbar?: () => void;
+  fontSize?: number; // Current editor font size
   // Focus management props
   focusClasses?: Record<string, boolean>;
   onRegisterElement?: (ref: HTMLElement | null) => void;
@@ -51,6 +53,7 @@ export function ActivityBar({
   onToggleLineWrapping,
   isToolbarVisible = true,
   onToggleToolbar,
+  fontSize = 14,
   focusClasses = {},
   onRegisterElement,
   onSetFocusFromClick
@@ -124,6 +127,28 @@ export function ActivityBar({
         </div>
 
         <div className="activity-bar-separator">
+          {/* Font Size Indicator */}
+          <div
+            className="activity-bar-item font-size-indicator"
+            title={`Editor font size: ${fontSize}px (Ctrl+Plus/Minus to adjust)`}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '2px',
+              cursor: 'default',
+              color: 'var(--iris-text-2)',
+              fontSize: '10px',
+              fontWeight: '500',
+              padding: '2px',
+              height: '32px'
+            }}
+          >
+            <Type size={12} />
+            <span>{fontSize}px</span>
+          </div>
+
           {onToggleToolbar && (
             <button
               className={clsx("activity-bar-item", {

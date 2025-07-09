@@ -12,6 +12,8 @@ export function HotkeysView() {
     { key: 'Ctrl+D', description: 'Toggle Dual-pane Mode', category: 'Application' },
     { key: 'Alt+Z', description: 'Toggle Line Wrapping', category: 'Application' },
     { key: 'F5', description: 'Reload Note', category: 'Application' },
+    { key: 'Ctrl++', description: 'Increase Editor Font Size', category: 'Application' },
+    { key: 'Ctrl+-', description: 'Decrease Editor Font Size', category: 'Application' },
 
     // Editor formatting
     { key: 'Ctrl+B', description: 'Bold', category: 'Editor - Formatting' },
