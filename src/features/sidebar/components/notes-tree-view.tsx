@@ -106,22 +106,7 @@ export function NotesTreeView({
     };
   }, []); // Only run once on mount
 
-  // Memoize category mapping separately
-  const categoryMap = useMemo(() => {
-    const map = new Map<string, TreeNode>();
-    categories.forEach(category => {
-      const categoryNode: TreeNode = {
-        id: category.id,
-        name: category.name,
-        type: 'category',
-        data: category,
-        parent: category.parent_id || null,
-        children: [],
-      };
-      map.set(category.id, categoryNode);
-    });
-    return map;
-  }, [categories]);
+
 
   // Memoize note category mapping
   const noteCategoryMap = useMemo(() => {
@@ -139,12 +124,26 @@ export function NotesTreeView({
     const rootNodes: TreeNode[] = [];
     const placedNotes = new Set<string>();
 
-    // Build category hierarchy
+    // Build category hierarchy by first creating a copy of the category map
+    const workingCategoryMap = new Map<string, TreeNode>();
     categories.forEach(category => {
-      const categoryNode = categoryMap.get(category.id);
+      const categoryNode: TreeNode = {
+        id: category.id,
+        name: category.name,
+        type: 'category',
+        data: category,
+        parent: category.parent_id || null,
+        children: [],
+      };
+      workingCategoryMap.set(category.id, categoryNode);
+    });
+
+    // Build hierarchy using the working map
+    categories.forEach(category => {
+      const categoryNode = workingCategoryMap.get(category.id);
       if (categoryNode) {
         if (category.parent_id) {
-          const parentNode = categoryMap.get(category.parent_id);
+          const parentNode = workingCategoryMap.get(category.parent_id);
           if (parentNode) {
             parentNode.children!.push(categoryNode);
           } else {
@@ -170,7 +169,7 @@ export function NotesTreeView({
 
       if (noteCategoryIds.length > 0) {
         noteCategoryIds.forEach(categoryId => {
-          const categoryNode = categoryMap.get(categoryId);
+          const categoryNode = workingCategoryMap.get(categoryId);
           if (categoryNode) {
             categoryNode.children!.push({ ...noteNode });
             placedNotes.add(note.id);
@@ -194,7 +193,7 @@ export function NotesTreeView({
     });
 
     return rootNodes;
-  }, [notes, categories, categoryMap, noteCategoryMap]);
+  }, [notes, categories, noteCategoryMap]);
 
   // Apply transformations (hoist, search, sort)
   const treeData = useMemo(() => {

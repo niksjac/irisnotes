@@ -1,6 +1,6 @@
 import { useEffect, useRef, useMemo, useCallback } from 'react';
 import { EditorView } from 'prosemirror-view';
-import { Transaction } from 'prosemirror-state';
+import { Transaction, TextSelection } from 'prosemirror-state';
 import { Schema, Node } from 'prosemirror-model';
 import { keymap } from 'prosemirror-keymap';
 
@@ -210,7 +210,7 @@ export function useEditorView({
       view.focus();
       // Set cursor to end of document
       const endPos = view.state.doc.content.size;
-      const tr = view.state.tr.setSelection(view.state.selection.constructor.near(view.state.doc.resolve(endPos)));
+      const tr = view.state.tr.setSelection(TextSelection.near(view.state.doc.resolve(endPos)));
       view.dispatch(tr);
     }, 0);
 
