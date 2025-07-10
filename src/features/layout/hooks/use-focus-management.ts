@@ -11,6 +11,8 @@ interface FocusManagementOptions {
   onFocusChange?: (element: FocusableElement) => void;
   onToggleSidebar?: () => void;
   onToggleActivityBar?: () => void;
+  sidebarCollapsed?: boolean;
+  activityBarVisible?: boolean;
 }
 
 export const useFocusManagement = (options: FocusManagementOptions = {}) => {
@@ -28,6 +30,27 @@ export const useFocusManagement = (options: FocusManagementOptions = {}) => {
     'sidebar-tree',
     'editor'
   ];
+
+  // Check if an element is visible and should be focusable
+  const isElementVisible = useCallback((element: FocusableElement): boolean => {
+    const targetElement = elementRefs.current.get(element);
+    if (!targetElement) return false;
+
+    // Check if element exists in DOM and is visible
+    if (targetElement.offsetParent === null) return false;
+
+    // Special checks for sidebar elements
+    if (element === 'sidebar-buttons' || element === 'sidebar-search' || element === 'sidebar-tree') {
+      return !options.sidebarCollapsed;
+    }
+
+    // Special check for activity bar
+    if (element === 'activity-bar') {
+      return options.activityBarVisible !== false;
+    }
+
+    return true;
+  }, [options.sidebarCollapsed, options.activityBarVisible]);
 
   // Register an element for focus management
   const registerElement = useCallback((element: FocusableElement, ref: HTMLElement | null) => {
@@ -50,34 +73,36 @@ export const useFocusManagement = (options: FocusManagementOptions = {}) => {
 
     const targetElement = elementRefs.current.get(element);
     if (targetElement) {
-      // Add visual focus indicator immediately
+      // Update focus state immediately
       setCurrentFocus(element);
       setIsTabNavigating(byTab);
 
-      // Focus the element immediately
-      requestAnimationFrame(() => {
-        if (targetElement.focus) {
-          targetElement.focus();
-        }
-      });
+      // Only focus DOM element for non-editor elements to avoid disrupting editor internals
+      if (element !== 'editor') {
+        requestAnimationFrame(() => {
+          if (targetElement.focus) {
+            targetElement.focus();
+          }
+        });
+      }
 
       // Call the focus change callback
       options.onFocusChange?.(element);
 
-      // Remove tab navigation flag immediately after next frame
+      // Clear tab navigation flag after a short delay
       if (byTab) {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => setIsTabNavigating(false));
-        });
+        setTimeout(() => setIsTabNavigating(false), 100);
       }
     }
   }, [options]);
 
   // Set focus from mouse click (no auto-show, no DOM focus)
   const setFocusFromClick = useCallback((element: FocusableElement) => {
+    // Clear any pending tab navigation state
+    setIsTabNavigating(false);
+
     // Update visual focus indicator
     setCurrentFocus(element);
-    setIsTabNavigating(false);
 
     // Call the focus change callback
     options.onFocusChange?.(element);
@@ -86,32 +111,38 @@ export const useFocusManagement = (options: FocusManagementOptions = {}) => {
   // Navigate to next/previous element in tab order
   const navigateTab = useCallback((direction: 'forward' | 'backward') => {
     const currentIndex = tabOrder.indexOf(currentFocus);
-    let nextIndex: number;
+    let attempts = 0;
+    const maxAttempts = tabOrder.length;
 
-    if (direction === 'forward') {
-      nextIndex = (currentIndex + 1) % tabOrder.length;
-    } else {
-      nextIndex = currentIndex === 0 ? tabOrder.length - 1 : currentIndex - 1;
-    }
+         const findNextFocusableElement = (startIndex: number): FocusableElement | null => {
+       let nextIndex: number;
 
-    const nextElement = tabOrder[nextIndex];
+       if (direction === 'forward') {
+         nextIndex = (startIndex + 1) % tabOrder.length;
+       } else {
+         nextIndex = startIndex === 0 ? tabOrder.length - 1 : startIndex - 1;
+       }
 
-    if (!nextElement) return;
+       const nextElement = tabOrder[nextIndex];
+       attempts++;
 
-    // Skip elements that aren't registered (collapsed/hidden)
-    const targetElement = elementRefs.current.get(nextElement);
+       // Prevent infinite loop or invalid index
+       if (attempts >= maxAttempts || !nextElement) return null;
 
-    if (targetElement && targetElement.offsetParent !== null) {
+       // Check if element is visible and focusable
+       if (isElementVisible(nextElement)) {
+         return nextElement;
+       } else {
+         // Skip to next element
+         return findNextFocusableElement(nextIndex);
+       }
+     };
+
+    const nextElement = findNextFocusableElement(currentIndex);
+    if (nextElement && nextElement !== currentFocus) {
       focusElement(nextElement, true);
-    } else {
-      // Skip to next available element
-      const skippedCurrent = currentFocus;
-      setCurrentFocus(nextElement);
-      if (nextElement !== skippedCurrent) {
-        navigateTab(direction);
-      }
     }
-  }, [currentFocus, focusElement]);
+  }, [currentFocus, focusElement, isElementVisible]);
 
   // Handle global keyboard events
   useEffect(() => {
@@ -184,5 +215,6 @@ export const useFocusManagement = (options: FocusManagementOptions = {}) => {
     navigateTab,
     isFocused,
     getFocusClasses,
+    isElementVisible,
   };
 };

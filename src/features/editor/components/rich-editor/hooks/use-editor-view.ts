@@ -143,13 +143,13 @@ export function useEditorView({
   }, [debouncedOnChange]);
 
   // Memoize the editor state creation
-  const memoizedCreateState = useMemo(() => {
-    return (doc: any) => createEditorState({
+  const memoizedCreateState = useCallback((doc: any) => {
+    return createEditorState({
       doc,
       schema,
       onToggleView: onToggleView || (() => {})
     });
-  }, [schema, onToggleView]);
+  }, [schema]); // Removed onToggleView dependency to prevent re-renders
 
   // Memoize the editor configuration
   const editorConfig = useMemo(() => ({
@@ -205,14 +205,12 @@ export function useEditorView({
 
     view.updateState(newState);
 
-    // Focus the editor and position cursor at end
-    setTimeout(() => {
-      view.focus();
-      // Set cursor to end of document
-      const endPos = view.state.doc.content.size;
-      const tr = view.state.tr.setSelection(TextSelection.near(view.state.doc.resolve(endPos)));
-      view.dispatch(tr);
-    }, 0);
+    // Only focus and position cursor on first initialization, not on re-renders
+    if (content === '' || !content) {
+      setTimeout(() => {
+        view.focus();
+      }, 0);
+    }
 
     // Cleanup function
     return () => {
@@ -221,7 +219,7 @@ export function useEditorView({
         viewRef.current = null;
       }
     };
-  }, [memoizedCreateState, editorConfig, dispatchTransaction]);
+  }, [schema, dispatchTransaction]); // Removed memoizedCreateState and editorConfig dependencies
 
   // Handle content updates more efficiently
   useEffect(() => {
@@ -236,11 +234,29 @@ export function useEditorView({
     // Only update if the content is actually different from what's currently displayed
     // This prevents cursor jumping when the content update comes from user typing
     if (content !== currentHtml && !doc.eq(view.state.doc)) {
+      // Store current selection to preserve cursor position
+      const currentSelection = view.state.selection;
+
       // Create new state with updated document
       const newState = memoizedCreateState(doc);
-      view.updateState(newState);
+
+      // Try to preserve cursor position if possible
+      try {
+        const maxPos = newState.doc.content.size;
+        const preservedPos = Math.min(currentSelection.from, maxPos);
+        const newSelection = TextSelection.near(newState.doc.resolve(preservedPos));
+
+        const stateWithSelection = newState.apply(
+          newState.tr.setSelection(newSelection)
+        );
+
+        view.updateState(stateWithSelection);
+      } catch (error) {
+        // Fallback to normal state update if position preservation fails
+        view.updateState(newState);
+      }
     }
-  }, [content, schema, memoizedCreateState]);
+  }, [content, schema]); // Removed memoizedCreateState dependency
 
   return { editorRef, editorView: viewRef.current };
 }

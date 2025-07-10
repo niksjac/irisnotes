@@ -11,20 +11,24 @@
   width: 100%;
   /* border: 5px solid red; */
   background-color: var(--iris-editor-background-color);
-
 }
 
 .source-editor-container .cm-editor {
   height: 100%;
   width: 100%;
   background-color: var(--iris-editor-background-color);
-
 }
 
 .source-editor-container .cm-editor .cm-line {
   font-size: var(--iris-editor-font-size, 14px);
   font-family: Consolas;
   font-weight: 100;
+  min-height: 1.2em; /* Ensure empty lines have height for cursor visibility */
+}
+
+/* Ensure cursor is visible in empty lines */
+.source-editor-container .cm-editor .cm-content {
+  min-height: 1.2em;
 }
 
 .source-editor-container .cm-editor .cm-line::selection {

@@ -54,7 +54,20 @@
   font-size: var(--iris-editor-font-size, 14px);
   font-weight: 100;
   font-family: consolas;
+  min-height: 1.2em; /* Ensure empty lines have height for cursor visibility */
   /* border: 1px dashed var(--iris-text-2); */
+}
+
+/* Ensure cursor is always visible in empty paragraphs */
+.rich-editor-view p:empty {
+  min-height: 1.2em;
+}
+
+.rich-editor-view p:empty::before {
+  content: "\200B"; /* Zero-width space to make cursor visible */
+  display: inline-block;
+  height: 1.2em;
+  line-height: 1.2;
 }
 
 /* Header styles with dynamic sizing */
@@ -62,36 +75,42 @@
   font-size: var(--iris-editor-font-size-h1, 28px);
   font-weight: 700;
   margin: 0.5em 0;
+  min-height: 1.2em;
 }
 
 .rich-editor-view h2 {
   font-size: var(--iris-editor-font-size-h2, 21px);
   font-weight: 600;
   margin: 0.5em 0;
+  min-height: 1.2em;
 }
 
 .rich-editor-view h3 {
   font-size: var(--iris-editor-font-size-h3, 17px);
   font-weight: 600;
   margin: 0.5em 0;
+  min-height: 1.2em;
 }
 
 .rich-editor-view h4 {
   font-size: var(--iris-editor-font-size-h4, 15px);
   font-weight: 600;
   margin: 0.5em 0;
+  min-height: 1.2em;
 }
 
 .rich-editor-view h5 {
   font-size: var(--iris-editor-font-size-h5, 14px);
   font-weight: 600;
   margin: 0.5em 0;
+  min-height: 1.2em;
 }
 
 .rich-editor-view h6 {
   font-size: var(--iris-editor-font-size-h6, 12px);
   font-weight: 600;
   margin: 0.5em 0;
+  min-height: 1.2em;
 }
 
 /* Code styling with dynamic font size */
@@ -131,7 +150,24 @@
 }
 
 .rich-editor .rich-editor-view p.editor-current-line-highlight {
-  background-color: blue;
+  background-color: rgba(0, 123, 255, 0.1); /* More subtle blue highlight */
+  border-radius: 2px;
+  min-height: 1.2em; /* Ensure empty highlighted lines are visible */
+  position: relative;
+}
+
+/* Ensure highlighted empty lines show the highlight */
+.rich-editor .rich-editor-view p.editor-current-line-highlight:empty {
+  min-height: 1.2em;
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* Ensure empty highlighted lines have visible space */
+.rich-editor .rich-editor-view p.editor-current-line-highlight:empty::before {
+  content: "\200B"; /* Zero-width space */
+  display: inline-block;
+  height: 1.2em;
+  line-height: 1.2;
 }
 
 /* Current line highlight respects parent wrapping settings */

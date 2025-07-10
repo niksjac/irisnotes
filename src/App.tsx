@@ -39,25 +39,6 @@ function App() {
   const lineWrappingData = useLineWrapping();
   const fontSizeData = useFontSize(); // Add font size management
 
-  // Focus management
-  const focusManagement = useFocusManagement({
-    onFocusChange: (element) => {
-      console.log('Focus changed to:', element);
-    },
-    onToggleSidebar: () => {
-      // Only show sidebar if it's collapsed
-      if (sidebarCollapsed) {
-        toggleSidebar();
-      }
-    },
-    onToggleActivityBar: () => {
-      // Only show activity bar if it's hidden
-      if (!activityBarVisible) {
-        toggleActivityBar();
-      }
-    }
-  });
-
   // Destructure only what we need
   const {
     notes,
@@ -95,6 +76,27 @@ function App() {
     setActivePane,
     toggleToolbar
   } = layoutData;
+
+  // Focus management (after layout data is available)
+  const focusManagement = useFocusManagement({
+    onFocusChange: (element) => {
+      console.log('Focus changed to:', element);
+    },
+    onToggleSidebar: () => {
+      // Only show sidebar if it's collapsed
+      if (sidebarCollapsed) {
+        toggleSidebar();
+      }
+    },
+    onToggleActivityBar: () => {
+      // Only show activity bar if it's hidden
+      if (!activityBarVisible) {
+        toggleActivityBar();
+      }
+    },
+    sidebarCollapsed,
+    activityBarVisible
+  });
 
   const { isWrapping, toggleLineWrapping } = lineWrappingData;
 

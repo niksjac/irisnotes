@@ -2,16 +2,25 @@
 
 /* Base focus management styles */
 .focus-managed {
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
   position: relative;
   cursor: pointer;
 }
 
-/* Current focus indicator */
-.focus-current {
-  background-color: var(--iris-primary-alpha);
-  border-radius: 4px;
-  outline: none;
+/* Green circle focus indicator in top-right corner */
+.focus-current::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  background-color: #22c55e; /* Green color */
+  border: 1px solid white;
+  border-radius: 50%;
+  z-index: 100; /* Reduced from 1000 to avoid covering important UI */
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* Ensure focus indicators are visible on hover too */
@@ -19,13 +28,10 @@
   background-color: var(--iris-bg-secondary);
 }
 
-.focus-current:hover {
-  background-color: var(--iris-primary-alpha);
-}
-
-/* Tab navigation - no animation, just smooth transition */
+/* Tab navigation - add subtle highlight */
 .focus-tab-navigating {
-  /* No animation - the transition from .focus-managed handles it */
+  background-color: var(--iris-bg-secondary);
+  border-radius: 4px;
 }
 
 /* Activity Bar Focus Styles */
@@ -37,31 +43,48 @@
   background-color: var(--iris-surface-3);
 }
 
-.activity-bar.focus-current {
-  background-color: var(--iris-primary-alpha);
+/* Special positioning for activity bar green circle */
+.activity-bar.focus-current::after {
+  top: 8px;
+  right: 8px;
 }
 
 /* Sidebar Focus Styles */
-.sidebar-buttons.focus-current {
-  background-color: var(--iris-primary-alpha);
+.sidebar-buttons.focus-managed,
+.sidebar-search.focus-managed,
+.sidebar-tree.focus-managed {
+  border-radius: 4px;
 }
 
-.sidebar-search.focus-current {
-  background-color: var(--iris-primary-alpha);
+/* Special positioning for sidebar elements */
+.sidebar-buttons.focus-current::after,
+.sidebar-search.focus-current::after {
+  top: 6px;
+  right: 6px;
 }
 
+/* Tree view needs special handling */
+.sidebar-tree.focus-current::after {
+  top: 8px;
+  right: 8px;
+}
+
+/* Input focus enhancement for search */
 .sidebar-search.focus-current .tree-search-input {
   border-color: var(--iris-primary);
   box-shadow: 0 0 0 1px var(--iris-primary-alpha);
 }
 
-.sidebar-tree.focus-current {
-  background-color: var(--iris-primary-alpha);
+/* Editor Focus Styles */
+.editor-wrapper.focus-managed {
+  border-radius: 4px;
 }
 
-/* Editor Focus Styles */
-.editor-wrapper.focus-current {
-  background-color: var(--iris-primary-alpha);
+/* Special positioning for editor green circle */
+.editor-wrapper.focus-current::after {
+  top: 8px;
+  right: 24px; /* Move further left to avoid scrollbar interference */
+  z-index: 100; /* Lower z-index to avoid covering editor UI */
 }
 
 /* Ensure focus indicators are above other content */
@@ -69,7 +92,7 @@
   z-index: 10;
 }
 
-/* Custom focus styles for tree view */
+/* Custom focus styles for tree view nodes */
 .notes-tree-view.focus-tab-navigating {
   background-color: var(--iris-bg-secondary);
 }
@@ -102,9 +125,22 @@
   outline: none;
 }
 
+/* Accessibility: Larger circle for high contrast mode */
+@media (prefers-contrast: high) {
+  .focus-current::after {
+    width: 10px;
+    height: 10px;
+    border-width: 2px;
+  }
+}
+
 /* Reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .focus-managed {
+    transition: none;
+  }
+
+  .focus-current::after {
     transition: none;
   }
 }

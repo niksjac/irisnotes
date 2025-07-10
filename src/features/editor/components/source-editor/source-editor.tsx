@@ -80,20 +80,17 @@ export function SourceEditor({
 
     viewRef.current = view;
 
-    // Focus the editor and position cursor at end
-    setTimeout(() => {
-      view.focus();
-      // Set cursor to end of document
-      const endPos = view.state.doc.length;
-      view.dispatch({
-        selection: { anchor: endPos, head: endPos }
-      });
-    }, 0);
+    // Only focus on empty content, don't position cursor automatically
+    if (!content || content.trim() === '') {
+      setTimeout(() => {
+        view.focus();
+      }, 0);
+    }
 
     return () => {
       view.destroy();
     };
-  }, [readOnly, onToggleView]);
+  }, [readOnly]); // Removed onToggleView from dependencies
 
   // Update content when it changes externally
   useEffect(() => {
@@ -103,13 +100,22 @@ export function SourceEditor({
     const formattedContent = formatHtml(content || '');
 
     if (currentContent !== formattedContent && content !== undefined) {
+      // Store current selection to preserve cursor position
+      const currentSelection = viewRef.current.state.selection;
+
       const transaction = viewRef.current.state.update({
         changes: {
           from: 0,
           to: viewRef.current.state.doc.length,
           insert: formattedContent
+        },
+        // Preserve selection position if possible
+        selection: {
+          anchor: Math.min(currentSelection.main.anchor, formattedContent.length),
+          head: Math.min(currentSelection.main.head, formattedContent.length)
         }
       });
+
       viewRef.current.dispatch(transaction);
     }
   }, [content]);
