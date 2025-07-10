@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useCallback, useState } from "react";
-import { EditorContainer, DualPaneEditor, EditorWrapper, WelcomeScreen, useFontSize } from "./features/editor";
+import { EditorContainer, DualPaneEditor, EditorWrapper, WelcomeScreen, FolderContentView, useFontSize } from "./features/editor";
 import { ActivityBar } from "./features/activity-bar";
 import { ResizableSidebar, SidebarContent } from "./features/sidebar";
 import { ConfigView } from "./features/editor/components/config-view";
@@ -27,6 +27,7 @@ const MemoizedConfigView = React.memo(ConfigView);
 const MemoizedHotkeysView = React.memo(HotkeysView);
 const MemoizedDatabaseStatusView = React.memo(DatabaseStatusView);
 const MemoizedWelcomeScreen = React.memo(WelcomeScreen);
+const MemoizedFolderContentView = React.memo(FolderContentView);
 
 function App() {
   const { config, loading: configLoading } = useConfig();
@@ -327,6 +328,12 @@ function App() {
     updateNoteContent(noteId, content);
   }, [updateNoteContent]);
 
+  const handleFolderSelect = useCallback((folderId: string) => {
+    setSelectedItemId(folderId);
+    setSelectedItemType('category');
+    setSelectedNoteId(null);
+  }, [setSelectedNoteId]);
+
   // Memoize shortcuts configuration
   const shortcutsConfig = useMemo(() => ({
     onToggleSidebar: toggleSidebar,
@@ -410,6 +417,14 @@ function App() {
     focusManagement.setFocusFromClick
   ]);
 
+  // Find selected folder for folder content view
+  const selectedFolder = useMemo(() => {
+    if (selectedItemType === 'category' && selectedItemId) {
+      return categories.find(cat => cat.id === selectedItemId) || null;
+    }
+    return null;
+  }, [selectedItemType, selectedItemId, categories]);
+
   // Memoize main content to prevent unnecessary re-renders
   const mainContent = useMemo(() => {
     // Show config view if active
@@ -420,6 +435,22 @@ function App() {
     // Show hotkeys view if active
     if (hotkeysViewActive) {
       return <MemoizedHotkeysView />;
+    }
+
+    // Show folder content view if a folder is selected
+    if (selectedFolder && selectedItemType === 'category') {
+      return (
+        <MemoizedFolderContentView
+          selectedFolder={selectedFolder}
+          notes={notes}
+          categories={categories}
+          noteCategories={noteCategories}
+          onNoteSelect={handleNoteClick}
+          onFolderSelect={handleFolderSelect}
+          onCreateNote={handleCreateNote}
+          onCreateFolder={handleCreateFolder}
+        />
+      );
     }
 
     // Otherwise show normal editor content
@@ -473,7 +504,7 @@ function App() {
         )}
       </EditorWrapper>
     );
-  }, [configViewActive, hotkeysViewActive, isDualPaneMode, notesForPane, activePaneId, selectedNote, handleContentChange, handleTitleChange, setActivePane, focusManagement.getFocusClasses, focusManagement.registerElement]);
+  }, [configViewActive, hotkeysViewActive, selectedFolder, selectedItemType, isDualPaneMode, notesForPane, activePaneId, selectedNote, handleContentChange, handleTitleChange, setActivePane, focusManagement.getFocusClasses, focusManagement.registerElement, notes, categories, noteCategories, handleNoteClick, handleFolderSelect, handleCreateNote, handleCreateFolder]);
 
   // Sync selectedItemId with selectedNoteId when note is selected through other means
   useEffect(() => {
