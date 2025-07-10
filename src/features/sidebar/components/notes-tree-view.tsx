@@ -63,10 +63,20 @@ export function NotesTreeView({
 }: NotesTreeViewProps) {
   const [sortAlphabetically, setSortAlphabetically] = useState(false);
   const [allExpanded, setAllExpanded] = useState(false);
-  const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
+
+  // Unified navigation state - single source of truth for keyboard focus
+  const [navigatedItemId, setNavigatedItemId] = useState<string | null>(null);
+
   const [hoistedFolderId, setHoistedFolderId] = useState<string | null>(null);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [treeHeight, setTreeHeight] = useState(400); // Default height
+
+  // Track expanded state internally for reliable navigation
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(() => {
+    // Initialize empty - will be populated after baseTreeData is available
+    return new Set<string>();
+  });
+
   const nodeRefsMap = useRef<Map<string, { startEditing: () => void }>>(new Map());
   const treeRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -105,8 +115,6 @@ export function NotesTreeView({
       }
     };
   }, []); // Only run once on mount
-
-
 
   // Memoize note category mapping
   const noteCategoryMap = useMemo(() => {
@@ -195,6 +203,26 @@ export function NotesTreeView({
     return rootNodes;
   }, [notes, categories, noteCategoryMap]);
 
+  // Initialize expanded state when tree data first becomes available
+  useEffect(() => {
+    if (baseTreeData.length > 0 && expandedNodes.size === 0) {
+      const initialExpanded = new Set<string>();
+      const addExpandedCategories = (nodes: TreeNode[]) => {
+        nodes.forEach(node => {
+          if (node.type === 'category') {
+            initialExpanded.add(node.id);
+            if (node.children) {
+              addExpandedCategories(node.children);
+            }
+          }
+        });
+      };
+      addExpandedCategories(baseTreeData);
+      setExpandedNodes(initialExpanded);
+      setAllExpanded(true); // Since we're starting with all expanded
+    }
+  }, [baseTreeData, expandedNodes.size]);
+
   // Apply transformations (hoist, search, sort)
   const treeData = useMemo(() => {
     let finalNodes = baseTreeData;
@@ -258,14 +286,7 @@ export function NotesTreeView({
     return finalNodes;
   }, [baseTreeData, hoistedFolderId, searchQuery, sortAlphabetically]);
 
-  // Get flattened list of all visible items for keyboard navigation (respects expanded/collapsed state)
-  const [treeStateVersion, setTreeStateVersion] = useState(0);
-
-  const refreshFlattenedItems = useCallback(() => {
-    setTreeStateVersion(prev => prev + 1);
-  }, []);
-
-  // Optimize flattened items calculation
+  // Synchronously calculate flattened items for reliable keyboard navigation
   const flattenedItems = useMemo(() => {
     if (!treeData.length) return [];
 
@@ -275,9 +296,7 @@ export function NotesTreeView({
         items.push(node);
         // Only include children if the node is a category and is expanded
         if (node.type === 'category' && node.children && node.children.length > 0) {
-          // Check if this node is expanded in the tree
-          const treeNode = treeRef.current?.get(node.id);
-          const isExpanded = treeNode?.isOpen ?? false;
+          const isExpanded = expandedNodes.has(node.id);
           if (isExpanded) {
             flatten(node.children);
           }
@@ -286,7 +305,28 @@ export function NotesTreeView({
     };
     flatten(treeData);
     return items;
-  }, [treeData, treeStateVersion]);
+  }, [treeData, expandedNodes]);
+
+  // Helper function to toggle node expansion with immediate state update
+  const toggleNodeExpansion = useCallback((nodeId: string) => {
+    setExpandedNodes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(nodeId)) {
+        newSet.delete(nodeId);
+      } else {
+        newSet.add(nodeId);
+      }
+      return newSet;
+    });
+
+    // Also toggle in react-arborist for visual consistency
+    if (treeRef.current) {
+      const node = treeRef.current.get(nodeId);
+      if (node) {
+        node.toggle();
+      }
+    }
+  }, []);
 
   // Get the currently hoisted folder info
   const hoistedFolder = useMemo(() => {
@@ -359,14 +399,37 @@ export function NotesTreeView({
     return findParent(treeData);
   }, [treeData]);
 
-  // Keyboard navigation
+  // Ensure navigation stays on visible items
+  const ensureValidNavigation = useCallback(() => {
+    if (navigatedItemId) {
+      const isVisible = flattenedItems.some(item => item.id === navigatedItemId);
+      if (!isVisible && flattenedItems.length > 0) {
+        // Try to find parent folder or move to first item
+        const parentFolder = findParentFolder(navigatedItemId);
+        const fallbackId = parentFolder ? parentFolder.id : flattenedItems[0]?.id;
+        const fallbackItem = fallbackId ? flattenedItems.find(item => item.id === fallbackId) : null;
+
+        if (fallbackItem) {
+          setNavigatedItemId(fallbackItem.id);
+          onItemSelect?.(fallbackItem.id, fallbackItem.type);
+        }
+      }
+    }
+  }, [navigatedItemId, flattenedItems, findParentFolder, onItemSelect]);
+
+  // Ensure valid navigation when flattened items change
+  useEffect(() => {
+    ensureValidNavigation();
+  }, [ensureValidNavigation]);
+
+  // Keyboard navigation with improved synchronization
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!containerRef.current?.contains(document.activeElement)) return;
 
       let shouldPreventDefault = false;
-      const currentIndex = focusedItemId ? flattenedItems.findIndex(item => item.id === focusedItemId) : -1;
-      const focusedItem = focusedItemId ? flattenedItems.find(item => item.id === focusedItemId) : null;
+      const currentIndex = navigatedItemId ? flattenedItems.findIndex(item => item.id === navigatedItemId) : -1;
+      const currentItem = navigatedItemId ? flattenedItems.find(item => item.id === navigatedItemId) : null;
 
       switch (e.key) {
         case 'ArrowDown':
@@ -374,7 +437,7 @@ export function NotesTreeView({
           if (currentIndex < flattenedItems.length - 1) {
             const nextItem = flattenedItems[currentIndex + 1];
             if (nextItem) {
-              setFocusedItemId(nextItem.id);
+              setNavigatedItemId(nextItem.id);
               onItemSelect?.(nextItem.id, nextItem.type);
             }
           }
@@ -385,7 +448,7 @@ export function NotesTreeView({
           if (currentIndex > 0) {
             const prevItem = flattenedItems[currentIndex - 1];
             if (prevItem) {
-              setFocusedItemId(prevItem.id);
+              setNavigatedItemId(prevItem.id);
               onItemSelect?.(prevItem.id, prevItem.type);
             }
           }
@@ -393,37 +456,33 @@ export function NotesTreeView({
 
         case 'ArrowRight':
           shouldPreventDefault = true;
-          if (focusedItem?.type === 'category' && treeRef.current) {
-            const node = treeRef.current.get(focusedItem.id);
-            if (node && !node.isOpen) {
-              node.toggle();
-              requestAnimationFrame(() => refreshFlattenedItems());
+          if (currentItem?.type === 'category') {
+            const isExpanded = expandedNodes.has(currentItem.id);
+            if (!isExpanded) {
+              toggleNodeExpansion(currentItem.id);
             }
           }
           break;
 
         case 'ArrowLeft':
           shouldPreventDefault = true;
-          if (focusedItem) {
-            if (focusedItem.type === 'category' && treeRef.current) {
-              const node = treeRef.current.get(focusedItem.id);
-              if (node && node.isOpen) {
-                node.toggle();
-                requestAnimationFrame(() => refreshFlattenedItems());
+          if (currentItem) {
+            if (currentItem.type === 'category') {
+              const isExpanded = expandedNodes.has(currentItem.id);
+              if (isExpanded) {
+                toggleNodeExpansion(currentItem.id);
               }
-            } else if (focusedItem.type === 'note') {
+            } else if (currentItem.type === 'note') {
               // Jump to parent folder and collapse it
-              const parentFolder = findParentFolder(focusedItem.id);
+              const parentFolder = findParentFolder(currentItem.id);
               if (parentFolder) {
-                setFocusedItemId(parentFolder.id);
+                setNavigatedItemId(parentFolder.id);
                 onItemSelect?.(parentFolder.id, parentFolder.type);
-                // Collapse the parent folder
-                if (treeRef.current) {
-                  const node = treeRef.current.get(parentFolder.id);
-                  if (node && node.isOpen) {
-                    node.toggle();
-                    requestAnimationFrame(() => refreshFlattenedItems());
-                  }
+
+                // Collapse the parent folder if expanded
+                const isExpanded = expandedNodes.has(parentFolder.id);
+                if (isExpanded) {
+                  toggleNodeExpansion(parentFolder.id);
                 }
               }
             }
@@ -433,29 +492,25 @@ export function NotesTreeView({
         case 'Enter':
         case ' ': // Space key
           shouldPreventDefault = true;
-          if (focusedItem) {
-            if (focusedItem.type === 'note') {
-              onNoteSelect?.(focusedItem.id);
-            } else if (focusedItem.type === 'category' && treeRef.current) {
-              const node = treeRef.current.get(focusedItem.id);
-              if (node) {
-                node.toggle();
-                requestAnimationFrame(() => refreshFlattenedItems());
-              }
+          if (currentItem) {
+            if (currentItem.type === 'note') {
+              onNoteSelect?.(currentItem.id);
+            } else if (currentItem.type === 'category') {
+              toggleNodeExpansion(currentItem.id);
             }
           }
           break;
 
         case 'F2':
           shouldPreventDefault = true;
-          if (focusedItem) {
+          if (currentItem) {
             // Try direct approach first
-            const nodeRef = nodeRefsMap.current.get(focusedItem.id);
+            const nodeRef = nodeRefsMap.current.get(currentItem.id);
             if (nodeRef) {
               nodeRef.startEditing();
             } else {
               // Fallback to state-based approach
-              setEditingItemId(focusedItem.id);
+              setEditingItemId(currentItem.id);
             }
           }
           break;
@@ -482,20 +537,14 @@ export function NotesTreeView({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [focusedItemId, flattenedItems, onItemSelect, onNoteSelect, hoistedFolderId, refreshFlattenedItems, findParentFolder]);
+  }, [navigatedItemId, flattenedItems, expandedNodes, onItemSelect, onNoteSelect, hoistedFolderId, toggleNodeExpansion, findParentFolder]);
 
-  // Initialize focused item
+  // Initialize navigation state from selection
   useEffect(() => {
-    if (selectedItemId && !focusedItemId) {
-      setFocusedItemId(selectedItemId);
+    if (selectedItemId && !navigatedItemId) {
+      setNavigatedItemId(selectedItemId);
     }
-  }, [selectedItemId, focusedItemId]);
-
-  // Refresh flattened items when tree data changes
-  useEffect(() => {
-    // Use immediate refresh for tree data changes
-    refreshFlattenedItems();
-  }, [treeData, refreshFlattenedItems]);
+  }, [selectedItemId, navigatedItemId]);
 
   const handleDeleteSelected = () => {
     if (selectedItemId) {
@@ -530,12 +579,25 @@ export function NotesTreeView({
     if (treeRef.current) {
       if (allExpanded) {
         treeRef.current.closeAll();
+        setExpandedNodes(new Set()); // Clear all expanded nodes
       } else {
         treeRef.current.openAll();
+        // Collect all category IDs to mark as expanded
+        const allCategoryIds = new Set<string>();
+        const collectCategories = (nodes: TreeNode[]) => {
+          nodes.forEach(node => {
+            if (node.type === 'category') {
+              allCategoryIds.add(node.id);
+              if (node.children) {
+                collectCategories(node.children);
+              }
+            }
+          });
+        };
+        collectCategories(treeData);
+        setExpandedNodes(allCategoryIds);
       }
       setAllExpanded(!allExpanded);
-      // Immediate refresh after expand/collapse all
-      refreshFlattenedItems();
     }
   };
 
@@ -554,7 +616,7 @@ export function NotesTreeView({
     const nodeData = node.data;
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(nodeData.name);
-    const isFocused = focusedItemId === nodeData.id;
+    const isFocused = navigatedItemId === nodeData.id;
     const isOpen = nodeData.type === 'note' && selectedNoteId === nodeData.id;
 
     // Register this node's editing function
@@ -617,7 +679,7 @@ export function NotesTreeView({
       e.stopPropagation();
       if (!isEditing) {
         // Select the item
-        setFocusedItemId(nodeData.id);
+        setNavigatedItemId(nodeData.id);
         if (onItemSelect) {
           onItemSelect(nodeData.id, nodeData.type);
         }
@@ -631,12 +693,11 @@ export function NotesTreeView({
 
     const handleToggle = (e: React.MouseEvent) => {
       e.stopPropagation();
-      node.toggle();
-      // Immediate refresh after toggle
-      refreshFlattenedItems();
+      toggleNodeExpansion(nodeData.id);
     };
 
     const hasChildren = node.children && node.children.length > 0;
+    const isExpanded = nodeData.type === 'category' ? expandedNodes.has(nodeData.id) : false;
 
     return (
       <div
@@ -658,7 +719,7 @@ export function NotesTreeView({
               }}
             >
               {hasChildren ? (
-                node.isOpen ? (
+                isExpanded ? (
                   <ChevronDown size={14} />
                 ) : (
                   <ChevronRight size={14} />
@@ -764,10 +825,10 @@ export function NotesTreeView({
 
   const handleContainerFocus = () => {
     // When focused via tab navigation, ensure the tree is ready
-    if (flattenedItems.length > 0 && !focusedItemId) {
+    if (flattenedItems.length > 0 && !navigatedItemId) {
       const firstItem = flattenedItems[0];
       if (firstItem) {
-        setFocusedItemId(firstItem.id);
+        setNavigatedItemId(firstItem.id);
         if (onItemSelect) {
           onItemSelect(firstItem.id, firstItem.type);
         }

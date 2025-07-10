@@ -309,6 +309,14 @@
   border-radius: 4px;
 }
 
+/* When both focused and selected, prioritize the selected outline but keep focused background */
+.tree-node.focused.selected {
+  background: var(--iris-bg-secondary);
+  outline: 2px solid var(--iris-primary);
+  outline-offset: -2px;
+  box-shadow: none;
+}
+
 /* Sidebar Buttons */
 .sidebar-buttons {
   display: flex;
