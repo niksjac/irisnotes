@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
-import { RichEditor } from './rich-editor/rich-editor';
-import { SourceEditor } from './source-editor/source-editor';
+import { useState, useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
+import { RichEditor, RichEditorRef } from './rich-editor/rich-editor';
+import { SourceEditor, SourceEditorRef } from './source-editor/source-editor';
 import { Code, FileText } from 'lucide-react';
 
 interface EditorContainerProps {
@@ -12,19 +12,37 @@ interface EditorContainerProps {
   toolbarVisible?: boolean;
 }
 
-export function EditorContainer({
+export interface EditorContainerRef {
+  focusAndPositionAtEnd: () => void;
+}
+
+export const EditorContainer = forwardRef<EditorContainerRef, EditorContainerProps>(({
   content,
   onChange,
   placeholder = "Start writing...",
   readOnly = false,
   defaultView = 'rich',
   toolbarVisible = true
-}: EditorContainerProps) {
+}, ref) => {
   const [showSourceView, setShowSourceView] = useState(defaultView === 'source');
+  const richEditorRef = useRef<RichEditorRef>(null);
+  const sourceEditorRef = useRef<SourceEditorRef>(null);
 
   const toggleView = useCallback(() => {
     setShowSourceView(prev => !prev);
   }, []);
+
+  const focusAndPositionAtEnd = useCallback(() => {
+    if (showSourceView) {
+      sourceEditorRef.current?.focusAndPositionAtEnd();
+    } else {
+      richEditorRef.current?.focusAndPositionAtEnd();
+    }
+  }, [showSourceView]);
+
+  useImperativeHandle(ref, () => ({
+    focusAndPositionAtEnd
+  }), [focusAndPositionAtEnd]);
 
   return (
     <div style={{ position: 'relative', height: '100%' }}>
@@ -58,6 +76,7 @@ export function EditorContainer({
       {/* Editor Content */}
       {showSourceView ? (
         <SourceEditor
+          ref={sourceEditorRef}
           content={content}
           onChange={onChange}
           readOnly={readOnly}
@@ -65,6 +84,7 @@ export function EditorContainer({
         />
       ) : (
         <RichEditor
+          ref={richEditorRef}
           content={content}
           onChange={onChange}
           placeholder={placeholder}
@@ -75,4 +95,6 @@ export function EditorContainer({
       )}
     </div>
   );
-}
+});
+
+EditorContainer.displayName = 'EditorContainer';

@@ -4,7 +4,7 @@
 .focus-managed {
   transition: all 0.2s ease;
   position: relative;
-  cursor: pointer;
+  cursor: auto; /* Override Open Props normalize cursor: pointer on [tabindex] */
 }
 
 /* Green circle focus indicator in top-right corner */
@@ -24,9 +24,9 @@
 }
 
 /* Ensure focus indicators are visible on hover too */
-.focus-managed:hover {
+/* .focus-managed:hover {
   background-color: var(--iris-bg-secondary);
-}
+} */
 
 /* Tab navigation - add subtle highlight */
 .focus-tab-navigating {
@@ -35,9 +35,6 @@
 }
 
 /* Activity Bar Focus Styles */
-.activity-bar.focus-managed {
-  cursor: pointer;
-}
 
 .activity-bar.focus-tab-navigating {
   background-color: var(--iris-surface-3);

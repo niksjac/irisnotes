@@ -1,20 +1,7 @@
-/* Base ProseMirror editor styling */
-.ProseMirror {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  -webkit-variant-ligatures: none;
-  font-variant-ligatures: none;
-  font-feature-settings: "liga" 0; /* the above doesn't seem to work in Edge */
-}
-
-.ProseMirror pre {
-  white-space: pre-wrap;
-}
-
 .editor-container {
   height: 100%;
   overflow: hidden;
-  /* border: 6px solid green; */
+  border: 5px solid pink;
 }
 
 .rich-editor {
@@ -22,19 +9,25 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* border: 1px solid green; */
+  border: 5px solid green;
 }
 
 .rich-editor-container {
   height: 100%;
   overflow:hidden;
   /* padding: 10px 0px 0px 10px; */
-  /* border: 5px solid red; */
+  border: 5px solid red;
+  padding: 10px 0px 0px 10px;
 }
 
 .rich-editor-view {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  -webkit-variant-ligatures: none;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0; /* the above doesn't seem to work in Edge */
+  border: 5px solid lightgray;
   outline: none;
-  padding: 10px 0px 0px 10px;
   height: 100%;
   overflow-x: auto;
   overflow-y: auto;
@@ -45,30 +38,28 @@
   /* border: 5px solid blue; */
 }
 
+/* .rich-editor-view pre {
+  white-space: pre-wrap;
+} */
+
 /* Base paragraph styling with dynamic font size */
 .rich-editor-view p {
   white-space: nowrap;
-  line-height: 1.2;
+  line-height: 1.5;
+  margin-top: 5px;
+  margin-bottom: 5px;
   /* max-inline-size: none; */
   width: fit-content;
   font-size: var(--iris-editor-font-size, 14px);
   font-weight: 100;
   font-family: consolas;
   min-height: 1.2em; /* Ensure empty lines have height for cursor visibility */
-  /* border: 1px dashed var(--iris-text-2); */
+  outline: 1px solid lightgray;
 }
 
-/* Ensure cursor is always visible in empty paragraphs */
-.rich-editor-view p:empty {
-  min-height: 1.2em;
-}
 
-.rich-editor-view p:empty::before {
-  content: "\200B"; /* Zero-width space to make cursor visible */
-  display: inline-block;
-  height: 1.2em;
-  line-height: 1.2;
-}
+
+
 
 /* Header styles with dynamic sizing */
 .rich-editor-view h1 {
@@ -133,7 +124,7 @@
 .rich-editor-view p span {
   font-family: inherit;
   font-size: inherit;
-  border: 1px dashed var(--iris-text-2);
+  border: 1px dashed greenyellow
 }
 
 /* Ensure sup/sub elements are properly styled */
@@ -150,8 +141,8 @@
 }
 
 .rich-editor .rich-editor-view p.editor-current-line-highlight {
-  background-color: rgba(0, 123, 255, 0.1); /* More subtle blue highlight */
-  border-radius: 2px;
+  background-color: blue;
+  border-radius: 5px;
   min-height: 1.2em; /* Ensure empty highlighted lines are visible */
   position: relative;
 }
@@ -174,13 +165,13 @@
 [data-line-wrapping="false"] .rich-editor-view p.editor-current-line-highlight,
 [data-line-wrapping="false"] .ProseMirror p.editor-current-line-highlight {
   white-space: nowrap;
-  /* width: 100%; */
+  width: 100%;
   max-inline-size: none;
 }
 
 [data-line-wrapping="true"] .rich-editor-view p.editor-current-line-highlight,
 [data-line-wrapping="true"] .ProseMirror p.editor-current-line-highlight {
-  /* width: 100%; */
+  width: 100%;
   white-space: normal;
   max-inline-size: 100%;
 }
@@ -189,14 +180,14 @@
 [data-line-wrapping="true"] .rich-editor-view p,
 [data-line-wrapping="true"] .ProseMirror p {
   white-space: normal;
-  /* width: 100%; */
+  width: 100%;
   max-inline-size: 100%;
 }
 
 [data-line-wrapping="false"] .rich-editor-view p,
 [data-line-wrapping="false"] .ProseMirror p {
   white-space: nowrap;
-  width: fit-content;
+  /* width: fit-content; */
   max-inline-size: none;
 }
 
@@ -208,8 +199,8 @@
 [data-line-wrapping="true"] .rich-editor-view h5,
 [data-line-wrapping="true"] .rich-editor-view h6 {
   white-space: normal;
-  width: 100%;
-  max-inline-size: 100%;
+  /* width: 100%; */
+  /* max-inline-size: 100%; */
 }
 
 [data-line-wrapping="false"] .rich-editor-view h1,
@@ -219,7 +210,7 @@
 [data-line-wrapping="false"] .rich-editor-view h5,
 [data-line-wrapping="false"] .rich-editor-view h6 {
   white-space: nowrap;
-  width: fit-content;
+  /* width: fit-content; */
   max-inline-size: none;
 }
 

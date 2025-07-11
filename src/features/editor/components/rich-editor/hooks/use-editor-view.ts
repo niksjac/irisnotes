@@ -118,6 +118,7 @@ export function useEditorView({
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
   const contentRef = useRef(content);
+  const isInternalChangeRef = useRef(false);
 
   // Keep refs up to date without triggering re-renders
   useEffect(() => {
@@ -161,23 +162,7 @@ export function useEditorView({
     handleClickOn: optimizedLinkClick
   }), [readOnly]);
 
-  // Optimize transaction handling
-  const dispatchTransaction = useCallback((transaction: Transaction) => {
-    if (!viewRef.current) return;
 
-    const view = viewRef.current;
-    const newState = view.state.apply(transaction);
-    view.updateState(newState);
-
-    // Only serialize if content actually changed
-    if (transaction.docChanged) {
-      const html = serializeToHtml(newState.doc, schema);
-      // Only call onChange if content is different
-      if (html !== contentRef.current) {
-        debouncedOnChange(html);
-      }
-    }
-  }, [schema, debouncedOnChange]);
 
   // Initialize editor view with proper cleanup
   useEffect(() => {
@@ -186,13 +171,43 @@ export function useEditorView({
     const doc = parseHtmlContent(content, schema);
     const state = memoizedCreateState(doc);
 
+    // Create dispatchTransaction locally to avoid dependency issues
+    const localDispatchTransaction = (transaction: Transaction) => {
+      if (!viewRef.current) return;
+
+      const view = viewRef.current;
+      const newState = view.state.apply(transaction);
+      view.updateState(newState);
+
+      // Only serialize if content actually changed
+      if (transaction.docChanged) {
+        const html = serializeToHtml(newState.doc, schema);
+        // Only call onChange if content is different
+        if (html !== contentRef.current) {
+          // Mark that this change is coming from internal editor activity
+          isInternalChangeRef.current = true;
+          debouncedOnChange(html);
+        }
+      }
+    };
+
     const view = new EditorView(editorRef.current, {
       state,
       ...editorConfig,
-      dispatchTransaction
+      dispatchTransaction: localDispatchTransaction
     });
 
-    viewRef.current = view;
+        viewRef.current = view;
+
+    // Store view reference on DOM element for external access
+    setTimeout(() => {
+      if (editorRef.current) {
+        const proseMirrorEl = editorRef.current.querySelector('.ProseMirror') as any;
+        if (proseMirrorEl) {
+          proseMirrorEl.pmView = view;
+        }
+      }
+    }, 0);
 
     // Add custom keymap
     const customKeymap = keymap({
@@ -219,11 +234,17 @@ export function useEditorView({
         viewRef.current = null;
       }
     };
-  }, [schema, dispatchTransaction]); // Removed memoizedCreateState and editorConfig dependencies
+  }, [schema]); // Only schema dependency - others are stable
 
   // Handle content updates more efficiently
   useEffect(() => {
     if (!viewRef.current) return;
+
+    // Skip update if this content change originated from internal editor activity
+    if (isInternalChangeRef.current) {
+      isInternalChangeRef.current = false;
+      return;
+    }
 
     const view = viewRef.current;
     const doc = parseHtmlContent(content, schema);
@@ -237,26 +258,59 @@ export function useEditorView({
       // Store current selection to preserve cursor position
       const currentSelection = view.state.selection;
 
-      // Create new state with updated document
-      const newState = memoizedCreateState(doc);
-
-      // Try to preserve cursor position if possible
+      // Instead of recreating the entire state, just update the document using a transaction
+      // This preserves all plugins, history, and other state while updating content
       try {
-        const maxPos = newState.doc.content.size;
+        const tr = view.state.tr.replaceWith(0, view.state.doc.content.size, doc.content);
+
+        // Preserve cursor position if possible
+        const maxPos = tr.doc.content.size;
         const preservedPos = Math.min(currentSelection.from, maxPos);
-        const newSelection = TextSelection.near(newState.doc.resolve(preservedPos));
+        const newSelection = TextSelection.near(tr.doc.resolve(preservedPos));
 
-        const stateWithSelection = newState.apply(
-          newState.tr.setSelection(newSelection)
-        );
-
-        view.updateState(stateWithSelection);
+        tr.setSelection(newSelection);
+        view.dispatch(tr);
       } catch (error) {
-        // Fallback to normal state update if position preservation fails
-        view.updateState(newState);
+        // Fallback: only if transaction approach fails, recreate state
+        console.warn('Failed to update content via transaction, falling back to state recreation:', error);
+        const newState = memoizedCreateState(doc);
+
+        try {
+          const maxPos = newState.doc.content.size;
+          const preservedPos = Math.min(currentSelection.from, maxPos);
+          const newSelection = TextSelection.near(newState.doc.resolve(preservedPos));
+
+          const stateWithSelection = newState.apply(
+            newState.tr.setSelection(newSelection)
+          );
+
+          view.updateState(stateWithSelection);
+        } catch (fallbackError) {
+          view.updateState(newState);
+        }
       }
     }
   }, [content, schema]); // Removed memoizedCreateState dependency
 
-  return { editorRef, editorView: viewRef.current };
+  // Method to focus editor and position cursor at end
+  const focusAndPositionAtEnd = useCallback(() => {
+    if (viewRef.current) {
+      const view = viewRef.current;
+      view.focus();
+
+      // Position cursor at the end of the document
+      const doc = view.state.doc;
+      const endPos = doc.content.size;
+      try {
+        const selection = TextSelection.near(doc.resolve(endPos));
+        const tr = view.state.tr.setSelection(selection);
+        view.dispatch(tr);
+      } catch (error) {
+        console.warn('Failed to position cursor at end:', error);
+        // Fallback: just focus without positioning
+      }
+    }
+  }, []);
+
+  return { editorRef, editorView: viewRef.current, focusAndPositionAtEnd };
 }

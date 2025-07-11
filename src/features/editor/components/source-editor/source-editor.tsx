@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { EditorView, keymap, highlightActiveLineGutter, lineNumbers } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
 import { html } from '@codemirror/lang-html';
@@ -19,14 +19,36 @@ interface SourceEditorProps {
   onToggleView?: () => void;
 }
 
-export function SourceEditor({
+export interface SourceEditorRef {
+  focusAndPositionAtEnd: () => void;
+}
+
+export const SourceEditor = forwardRef<SourceEditorRef, SourceEditorProps>(({
   content,
   onChange,
   readOnly = false,
   onToggleView
-}: SourceEditorProps) {
+}, ref) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
+
+  // Method to focus editor and position cursor at end
+  const focusAndPositionAtEnd = useCallback(() => {
+    if (viewRef.current) {
+      const view = viewRef.current;
+      const doc = view.state.doc;
+      const endPos = doc.length;
+
+      view.dispatch({
+        selection: { anchor: endPos, head: endPos }
+      });
+      view.focus();
+    }
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    focusAndPositionAtEnd
+  }), [focusAndPositionAtEnd]);
 
   useEffect(() => {
     if (!editorRef.current) return;
@@ -78,7 +100,17 @@ export function SourceEditor({
       parent: editorRef.current
     });
 
-    viewRef.current = view;
+        viewRef.current = view;
+
+    // Store view reference on DOM element for external access
+    setTimeout(() => {
+      if (editorRef.current) {
+        const cmEditor = editorRef.current.querySelector('.cm-editor') as any;
+        if (cmEditor) {
+          cmEditor.cmView = view;
+        }
+      }
+    }, 0);
 
     // Only focus on empty content, don't position cursor automatically
     if (!content || content.trim() === '') {
@@ -129,4 +161,4 @@ export function SourceEditor({
       />
     </div>
   );
-}
+});

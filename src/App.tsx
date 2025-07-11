@@ -115,6 +115,13 @@ function App() {
     const loadCategories = async () => {
       if (!storageManager || isLoading) return;
 
+      // Check if storage is actually ready by trying to get active storage
+      const activeStorage = storageManager.getActiveStorage();
+      if (!activeStorage) {
+        console.log('Storage not ready yet, skipping category load');
+        return;
+      }
+
       try {
         const result = await storageManager.getCategories();
         if (result.success) {
@@ -139,7 +146,10 @@ function App() {
 
     try {
       const storage = storageManager.getActiveStorage();
-      if (!storage) return [];
+      if (!storage) {
+        console.log('Storage not ready, skipping note-category load');
+        return [];
+      }
 
       const relationships: { noteId: string; categoryId: string }[] = [];
 
@@ -206,11 +216,14 @@ function App() {
       if (result.success && result.data && parentCategoryId) {
         // Add the note to the category
         const storage = storageManager.getActiveStorage();
-        if (storage) {
-          await storage.addNoteToCategory(result.data.id, parentCategoryId);
-          // Reload note categories to update the tree
-          await loadNoteCategories();
+        if (!storage) {
+          console.log('Storage not ready, cannot add note to category');
+          return;
         }
+
+        await storage.addNoteToCategory(result.data.id, parentCategoryId);
+        // Reload note categories to update the tree
+        await loadNoteCategories();
       }
     } catch (error) {
       console.error('Failed to create note:', error);
@@ -222,20 +235,23 @@ function App() {
 
     try {
       const storage = storageManager.getActiveStorage();
-      if (storage) {
-        // Remove from all categories first
-        for (const category of categories) {
-          await storage.removeNoteFromCategory(noteId, category.id);
-        }
-
-        // Add to new category if specified
-        if (newCategoryId) {
-          await storage.addNoteToCategory(noteId, newCategoryId);
-        }
-
-        // Reload note categories to update the tree
-        await loadNoteCategories();
+      if (!storage) {
+        console.log('Storage not ready, cannot move note');
+        return;
       }
+
+      // Remove from all categories first
+      for (const category of categories) {
+        await storage.removeNoteFromCategory(noteId, category.id);
+      }
+
+      // Add to new category if specified
+      if (newCategoryId) {
+        await storage.addNoteToCategory(noteId, newCategoryId);
+      }
+
+      // Reload note categories to update the tree
+      await loadNoteCategories();
     } catch (error) {
       console.error('Failed to move note:', error);
     }
@@ -246,11 +262,14 @@ function App() {
 
     try {
       const storage = storageManager.getActiveStorage();
-      if (storage) {
-        await storage.deleteNote(noteId);
-        // Reload notes to update the UI
-        await loadAllNotes();
+      if (!storage) {
+        console.log('Storage not ready, cannot delete note');
+        return;
       }
+
+      await storage.deleteNote(noteId);
+      // Reload notes to update the UI
+      await loadAllNotes();
     } catch (error) {
       console.error('Failed to delete note:', error);
     }
@@ -261,10 +280,13 @@ function App() {
 
     try {
       const storage = storageManager.getActiveStorage();
-      if (storage) {
-        await storage.deleteCategory(categoryId);
-        setCategories(prev => prev.filter(cat => cat.id !== categoryId));
+      if (!storage) {
+        console.log('Storage not ready, cannot delete category');
+        return;
       }
+
+      await storage.deleteCategory(categoryId);
+      setCategories(prev => prev.filter(cat => cat.id !== categoryId));
     } catch (error) {
       console.error('Failed to delete category:', error);
     }
@@ -279,13 +301,16 @@ function App() {
 
     try {
       const storage = storageManager.getActiveStorage();
-      if (storage) {
-        const result = await storage.updateCategory(categoryId, { name: newName });
-        if (result.success) {
-          setCategories(prev => prev.map(cat =>
-            cat.id === categoryId ? { ...cat, name: newName } : cat
-          ));
-        }
+      if (!storage) {
+        console.log('Storage not ready, cannot rename category');
+        return;
+      }
+
+      const result = await storage.updateCategory(categoryId, { name: newName });
+      if (result.success) {
+        setCategories(prev => prev.map(cat =>
+          cat.id === categoryId ? { ...cat, name: newName } : cat
+        ));
       }
     } catch (error) {
       console.error('Failed to rename category:', error);
@@ -308,7 +333,10 @@ function App() {
     } else {
       setSelectedNoteId(noteId);
     }
-  }, [isDualPaneMode, openNoteInPane, activePaneId, setSelectedNoteId]);
+
+    // Focus the editor after note selection for keyboard interaction
+    focusManagement.focusElement('editor');
+  }, [isDualPaneMode, openNoteInPane, activePaneId, setSelectedNoteId, focusManagement]);
 
   const handleItemSelect = useCallback((itemId: string, itemType: 'note' | 'category') => {
     setSelectedItemId(itemId);

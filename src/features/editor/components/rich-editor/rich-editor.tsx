@@ -1,3 +1,4 @@
+import { forwardRef, useImperativeHandle } from 'react';
 import { RichEditorProps } from './types';
 import { editorSchema } from './schema';
 import { useEditorView } from './hooks/use-editor-view';
@@ -6,22 +7,30 @@ import { RichEditorToolbar } from './rich-editor-toolbar';
 import 'prosemirror-view/style/prosemirror.css';
 import './rich-editor.css';
 
-export function RichEditor({
+export interface RichEditorRef {
+  focusAndPositionAtEnd: () => void;
+}
+
+export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
   content,
   onChange,
   placeholder = "Start writing...",
   readOnly = false,
   onToggleView,
   toolbarVisible = true
-}: RichEditorProps) {
+}, ref) => {
   const { config, loading } = useConfig();
-  const { editorRef, editorView } = useEditorView({
+  const { editorRef, editorView, focusAndPositionAtEnd } = useEditorView({
     content,
     onChange,
     readOnly: readOnly || false,
     onToggleView: onToggleView || (() => {}),
     schema: editorSchema
   });
+
+  useImperativeHandle(ref, () => ({
+    focusAndPositionAtEnd
+  }), [focusAndPositionAtEnd]);
 
   return (
     <div className="rich-editor">
@@ -39,4 +48,4 @@ export function RichEditor({
       />
     </div>
   );
-}
+});
