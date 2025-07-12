@@ -248,84 +248,75 @@
   background: var(--iris-border);
   border-radius: 3px;
 }
-
 .tree-container::-webkit-scrollbar-thumb:hover {
-  background: var(--iris-text-secondary);
+  background: var(--iris-border-hover);
 }
 
-/* Responsive design */
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .tree-header {
     padding: var(--iris-space-sm);
   }
-
   .tree-search {
     padding: var(--iris-space-sm);
   }
-
   .tree-node {
-    padding: var(--iris-space-sm);
+    padding: var(--iris-space-xs);
   }
-
   .tree-node-actions {
-    opacity: 1;
+    display: none; /* Hide actions on smaller screens to save space */
   }
 }
-
 .hoist-breadcrumb {
   display: flex;
   align-items: center;
   gap: var(--iris-space-xs);
-  color: var(--iris-text-secondary);
   font-size: var(--iris-font-size-sm);
+  color: var(--iris-text-secondary);
 }
 
 .hoist-breadcrumb span {
-  color: var(--iris-primary);
   font-weight: 500;
+  color: var(--iris-text-primary);
 }
 
 .hoist-indicator {
   padding: var(--iris-space-sm) var(--iris-space-md);
-  background: var(--iris-primary-alpha);
-  border-bottom: 1px solid var(--iris-border);
-  display: flex;
-  flex-direction: column;
-  gap: var(--iris-space-xs);
+  background: var(--iris-primary-alpha-heavy);
+  border-bottom: 1px solid var(--iris-primary-alpha-heavy);
+  text-align: center;
 }
 
 .hoist-indicator span {
-  color: var(--iris-text-primary);
   font-size: var(--iris-font-size-sm);
+  color: var(--iris-primary);
 }
 
 .hoist-indicator small {
-  color: var(--iris-text-secondary);
+  display: block;
   font-size: var(--iris-font-size-xs);
+  color: var(--iris-text-secondary);
 }
 
 .tree-node.focused {
-  background: var(--iris-bg-secondary);
-  border-radius: 4px;
-}
-
-/* When both focused and selected, prioritize the selected outline but keep focused background */
-.tree-node.focused.selected {
-  background: var(--iris-bg-secondary);
-  outline: 2px solid var(--iris-primary);
+  outline: 2px solid var(--iris-accent);
   outline-offset: -2px;
-  box-shadow: none;
+  background: var(--iris-bg-secondary);
 }
 
-/* Sidebar Buttons */
+.tree-node.focused.selected {
+  outline: 2px solid var(--iris-primary);
+  /* When focused and selected, primary color takes precedence */
+}
+
+/* Unified focus state for the entire sidebar section */
 .sidebar-buttons {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--iris-space-sm) var(--iris-space-md);
-  border-bottom: 1px solid var(--iris-border);
+  flex-direction: column;
+  gap: var(--iris-space-sm);
+  padding: var(--iris-space-md);
+  border-right: 1px solid var(--iris-border);
   background: var(--iris-surface-2);
-  outline: none;
 }
 
 .sidebar-buttons:focus {
@@ -334,22 +325,22 @@
 
 .sidebar-buttons-content {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
+  flex-direction: column;
+  gap: var(--iris-space-sm);
 }
 
 .sidebar-buttons-group {
   display: flex;
-  gap: var(--iris-space-xs);
+  flex-direction: column;
+  gap: var(--iris-space-sm);
 }
 
 .sidebar-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border: none;
   border-radius: 4px;
   background: transparent;
@@ -364,5 +355,14 @@
 }
 
 .sidebar-button:active {
-  transform: scale(0.95);
+  background: var(--iris-bg-tertiary);
+}
+
+.sidebar-button.active {
+  background: var(--iris-primary);
+  color: var(--iris-white);
+}
+
+.sidebar-button.active:hover {
+  background: var(--iris-primary-hover);
 }

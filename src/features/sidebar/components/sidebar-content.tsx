@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { SidebarButtons } from "./sidebar-buttons";
 import { SidebarSearch } from "./sidebar-search";
-import { NotesTreeView } from "./notes-tree-view";
+import { NotesTreeView } from "../../notes-tree-view";
 import type { Note, Category } from "../../../types/database";
 import type { FocusableElement } from "../../layout";
 
