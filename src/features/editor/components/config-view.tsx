@@ -1,6 +1,7 @@
 import { useTheme } from '../../theme';
 import { useConfig } from '../../../hooks/use-config';
 import type { StorageSettings } from '../../../types';
+import './config-view.css';
 
 export function ConfigView() {
   const { darkMode, toggleDarkMode } = useTheme();
@@ -95,70 +96,24 @@ export function ConfigView() {
   };
 
   return (
-    <div style={{
-      padding: 'var(--iris-space-lg)',
-      height: '100%',
-      overflow: 'auto',
-      background: 'var(--iris-bg-primary)'
-    }}>
-      <h1 style={{
-        fontSize: 'var(--iris-font-size-xl)',
-        fontWeight: '600',
-        margin: '0 0 var(--iris-space-lg) 0',
-        color: 'var(--iris-text)'
-      }}>
-        Configuration
-      </h1>
+    <div className="config-view">
+      <h1>Configuration</h1>
 
       {/* Storage Settings */}
-      <section style={{ marginBottom: 'var(--iris-space-xl)' }}>
-        <h2 style={{
-          fontSize: 'var(--iris-font-size-lg)',
-          fontWeight: '500',
-          margin: '0 0 var(--iris-space-md) 0',
-          color: 'var(--iris-text)',
-          borderBottom: '1px solid var(--iris-border)',
-          paddingBottom: 'var(--iris-space-sm)'
-        }}>
-          Storage Settings
-        </h2>
+      <section className="config-section">
+        <h2>Storage Settings</h2>
 
-        <div style={{
-          display: 'grid',
-          gap: 'var(--iris-space-md)'
-        }}>
+        <div className="config-section-grid">
           {/* Storage Backend Selection */}
-          <div style={{
-            padding: 'var(--iris-space-md)',
-            border: '1px solid var(--iris-border)',
-            borderRadius: '6px',
-            background: 'var(--iris-bg-secondary)'
-          }}>
-            <div style={{
-              fontWeight: '500',
-              color: 'var(--iris-text)',
-              marginBottom: 'var(--iris-space-xs)'
-            }}>
-              Storage Backend
-            </div>
-            <div style={{
-              fontSize: 'var(--iris-font-size-sm)',
-              color: 'var(--iris-text-muted)',
-              marginBottom: 'var(--iris-space-sm)'
-            }}>
+          <div className="config-card">
+            <div className="config-setting-label">Storage Backend</div>
+            <div className="config-setting-description">
               Choose how your notes are stored. Changing this will switch to the new storage - notes from other storages won't be visible until you switch back.
             </div>
             <select
+              className="config-select"
               value={config.storage.backend}
               onChange={(e) => handleStorageBackendChange(e.target.value as StorageSettings['backend'])}
-              style={{
-                padding: 'var(--iris-space-sm)',
-                border: '1px solid var(--iris-border)',
-                borderRadius: '4px',
-                background: 'var(--iris-bg-primary)',
-                color: 'var(--iris-text)',
-                width: '200px'
-              }}
             >
               <option value="sqlite">SQLite Database</option>
               <option value="file-system">File System</option>
@@ -168,117 +123,49 @@ export function ConfigView() {
 
           {/* SQLite Configuration */}
           {config.storage.backend === 'sqlite' && (
-            <div style={{
-              padding: 'var(--iris-space-md)',
-              border: '1px solid var(--iris-border)',
-              borderRadius: '6px',
-              background: 'var(--iris-bg-secondary)'
-            }}>
-              <div style={{
-                fontWeight: '500',
-                color: 'var(--iris-text)',
-                marginBottom: 'var(--iris-space-xs)'
-              }}>
-                SQLite Database Path
-              </div>
-              <div style={{
-                fontSize: 'var(--iris-font-size-sm)',
-                color: 'var(--iris-text-muted)',
-                marginBottom: 'var(--iris-space-sm)'
-              }}>
+            <div className="config-card">
+              <div className="config-setting-label">SQLite Database Path</div>
+              <div className="config-setting-description">
                 Path to the SQLite database file
               </div>
               <input
                 type="text"
+                className="config-input config-input--path"
                 value={config.storage.sqlite?.database_path || 'notes.db'}
                 onChange={(e) => handleSQLitePathChange(e.target.value)}
-                style={{
-                  padding: 'var(--iris-space-sm)',
-                  border: '1px solid var(--iris-border)',
-                  borderRadius: '4px',
-                  background: 'var(--iris-bg-primary)',
-                  color: 'var(--iris-text)',
-                  width: '300px',
-                  fontFamily: 'monospace'
-                }}
               />
             </div>
           )}
 
           {/* File System Configuration */}
           {config.storage.backend === 'file-system' && (
-            <div style={{
-              padding: 'var(--iris-space-md)',
-              border: '1px solid var(--iris-border)',
-              borderRadius: '6px',
-              background: 'var(--iris-bg-secondary)'
-            }}>
-              <div style={{
-                fontWeight: '500',
-                color: 'var(--iris-text)',
-                marginBottom: 'var(--iris-space-xs)'
-              }}>
-                Notes Directory
-              </div>
-              <div style={{
-                fontSize: 'var(--iris-font-size-sm)',
-                color: 'var(--iris-text-muted)',
-                marginBottom: 'var(--iris-space-sm)'
-              }}>
+            <div className="config-card">
+              <div className="config-setting-label">Notes Directory</div>
+              <div className="config-setting-description">
                 Directory where note files will be stored (Not yet implemented)
               </div>
               <input
                 type="text"
+                className="config-input config-input--path"
                 value={config.storage.fileSystem?.notes_directory || './notes'}
                 onChange={(e) => handleFileSystemPathChange(e.target.value)}
                 disabled
-                style={{
-                  padding: 'var(--iris-space-sm)',
-                  border: '1px solid var(--iris-border)',
-                  borderRadius: '4px',
-                  background: 'var(--iris-bg-tertiary)',
-                  color: 'var(--iris-text-muted)',
-                  width: '300px',
-                  fontFamily: 'monospace'
-                }}
               />
             </div>
           )}
 
           {/* Cloud Storage Configuration */}
           {config.storage.backend === 'cloud' && (
-            <div style={{
-              padding: 'var(--iris-space-md)',
-              border: '1px solid var(--iris-border)',
-              borderRadius: '6px',
-              background: 'var(--iris-bg-secondary)'
-            }}>
-              <div style={{
-                fontWeight: '500',
-                color: 'var(--iris-text)',
-                marginBottom: 'var(--iris-space-xs)'
-              }}>
-                Cloud Provider
-              </div>
-              <div style={{
-                fontSize: 'var(--iris-font-size-sm)',
-                color: 'var(--iris-text-muted)',
-                marginBottom: 'var(--iris-space-sm)'
-              }}>
+            <div className="config-card">
+              <div className="config-setting-label">Cloud Provider</div>
+              <div className="config-setting-description">
                 Choose your cloud storage provider (Not yet implemented)
               </div>
               <select
+                className="config-select"
                 value={config.storage.cloud?.provider || 'google-drive'}
                 onChange={(e) => handleCloudProviderChange(e.target.value as 'google-drive' | 'dropbox' | 'onedrive')}
                 disabled
-                style={{
-                  padding: 'var(--iris-space-sm)',
-                  border: '1px solid var(--iris-border)',
-                  borderRadius: '4px',
-                  background: 'var(--iris-bg-tertiary)',
-                  color: 'var(--iris-text-muted)',
-                  width: '200px'
-                }}
               >
                 <option value="google-drive">Google Drive</option>
                 <option value="dropbox">Dropbox</option>
@@ -288,24 +175,9 @@ export function ConfigView() {
           )}
 
           {/* Storage Status */}
-          <div style={{
-            padding: 'var(--iris-space-md)',
-            border: '1px solid var(--iris-border)',
-            borderRadius: '6px',
-            background: 'var(--iris-bg-secondary)'
-          }}>
-            <div style={{
-              fontWeight: '500',
-              color: 'var(--iris-text)',
-              marginBottom: 'var(--iris-space-xs)'
-            }}>
-              Current Storage Status
-            </div>
-            <div style={{
-              fontSize: 'var(--iris-font-size-sm)',
-              color: 'var(--iris-text)',
-              fontFamily: 'monospace'
-            }}>
+          <div className="config-card">
+            <div className="config-setting-label">Current Storage Status</div>
+            <div className="config-status">
               Backend: {config.storage.backend}
               {config.storage.backend === 'sqlite' && (
                 <div>Database: {config.storage.sqlite?.database_path}</div>
@@ -317,11 +189,7 @@ export function ConfigView() {
                 <div>Provider: {config.storage.cloud?.provider}</div>
               )}
             </div>
-            <div style={{
-              fontSize: 'var(--iris-font-size-xs)',
-              color: 'var(--iris-text-muted)',
-              marginTop: 'var(--iris-space-xs)'
-            }}>
+            <div className="config-status-warning">
               ⚠️ Note: Changing storage backends will hide notes from other storages until you switch back
             </div>
           </div>
@@ -330,130 +198,49 @@ export function ConfigView() {
 
       {/* Production Path Settings */}
       {!import.meta.env.DEV && (
-        <section style={{ marginBottom: 'var(--iris-space-xl)' }}>
-          <h2 style={{
-            fontSize: 'var(--iris-font-size-lg)',
-            fontWeight: '500',
-            margin: '0 0 var(--iris-space-md) 0',
-            color: 'var(--iris-text)',
-            borderBottom: '1px solid var(--iris-border)',
-            paddingBottom: 'var(--iris-space-sm)'
-          }}>
-            Custom Paths
-          </h2>
+        <section className="config-section">
+          <h2>Custom Paths</h2>
 
-          <div style={{
-            display: 'grid',
-            gap: 'var(--iris-space-md)'
-          }}>
-            <div style={{
-              padding: 'var(--iris-space-md)',
-              border: '1px solid var(--iris-border)',
-              borderRadius: '6px',
-              background: 'var(--iris-bg-secondary)'
-            }}>
-              <div style={{
-                fontWeight: '500',
-                color: 'var(--iris-text)',
-                marginBottom: 'var(--iris-space-xs)'
-              }}>
-                Custom Config Directory
-              </div>
-              <div style={{
-                fontSize: 'var(--iris-font-size-sm)',
-                color: 'var(--iris-text-muted)',
-                marginBottom: 'var(--iris-space-sm)'
-              }}>
+          <div className="config-section-grid">
+            <div className="config-card">
+              <div className="config-setting-label">Custom Config Directory</div>
+              <div className="config-setting-description">
                 Override the default config directory (default: ~/.config/irisnotes/)
               </div>
               <input
                 type="text"
+                className="config-input config-input--long-path"
                 value={config.production.customConfigPath || ''}
                 onChange={(e) => handleCustomConfigPathChange(e.target.value)}
                 placeholder="~/.config/irisnotes/"
-                style={{
-                  padding: 'var(--iris-space-sm)',
-                  border: '1px solid var(--iris-border)',
-                  borderRadius: '4px',
-                  background: 'var(--iris-bg-primary)',
-                  color: 'var(--iris-text)',
-                  width: '400px',
-                  fontFamily: 'monospace'
-                }}
               />
             </div>
 
-            <div style={{
-              padding: 'var(--iris-space-md)',
-              border: '1px solid var(--iris-border)',
-              borderRadius: '6px',
-              background: 'var(--iris-bg-secondary)'
-            }}>
-              <div style={{
-                fontWeight: '500',
-                color: 'var(--iris-text)',
-                marginBottom: 'var(--iris-space-xs)'
-              }}>
-                Custom Database Path
-              </div>
-              <div style={{
-                fontSize: 'var(--iris-font-size-sm)',
-                color: 'var(--iris-text-muted)',
-                marginBottom: 'var(--iris-space-sm)'
-              }}>
+            <div className="config-card">
+              <div className="config-setting-label">Custom Database Path</div>
+              <div className="config-setting-description">
                 Override the default database file location
               </div>
               <input
                 type="text"
+                className="config-input config-input--long-path"
                 value={config.production.customDatabasePath || ''}
                 onChange={(e) => handleCustomDatabasePathChange(e.target.value)}
                 placeholder="~/.config/irisnotes/notes.db"
-                style={{
-                  padding: 'var(--iris-space-sm)',
-                  border: '1px solid var(--iris-border)',
-                  borderRadius: '4px',
-                  background: 'var(--iris-bg-primary)',
-                  color: 'var(--iris-text)',
-                  width: '400px',
-                  fontFamily: 'monospace'
-                }}
               />
             </div>
 
-            <div style={{
-              padding: 'var(--iris-space-md)',
-              border: '1px solid var(--iris-border)',
-              borderRadius: '6px',
-              background: 'var(--iris-bg-secondary)'
-            }}>
-              <div style={{
-                fontWeight: '500',
-                color: 'var(--iris-text)',
-                marginBottom: 'var(--iris-space-xs)'
-              }}>
-                Custom Notes Directory
-              </div>
-              <div style={{
-                fontSize: 'var(--iris-font-size-sm)',
-                color: 'var(--iris-text-muted)',
-                marginBottom: 'var(--iris-space-sm)'
-              }}>
+            <div className="config-card">
+              <div className="config-setting-label">Custom Notes Directory</div>
+              <div className="config-setting-description">
                 Override the default notes directory for file-system backend
               </div>
               <input
                 type="text"
+                className="config-input config-input--long-path"
                 value={config.production.customNotesPath || ''}
                 onChange={(e) => handleCustomNotesPathChange(e.target.value)}
                 placeholder="~/.config/irisnotes/notes/"
-                style={{
-                  padding: 'var(--iris-space-sm)',
-                  border: '1px solid var(--iris-border)',
-                  borderRadius: '4px',
-                  background: 'var(--iris-bg-primary)',
-                  color: 'var(--iris-text)',
-                  width: '400px',
-                  fontFamily: 'monospace'
-                }}
               />
             </div>
           </div>
@@ -462,75 +249,30 @@ export function ConfigView() {
 
       {/* Development Mode Notice */}
       {import.meta.env.DEV && (
-        <section style={{ marginBottom: 'var(--iris-space-xl)' }}>
-          <div style={{
-            padding: 'var(--iris-space-md)',
-            border: '1px solid #faad14',
-            borderRadius: '6px',
-            background: '#fffbe6',
-            color: '#d48806'
-          }}>
-            <div style={{
-              fontWeight: '500',
-              marginBottom: 'var(--iris-space-xs)'
-            }}>
-              Development Mode
+        <section className="config-section">
+          <div className="config-dev-notice">
+            <div className="config-dev-notice-title">Development Mode</div>
+            <div className="config-dev-notice-content">
+              Running in development mode with local config directory: <code>./dev/config/</code>
             </div>
-                         <div style={{ fontSize: 'var(--iris-font-size-sm)' }}>
-               Running in development mode with local config directory: <code>./dev/config/</code>
-             </div>
           </div>
         </section>
       )}
 
       {/* Theme Settings */}
-      <section style={{ marginBottom: 'var(--iris-space-xl)' }}>
-        <h2 style={{
-          fontSize: 'var(--iris-font-size-lg)',
-          fontWeight: '500',
-          margin: '0 0 var(--iris-space-md) 0',
-          color: 'var(--iris-text)',
-          borderBottom: '1px solid var(--iris-border)',
-          paddingBottom: 'var(--iris-space-sm)'
-        }}>
-          Theme Settings
-        </h2>
+      <section className="config-section">
+        <h2>Theme Settings</h2>
 
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: 'var(--iris-space-md)',
-          border: '1px solid var(--iris-border)',
-          borderRadius: '6px',
-          background: 'var(--iris-bg-secondary)'
-        }}>
-          <div>
-            <div style={{
-              fontWeight: '500',
-              color: 'var(--iris-text)',
-              marginBottom: 'var(--iris-space-xs)'
-            }}>
-              Dark Mode
-            </div>
-            <div style={{
-              fontSize: 'var(--iris-font-size-sm)',
-              color: 'var(--iris-text-muted)'
-            }}>
+        <div className="config-theme-toggle">
+          <div className="config-theme-info">
+            <div className="config-setting-label">Dark Mode</div>
+            <div className="config-setting-description">
               Toggle between light and dark theme
             </div>
           </div>
           <button
+            className={`config-button ${darkMode ? 'config-button--active' : ''}`}
             onClick={toggleDarkMode}
-            style={{
-              padding: 'var(--iris-space-sm) var(--iris-space-md)',
-              border: '1px solid var(--iris-border)',
-              borderRadius: '4px',
-              background: darkMode ? 'var(--iris-accent)' : 'var(--iris-bg-primary)',
-              color: darkMode ? 'white' : 'var(--iris-text)',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
           >
             {darkMode ? 'Enabled' : 'Disabled'}
           </button>
@@ -538,176 +280,68 @@ export function ConfigView() {
       </section>
 
       {/* Editor Settings */}
-      <section style={{ marginBottom: 'var(--iris-space-xl)' }}>
-        <h2 style={{
-          fontSize: 'var(--iris-font-size-lg)',
-          fontWeight: '500',
-          margin: '0 0 var(--iris-space-md) 0',
-          color: 'var(--iris-text)',
-          borderBottom: '1px solid var(--iris-border)',
-          paddingBottom: 'var(--iris-space-sm)'
-        }}>
-          Editor Settings
-        </h2>
+      <section className="config-section">
+        <h2>Editor Settings</h2>
 
-        <div style={{
-          display: 'grid',
-          gap: 'var(--iris-space-md)'
-        }}>
-          <div style={{
-            padding: 'var(--iris-space-md)',
-            border: '1px solid var(--iris-border)',
-            borderRadius: '6px',
-            background: 'var(--iris-bg-secondary)'
-          }}>
-            <div style={{
-              fontWeight: '500',
-              color: 'var(--iris-text)',
-              marginBottom: 'var(--iris-space-xs)'
-            }}>
-              Editor Mode
-            </div>
-            <div style={{
-              fontSize: 'var(--iris-font-size-sm)',
-              color: 'var(--iris-text-muted)',
-              marginBottom: 'var(--iris-space-sm)'
-            }}>
+        <div className="config-section-grid">
+          <div className="config-card">
+            <div className="config-setting-label">Editor Mode</div>
+            <div className="config-setting-description">
               Choose your preferred editing mode
             </div>
-            <select style={{
-              padding: 'var(--iris-space-sm)',
-              border: '1px solid var(--iris-border)',
-              borderRadius: '4px',
-              background: 'var(--iris-bg-primary)',
-              color: 'var(--iris-text)',
-              width: '200px'
-            }}>
+            <select className="config-select">
               <option value="rich">Rich Text Editor</option>
               <option value="source">Source Editor</option>
               <option value="split">Split View</option>
             </select>
           </div>
 
-          <div style={{
-            padding: 'var(--iris-space-md)',
-            border: '1px solid var(--iris-border)',
-            borderRadius: '6px',
-            background: 'var(--iris-bg-secondary)'
-          }}>
-            <div style={{
-              fontWeight: '500',
-              color: 'var(--iris-text)',
-              marginBottom: 'var(--iris-space-xs)'
-            }}>
-              Auto Save
-            </div>
-            <div style={{
-              fontSize: 'var(--iris-font-size-sm)',
-              color: 'var(--iris-text-muted)',
-              marginBottom: 'var(--iris-space-sm)'
-            }}>
+          <div className="config-card">
+            <div className="config-setting-label">Auto Save</div>
+            <div className="config-setting-description">
               Automatically save changes as you type
             </div>
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--iris-space-sm)',
-              cursor: 'pointer'
-            }}>
+            <label className="config-checkbox-label">
               <input
                 type="checkbox"
+                className="config-checkbox"
                 defaultChecked={true}
-                style={{ margin: 0 }}
               />
-              <span style={{ color: 'var(--iris-text)' }}>Enable auto save</span>
+              <span className="config-checkbox-text">Enable auto save</span>
             </label>
           </div>
         </div>
       </section>
 
       {/* Application Settings */}
-      <section style={{ marginBottom: 'var(--iris-space-xl)' }}>
-        <h2 style={{
-          fontSize: 'var(--iris-font-size-lg)',
-          fontWeight: '500',
-          margin: '0 0 var(--iris-space-md) 0',
-          color: 'var(--iris-text)',
-          borderBottom: '1px solid var(--iris-border)',
-          paddingBottom: 'var(--iris-space-sm)'
-        }}>
-          Application Settings
-        </h2>
+      <section className="config-section">
+        <h2>Application Settings</h2>
 
-        <div style={{
-          display: 'grid',
-          gap: 'var(--iris-space-md)'
-        }}>
-          <div style={{
-            padding: 'var(--iris-space-md)',
-            border: '1px solid var(--iris-border)',
-            borderRadius: '6px',
-            background: 'var(--iris-bg-secondary)'
-          }}>
-            <div style={{
-              fontWeight: '500',
-              color: 'var(--iris-text)',
-              marginBottom: 'var(--iris-space-xs)'
-            }}>
-              Default Category
-            </div>
-            <div style={{
-              fontSize: 'var(--iris-font-size-sm)',
-              color: 'var(--iris-text-muted)',
-              marginBottom: 'var(--iris-space-sm)'
-            }}>
+        <div className="config-section-grid">
+          <div className="config-card">
+            <div className="config-setting-label">Default Category</div>
+            <div className="config-setting-description">
               Default category for new notes
             </div>
-            <select style={{
-              padding: 'var(--iris-space-sm)',
-              border: '1px solid var(--iris-border)',
-              borderRadius: '4px',
-              background: 'var(--iris-bg-primary)',
-              color: 'var(--iris-text)',
-              width: '200px'
-            }}>
+            <select className="config-select">
               <option value="general">General</option>
               <option value="work">Work</option>
               <option value="personal">Personal</option>
             </select>
           </div>
 
-          <div style={{
-            padding: 'var(--iris-space-md)',
-            border: '1px solid var(--iris-border)',
-            borderRadius: '6px',
-            background: 'var(--iris-bg-secondary)'
-          }}>
-            <div style={{
-              fontWeight: '500',
-              color: 'var(--iris-text)',
-              marginBottom: 'var(--iris-space-xs)'
-            }}>
-              Show Word Count
-            </div>
-            <div style={{
-              fontSize: 'var(--iris-font-size-sm)',
-              color: 'var(--iris-text-muted)',
-              marginBottom: 'var(--iris-space-sm)'
-            }}>
+          <div className="config-card">
+            <div className="config-setting-label">Show Word Count</div>
+            <div className="config-setting-description">
               Display word count in editor status bar
             </div>
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--iris-space-sm)',
-              cursor: 'pointer'
-            }}>
+            <label className="config-checkbox-label">
               <input
                 type="checkbox"
+                className="config-checkbox"
                 defaultChecked={true}
-                style={{ margin: 0 }}
               />
-              <span style={{ color: 'var(--iris-text)' }}>Show word count</span>
+              <span className="config-checkbox-text">Show word count</span>
             </label>
           </div>
         </div>
@@ -715,30 +349,10 @@ export function ConfigView() {
 
       {/* Configuration Info */}
       <section>
-        <h2 style={{
-          fontSize: 'var(--iris-font-size-lg)',
-          fontWeight: '500',
-          margin: '0 0 var(--iris-space-md) 0',
-          color: 'var(--iris-text)',
-          borderBottom: '1px solid var(--iris-border)',
-          paddingBottom: 'var(--iris-space-sm)'
-        }}>
-          Configuration Information
-        </h2>
+        <h2>Configuration Information</h2>
 
-        <div style={{
-          padding: 'var(--iris-space-md)',
-          border: '1px solid var(--iris-border)',
-          borderRadius: '6px',
-          background: 'var(--iris-bg-secondary)',
-          fontFamily: 'monospace',
-          fontSize: 'var(--iris-font-size-sm)'
-        }}>
-          <pre style={{
-            margin: 0,
-            color: 'var(--iris-text)',
-            whiteSpace: 'pre-wrap'
-          }}>
+        <div className="config-info-display">
+          <pre className="config-info-pre">
             {JSON.stringify(config, null, 2)}
           </pre>
         </div>

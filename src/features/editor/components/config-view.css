@@ -1,0 +1,247 @@
+/* Config View Styles */
+
+/* Main Container */
+.config-view {
+  padding: var(--iris-space-lg);
+  height: 100%;
+  overflow: auto;
+  background: var(--iris-bg-primary);
+}
+
+/* Typography */
+.config-view h1 {
+  font-size: var(--iris-font-size-xl);
+  font-weight: 600;
+  margin: 0 0 var(--iris-space-lg) 0;
+  color: var(--iris-text);
+}
+
+.config-view h2 {
+  font-size: var(--iris-font-size-lg);
+  font-weight: 500;
+  margin: 0 0 var(--iris-space-md) 0;
+  color: var(--iris-text);
+  border-bottom: 1px solid var(--iris-border);
+  padding-bottom: var(--iris-space-sm);
+}
+
+/* Sections */
+.config-section {
+  margin-bottom: var(--iris-space-xl);
+}
+
+.config-section-grid {
+  display: grid;
+  gap: var(--iris-space-md);
+}
+
+/* Settings Cards */
+.config-card {
+  padding: var(--iris-space-md);
+  border: 1px solid var(--iris-border);
+  border-radius: 6px;
+  background: var(--iris-bg-secondary);
+}
+
+.config-card-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--iris-space-md);
+  border: 1px solid var(--iris-border);
+  border-radius: 6px;
+  background: var(--iris-bg-secondary);
+}
+
+.config-card-content {
+  flex: 1;
+}
+
+/* Setting Labels and Descriptions */
+.config-setting-label {
+  font-weight: 500;
+  color: var(--iris-text);
+  margin-bottom: var(--iris-space-xs);
+}
+
+.config-setting-description {
+  font-size: var(--iris-font-size-sm);
+  color: var(--iris-text-muted);
+  margin-bottom: var(--iris-space-sm);
+}
+
+/* Form Elements */
+.config-select {
+  padding: var(--iris-space-sm);
+  border: 1px solid var(--iris-border);
+  border-radius: 4px;
+  background: var(--iris-bg-primary);
+  color: var(--iris-text);
+  width: 200px;
+  font-size: var(--iris-font-size-base);
+}
+
+.config-select:disabled {
+  background: var(--iris-bg-tertiary);
+  color: var(--iris-text-muted);
+}
+
+.config-input {
+  padding: var(--iris-space-sm);
+  border: 1px solid var(--iris-border);
+  border-radius: 4px;
+  background: var(--iris-bg-primary);
+  color: var(--iris-text);
+  font-family: monospace;
+  font-size: var(--iris-font-size-base);
+}
+
+.config-input:disabled {
+  background: var(--iris-bg-tertiary);
+  color: var(--iris-text-muted);
+}
+
+.config-input--path {
+  width: 300px;
+}
+
+.config-input--long-path {
+  width: 400px;
+}
+
+.config-button {
+  padding: var(--iris-space-sm) var(--iris-space-md);
+  border: 1px solid var(--iris-border);
+  border-radius: 4px;
+  background: var(--iris-bg-primary);
+  color: var(--iris-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: var(--iris-font-size-base);
+}
+
+.config-button--active {
+  background: var(--iris-accent);
+  color: white;
+}
+
+/* Status Display */
+.config-status {
+  font-size: var(--iris-font-size-sm);
+  color: var(--iris-text);
+  font-family: monospace;
+}
+
+.config-status-warning {
+  font-size: var(--iris-font-size-xs);
+  color: var(--iris-text-muted);
+  margin-top: var(--iris-space-xs);
+}
+
+/* Notices */
+.config-dev-notice {
+  padding: var(--iris-space-md);
+  border: 1px solid #faad14;
+  border-radius: 6px;
+  background: #fffbe6;
+  color: #d48806;
+}
+
+.config-dev-notice-title {
+  font-weight: 500;
+  margin-bottom: var(--iris-space-xs);
+}
+
+.config-dev-notice-content {
+  font-size: var(--iris-font-size-sm);
+}
+
+.config-dev-notice code {
+  background: rgba(212, 136, 6, 0.1);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+/* Checkbox and Label */
+.config-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--iris-space-sm);
+  cursor: pointer;
+}
+
+.config-checkbox {
+  margin: 0;
+}
+
+.config-checkbox-text {
+  color: var(--iris-text);
+  font-size: var(--iris-font-size-base);
+}
+
+/* Configuration Info */
+.config-info-display {
+  padding: var(--iris-space-md);
+  border: 1px solid var(--iris-border);
+  border-radius: 6px;
+  background: var(--iris-bg-secondary);
+  font-family: monospace;
+  font-size: var(--iris-font-size-sm);
+}
+
+.config-info-pre {
+  margin: 0;
+  color: var(--iris-text);
+  white-space: pre-wrap;
+}
+
+/* Production Path Settings */
+.config-production-section {
+  margin-bottom: var(--iris-space-xl);
+}
+
+/* Theme Settings */
+.config-theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--iris-space-md);
+  border: 1px solid var(--iris-border);
+  border-radius: 6px;
+  background: var(--iris-bg-secondary);
+}
+
+.config-theme-info {
+  flex: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .config-view {
+    padding: var(--iris-space-md);
+  }
+
+  .config-select {
+    width: 100%;
+    max-width: 200px;
+  }
+
+  .config-input--path,
+  .config-input--long-path {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .config-card-flex {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--iris-space-md);
+  }
+
+  .config-theme-toggle {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--iris-space-md);
+  }
+}

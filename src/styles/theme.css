@@ -47,6 +47,8 @@
   /* Typography */
   --iris-font-family: var(--font-sans);
   --iris-font-mono: var(--font-mono);
+  --iris-font-size-xs: var(--font-size-00);
+  --iris-font-size-sm: var(--font-size-0);
   --iris-font-size-base: var(--font-size-1);
   --iris-font-size-lg: var(--font-size-2);
   --iris-font-size-xl: var(--font-size-3);
