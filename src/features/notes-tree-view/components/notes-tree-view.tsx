@@ -2,11 +2,11 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { Tree } from 'react-arborist';
 import clsx from 'clsx';
 import { NotesTreeViewProps, TreeNode } from '../types';
-import { useTreeData } from '../hooks/useTreeData';
-import { useTreeTransformations } from '../hooks/useTreeTransformations';
-import { useTreeKeyboardNavigation } from '../hooks/useTreeKeyboardNavigation';
-import { TreeHeader } from './TreeHeader';
-import { TreeNode as TreeNodeComponent } from './TreeNode';
+import { useTreeData } from '../hooks/use-tree-data';
+import { useTreeTransformations } from '../hooks/use-tree-transformations';
+import { useTreeKeyboardNavigation } from '../hooks/use-tree-keyboard-navigation';
+import { TreeHeader } from './tree-header';
+import { TreeNode as TreeNodeComponent } from './tree-node';
 import './notes-tree-view.css';
 
 export function NotesTreeView({

@@ -6,16 +6,19 @@
   width: 100%;
   background: var(--iris-bg);
   color: var(--iris-text);
+  border:5px solid orange;
 }
 
 .welcome-content {
   max-width: 500px;
   padding: var(--iris-space-xl);
   text-align: center;
+  border:5px solid red;
 }
 
 .welcome-header {
   margin-bottom: var(--iris-space-xl);
+  border:5px solid blue;
 }
 
 .welcome-icon {
@@ -28,13 +31,15 @@
   background: var(--iris-primary-alpha);
   border-radius: 50%;
   color: var(--iris-primary);
+  border:5px solid green;
 }
 
 .welcome-header h1 {
-  margin: 0 0 var(--iris-space-md);
+  margin: 0 auto var(--iris-space-md);
   font-size: var(--iris-font-size-xl);
   font-weight: 600;
   color: var(--iris-text);
+  border:5px solid yellow;
 }
 
 .welcome-header p {
@@ -42,6 +47,7 @@
   font-size: var(--iris-font-size-lg);
   color: var(--iris-text-2);
   line-height: 1.5;
+  border:5px solid purple;
 }
 
 .welcome-actions {
@@ -49,6 +55,7 @@
   flex-direction: column;
   gap: var(--iris-space-md);
   margin-bottom: var(--iris-space-xl);
+  border:5px solid pink;
 }
 
 .welcome-action-btn {
@@ -66,6 +73,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
+  border:5px solid brown;
 }
 
 .welcome-action-btn:hover {
@@ -91,6 +99,7 @@
   border-radius: var(--iris-radius-md);
   padding: var(--iris-space-lg);
   border: 1px solid var(--iris-border);
+  border:5px solid cyan;
 }
 
 .welcome-tips h3 {
@@ -109,6 +118,7 @@
   padding: var(--iris-space-xs) 0;
   font-size: var(--iris-font-size-sm);
   color: var(--iris-text-2);
+  border:5px solid magenta;
 }
 
 .welcome-tips strong {
@@ -118,6 +128,7 @@
   padding: 2px 4px;
   border-radius: 3px;
   font-size: 11px;
+  border:5px solid orange;
 }
 
 /* Responsive design */
@@ -125,14 +136,17 @@
   .welcome-content {
     max-width: 90%;
     padding: var(--iris-space-lg);
+    border:5px solid lightblue;
   }
 
   .welcome-actions {
     gap: var(--iris-space-sm);
+    border:5px solid lightgreen;
   }
 
   .welcome-action-btn {
     padding: var(--iris-space-sm) var(--iris-space-md);
     font-size: var(--iris-font-size-sm);
+    border:5px solid lightcoral;
   }
 }
