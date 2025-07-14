@@ -2,7 +2,7 @@ import React from 'react';
 import { ActivityBar } from '../features/activity-bar';
 import { ResizableSidebar } from '../features/sidebar';
 import { DatabaseStatusView } from '../features/editor/components/database-status-view';
-import { useAppContext } from '../contexts/AppContext';
+import { useAppContext } from '../hooks/useAppContext';
 import { AppSidebar } from './AppSidebar';
 import { AppMainContent } from './AppMainContent';
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { SidebarContent } from '../features/sidebar';
-import { useAppContext } from '../contexts/AppContext';
+import { useAppContext } from '../hooks/useAppContext';
 
 export const AppSidebar: React.FC = () => {
   const {

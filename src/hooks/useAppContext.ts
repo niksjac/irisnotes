@@ -1,4 +1,4 @@
-import { useAppStore } from '../hooks/useAppStore';
+import { useAppStore } from './useAppStore';
 
 interface AppContextType {
   // State

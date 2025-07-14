@@ -2,7 +2,7 @@ import React from 'react';
 import { ConfigView } from '../features/editor/components/config-view';
 import { HotkeysView } from '../features/editor/components/hotkeys-view';
 import { FolderContent, DualPaneContent, SinglePaneContent } from '../components';
-import { useAppContext } from '../contexts/AppContext';
+import { useAppContext } from '../hooks/useAppContext';
 
 // Simple wrapper components for views that don't need props
 const ConfigContent = () => <ConfigView />;
