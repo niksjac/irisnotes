@@ -1,11 +1,11 @@
-/* Import Open Props */
-@import "open-props/style";
-@import "open-props/normalize";
-
 /*
- * IrisNotes Theme Architecture
- * This file defines the default theme using CSS custom properties.
- * Users can override these variables in their config/theme.css file.
+ * IrisNotes Legacy Theme File
+ *
+ * NOTE: This file is being phased out in favor of Tailwind CSS v4
+ * Open Props imports moved to: src/styles/tailwind.css
+ * Scrollbar styles moved to: src/styles/components.css
+ *
+ * TODO: Migrate remaining CSS custom properties and remove this file
  */
 
 :root {
@@ -102,64 +102,9 @@
   }
 }
 
-/* Base app styles */
-* {
-  box-sizing: border-box;
-}
+/* Base app styles moved to Tailwind classes in index.html */
 
-html {
-  /* border: 5px solid red; */
-  height: 100%;
-  overflow: hidden;
-}
 
-body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  overflow: hidden;
-  /* border:5px solid yellow; */
-}
 
-#root {
-  overflow: hidden;
-  height: 100%;
-  /* border:5px solid blue; */
-  display: flex;
-  flex-direction: column;
-}
-
-/* App Layout */
-.app {
-  overflow: hidden;
-  height: 100%;
-  /* border:5px solid green; */
-  display: flex;
-  /* min-height: 100vh; */
-  /* background-color: var(--iris-surface); */
-}
-
-/* Scrollbars */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--iris-surface-2);
-}
-
-::-webkit-scrollbar-thumb {
-  /* background: var(--iris-text-3); */
-  border-radius: var(--iris-radius-sm);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--iris-text-2);
-}
-
-/* User theme override placeholder */
-/* This is where dynamically loaded user themes will be injected */
-#user-theme-styles {
-  /* User CSS will be injected here */
-}
+/* Legacy theme file - being migrated to Tailwind CSS */
+/* Most styles moved to src/styles/tailwind.css and src/styles/components.css */

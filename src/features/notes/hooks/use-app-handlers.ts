@@ -1,0 +1,120 @@
+import { useCallback } from 'react';
+import type { SingleStorageManager } from '../storage/types';
+import type { PaneId } from './use-single-storage-notes';
+import type { FocusableElement } from '../../layout';
+
+interface UseAppHandlersProps {
+  storageManager: SingleStorageManager | null;
+  isDualPaneMode: boolean;
+  activePaneId: PaneId;
+  openNoteInPane: (noteId: string, paneId: PaneId) => void;
+  setSelectedNoteId: (noteId: string | null) => void;
+  updateNoteTitle: (noteId: string, title: string) => void;
+  updateNoteContent: (noteId: string, content: string) => void;
+  createNewNote: () => Promise<{ success: boolean; data?: any }>;
+  loadAllNotes: () => Promise<void>;
+  loadNoteCategories: () => Promise<any[]>;
+  focusElement: (element: FocusableElement, byTab?: boolean, autoShow?: boolean) => void;
+}
+
+export function useAppHandlers({
+  storageManager,
+  isDualPaneMode,
+  activePaneId,
+  openNoteInPane,
+  setSelectedNoteId,
+  updateNoteTitle,
+  updateNoteContent,
+  createNewNote,
+  loadAllNotes,
+  loadNoteCategories,
+  focusElement
+}: UseAppHandlersProps) {
+
+  const handleNoteClick = useCallback((noteId: string) => {
+    if (isDualPaneMode) {
+      openNoteInPane(noteId, activePaneId);
+    } else {
+      setSelectedNoteId(noteId);
+    }
+
+    // Focus the editor after note selection for keyboard interaction
+    focusElement('editor');
+  }, [isDualPaneMode, openNoteInPane, activePaneId, setSelectedNoteId, focusElement]);
+
+  const handleItemSelect = useCallback((_itemId: string, itemType: 'note' | 'category') => {
+    // Don't automatically open notes when just selecting them
+    // Notes will be opened via Enter/Space or double-click in the tree view
+    if (itemType === 'category') {
+      // For folders, we don't load them in the editor, just select them
+      setSelectedNoteId(null);
+    }
+  }, [setSelectedNoteId]);
+
+  const handleTitleChange = useCallback((noteId: string, title: string) => {
+    updateNoteTitle(noteId, title);
+  }, [updateNoteTitle]);
+
+  const handleContentChange = useCallback((noteId: string, content: string) => {
+    updateNoteContent(noteId, content);
+  }, [updateNoteContent]);
+
+  const handleFolderSelect = useCallback((_folderId: string) => {
+    setSelectedNoteId(null);
+  }, [setSelectedNoteId]);
+
+  const handleCreateNote = useCallback(async (parentCategoryId?: string) => {
+    if (!storageManager) return;
+
+    try {
+      const result = await createNewNote();
+      if (result.success && result.data && parentCategoryId) {
+        // Add the note to the category
+        const storage = storageManager.getActiveStorage();
+        if (!storage) {
+          console.log('Storage not ready, cannot add note to category');
+          return;
+        }
+
+        await storage.addNoteToCategory(result.data.id, parentCategoryId);
+        // Reload note categories to update the tree
+        await loadNoteCategories();
+      }
+    } catch (error) {
+      console.error('Failed to create note:', error);
+    }
+  }, [storageManager, createNewNote, loadNoteCategories]);
+
+  const handleDeleteNote = useCallback(async (noteId: string) => {
+    if (!storageManager) return;
+
+    try {
+      const storage = storageManager.getActiveStorage();
+      if (!storage) {
+        console.log('Storage not ready, cannot delete note');
+        return;
+      }
+
+      await storage.deleteNote(noteId);
+      // Reload notes to update the UI
+      await loadAllNotes();
+    } catch (error) {
+      console.error('Failed to delete note:', error);
+    }
+  }, [storageManager, loadAllNotes]);
+
+  const handleRenameNote = useCallback(async (noteId: string, newTitle: string) => {
+    await updateNoteTitle(noteId, newTitle);
+  }, [updateNoteTitle]);
+
+  return {
+    handleNoteClick,
+    handleItemSelect,
+    handleTitleChange,
+    handleContentChange,
+    handleFolderSelect,
+    handleCreateNote,
+    handleDeleteNote,
+    handleRenameNote
+  };
+}

@@ -1,0 +1,176 @@
+@import "tailwindcss";
+@import "open-props/style";
+@import "open-props/normalize";
+
+/* Enhanced Tailwind CSS v4 Theme Configuration with Open Props integration */
+@theme {
+  /* Import and extend Open Props color scale */
+  /* Primary colors based on Open Props blue scale */
+  --color-iris-primary-50: #eff6ff;
+  --color-iris-primary-100: #dbeafe;
+  --color-iris-primary-200: #bfdbfe;
+  --color-iris-primary-300: #93c5fd;
+  --color-iris-primary-400: #60a5fa;
+  --color-iris-primary-500: #3b82f6;
+  --color-iris-primary-600: #2563eb;
+  --color-iris-primary-700: #1d4ed8;
+  --color-iris-primary-800: #1e40af;
+  --color-iris-primary-900: #1e3a8a;
+
+  /* Surface colors based on Open Props gray scale */
+  --color-iris-surface-50: #f9fafb;
+  --color-iris-surface-100: #f3f4f6;
+  --color-iris-surface-200: #e5e7eb;
+  --color-iris-surface-300: #d1d5db;
+  --color-iris-surface-400: #9ca3af;
+  --color-iris-surface-500: #6b7280;
+  --color-iris-surface-600: #4b5563;
+  --color-iris-surface-700: #374151;
+  --color-iris-surface-800: #1f2937;
+  --color-iris-surface-900: #111827;
+
+  /* Semantic color mappings */
+  --color-iris-primary: var(--color-iris-primary-500);
+  --color-iris-primary-hover: var(--color-iris-primary-600);
+  --color-iris-primary-active: var(--color-iris-primary-700);
+  --color-iris-primary-alpha: rgb(59 130 246 / 0.125);
+
+  --color-iris-surface: var(--color-iris-surface-50);
+  --color-iris-surface-2: var(--color-iris-surface-100);
+  --color-iris-surface-3: var(--color-iris-surface-200);
+
+  --color-iris-bg-primary: #ffffff;
+  --color-iris-bg-secondary: var(--color-iris-surface-50);
+  --color-iris-bg-tertiary: var(--color-iris-surface-100);
+
+  --color-iris-text: var(--color-iris-surface-900);
+  --color-iris-text-2: var(--color-iris-surface-600);
+  --color-iris-text-3: var(--color-iris-surface-500);
+  --color-iris-text-primary: var(--color-iris-surface-900);
+  --color-iris-text-secondary: var(--color-iris-surface-600);
+  --color-iris-text-muted: var(--color-iris-surface-400);
+
+  --color-iris-border: var(--color-iris-surface-300);
+  --color-iris-border-hover: var(--color-iris-surface-400);
+
+  --color-iris-success: #10b981;
+  --color-iris-warning: #f59e0b;
+  --color-iris-error: #ef4444;
+
+  --color-iris-editor-bg: #ffffff;
+  --color-iris-editor-selection: var(--color-iris-primary-100);
+  --color-iris-editor-cursor: var(--color-iris-primary-500);
+
+  /* Layout dimensions */
+  --sidebar-width: 300px;
+  --sidebar-collapsed-width: 0px;
+  --activity-bar-width: 48px;
+
+  /* Enhanced spacing scale based on Open Props */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 0.75rem;
+  --spacing-lg: 1rem;
+  --spacing-xl: 1.25rem;
+  --spacing-2xl: 1.5rem;
+  --spacing-3xl: 2rem;
+
+  /* Typography scale */
+  --font-family-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-family-mono: 'Consolas', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Liberation Mono', 'Courier New', monospace;
+
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+
+  /* Radius scale */
+  --radius-none: 0;
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.75rem;
+  --radius-full: 9999px;
+
+  /* Shadow scale */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
+
+  /* Editor-specific variables */
+  --iris-editor-font-size: 14px;
+  --iris-editor-background-color: var(--color-iris-editor-bg);
+}
+
+/* Dark mode configuration */
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-iris-primary-alpha: rgb(59 130 246 / 0.15);
+
+    --color-iris-surface: var(--color-iris-surface-900);
+    --color-iris-surface-2: var(--color-iris-surface-800);
+    --color-iris-surface-3: var(--color-iris-surface-700);
+
+    --color-iris-bg-primary: var(--color-iris-surface-900);
+    --color-iris-bg-secondary: var(--color-iris-surface-800);
+    --color-iris-bg-tertiary: var(--color-iris-surface-700);
+
+    --color-iris-text: var(--color-iris-surface-50);
+    --color-iris-text-2: var(--color-iris-surface-300);
+    --color-iris-text-3: var(--color-iris-surface-400);
+    --color-iris-text-primary: var(--color-iris-surface-50);
+    --color-iris-text-secondary: var(--color-iris-surface-300);
+    --color-iris-text-muted: var(--color-iris-surface-500);
+
+    --color-iris-border: var(--color-iris-surface-700);
+    --color-iris-border-hover: var(--color-iris-surface-600);
+
+    --color-iris-editor-bg: var(--color-iris-surface-900);
+    --color-iris-editor-selection: var(--color-iris-primary-900);
+    --iris-editor-background-color: var(--color-iris-editor-bg);
+  }
+}
+
+/* Custom utility classes */
+@layer utilities {
+  .__1 {
+    border: 5px solid red !important;
+  }
+
+  .__2 {
+    border: 5px solid blue !important;
+  }
+
+  .__3 {
+    border: 5px solid green !important;
+  }
+
+  .debug-test {
+    background: red !important;
+    color: white !important;
+    padding: 10px !important;
+  }
+}
+
+/*
+ * Iris Design System Integration with Tailwind CSS v4
+ *
+ * Use arbitrary values to access the design system:
+ * - Colors: text-[var(--color-iris-text-primary)]
+ * - Backgrounds: bg-[var(--color-iris-bg-primary)]
+ * - Borders: border-[var(--color-iris-border)]
+ * - Spacing: p-[var(--spacing-md)]
+ *
+ * Common patterns:
+ * - Primary text: text-[var(--color-iris-text-primary)]
+ * - Secondary text: text-[var(--color-iris-text-secondary)]
+ * - Muted text: text-[var(--color-iris-text-muted)]
+ * - Primary bg: bg-[var(--color-iris-bg-primary)]
+ * - Surface bg: bg-[var(--color-iris-surface)]
+ */

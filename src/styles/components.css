@@ -72,14 +72,7 @@
   border-color: #b91c1c;
 }
 
-/* App container styles */
-.app-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  width: 100vw;
-}
-
+/* App header styles - keeping these as they may be used elsewhere */
 .app-header {
   display: flex;
   align-items: center;
@@ -100,11 +93,6 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.app-content {
-  flex: 1;
-  overflow: hidden;
 }
 
 /* File storage demo specific styles */
@@ -226,4 +214,52 @@
   outline: none;
   border-color: var(--iris-primary);
   box-shadow: 0 0 0 2px hsla(var(--iris-primary), 0.2);
+}
+
+/* Component-specific styles that can't be handled by Tailwind utilities */
+
+/* Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-iris-surface-2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-iris-surface-400);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-iris-surface-500);
+}
+
+/* Firefox scrollbar support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-iris-surface-400) var(--color-iris-surface-2);
+}
+
+/* User theme override system */
+/* This is where dynamically loaded user themes will be injected */
+#user-theme-styles {
+  /* User CSS will be injected here */
+}
+
+/* Utility classes for complex interactions that need CSS */
+.focus-visible-only:focus {
+  outline: 2px solid var(--color-iris-primary);
+  outline-offset: -2px;
+}
+
+.focus-visible-only:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
