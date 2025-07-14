@@ -31,6 +31,7 @@
     "@tauri-apps/plugin-sql": "^2.2.0",
     "@tauri-apps/plugin-window-state": "^2.3.0",
     "clsx": "^2.1.1",
+    "jotai": "^2.12.5",
     "js-beautify": "^1.15.4",
     "lucide-react": "^0.513.0",
     "open-props": "^1.7.15",

@@ -1,6 +1,4 @@
-import React, { createContext, useContext, ReactNode } from 'react';
-import { useAppState } from '../hooks/useAppState';
-import { useAppActions } from '../hooks/useAppActions';
+import { useAppStore } from '../hooks/useAppStore';
 
 interface AppContextType {
   // State
@@ -57,76 +55,8 @@ interface AppContextType {
   toggleLineWrapping: () => void;
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined);
-
-interface AppProviderProps {
-  children: ReactNode;
-}
-
-export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
-  const appState = useAppState();
-  const appActions = useAppActions(appState);
-
-  const contextValue: AppContextType = {
-    // State
-    notes: appState.notes,
-    categories: appState.categories,
-    noteCategories: appState.noteCategories,
-    selectedNote: appState.selectedNote,
-    selectedNoteId: appState.selectedNoteId,
-    selectedItem: appState.selectedItem,
-    selectedFolder: appState.selectedFolder,
-    notesForPane: appState.notesForPane,
-    sidebarCollapsed: appState.sidebarCollapsed,
-    activityBarVisible: appState.activityBarVisible,
-    configViewActive: appState.configViewActive,
-    hotkeysViewActive: appState.hotkeysViewActive,
-    databaseStatusVisible: appState.databaseStatusVisible,
-    isDualPaneMode: appState.isDualPaneMode,
-    activePaneId: appState.activePaneId,
-    toolbarVisible: appState.toolbarVisible,
-    isWrapping: appState.isWrapping,
-    fontSize: appState.fontSize,
-    focusManagement: appState.focusManagement,
-
-    // Actions
-    handleNoteClick: appActions.handleNoteClick,
-    handleTitleChange: appActions.handleTitleChange,
-    handleContentChange: appActions.handleContentChange,
-    handleCreateNote: appActions.handleCreateNote,
-    handleDeleteNote: appActions.handleDeleteNote,
-    handleRenameNote: appActions.handleRenameNote,
-    handleItemSelectWithState: appActions.handleItemSelectWithState,
-    handleFolderSelectWithState: appActions.handleFolderSelectWithState,
-    handleCreateFolder: appState.handleCreateFolder,
-    handleMoveNote: appState.handleMoveNote,
-    handleDeleteCategory: appState.handleDeleteCategory,
-    handleRenameCategory: appState.handleRenameCategory,
-
-    // Layout actions
-    toggleSidebar: appState.toggleSidebar,
-    handleSidebarCollapsedChange: appState.handleSidebarCollapsedChange,
-    toggleActivityBar: appState.toggleActivityBar,
-    toggleConfigView: appState.toggleConfigView,
-    toggleHotkeysView: appState.toggleHotkeysView,
-    toggleDatabaseStatus: appState.toggleDatabaseStatus,
-    toggleDualPaneMode: appState.toggleDualPaneMode,
-    setActivePane: appState.setActivePane,
-    toggleToolbar: appState.toggleToolbar,
-    toggleLineWrapping: appState.toggleLineWrapping,
-  };
-
-  return (
-    <AppContext.Provider value={contextValue}>
-      {children}
-    </AppContext.Provider>
-  );
-};
-
+// This hook now uses Jotai instead of React Context
+// but maintains the same interface for backwards compatibility
 export const useAppContext = (): AppContextType => {
-  const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error('useAppContext must be used within an AppProvider');
-  }
-  return context;
+  return useAppStore();
 };
