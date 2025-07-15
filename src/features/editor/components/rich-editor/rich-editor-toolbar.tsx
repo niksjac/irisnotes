@@ -34,7 +34,6 @@ import {
   Redo2,
   X
 } from 'lucide-react';
-import './rich-editor-toolbar.css';
 
 interface RichEditorToolbarProps {
   editorView: EditorView | null;
@@ -59,7 +58,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Bold',
       shortcut: 'Ctrl+B',
       command: toggleMark(schema.marks.strong),
-      className: 'toolbar-bold',
+      className: 'font-black font-serif',
       group: 'format'
     },
     {
@@ -67,7 +66,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Italic',
       shortcut: 'Ctrl+I',
       command: toggleMark(schema.marks.em),
-      className: 'toolbar-italic',
+      className: 'italic font-serif',
       group: 'format'
     },
     {
@@ -75,7 +74,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Underline',
       shortcut: 'Ctrl+U',
       command: toggleMark(schema.marks.underline),
-      className: 'toolbar-underline',
+      className: 'underline font-serif',
       group: 'format'
     },
     {
@@ -83,7 +82,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Strikethrough',
       shortcut: 'Ctrl+Shift+X',
       command: toggleMark(schema.marks.strikethrough),
-      className: 'toolbar-strikethrough',
+      className: 'line-through font-serif',
       group: 'format'
     },
     {
@@ -91,7 +90,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Code',
       shortcut: 'Ctrl+`',
       command: toggleMark(schema.marks.code),
-      className: 'toolbar-code',
+      className: 'font-mono text-sm',
       group: 'format'
     },
     {
@@ -99,7 +98,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Superscript',
       shortcut: 'Ctrl+Shift+=',
       command: toggleSuperscript(schema),
-      className: 'toolbar-superscript',
+      className: 'font-serif text-sm',
       group: 'format'
     },
     {
@@ -107,7 +106,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Subscript',
       shortcut: 'Ctrl+=',
       command: toggleSubscript(schema),
-      className: 'toolbar-subscript',
+      className: 'font-serif text-sm',
       group: 'format'
     },
 
@@ -117,7 +116,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Heading 1',
       shortcut: 'Ctrl+Shift+1',
       command: setBlockType(schema.nodes.heading, { level: 1 }),
-      className: 'toolbar-h1',
+      className: 'font-bold font-serif text-lg',
       group: 'block'
     },
     {
@@ -125,7 +124,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Heading 2',
       shortcut: 'Ctrl+Shift+2',
       command: setBlockType(schema.nodes.heading, { level: 2 }),
-      className: 'toolbar-h2',
+      className: 'font-bold font-serif',
       group: 'block'
     },
     {
@@ -133,7 +132,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Heading 3',
       shortcut: 'Ctrl+Shift+3',
       command: setBlockType(schema.nodes.heading, { level: 3 }),
-      className: 'toolbar-h3',
+      className: 'font-bold font-serif text-sm',
       group: 'block'
     },
     {
@@ -141,7 +140,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Paragraph',
       shortcut: 'Ctrl+Shift+0',
       command: setBlockType(schema.nodes.paragraph),
-      className: 'toolbar-paragraph',
+      className: 'text-xl',
       group: 'block'
     },
 
@@ -151,7 +150,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Bullet List',
       shortcut: 'Ctrl+Shift+8',
       command: wrapInList(schema.nodes.bullet_list),
-      className: 'toolbar-bullet-list',
+      className: 'font-semibold',
       group: 'list'
     },
     {
@@ -159,7 +158,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Ordered List',
       shortcut: 'Ctrl+Shift+9',
       command: wrapInList(schema.nodes.ordered_list),
-      className: 'toolbar-ordered-list',
+      className: 'font-semibold',
       group: 'list'
     },
     {
@@ -167,7 +166,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Blockquote',
       shortcut: 'Ctrl+Shift+.',
       command: wrapIn(schema.nodes.blockquote),
-      className: 'toolbar-blockquote',
+      className: 'font-serif text-lg',
       group: 'list'
     },
 
@@ -177,7 +176,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Red Text',
       shortcut: 'Ctrl+Shift+R',
       command: toggleColor('#e74c3c', schema),
-      className: 'toolbar-color-red',
+      className: 'text-lg',
       group: 'color'
     },
     {
@@ -185,7 +184,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Green Text',
       shortcut: 'Ctrl+Shift+G',
       command: toggleColor('#27ae60', schema),
-      className: 'toolbar-color-green',
+      className: 'text-lg',
       group: 'color'
     },
     {
@@ -193,7 +192,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Blue Text',
       shortcut: 'Ctrl+Shift+L',
       command: toggleColor('#3498db', schema),
-      className: 'toolbar-color-blue',
+      className: 'text-lg',
       group: 'color'
     },
     {
@@ -201,7 +200,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Yellow Text',
       shortcut: 'Ctrl+Shift+Y',
       command: toggleColor('#f39c12', schema),
-      className: 'toolbar-color-yellow',
+      className: 'text-lg',
       group: 'color'
     },
     {
@@ -209,7 +208,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Purple Text',
       shortcut: 'Ctrl+Shift+P',
       command: toggleColor('#9b59b6', schema),
-      className: 'toolbar-color-purple',
+      className: 'text-lg',
       group: 'color'
     },
     {
@@ -217,7 +216,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Clear Color',
       shortcut: 'Ctrl+Shift+C',
       command: clearColor(schema),
-      className: 'toolbar-color-clear',
+      className: 'text-lg',
       group: 'color'
     },
 
@@ -226,21 +225,23 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       icon: Settings,
       label: 'Arial Font',
       command: toggleFontFamily('Arial', schema),
-      className: 'toolbar-font-arial',
-      group: 'font'
+      className: 'font-semibold',
+      group: 'font',
+      style: { fontFamily: 'Arial, sans-serif' }
     },
     {
       icon: Settings,
       label: 'Times Font',
       command: toggleFontFamily('Times New Roman', schema),
-      className: 'toolbar-font-times',
-      group: 'font'
+      className: 'font-semibold',
+      group: 'font',
+      style: { fontFamily: 'Times New Roman, serif' }
     },
     {
       icon: Settings,
       label: 'Monospace Font',
       command: toggleFontFamily('Consolas', schema),
-      className: 'toolbar-font-consolas',
+      className: 'font-semibold font-mono',
       group: 'font'
     },
 
@@ -249,21 +250,21 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       icon: Minus,
       label: '10px Font Size',
       command: toggleFontSize('10px', schema),
-      className: 'toolbar-size-10',
+      className: 'font-semibold font-mono',
       group: 'size'
     },
     {
       icon: Type,
       label: '14px Font Size',
       command: toggleFontSize('14px', schema),
-      className: 'toolbar-size-14',
+      className: 'font-semibold font-mono',
       group: 'size'
     },
     {
       icon: Plus,
       label: '18px Font Size',
       command: toggleFontSize('18px', schema),
-      className: 'toolbar-size-18',
+      className: 'font-semibold font-mono',
       group: 'size'
     },
 
@@ -272,21 +273,21 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       icon: () => <PaintBucket style={{ color: '#f39c12' }} />,
       label: 'Yellow Background',
       command: toggleBackgroundColor('#fff3cd', schema),
-      className: 'toolbar-bg-yellow',
+      className: 'text-lg',
       group: 'background'
     },
     {
       icon: () => <PaintBucket style={{ color: '#27ae60' }} />,
       label: 'Green Background',
       command: toggleBackgroundColor('#d4edda', schema),
-      className: 'toolbar-bg-green',
+      className: 'text-lg',
       group: 'background'
     },
     {
       icon: () => <PaintBucket style={{ color: '#3498db' }} />,
       label: 'Blue Background',
       command: toggleBackgroundColor('#d1ecf1', schema),
-      className: 'toolbar-bg-blue',
+      className: 'text-lg',
       group: 'background'
     },
 
@@ -296,7 +297,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Undo',
       shortcut: 'Ctrl+Z',
       command: undo,
-      className: 'toolbar-undo',
+      className: 'text-xl font-semibold',
       group: 'utility'
     },
     {
@@ -304,7 +305,7 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
       label: 'Redo',
       shortcut: 'Ctrl+Y',
       command: redo,
-      className: 'toolbar-redo',
+      className: 'text-xl font-semibold',
       group: 'utility'
     },
   ];
@@ -312,16 +313,17 @@ export function RichEditorToolbar({ editorView, schema }: RichEditorToolbarProps
   if (!editorView || !schema) return null;
 
   return (
-    <div className="iris-editor-toolbar">
-      <div className="toolbar-buttons-container">
+    <div className="flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800 overflow-hidden min-h-[40px]">
+      <div className="flex items-center gap-1 flex-1 flex-wrap">
         {allButtons.map((button, index) => {
           const IconComponent = button.icon;
           return (
             <button
               key={index}
-              className={`toolbar-button ${button.className}`}
+              className={`inline-flex items-center justify-center w-8 h-8 flex-shrink-0 border border-transparent rounded-sm bg-transparent text-gray-600 dark:text-gray-400 font-medium cursor-pointer transition-all duration-200 hover:bg-gray-200 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-900 dark:hover:text-gray-100 active:translate-y-px border-black ${button.className}`}
               onClick={executeCommand(button.command)}
               title={`${button.label} ${button.shortcut ? `(${button.shortcut})` : ''}`}
+              style={button.style}
             >
               <IconComponent size={16} />
             </button>

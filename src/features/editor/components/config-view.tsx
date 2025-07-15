@@ -1,7 +1,6 @@
 import { useTheme } from '../../theme';
 import { useConfig } from '../../../hooks/use-config';
 import type { StorageSettings } from '../../../types';
-import './config-view.css';
 
 export function ConfigView() {
   const { darkMode, toggleDarkMode } = useTheme();

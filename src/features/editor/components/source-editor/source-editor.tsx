@@ -10,7 +10,6 @@ import { foldGutter, foldKeymap, indentOnInput, bracketMatching } from '@codemir
 import { highlightActiveLine } from '@codemirror/view';
 
 import { formatHtml } from './formatters/html-formatter';
-import './source-editor.css';
 
 interface SourceEditorProps {
   content: string;
@@ -153,11 +152,10 @@ export const SourceEditor = forwardRef<SourceEditorRef, SourceEditorProps>(({
   }, [content]);
 
   return (
-    <div className="source-editor">
+    <div className="flex flex-col h-full w-full">
       <div
         ref={editorRef}
-        className="source-editor-container"
-        // style={{ height: '100%', minHeight: '100%' }}
+        className="h-full w-full bg-gray-50 dark:bg-gray-900"
       />
     </div>
   );

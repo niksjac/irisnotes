@@ -39,14 +39,14 @@ export function SidebarButtons({
   return (
     <div
       ref={buttonsRef}
-      className={clsx("sidebar-buttons", focusClasses)}
+      className={clsx("flex flex-col gap-4 px-4 py-4 border-r border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 outline-none", focusClasses)}
       tabIndex={0}
       onClick={handleClick}
     >
-      <div className="sidebar-buttons-content">
-        <div className="sidebar-buttons-group">
+      <div className="flex flex-row gap-4">
+        <div className="flex flex-row gap-4">
           <button
-            className="sidebar-button"
+            className="flex items-center justify-center w-9 h-9 border-none rounded bg-transparent text-gray-600 dark:text-gray-400 cursor-pointer transition-all duration-200 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 active:bg-gray-300 dark:active:bg-gray-600"
             onClick={onCreateNote}
             title="New Note (Ctrl+N)"
           >
@@ -54,7 +54,7 @@ export function SidebarButtons({
           </button>
 
           <button
-            className="sidebar-button"
+            className="flex items-center justify-center w-9 h-9 border-none rounded bg-transparent text-gray-600 dark:text-gray-400 cursor-pointer transition-all duration-200 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 active:bg-gray-300 dark:active:bg-gray-600"
             onClick={onCreateFolder}
             title="New Folder"
           >
@@ -62,7 +62,7 @@ export function SidebarButtons({
           </button>
 
           <button
-            className="sidebar-button"
+            className="flex items-center justify-center w-9 h-9 border-none rounded bg-transparent text-gray-600 dark:text-gray-400 cursor-pointer transition-all duration-200 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 active:bg-gray-300 dark:active:bg-gray-600"
             onClick={onFocusSearch}
             title="Focus Search (Ctrl+Shift+P)"
           >
@@ -70,9 +70,9 @@ export function SidebarButtons({
           </button>
         </div>
 
-        <div className="sidebar-buttons-group">
+        <div className="flex flex-row gap-4">
           <button
-            className="sidebar-button"
+            className="flex items-center justify-center w-9 h-9 border-none rounded bg-transparent text-gray-600 dark:text-gray-400 cursor-pointer transition-all duration-200 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 active:bg-gray-300 dark:active:bg-gray-600"
             title="More Actions"
           >
             <MoreHorizontal size={16} />

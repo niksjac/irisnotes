@@ -1,5 +1,4 @@
 import { FileText, Folder, Search } from "lucide-react";
-import "./welcome-screen.css";
 
 interface WelcomeScreenProps {
   onCreateNote: () => void;

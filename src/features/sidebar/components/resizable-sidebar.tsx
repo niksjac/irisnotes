@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import clsx from "clsx";
-import "./resizable-sidebar.css";
 
 interface ResizableSidebarProps {
   isCollapsed: boolean;
@@ -102,9 +101,9 @@ export function ResizableSidebar({
   return (
     <div
       ref={sidebarRef}
-      className={clsx("resizable-sidebar", {
-        collapsed: isCollapsed,
-        resizing: isResizing
+      className={clsx("bg-gray-100 dark:bg-gray-800 border-r border-gray-300 dark:border-gray-600 flex-shrink-0 relative overflow-hidden", {
+        "!w-0 !min-w-0 !border-r-0": isCollapsed,
+        "transition-none": isResizing && !isCollapsed
       })}
       style={{
         width: isCollapsed ? 0 : width,
@@ -112,15 +111,18 @@ export function ResizableSidebar({
         maxWidth: isCollapsed ? 0 : maxWidth,
       }}
     >
-      <div className="sidebar-content">
+      <div className="h-full overflow-hidden flex flex-col">
         {children}
       </div>
 
       {!isCollapsed && (
         <div
           ref={resizerRef}
-          className="sidebar-resizer"
+          className="absolute top-0 right-0 w-1 h-full cursor-col-resize bg-transparent transition-colors duration-100 hover:bg-blue-500 before:content-[''] before:absolute before:top-0 before:-left-0.5 before:-right-0.5 before:bottom-0"
           onMouseDown={handleMouseDown}
+          style={{
+            backgroundColor: isResizing ? 'var(--primary)' : 'transparent'
+          }}
         />
       )}
     </div>

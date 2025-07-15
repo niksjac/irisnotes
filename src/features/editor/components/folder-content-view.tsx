@@ -1,7 +1,6 @@
 import React from 'react';
 import { FileText, Folder, Plus, FolderOpen } from 'lucide-react';
 import type { Note, Category } from '../../../types/database';
-import './folder-content-view.css';
 
 interface FolderContentViewProps {
   selectedFolder: Category;

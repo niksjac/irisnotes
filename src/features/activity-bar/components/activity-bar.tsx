@@ -12,7 +12,6 @@ import {
   PanelRightOpen,
   Type
 } from "lucide-react";
-import "./activity-bar.css";
 
 interface ActivityBarProps {
   isVisible: boolean;
@@ -79,15 +78,15 @@ export function ActivityBar({
   return (
     <div
       ref={activityBarRef}
-      className={clsx("activity-bar", focusClasses)}
+      className={clsx("w-9 bg-gray-200 dark:bg-gray-700 border-r border-gray-300 dark:border-gray-600 flex-shrink-0 flex flex-col", focusClasses)}
       tabIndex={0}
       onClick={handleClick}
     >
-      <div className="activity-bar-content">
-        <div className="activity-bar-items">
+      <div className="flex flex-col h-full items-center py-1">
+        <div className="flex flex-col gap-2 py-1 items-center">
           <button
-            className={clsx("activity-bar-item", {
-              active: !sidebarCollapsed,
+            className={clsx("flex items-center justify-center w-6 h-6 border-none rounded-none bg-transparent text-gray-600 dark:text-gray-400 cursor-pointer transition-all duration-200 text-lg font-semibold p-0 hover:bg-transparent hover:text-gray-900 dark:hover:text-gray-100 hover:scale-110", {
+              "bg-transparent text-blue-500 scale-110": !sidebarCollapsed,
             })}
             onClick={onToggleSidebar}
             title="Toggle Notes Sidebar"
@@ -96,8 +95,8 @@ export function ActivityBar({
           </button>
 
           <button
-            className={clsx("activity-bar-item", {
-              active: configViewActive,
+            className={clsx("flex items-center justify-center w-6 h-6 border-none rounded-none bg-transparent text-gray-600 dark:text-gray-400 cursor-pointer transition-all duration-200 text-lg font-semibold p-0 hover:bg-transparent hover:text-gray-900 dark:hover:text-gray-100 hover:scale-110", {
+              "bg-transparent text-blue-500 scale-110": configViewActive,
             })}
             onClick={onToggleConfigView}
             title="Configuration"
@@ -106,8 +105,8 @@ export function ActivityBar({
           </button>
 
           <button
-            className={clsx("activity-bar-item", {
-              active: hotkeysViewActive,
+            className={clsx("flex items-center justify-center w-6 h-6 border-none rounded-none bg-transparent text-gray-600 dark:text-gray-400 cursor-pointer transition-all duration-200 text-lg font-semibold p-0 hover:bg-transparent hover:text-gray-900 dark:hover:text-gray-100 hover:scale-110", {
+              "bg-transparent text-blue-500 scale-110": hotkeysViewActive,
             })}
             onClick={onToggleHotkeysView}
             title="Hotkeys Reference"
@@ -116,8 +115,8 @@ export function ActivityBar({
           </button>
 
           <button
-            className={clsx("activity-bar-item", {
-              active: databaseStatusVisible,
+            className={clsx("flex items-center justify-center w-6 h-6 border-none rounded-none bg-transparent text-gray-600 dark:text-gray-400 cursor-pointer transition-all duration-200 text-lg font-semibold p-0 hover:bg-transparent hover:text-gray-900 dark:hover:text-gray-100 hover:scale-110", {
+              "bg-transparent text-blue-500 scale-110": databaseStatusVisible,
             })}
             onClick={onToggleDatabaseStatus}
             title="Database Status"
@@ -126,10 +125,10 @@ export function ActivityBar({
           </button>
         </div>
 
-        <div className="activity-bar-separator">
+        <div className="mt-auto pt-2 border-t border-gray-300 dark:border-gray-600 flex flex-col gap-2 pl-0 pr-0 pb-1 items-center">
           {/* Font Size Indicator */}
           <div
-            className="activity-bar-item font-size-indicator"
+            className="flex items-center justify-center w-6 h-6 border-none rounded-none bg-transparent text-gray-600 dark:text-gray-400 cursor-default transition-all duration-200 text-lg font-normal p-0"
             title={`Editor font size: ${fontSize}px (Ctrl+Plus/Minus to adjust)`}
             style={{
               display: 'flex',
@@ -151,8 +150,8 @@ export function ActivityBar({
 
           {onToggleToolbar && (
             <button
-              className={clsx("activity-bar-item", {
-                active: isToolbarVisible,
+              className={clsx("flex items-center justify-center w-6 h-6 border-none rounded-none bg-transparent text-gray-600 dark:text-gray-400 cursor-pointer transition-all duration-200 text-lg font-semibold p-0 hover:bg-transparent hover:text-gray-900 dark:hover:text-gray-100 hover:scale-110", {
+                "bg-transparent text-blue-500 scale-110": isToolbarVisible,
               })}
               onClick={onToggleToolbar}
               title={`${isToolbarVisible ? 'Hide' : 'Show'} editor toolbar`}
@@ -163,8 +162,8 @@ export function ActivityBar({
 
           {onToggleLineWrapping && (
             <button
-              className={clsx("activity-bar-item", {
-                active: isLineWrapping,
+              className={clsx("flex items-center justify-center w-6 h-6 border-none rounded-none bg-transparent text-gray-600 dark:text-gray-400 cursor-pointer transition-all duration-200 text-lg font-semibold p-0 hover:bg-transparent hover:text-gray-900 dark:hover:text-gray-100 hover:scale-110", {
+                "bg-transparent text-blue-500 scale-110": isLineWrapping,
               })}
               onClick={onToggleLineWrapping}
               title={`${isLineWrapping ? 'Disable' : 'Enable'} line wrapping (Ctrl+Alt+W)`}
@@ -175,8 +174,8 @@ export function ActivityBar({
 
           {onToggleDualPane && (
             <button
-              className={clsx("activity-bar-item dual-pane-toggle", {
-                active: isDualPaneMode,
+              className={clsx("flex items-center justify-center w-6 h-6 border-none rounded-none bg-transparent text-gray-600 dark:text-gray-400 cursor-pointer transition-all duration-200 p-0 hover:bg-transparent hover:text-gray-900 dark:hover:text-gray-100 hover:scale-110", {
+                "bg-transparent text-blue-500 scale-110": isDualPaneMode,
               })}
               onClick={onToggleDualPane}
               title={`${isDualPaneMode ? 'Disable' : 'Enable'} dual-pane mode (Ctrl+D)`}

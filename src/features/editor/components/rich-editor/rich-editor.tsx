@@ -5,7 +5,6 @@ import { useEditorView } from './hooks/use-editor-view';
 import { useConfig } from '../../../../hooks/use-config';
 import { RichEditorToolbar } from './rich-editor-toolbar';
 import 'prosemirror-view/style/prosemirror.css';
-import './rich-editor.css';
 
 export interface RichEditorRef {
   focusAndPositionAtEnd: () => void;
@@ -33,7 +32,7 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
   }), [focusAndPositionAtEnd]);
 
   return (
-    <div className="rich-editor">
+    <div className="h-full flex flex-col overflow-hidden">
       {toolbarVisible && (
         <RichEditorToolbar
           editorView={editorView}
@@ -42,7 +41,7 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
       )}
       <div
         ref={editorRef}
-        className="rich-editor-container"
+        className="h-full overflow-hidden pt-2.5 pl-2.5"
         data-placeholder={placeholder}
         data-line-wrapping={!loading && config.editor.lineWrapping ? 'true' : 'false'}
       />

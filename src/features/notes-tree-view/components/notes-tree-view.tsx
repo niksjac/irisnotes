@@ -7,7 +7,6 @@ import { useTreeTransformations } from '../hooks/use-tree-transformations';
 import { useTreeKeyboardNavigation } from '../hooks/use-tree-keyboard-navigation';
 import { TreeHeader } from './tree-header';
 import { TreeNode as TreeNodeComponent } from './tree-node';
-import './notes-tree-view.css';
 
 export function NotesTreeView({
   notes,
@@ -412,7 +411,7 @@ export function NotesTreeView({
   return (
     <div
       ref={containerRef}
-      className={clsx("notes-tree-view", focusClasses)}
+      className={clsx("flex flex-col h-full overflow-hidden outline-none", focusClasses)}
       tabIndex={0}
       onClick={handleContainerClick}
       onFocus={handleContainerFocus}
@@ -433,13 +432,13 @@ export function NotesTreeView({
       />
 
       {hoistedFolder && (
-        <div className="hoist-indicator">
-          <span>Showing contents of: <strong>{hoistedFolder.name}</strong></span>
-          <small>Press Escape to exit hoist mode</small>
+        <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900 border-b border-blue-200 dark:border-blue-700 text-center">
+          <span className="text-sm text-blue-600 dark:text-blue-300">Showing contents of: <strong className="text-blue-700 dark:text-blue-200">{hoistedFolder.name}</strong></span>
+          <small className="block text-xs text-blue-500 dark:text-blue-400">Press Escape to exit hoist mode</small>
         </div>
       )}
 
-      <div ref={treeContainerRef} className="tree-container">
+      <div ref={treeContainerRef} className="flex-1 overflow-hidden p-1">
         <Tree
           ref={treeRef}
           data={treeData}

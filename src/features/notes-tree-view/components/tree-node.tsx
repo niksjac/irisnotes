@@ -121,14 +121,14 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     <div
       ref={dragHandle}
       style={style}
-      className={`tree-node ${nodeData.type} ${selectedItemId === nodeData.id ? 'selected' : ''} ${isFocused ? 'focused' : ''} ${isOpen ? 'open' : ''}`}
+      className={`flex items-center justify-between px-2 py-1 my-0.5 rounded cursor-pointer transition-all duration-200 relative hover:bg-gray-200 dark:hover:bg-gray-700 ${selectedItemId === nodeData.id ? 'outline outline-2 outline-blue-500 outline-offset-[-2px]' : ''} ${nodeData.type === 'category' ? 'font-medium' : ''} ${isFocused ? 'outline outline-2 outline-blue-500 outline-offset-[-2px] bg-gray-200 dark:bg-gray-700' : ''} ${isOpen ? 'text-green-500 font-bold' : ''}`}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
     >
-      <div className="tree-node-content">
+      <div className="flex items-center gap-1 flex-1 min-w-0">
         {nodeData.type === 'category' && (
           <div
-            className="tree-node-arrow"
+            className="flex items-center justify-center w-4 h-4 text-gray-600 dark:text-gray-400 flex-shrink-0 transition-colors duration-200 hover:text-gray-900 dark:hover:text-gray-100"
             onClick={handleToggle}
             style={{
               opacity: hasChildren ? 1 : 0.3,
@@ -139,11 +139,11 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
           </div>
         )}
         {nodeData.type === 'note' && (
-          <div className="tree-node-arrow" style={{ opacity: 0 }}>
+          <div className="flex items-center justify-center w-4 h-4 text-gray-600 dark:text-gray-400 flex-shrink-0" style={{ opacity: 0 }}>
             <ChevronRight size={14} />
           </div>
         )}
-        <div className="tree-node-icon">
+        <div className={`flex items-center justify-center w-5 h-5 flex-shrink-0 ${nodeData.type === 'category' ? 'text-blue-500' : 'text-gray-600 dark:text-gray-400'} ${selectedItemId === nodeData.id ? 'text-blue-500' : ''} ${isOpen && nodeData.type === 'note' ? 'text-green-500' : ''}`}>
           {nodeData.type === 'category' ? <Folder size={16} /> : <FileText size={16} />}
         </div>
         {isEditing ? (
@@ -154,17 +154,17 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
             onBlur={handleEditSubmit}
             onKeyDown={handleKeyDown}
             autoFocus
-            className="tree-node-input"
+            className="flex-1 px-1 py-0.5 border border-blue-500 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs font-mono outline-none"
           />
         ) : (
-          <span className="tree-node-name">{nodeData.name}</span>
+          <span className={`text-xs font-mono whitespace-nowrap overflow-hidden text-ellipsis min-w-0 ${isOpen && nodeData.type === 'note' ? 'text-green-500 font-bold' : 'text-gray-900 dark:text-gray-100'}`}>{nodeData.name}</span>
         )}
       </div>
-      <div className="tree-node-actions">
+      <div className="flex gap-0.5 opacity-100 transition-opacity duration-200 items-center">
         {nodeData.type === 'category' && (
           <>
             <button
-              className="tree-node-action"
+              className="flex items-center justify-center w-5 h-5 border-none rounded-sm bg-transparent text-gray-600 dark:text-gray-400 cursor-pointer transition-all duration-200 hover:bg-gray-300 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
               onClick={(e) => {
                 e.stopPropagation();
                 onCreateNote(nodeData.id);
@@ -174,7 +174,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               <Plus size={12} />
             </button>
             <button
-              className="tree-node-action"
+              className="flex items-center justify-center w-5 h-5 border-none rounded-sm bg-transparent text-gray-600 dark:text-gray-400 cursor-pointer transition-all duration-200 hover:bg-gray-300 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
               onClick={(e) => {
                 e.stopPropagation();
                 onCreateFolder(nodeData.id);
