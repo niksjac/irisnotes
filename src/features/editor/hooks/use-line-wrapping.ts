@@ -7,7 +7,7 @@ export const useLineWrapping = () => {
   const toggleLineWrapping = useCallback(() => {
     const newWrappingState = !config.editor.lineWrapping;
 
-    console.log('Toggling line wrapping from', config.editor.lineWrapping, 'to', newWrappingState);
+
 
     // Update config - this will trigger the useEffect in RichEditor component
     updateConfig({

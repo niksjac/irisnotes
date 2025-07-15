@@ -55,7 +55,7 @@ export const useConfig = () => {
           return;
         } catch {
           // Fall back to system config in dev mode
-          console.log('Local config not found, trying system config');
+
         }
       }
 
@@ -75,7 +75,7 @@ export const useConfig = () => {
 
       setConfig(mergedConfig);
         } catch (error) {
-      console.log('Config file not found, using defaults');
+
       const isDevelopment = import.meta.env.DEV;
       const defaultConfig: AppConfig = isDevelopment ? {
         ...DEFAULT_CONFIG,
@@ -128,7 +128,7 @@ export const useConfig = () => {
 
         // Listen for config file changes
         const unlisten = await listen('config-file-changed', () => {
-          console.log('Config file changed, reloading...');
+
           loadConfig();
         });
 

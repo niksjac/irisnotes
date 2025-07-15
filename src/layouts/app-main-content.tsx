@@ -1,7 +1,7 @@
 import React from 'react';
 import { ConfigView } from '../features/editor/components/config-view';
 import { HotkeysView } from '../features/editor/components/hotkeys-view';
-import { FolderContent, DualPaneContent, SinglePaneContent } from '../components';
+import { FolderContent, DualPaneContent, SinglePaneContent } from './';
 import {
   useNotesData,
   useNotesActions,

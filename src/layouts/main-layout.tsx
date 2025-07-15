@@ -13,8 +13,8 @@ import {
   useFocusManagement
 } from '../features/layout';
 import { useEditorState, useEditorActions } from '../features/editor';
-import { AppSidebar } from './AppSidebar';
-import { AppMainContent } from './AppMainContent';
+import { AppSidebar } from './app-sidebar';
+import { AppMainContent } from './app-main-content';
 
 export const MainLayout: React.FC = () => {
   // Layout state - focused hooks

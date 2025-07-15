@@ -25,7 +25,7 @@ export const useTheme = () => {
         styleElement.textContent = themeCSS;
         document.head.appendChild(styleElement);
 
-        console.log("User theme loaded successfully");
+
       }
     } catch (error) {
       console.error("Failed to load user theme:", error);

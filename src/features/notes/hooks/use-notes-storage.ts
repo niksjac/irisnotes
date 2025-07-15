@@ -11,28 +11,20 @@ export const useNotesStorage = () => {
   // Initialize storage when config loads or changes
   useEffect(() => {
     const initializeStorage = async () => {
-      console.log('🚀 useNotesStorage: Starting initialization...');
-      console.log('🔧 Config loading:', configLoading);
-      console.log('🔧 Current config:', config);
-
       if (configLoading) {
-        console.log('⏳ Config still loading, skipping initialization');
         return;
       }
 
       try {
         // Configure storage based on config
         const storageConfig = config.storage;
-        console.log('🔧 Setting active storage with config:', storageConfig);
         const result = await storageManager.setActiveStorage(storageConfig);
-        console.log('🔧 setActiveStorage result:', result);
 
         if (!result.success) {
           console.error('❌ Failed to set active storage:', result.error);
           throw new Error(result.error);
         }
 
-        console.log('✅ Active storage set successfully');
         setIsInitialized(true);
       } catch (err) {
         console.error('❌ Failed to initialize storage:', err);

@@ -105,8 +105,9 @@ src/
 ├── atoms/                     # Jotai atomic state
 │   ├── index.ts              # Core atoms
 │   └── actions.ts            # Action atoms
-└── examples/                  # Reference implementation
-    └── FocusedHooksExample.tsx
+└── shared/                    # Reusable components across features
+    ├── components/            # Button, Input, Modal, etc.
+    └── utils/                 # Utility functions
 ```
 
 ## 💡 Patterns Established
@@ -121,7 +122,7 @@ src/
 - Import only the focused hooks you need
 - Use initialization hooks for lifecycle management
 - Combine state and action hooks as needed
-- Reference `FocusedHooksExample.tsx` for comprehensive patterns
+- Reference actual components in `src/layouts/` for comprehensive patterns
 
 ## 🔮 Future Benefits
 

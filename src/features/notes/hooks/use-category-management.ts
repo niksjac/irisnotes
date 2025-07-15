@@ -24,7 +24,7 @@ export function useCategoryManagement({
       // Check if storage is actually ready by trying to get active storage
       const activeStorage = storageManager.getActiveStorage();
       if (!activeStorage) {
-        console.log('Storage not ready yet, skipping category load');
+
         return;
       }
 
@@ -53,7 +53,7 @@ export function useCategoryManagement({
     try {
       const storage = storageManager.getActiveStorage();
       if (!storage) {
-        console.log('Storage not ready, skipping note-category load');
+
         return [];
       }
 
@@ -120,7 +120,7 @@ export function useCategoryManagement({
     try {
       const storage = storageManager.getActiveStorage();
       if (!storage) {
-        console.log('Storage not ready, cannot move note');
+
         return;
       }
 
@@ -147,7 +147,7 @@ export function useCategoryManagement({
     try {
       const storage = storageManager.getActiveStorage();
       if (!storage) {
-        console.log('Storage not ready, cannot delete category');
+
         return;
       }
 
@@ -164,7 +164,7 @@ export function useCategoryManagement({
     try {
       const storage = storageManager.getActiveStorage();
       if (!storage) {
-        console.log('Storage not ready, cannot rename category');
+
         return;
       }
 

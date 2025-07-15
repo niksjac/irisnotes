@@ -82,9 +82,7 @@ export const useNotes = () => {
 
   // Initialize selected note after config loads
   useEffect(() => {
-    console.log('useNotes config effect:', { loading, enableExampleNote: config.debug?.enableExampleNote });
     if (!loading && config.debug?.enableExampleNote) {
-      console.log('Setting selected note to example-debug-note');
       setSelectedNoteIds(prev => ({
         ...prev,
         left: prev.left || "example-debug-note"
@@ -107,17 +105,12 @@ export const useNotes = () => {
   };
 
   const loadExampleNote = async () => {
-    console.log('loadExampleNote called with config:', config.debug?.enableExampleNote);
     if (!config.debug?.enableExampleNote) {
-      console.log("Example note disabled in config");
       return;
     }
 
     try {
-      console.log("=== Loading example debug note ===");
-
       const parsedContent = parseTextWithColors(EXAMPLE_NOTE_CONTENT);
-      console.log("Parsed content length:", parsedContent.length);
 
       const exampleNote: Note = {
         id: "example-debug-note",
@@ -135,8 +128,6 @@ export const useNotes = () => {
 
       setNotes([exampleNote]);
       setSelectedNoteId("example-debug-note");
-      console.log("Example note loaded successfully, notes array length:", 1);
-      console.log("=== End loading example note ===");
     } catch (error) {
       console.error("Failed to load example note:", error);
     }
@@ -144,7 +135,6 @@ export const useNotes = () => {
 
   const reloadExampleNote = async () => {
     if (!config.debug?.enableExampleNote) {
-      console.log("Example note disabled in config, skipping reload");
       return;
     }
 

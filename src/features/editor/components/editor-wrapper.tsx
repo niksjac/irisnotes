@@ -77,7 +77,7 @@ export function EditorWrapper({
     for (const approach of approaches) {
       try {
         if (approach()) {
-          console.log('Editor focused successfully');
+
           return;
         }
       } catch (error) {

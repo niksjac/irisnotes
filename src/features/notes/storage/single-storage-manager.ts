@@ -8,7 +8,6 @@ export class SingleStorageManagerImpl implements SingleStorageManager {
 
   async setActiveStorage(config: StorageConfig): Promise<VoidStorageResult> {
     try {
-      console.log('🔧 SingleStorageManager: Setting active storage with config:', config);
 
       // Create the appropriate storage adapter based on config
       let adapter: StorageAdapter;
@@ -18,7 +17,6 @@ export class SingleStorageManagerImpl implements SingleStorageManager {
           if (!config.sqlite?.database_path) {
             return { success: false, error: 'SQLite database path is required' };
           }
-          console.log('🔧 Creating SQLite adapter with database path:', config.sqlite.database_path);
           adapter = new SQLiteStorageAdapter(config);
           break;
 
@@ -41,9 +39,7 @@ export class SingleStorageManagerImpl implements SingleStorageManager {
       }
 
       // Initialize the new storage adapter
-      console.log('🔧 Initializing storage adapter...');
       const initResult = await adapter.init();
-      console.log('🔧 Storage adapter init result:', initResult);
 
       if (!initResult.success) {
         console.error('❌ Storage adapter initialization failed:', initResult.error);
@@ -51,7 +47,6 @@ export class SingleStorageManagerImpl implements SingleStorageManager {
       }
 
       // Set as active storage
-      console.log('✅ Setting as active storage');
       this.activeStorage = adapter;
       this.activeConfig = config;
 

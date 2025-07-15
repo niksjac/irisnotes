@@ -93,7 +93,7 @@ const { getSelectedNote } = useNotesNavigation();
 
 ### Future Maintenance:
 - Use focused hooks pattern for new features
-- Reference `FocusedHooksExample.tsx` for patterns
+- Reference layout components in `src/layouts/` for established patterns
 - Monitor performance with React DevTools
 - Add new atoms/hooks as needed per domain
 

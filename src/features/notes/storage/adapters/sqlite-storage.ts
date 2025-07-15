@@ -15,16 +15,11 @@ export class SQLiteStorageAdapter implements StorageAdapter {
     try {
       // Initialize SQLite database connection
       const dbPath = this.config.sqlite?.database_path || 'notes.db';
-      console.log('🔧 Initializing SQLite database at path:', dbPath);
-      console.log('🔧 Full database URI:', `sqlite:${dbPath}`);
 
       this.db = await Database.load(`sqlite:${dbPath}`);
-      console.log('✅ Database connection established');
 
       // Create tables if they don't exist
-      console.log('🔧 Creating database schema...');
       await this.createTables();
-      console.log('✅ Database schema created successfully');
 
       return { success: true, data: undefined };
     } catch (error) {
@@ -172,7 +167,6 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       `);
     }
 
-    console.log('Database schema created successfully');
   }
 
   getConfig(): StorageConfig {

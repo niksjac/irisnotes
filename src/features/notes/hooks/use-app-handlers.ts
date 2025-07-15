@@ -72,7 +72,7 @@ export function useAppHandlers({
         // Add the note to the category
         const storage = storageManager.getActiveStorage();
         if (!storage) {
-          console.log('Storage not ready, cannot add note to category');
+
           return;
         }
 
@@ -91,7 +91,7 @@ export function useAppHandlers({
     try {
       const storage = storageManager.getActiveStorage();
       if (!storage) {
-        console.log('Storage not ready, cannot delete note');
+
         return;
       }
 
