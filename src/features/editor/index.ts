@@ -7,6 +7,11 @@ export { EditorWrapper } from './components/editor-wrapper';
 export { WelcomeScreen } from './components/welcome-screen';
 export { HotkeysView } from './components/hotkeys-view';
 
+// Layout components
+export { DualPaneContent } from './components/dual-pane-content';
+export { SinglePaneContent } from './components/single-pane-content';
+export { FolderContent } from './components/folder-content';
+
 // Hooks
 export { useFontSize } from './hooks/use-font-size';
 export { useLineWrapping } from './hooks/use-line-wrapping';

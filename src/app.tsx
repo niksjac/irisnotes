@@ -1,5 +1,5 @@
 import { Provider } from 'jotai';
-import { MainLayout } from "./layouts";
+import { MainLayout } from "./features/layout";
 
 // Import Tailwind first as base
 import "./styles/tailwind.css";

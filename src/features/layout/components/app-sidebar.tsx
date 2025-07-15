@@ -1,5 +1,5 @@
 import React from 'react';
-import { SidebarContent } from '../features/sidebar';
+import { SidebarContent } from '../../sidebar';
 import {
   useNotesData,
   useNotesSelection,
@@ -8,10 +8,9 @@ import {
   useNotesInitialization,
   useCategoryManagement,
   useAppHandlers
-} from '../features/notes/hooks';
-import { useFocusManagement } from '../features/layout';
-import { usePaneState } from '../features/layout';
-import { useNotesStorage } from '../features/notes/hooks';
+} from '../../notes/hooks';
+import { usePaneState } from '../hooks';
+import { useNotesStorage } from '../../notes/hooks';
 
 export const AppSidebar: React.FC = () => {
   // Notes data - focused hooks
@@ -73,16 +72,7 @@ export const AppSidebar: React.FC = () => {
     createNewNote,
     loadAllNotes: () => Promise.resolve(), // Handled by initialization
     loadNoteCategories: () => Promise.resolve([]),
-    focusElement: () => {} // Will be provided by focus management
-  });
-
-  // Focus management
-  const focusManagement = useFocusManagement({
-    onFocusChange: () => {},
-    onToggleSidebar: () => {},
-    onToggleActivityBar: () => {},
-    sidebarCollapsed: false,
-    activityBarVisible: true
+    focusElement: () => {} // No-op since focus management is handled at main layout level
   });
 
   return (
@@ -105,10 +95,10 @@ export const AppSidebar: React.FC = () => {
       onRenameNote={handleRenameNote}
       onRenameCategory={handleRenameCategory}
       noteCategories={noteCategories}
-      registerElement={focusManagement.registerElement}
-      getFocusClasses={focusManagement.getFocusClasses}
-      focusElement={focusManagement.focusElement}
-      setFocusFromClick={focusManagement.setFocusFromClick}
+      registerElement={() => {}} // No-op since focus management is handled at main layout level
+      getFocusClasses={() => ({})} // Return empty since focus management is handled at main layout level
+      focusElement={() => {}} // No-op since focus management is handled at main layout level
+      setFocusFromClick={() => {}} // No-op since focus management is handled at main layout level
     />
   );
 };

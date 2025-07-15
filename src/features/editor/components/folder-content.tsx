@@ -1,6 +1,6 @@
 import React from 'react';
-import { FolderContentView } from '../features/editor';
-import type { Note, Category } from '../types/database';
+import { FolderContentView } from '../index';
+import type { Note, Category } from '../../../types/database';
 
 interface FolderContentProps {
   selectedFolder: Category;

@@ -1,6 +1,6 @@
 import React from 'react';
-import { EditorWrapper, EditorContainer, WelcomeScreen } from '../features/editor';
-import type { Note } from '../types/database';
+import { EditorWrapper, EditorContainer, WelcomeScreen } from '../index';
+import type { Note } from '../../../types/database';
 
 interface SinglePaneContentProps {
   selectedNote: Note | null;

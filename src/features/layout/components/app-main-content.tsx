@@ -1,7 +1,7 @@
 import React from 'react';
-import { ConfigView } from '../features/editor/components/config-view';
-import { HotkeysView } from '../features/editor/components/hotkeys-view';
-import { FolderContent, DualPaneContent, SinglePaneContent } from './';
+import { ConfigView } from '../../editor/components/config-view';
+import { HotkeysView } from '../../editor/components/hotkeys-view';
+import { FolderContent, DualPaneContent, SinglePaneContent } from '../../editor';
 import {
   useNotesData,
   useNotesActions,
@@ -10,14 +10,13 @@ import {
   useCategoryManagement,
   useAppHandlers,
   useNotesStorage
-} from '../features/notes/hooks';
+} from '../../notes/hooks';
 import {
   useViewState,
   usePaneState,
-  usePaneActions,
-  useFocusManagement
-} from '../features/layout';
-import { useEditorLayout } from '../features/layout';
+  usePaneActions
+} from '../hooks';
+import { useEditorLayout } from '../hooks';
 
 // Simple wrapper components for views that don't need props
 const ConfigContent = () => <ConfigView />;
@@ -91,16 +90,7 @@ export const AppMainContent: React.FC = () => {
     createNewNote,
     loadAllNotes: () => Promise.resolve(),
     loadNoteCategories: () => Promise.resolve([]),
-    focusElement: (element) => focusManagement.focusElement(element)
-  });
-
-  // Focus management
-  const focusManagement = useFocusManagement({
-    onFocusChange: () => {},
-    onToggleSidebar: () => {},
-    onToggleActivityBar: () => {},
-    sidebarCollapsed: false,
-    activityBarVisible: true
+    focusElement: () => {} // No-op since focus management is handled at main layout level
   });
 
   // Helper functions
@@ -162,11 +152,11 @@ export const AppMainContent: React.FC = () => {
       onContentChange={handleContentChange}
       onCreateNote={handleCreateNote}
       onCreateFolder={handleCreateFolder}
-      onFocusSearch={() => focusManagement.focusElement('sidebar-search')}
+      onFocusSearch={() => {}} // No-op since focus management is handled at main layout level
       toolbarVisible={toolbarVisible}
-      focusClasses={focusManagement.getFocusClasses('editor')}
-      onRegisterElement={(ref) => focusManagement.registerElement('editor', ref)}
-      onSetFocusFromClick={() => focusManagement.setFocusFromClick('editor')}
+      focusClasses={{}} // Empty since focus management is handled at main layout level
+      onRegisterElement={() => {}} // No-op since focus management is handled at main layout level
+      onSetFocusFromClick={() => {}} // No-op since focus management is handled at main layout level
     />
   );
 };

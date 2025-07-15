@@ -1,7 +1,7 @@
 import React from 'react';
-import { DualPaneEditor } from '../features/editor';
-import type { Note } from '../types/database';
-import type { PaneId } from '../features/layout/hooks/use-layout';
+import { DualPaneEditor } from '../index';
+import type { Note } from '../../../types/database';
+import type { PaneId } from '../../layout/hooks/use-layout';
 
 interface DualPaneContentProps {
   leftNote: Note | null;
