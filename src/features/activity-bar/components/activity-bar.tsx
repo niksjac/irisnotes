@@ -138,7 +138,7 @@ export function ActivityBar({
               justifyContent: 'center',
               gap: '2px',
               cursor: 'default',
-              color: 'var(--iris-text-2)',
+              color: 'var(--text-2)',
               fontSize: '10px',
               fontWeight: '500',
               padding: '2px',

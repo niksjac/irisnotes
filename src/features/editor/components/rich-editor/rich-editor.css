@@ -50,7 +50,7 @@
   margin-bottom: 5px;
   /* max-inline-size: none; */
   width: fit-content;
-  font-size: var(--iris-editor-font-size, 14px);
+  font-size: var(--editor-font-size, 14px);
   font-weight: 100;
   font-family: consolas;
   min-height: 1.2em; /* Ensure empty lines have height for cursor visibility */
@@ -63,42 +63,42 @@
 
 /* Header styles with dynamic sizing */
 .rich-editor-view h1 {
-  font-size: var(--iris-editor-font-size-h1, 28px);
+  font-size: var(--editor-font-size-h1, 28px);
   font-weight: 700;
   margin: 0.5em 0;
   min-height: 1.2em;
 }
 
 .rich-editor-view h2 {
-  font-size: var(--iris-editor-font-size-h2, 21px);
+  font-size: var(--editor-font-size-h2, 21px);
   font-weight: 600;
   margin: 0.5em 0;
   min-height: 1.2em;
 }
 
 .rich-editor-view h3 {
-  font-size: var(--iris-editor-font-size-h3, 17px);
+  font-size: var(--editor-font-size-h3, 17px);
   font-weight: 600;
   margin: 0.5em 0;
   min-height: 1.2em;
 }
 
 .rich-editor-view h4 {
-  font-size: var(--iris-editor-font-size-h4, 15px);
+  font-size: var(--editor-font-size-h4, 15px);
   font-weight: 600;
   margin: 0.5em 0;
   min-height: 1.2em;
 }
 
 .rich-editor-view h5 {
-  font-size: var(--iris-editor-font-size-h5, 14px);
+  font-size: var(--editor-font-size-h5, 14px);
   font-weight: 600;
   margin: 0.5em 0;
   min-height: 1.2em;
 }
 
 .rich-editor-view h6 {
-  font-size: var(--iris-editor-font-size-h6, 12px);
+  font-size: var(--editor-font-size-h6, 12px);
   font-weight: 600;
   margin: 0.5em 0;
   min-height: 1.2em;
@@ -106,9 +106,9 @@
 
 /* Code styling with dynamic font size */
 .rich-editor-view code {
-  font-size: var(--iris-editor-font-size-code, 12px);
+  font-size: var(--editor-font-size-code, 12px);
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  background: var(--iris-bg-tertiary, #f3f4f6);
+  background: var(--bg-tertiary, #f3f4f6);
   padding: 2px 4px;
   border-radius: 3px;
 }
@@ -116,7 +116,7 @@
 .rich-editor-view pre code {
   display: block;
   padding: 8px 12px;
-  background: var(--iris-bg-tertiary, #f3f4f6);
+  background: var(--bg-tertiary, #f3f4f6);
   border-radius: 6px;
 }
 

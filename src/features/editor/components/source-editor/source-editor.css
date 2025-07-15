@@ -10,17 +10,17 @@
   height: 100%;
   width: 100%;
   /* border: 5px solid red; */
-  background-color: var(--iris-editor-background-color);
+  background-color: var(--editor-bg);
 }
 
 .source-editor-container .cm-editor {
   height: 100%;
   width: 100%;
-  background-color: var(--iris-editor-background-color);
+  background-color: var(--editor-bg);
 }
 
 .source-editor-container .cm-editor .cm-line {
-  font-size: var(--iris-editor-font-size, 14px);
+  font-size: var(--editor-font-size, 14px);
   font-family: Consolas;
   font-weight: 100;
   min-height: 1.2em; /* Ensure empty lines have height for cursor visibility */
@@ -36,5 +36,5 @@
 }
 
 .source-editor-container .cm-gutters {
-  background-color: var(--iris-editor-background-color);
+  background-color: var(--editor-bg);
 }

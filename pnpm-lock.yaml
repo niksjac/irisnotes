@@ -80,9 +80,6 @@ importers:
       lucide-react:
         specifier: ^0.513.0
         version: 0.513.0(react@18.3.1)
-      open-props:
-        specifier: ^1.7.15
-        version: 1.7.15
       prosemirror-commands:
         specifier: ^1.7.1
         version: 1.7.1
@@ -1235,9 +1232,6 @@ packages:
   normalize-range@0.1.2:
     resolution: {integrity: sha512-bdok/XvKII3nUpklnV6P2hxtMNrCboOjAcyBuQnWEhO665FwrSNRxU+AqpsyvO6LgGYPspN+lu5CLtw4jPRKNA==}
     engines: {node: '>=0.10.0'}
-
-  open-props@1.7.15:
-    resolution: {integrity: sha512-TvyN35N02w1wmIsz6SUInEo0RaVvSvIj794qlHjkmeTFuBYu2vzV6LbZyE5D8/c5UsGtRudl4ScK1jkabPBpGw==}
 
   orderedmap@2.1.1:
     resolution: {integrity: sha512-TvAWxi0nDe1j/rtMcWcIj94+Ffe6n7zhow33h40SKxmsmozs6dz/e+EajymfoFcHd7sxNn8yHM8839uixMOV6g==}
@@ -2524,8 +2518,6 @@ snapshots:
       abbrev: 2.0.0
 
   normalize-range@0.1.2: {}
-
-  open-props@1.7.15: {}
 
   orderedmap@2.1.1: {}
 

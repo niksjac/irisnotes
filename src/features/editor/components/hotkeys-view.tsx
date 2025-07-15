@@ -83,31 +83,31 @@ export function HotkeysView() {
 
   return (
     <div style={{
-      padding: 'var(--iris-space-lg)',
+      padding: 'var(--space-lg)',
       height: '100%',
       overflow: 'auto',
-      background: 'var(--iris-bg-primary)'
+      background: 'var(--bg-primary)'
     }}>
       <h1 style={{
-        fontSize: 'var(--iris-font-size-xl)',
+        fontSize: 'var(--font-size-xl)',
         fontWeight: '600',
-        margin: '0 0 var(--iris-space-lg) 0',
-        color: 'var(--iris-text)'
+        margin: '0 0 var(--space-lg) 0',
+        color: 'var(--text)'
       }}>
         Keyboard Shortcuts
       </h1>
 
       <div style={{
-        marginBottom: 'var(--iris-space-lg)',
-        padding: 'var(--iris-space-md)',
-        background: 'var(--iris-bg-secondary)',
-        border: '1px solid var(--iris-border)',
+        marginBottom: 'var(--space-lg)',
+        padding: 'var(--space-md)',
+        background: 'var(--bg-secondary)',
+        border: '1px solid var(--border)',
         borderRadius: '6px'
       }}>
         <p style={{
           margin: 0,
-          fontSize: 'var(--iris-font-size-sm)',
-          color: 'var(--iris-text-muted)',
+          fontSize: 'var(--font-size-sm)',
+          color: 'var(--text-3)',
           lineHeight: '1.5'
         }}>
           <strong>Note:</strong> On macOS, use Cmd (⌘) instead of Ctrl for most shortcuts.
@@ -118,50 +118,50 @@ export function HotkeysView() {
       {categories.map(category => {
         const categoryHotkeys = hotkeys.filter(h => h.category === category);
         return (
-          <section key={category} style={{ marginBottom: 'var(--iris-space-xl)' }}>
+          <section key={category} style={{ marginBottom: 'var(--space-xl)' }}>
             <h2 style={{
-              fontSize: 'var(--iris-font-size-lg)',
+              fontSize: 'var(--font-size-lg)',
               fontWeight: '500',
-              margin: '0 0 var(--iris-space-md) 0',
-              color: 'var(--iris-text)',
-              borderBottom: '1px solid var(--iris-border)',
-              paddingBottom: 'var(--iris-space-sm)'
+              margin: '0 0 var(--space-md) 0',
+              color: 'var(--text)',
+              borderBottom: '1px solid var(--border)',
+              paddingBottom: 'var(--space-sm)'
             }}>
               {category}
             </h2>
 
             <div style={{
               display: 'grid',
-              gap: 'var(--iris-space-xs)',
-              background: 'var(--iris-bg-secondary)',
-              border: '1px solid var(--iris-border)',
+              gap: 'var(--space-xs)',
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border)',
               borderRadius: '6px',
-              padding: 'var(--iris-space-md)'
+              padding: 'var(--space-md)'
             }}>
               {categoryHotkeys.map((hotkey, index) => (
                 <div key={index} style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: 'var(--iris-space-sm)',
-                  background: 'var(--iris-bg-primary)',
-                  border: '1px solid var(--iris-border)',
+                  padding: 'var(--space-sm)',
+                  background: 'var(--bg-primary)',
+                  border: '1px solid var(--border)',
                   borderRadius: '4px'
                 }}>
                   <span style={{
-                    color: 'var(--iris-text)',
-                    fontSize: 'var(--iris-font-size-sm)'
+                    color: 'var(--text)',
+                    fontSize: 'var(--font-size-sm)'
                   }}>
                     {hotkey.description}
                   </span>
                   <code style={{
-                    background: 'var(--iris-bg-tertiary)',
-                    color: 'var(--iris-text)',
+                    background: 'var(--bg-tertiary)',
+                    color: 'var(--text)',
                     padding: '2px 6px',
                     borderRadius: '3px',
-                    fontSize: 'var(--iris-font-size-xs)',
+                    fontSize: 'var(--font-size-xs)',
                     fontFamily: 'monospace',
-                    border: '1px solid var(--iris-border)'
+                    border: '1px solid var(--border)'
                   }}>
                     {formatKey(hotkey.key)}
                   </code>
@@ -173,25 +173,25 @@ export function HotkeysView() {
       })}
 
       <section style={{
-        marginTop: 'var(--iris-space-xl)',
-        padding: 'var(--iris-space-md)',
-        background: 'var(--iris-bg-secondary)',
-        border: '1px solid var(--iris-border)',
+        marginTop: 'var(--space-xl)',
+        padding: 'var(--space-md)',
+        background: 'var(--bg-secondary)',
+        border: '1px solid var(--border)',
         borderRadius: '6px'
       }}>
         <h3 style={{
-          fontSize: 'var(--iris-font-size-md)',
+          fontSize: 'var(--font-size-lg)',
           fontWeight: '500',
-          margin: '0 0 var(--iris-space-sm) 0',
-          color: 'var(--iris-text)'
+          margin: '0 0 var(--space-sm) 0',
+          color: 'var(--text)'
         }}>
           Tips
         </h3>
         <ul style={{
           margin: 0,
-          paddingLeft: 'var(--iris-space-lg)',
-          color: 'var(--iris-text-muted)',
-          fontSize: 'var(--iris-font-size-sm)',
+          paddingLeft: 'var(--space-lg)',
+          color: 'var(--text-3)',
+          fontSize: 'var(--font-size-sm)',
           lineHeight: '1.6'
         }}>
           <li>Most shortcuts work when focus is on the editor</li>

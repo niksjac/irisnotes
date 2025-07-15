@@ -34,9 +34,9 @@ export const SinglePaneContent = React.memo(({
   >
     {selectedNote ? (
       <>
-        <div className="h-[50px] flex items-center px-4 bg-[var(--iris-editor-bg)]">
-          <input
-            className="w-full border-0 bg-transparent text-lg font-semibold outline-none py-2 text-[var(--iris-text)] placeholder:text-[var(--iris-text-3)] placeholder:italic"
+              <div className="h-[50px] flex items-center px-4 bg-[var(--editor-bg)]">
+        <input
+          className="w-full border-0 bg-transparent text-lg font-semibold outline-none py-2 text-[var(--text)] placeholder:text-[var(--text-3)] placeholder:italic"
             type="text"
             value={selectedNote.title}
             onChange={(e) => onTitleChange(selectedNote.id, e.target.value)}

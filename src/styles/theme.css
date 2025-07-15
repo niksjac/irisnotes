@@ -10,95 +10,95 @@
 
 :root {
   /* App-specific theme variables - users can override these */
-  --iris-primary: var(--blue-6);
-  --iris-primary-hover: var(--blue-7);
-  --iris-primary-active: var(--blue-8);
-  --iris-primary-alpha: #3b82f620;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-active: #1e40af;
+  --primary-alpha: #3b82f620;
 
-  --iris-surface: var(--gray-0);
-  --iris-surface-2: var(--gray-1);
-  --iris-surface-3: var(--gray-2);
+  --surface: #f9fafb;
+  --surface-2: #f3f4f6;
+  --surface-3: #e5e7eb;
 
-  --iris-bg-primary: var(--gray-0);
-  --iris-bg-secondary: var(--gray-1);
-  --iris-bg-tertiary: var(--gray-2);
+  --bg-primary: #f9fafb;
+  --bg-secondary: #f3f4f6;
+  --bg-tertiary: #e5e7eb;
 
-  --iris-text: var(--gray-9);
-  --iris-text-2: var(--gray-7);
-  --iris-text-3: var(--gray-6);
-  --iris-text-primary: var(--gray-9);
-  --iris-text-secondary: var(--gray-7);
+  --text: #111827;
+  --text-2: #374151;
+  --text-3: #4b5563;
+  --text-primary: #111827;
+  --text-secondary: #374151;
 
-  --iris-border: var(--gray-3);
-  --iris-border-hover: var(--gray-4);
+  --border: #d1d5db;
+  --border-hover: #9ca3af;
 
-  --iris-success: var(--green-6);
-  --iris-warning: var(--yellow-6);
-  --iris-error: var(--red-6);
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
 
-  --iris-editor-bg: var(--gray-0);
-  --iris-editor-selection: var(--blue-2);
-  --iris-editor-cursor: var(--blue-6);
+  --editor-bg: #f9fafb;
+  --editor-selection: #bfdbfe;
+  --editor-cursor: #2563eb;
 
-  --iris-sidebar-width: 300px;
-  --iris-sidebar-collapsed-width: 0px;
-  --iris-activity-bar-width: 48px;
+  --sidebar-width: 300px;
+  --sidebar-collapsed-width: 0px;
+  --activity-bar-width: 48px;
 
   /* Typography */
-  --iris-font-family: var(--font-sans);
-  --iris-font-mono: var(--font-mono);
-  --iris-font-size-xs: var(--font-size-00);
-  --iris-font-size-sm: var(--font-size-0);
-  --iris-font-size-base: var(--font-size-1);
-  --iris-font-size-lg: var(--font-size-2);
-  --iris-font-size-xl: var(--font-size-3);
+  --font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-mono: 'Consolas', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Liberation Mono', 'Courier New', monospace;
+  --font-size-xs: 0.5rem;
+  --font-size-sm: 0.75rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.1rem;
+  --font-size-xl: 1.25rem;
 
   /* Editor-specific typography */
-  /* --iris-editor-font-family: 'Consolas', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Liberation Mono', 'Courier New', monospace; */
-  /* --iris-editor-font-size: 11px; */
+  /* --editor-font-family: 'Consolas', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Liberation Mono', 'Courier New', monospace; */
+  /* --editor-font-size: 11px; */
 
   /* Spacing */
-  --iris-space-xs: var(--size-1);
-  --iris-space-sm: var(--size-2);
-  --iris-space-md: var(--size-3);
-  --iris-space-lg: var(--size-4);
-  --iris-space-xl: var(--size-5);
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.25rem;
+  --space-xl: 1.5rem;
 
   /* Radius */
-  --iris-radius-sm: var(--radius-2);
-  --iris-radius-md: var(--radius-3);
-  --iris-radius-lg: var(--radius-4);
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.375rem;
 
   /* Shadows */
-  --iris-shadow-sm: var(--shadow-2);
-  --iris-shadow-md: var(--shadow-3);
-  --iris-shadow-lg: var(--shadow-4);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
 /* Dark theme */
 @media (prefers-color-scheme: dark) {
   :root {
-    --iris-primary-alpha: #3b82f625;
+    --primary-alpha: #3b82f625;
 
-    --iris-surface: var(--gray-9);
-    --iris-surface-2: var(--gray-8);
-    --iris-surface-3: var(--gray-7);
+    --surface: #111827;
+    --surface-2: #1f2937;
+    --surface-3: #374151;
 
-    --iris-bg-primary: var(--gray-9);
-    --iris-bg-secondary: var(--gray-8);
-    --iris-bg-tertiary: var(--gray-7);
+    --bg-primary: #111827;
+    --bg-secondary: #1f2937;
+    --bg-tertiary: #374151;
 
-    --iris-text: var(--gray-1);
-    --iris-text-2: var(--gray-3);
-    --iris-text-3: var(--gray-4);
-    --iris-text-primary: var(--gray-1);
-    --iris-text-secondary: var(--gray-3);
+    --text: #f3f4f6;
+    --text-2: #d1d5db;
+    --text-3: #9ca3af;
+    --text-primary: #f3f4f6;
+    --text-secondary: #d1d5db;
 
-    --iris-border: var(--gray-7);
-    --iris-border-hover: var(--gray-6);
+    --border: #374151;
+    --border-hover: #4b5563;
 
-    --iris-editor-bg: var(--gray-9);
-    --iris-editor-selection: var(--blue-8);
+    --editor-bg: #111827;
+    --editor-selection: #1e40af;
   }
 }
 

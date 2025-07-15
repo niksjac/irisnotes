@@ -1,8 +1,8 @@
 /* Activity Bar */
 .activity-bar {
   width: 35px;
-  background-color: var(--iris-surface-3);
-  border-right: 1px solid var(--iris-border);
+  background-color: var(--surface-3);
+  border-right: 1px solid var(--border);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -19,8 +19,8 @@
 .activity-bar-items {
   display: flex;
   flex-direction: column;
-  gap: var(--iris-space-sm);
-  padding: var(--iris-space-xs) 0;
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
   align-items: center;
 }
 
@@ -33,41 +33,41 @@
   border: none;
   border-radius: 0;
   background-color: transparent;
-  color: var(--iris-text-2);
+  color: var(--text-2);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: var(--iris-font-size-lg);
+  font-size: var(--font-size-lg);
   font-weight: 600;
   padding: 0;
 }
 
 .activity-bar-item:hover {
   background-color: transparent;
-  color: var(--iris-text);
+  color: var(--text);
   transform: scale(1.1);
 }
 
 .activity-bar-item.active {
   background-color: transparent;
-  color: var(--iris-primary);
+  color: var(--primary);
   transform: scale(1.1);
 }
 
 .activity-bar-separator {
   margin-top: auto;
-  padding-top: var(--iris-space-sm);
-  border-top: 1px solid var(--iris-border);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  gap: var(--iris-space-sm);
+  gap: var(--space-sm);
   padding-left: 0;
   padding-right: 0;
-  padding-bottom: var(--iris-space-xs);
+  padding-bottom: var(--space-xs);
   align-items: center;
 }
 
 .dual-pane-toggle {
-  font-size: var(--iris-font-size-lg) !important;
+  font-size: var(--font-size-lg) !important;
   font-weight: normal !important;
 }
 
@@ -77,14 +77,14 @@
     width: 100%;
     height: 48px;
     border-right: none;
-    border-bottom: 1px solid var(--iris-border);
+    border-bottom: 1px solid var(--border);
   }
 
   .activity-bar-content {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: 0 var(--iris-space-md);
+    padding: 0 var(--space-md);
   }
 
   .activity-bar-items {
@@ -96,7 +96,7 @@
     padding: 0;
     flex-direction: row;
     border-top: none;
-    border-left: 1px solid var(--iris-border);
-    padding-left: var(--iris-space-md);
+    border-left: 1px solid var(--border);
+    padding-left: var(--space-md);
   }
 }

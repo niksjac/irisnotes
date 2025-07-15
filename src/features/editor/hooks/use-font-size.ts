@@ -71,15 +71,15 @@ export const useFontSize = (config: Partial<FontSizeConfig> = {}) => {
     const root = document.documentElement;
 
     // Set CSS custom properties for editor-specific font sizes
-    root.style.setProperty('--iris-editor-font-size', `${sizes.base}px`);
-    root.style.setProperty('--iris-editor-font-size-h1', `${sizes.h1}px`);
-    root.style.setProperty('--iris-editor-font-size-h2', `${sizes.h2}px`);
-    root.style.setProperty('--iris-editor-font-size-h3', `${sizes.h3}px`);
-    root.style.setProperty('--iris-editor-font-size-h4', `${sizes.h4}px`);
-    root.style.setProperty('--iris-editor-font-size-h5', `${sizes.h5}px`);
-    root.style.setProperty('--iris-editor-font-size-h6', `${sizes.h6}px`);
-    root.style.setProperty('--iris-editor-font-size-small', `${sizes.small}px`);
-    root.style.setProperty('--iris-editor-font-size-code', `${sizes.code}px`);
+    root.style.setProperty('--editor-font-size', `${sizes.base}px`);
+    root.style.setProperty('--editor-font-size-h1', `${sizes.h1}px`);
+    root.style.setProperty('--editor-font-size-h2', `${sizes.h2}px`);
+    root.style.setProperty('--editor-font-size-h3', `${sizes.h3}px`);
+    root.style.setProperty('--editor-font-size-h4', `${sizes.h4}px`);
+    root.style.setProperty('--editor-font-size-h5', `${sizes.h5}px`);
+    root.style.setProperty('--editor-font-size-h6', `${sizes.h6}px`);
+    root.style.setProperty('--editor-font-size-small', `${sizes.small}px`);
+    root.style.setProperty('--editor-font-size-code', `${sizes.code}px`);
   }, [getFontSizes]);
 
   return {

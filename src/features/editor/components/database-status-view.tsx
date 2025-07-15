@@ -67,8 +67,8 @@ export function DatabaseStatusView() {
       right: '20px',
       width: '300px',
       maxHeight: '80vh',
-      background: 'var(--iris-bg-primary)',
-      border: '1px solid var(--iris-border)',
+      background: 'var(--bg-primary)',
+      border: '1px solid var(--border)',
       borderRadius: '8px',
       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
       zIndex: 1000,
@@ -76,9 +76,9 @@ export function DatabaseStatusView() {
     }}>
       {/* Header */}
       <div style={{
-        padding: 'var(--iris-space-md)',
-        borderBottom: '1px solid var(--iris-border)',
-        background: 'var(--iris-bg-secondary)'
+        padding: 'var(--space-md)',
+        borderBottom: '1px solid var(--border)',
+        background: 'var(--bg-secondary)'
       }}>
         <div style={{
           display: 'flex',
@@ -87,9 +87,9 @@ export function DatabaseStatusView() {
         }}>
           <h3 style={{
             margin: 0,
-            fontSize: 'var(--iris-font-size-md)',
+            fontSize: 'var(--font-size-lg)',
             fontWeight: '600',
-            color: 'var(--iris-text)'
+            color: 'var(--text)'
           }}>
             Database Status
           </h3>
@@ -98,11 +98,11 @@ export function DatabaseStatusView() {
             disabled={refreshing}
             style={{
               padding: '4px 8px',
-              fontSize: 'var(--iris-font-size-xs)',
-              border: '1px solid var(--iris-border)',
+              fontSize: 'var(--font-size-xs)',
+              border: '1px solid var(--border)',
               borderRadius: '4px',
-              background: 'var(--iris-bg-primary)',
-              color: 'var(--iris-text)',
+              background: 'var(--bg-primary)',
+              color: 'var(--text)',
               cursor: refreshing ? 'not-allowed' : 'pointer',
               opacity: refreshing ? 0.6 : 1
             }}
@@ -114,13 +114,13 @@ export function DatabaseStatusView() {
 
       {/* Status Indicator */}
       <div style={{
-        padding: 'var(--iris-space-md)',
-        borderBottom: '1px solid var(--iris-border)'
+        padding: 'var(--space-md)',
+        borderBottom: '1px solid var(--border)'
       }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 'var(--iris-space-sm)'
+          gap: 'var(--space-sm)'
         }}>
           <div style={{
             width: '12px',
@@ -130,21 +130,21 @@ export function DatabaseStatusView() {
           }} />
           <span style={{
             fontWeight: '500',
-            color: 'var(--iris-text)',
-            fontSize: 'var(--iris-font-size-sm)'
+            color: 'var(--text)',
+            fontSize: 'var(--font-size-sm)'
           }}>
             {getStatusText()}
           </span>
         </div>
         {error && (
           <div style={{
-            marginTop: 'var(--iris-space-xs)',
-            padding: 'var(--iris-space-sm)',
+            marginTop: 'var(--space-xs)',
+            padding: 'var(--space-sm)',
             background: '#fef2f2',
             border: '1px solid #fecaca',
             borderRadius: '4px',
             color: '#dc2626',
-            fontSize: 'var(--iris-font-size-xs)'
+            fontSize: 'var(--font-size-xs)'
           }}>
             {error}
           </div>
@@ -152,24 +152,24 @@ export function DatabaseStatusView() {
       </div>
 
       {/* Database Information */}
-      <div style={{ padding: 'var(--iris-space-md)' }}>
+      <div style={{ padding: 'var(--space-md)' }}>
         <div style={{
           display: 'grid',
-          gap: 'var(--iris-space-md)'
+          gap: 'var(--space-md)'
         }}>
           {/* Backend Type */}
           <div>
             <div style={{
-              fontSize: 'var(--iris-font-size-xs)',
+              fontSize: 'var(--font-size-xs)',
               fontWeight: '500',
-              color: 'var(--iris-text-muted)',
+              color: 'var(--text-3)',
               marginBottom: '2px'
             }}>
               Backend
             </div>
             <div style={{
-              fontSize: 'var(--iris-font-size-sm)',
-              color: 'var(--iris-text)',
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--text)',
               fontFamily: 'monospace'
             }}>
               {databaseInfo?.backend || 'Unknown'}
@@ -179,16 +179,16 @@ export function DatabaseStatusView() {
           {/* Notes Count */}
           <div>
             <div style={{
-              fontSize: 'var(--iris-font-size-xs)',
+              fontSize: 'var(--font-size-xs)',
               fontWeight: '500',
-              color: 'var(--iris-text-muted)',
+              color: 'var(--text-3)',
               marginBottom: '2px'
             }}>
               Total Notes
             </div>
             <div style={{
-              fontSize: 'var(--iris-font-size-sm)',
-              color: 'var(--iris-text)',
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--text)',
               fontWeight: '500'
             }}>
               {databaseInfo?.note_count ?? notes.length}
@@ -198,16 +198,16 @@ export function DatabaseStatusView() {
           {/* Storage Size */}
           <div>
             <div style={{
-              fontSize: 'var(--iris-font-size-xs)',
+              fontSize: 'var(--font-size-xs)',
               fontWeight: '500',
-              color: 'var(--iris-text-muted)',
+              color: 'var(--text-3)',
               marginBottom: '2px'
             }}>
               Storage Size
             </div>
             <div style={{
-              fontSize: 'var(--iris-font-size-sm)',
-              color: 'var(--iris-text)'
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--text)'
             }}>
               {formatBytes(databaseInfo?.storage_size)}
             </div>
@@ -216,16 +216,16 @@ export function DatabaseStatusView() {
           {/* Last Sync */}
           <div>
             <div style={{
-              fontSize: 'var(--iris-font-size-xs)',
+              fontSize: 'var(--font-size-xs)',
               fontWeight: '500',
-              color: 'var(--iris-text-muted)',
+              color: 'var(--text-3)',
               marginBottom: '2px'
             }}>
               Last Sync
             </div>
             <div style={{
-              fontSize: 'var(--iris-font-size-sm)',
-              color: 'var(--iris-text)'
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--text)'
             }}>
               {formatDate(databaseInfo?.last_sync)}
             </div>
@@ -234,16 +234,16 @@ export function DatabaseStatusView() {
           {/* Available Storages */}
           <div>
             <div style={{
-              fontSize: 'var(--iris-font-size-xs)',
+              fontSize: 'var(--font-size-xs)',
               fontWeight: '500',
-              color: 'var(--iris-text-muted)',
+              color: 'var(--text-3)',
               marginBottom: '2px'
             }}>
               Available Storages
             </div>
             <div style={{
-              fontSize: 'var(--iris-font-size-sm)',
-              color: 'var(--iris-text)'
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--text)'
             }}>
               {storageManager?.getStorages().join(', ') || 'None'}
             </div>
@@ -252,9 +252,9 @@ export function DatabaseStatusView() {
           {/* Connection Status */}
           <div>
             <div style={{
-              fontSize: 'var(--iris-font-size-xs)',
+              fontSize: 'var(--font-size-xs)',
               fontWeight: '500',
-              color: 'var(--iris-text-muted)',
+              color: 'var(--text-3)',
               marginBottom: '2px'
             }}>
               Connection
@@ -262,7 +262,7 @@ export function DatabaseStatusView() {
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 'var(--iris-space-xs)'
+              gap: 'var(--space-xs)'
             }}>
               <div style={{
                 width: '8px',
@@ -271,8 +271,8 @@ export function DatabaseStatusView() {
                 background: storageManager ? '#27ae60' : '#e74c3c'
               }} />
               <span style={{
-                fontSize: 'var(--iris-font-size-sm)',
-                color: 'var(--iris-text)'
+                fontSize: 'var(--font-size-sm)',
+                color: 'var(--text)'
               }}>
                 {storageManager ? 'Connected' : 'Disconnected'}
               </span>
@@ -282,24 +282,24 @@ export function DatabaseStatusView() {
 
         {/* Actions */}
         <div style={{
-          marginTop: 'var(--iris-space-lg)',
-          paddingTop: 'var(--iris-space-md)',
-          borderTop: '1px solid var(--iris-border)'
+          marginTop: 'var(--space-lg)',
+          paddingTop: 'var(--space-md)',
+          borderTop: '1px solid var(--border)'
         }}>
           <div style={{
             display: 'grid',
-            gap: 'var(--iris-space-sm)'
+            gap: 'var(--space-sm)'
           }}>
             <button
               onClick={loadDatabaseInfo}
               disabled={refreshing}
               style={{
-                padding: 'var(--iris-space-sm)',
-                fontSize: 'var(--iris-font-size-xs)',
-                border: '1px solid var(--iris-border)',
+                padding: 'var(--space-sm)',
+                fontSize: 'var(--font-size-xs)',
+                border: '1px solid var(--border)',
                 borderRadius: '4px',
-                background: 'var(--iris-bg-secondary)',
-                color: 'var(--iris-text)',
+                background: 'var(--bg-secondary)',
+                color: 'var(--text)',
                 cursor: refreshing ? 'not-allowed' : 'pointer',
                 opacity: refreshing ? 0.6 : 1
               }}
@@ -312,11 +312,11 @@ export function DatabaseStatusView() {
                 onClick={() => storageManager.syncAllStorages()}
                 disabled={refreshing}
                 style={{
-                  padding: 'var(--iris-space-sm)',
-                  fontSize: 'var(--iris-font-size-xs)',
-                  border: '1px solid var(--iris-accent)',
+                  padding: 'var(--space-sm)',
+                  fontSize: 'var(--font-size-xs)',
+                  border: '1px solid var(--primary)',
                   borderRadius: '4px',
-                  background: 'var(--iris-accent)',
+                  background: 'var(--primary)',
                   color: 'white',
                   cursor: refreshing ? 'not-allowed' : 'pointer',
                   opacity: refreshing ? 0.6 : 1

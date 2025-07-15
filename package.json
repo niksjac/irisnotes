@@ -34,7 +34,6 @@
     "jotai": "^2.12.5",
     "js-beautify": "^1.15.4",
     "lucide-react": "^0.513.0",
-    "open-props": "^1.7.15",
     "prosemirror-commands": "^1.7.1",
     "prosemirror-dropcursor": "^1.8.2",
     "prosemirror-example-setup": "^1.2.3",
