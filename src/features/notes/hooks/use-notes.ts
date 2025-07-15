@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Note } from '../../../types';
-import { parseTextWithColors } from '../../../utils/text-parser';
+import { parseTextWithColors } from '../../../shared';
 import { useConfig } from '../../../hooks/use-config';
 
 export type PaneId = 'left' | 'right';
