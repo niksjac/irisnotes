@@ -8,5 +8,9 @@ export { WelcomeScreen } from './components/welcome-screen';
 export { HotkeysView } from './components/hotkeys-view';
 
 // Hooks
-export { useLineWrapping } from './hooks/use-line-wrapping';
 export { useFontSize } from './hooks/use-font-size';
+export { useLineWrapping } from './hooks/use-line-wrapping';
+
+// New focused hooks
+export { useEditorState } from './hooks/use-editor-state';
+export { useEditorActions } from './hooks/use-editor-actions';

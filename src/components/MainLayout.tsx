@@ -2,31 +2,61 @@ import React from 'react';
 import { ActivityBar } from '../features/activity-bar';
 import { ResizableSidebar } from '../features/sidebar';
 import { DatabaseStatusView } from '../features/editor/components/database-status-view';
-import { useAppContext } from '../hooks/useAppContext';
+import {
+  useSidebarState,
+  useSidebarActions,
+  useViewState,
+  useViewActions,
+  usePaneState,
+  usePaneActions,
+  useEditorLayout,
+  useFocusManagement
+} from '../features/layout';
+import { useEditorState, useEditorActions } from '../features/editor';
 import { AppSidebar } from './AppSidebar';
 import { AppMainContent } from './AppMainContent';
 
 export const MainLayout: React.FC = () => {
+  // Layout state - focused hooks
+  const { sidebarCollapsed } = useSidebarState();
   const {
-    sidebarCollapsed,
     activityBarVisible,
     configViewActive,
     hotkeysViewActive,
-    databaseStatusVisible,
-    isDualPaneMode,
-    isWrapping,
-    fontSize,
-    toggleSidebar,
-    handleSidebarCollapsedChange,
+    databaseStatusVisible
+  } = useViewState();
+  const { isDualPaneMode } = usePaneState();
+
+  // Layout actions - focused hooks
+  const { toggleSidebar, handleSidebarCollapsedChange } = useSidebarActions();
+  const {
     toggleConfigView,
     toggleHotkeysView,
-    toggleDatabaseStatus,
-    toggleDualPaneMode,
-    toggleToolbar,
-    toggleLineWrapping,
-    focusManagement,
-    toolbarVisible
-  } = useAppContext();
+    toggleDatabaseStatus
+  } = useViewActions();
+  const { toggleDualPaneMode } = usePaneActions();
+  const { toolbarVisible, toggleToolbar } = useEditorLayout();
+
+  // Editor state and actions - focused hooks
+  const { isWrapping, fontSize } = useEditorState();
+  const { toggleLineWrapping } = useEditorActions();
+
+  // Focus management - existing focused hook
+  const focusManagement = useFocusManagement({
+    onFocusChange: () => {
+      // Focus change callback
+    },
+    onToggleSidebar: () => {
+      if (sidebarCollapsed) {
+        toggleSidebar();
+      }
+    },
+    onToggleActivityBar: () => {
+      // Activity bar toggle if needed
+    },
+    sidebarCollapsed,
+    activityBarVisible
+  });
 
   return (
     <div className="flex flex-col h-screen w-screen">
