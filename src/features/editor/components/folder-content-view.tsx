@@ -71,11 +71,11 @@ export function FolderContentView({
           <p>Create your first note or subfolder to get started</p>
 
           <div className="empty-actions">
-            <button className="create-btn primary" onClick={handleCreateNote}>
+            <button className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors" onClick={handleCreateNote}>
               <Plus size={16} />
               Create Note
             </button>
-            <button className="create-btn secondary" onClick={handleCreateFolder}>
+            <button className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors" onClick={handleCreateFolder}>
               <Plus size={16} />
               Create Subfolder
             </button>
@@ -93,11 +93,11 @@ export function FolderContentView({
           <h2>{selectedFolder.name}</h2>
         </div>
         <div className="folder-actions">
-          <button className="folder-action-btn" onClick={handleCreateNote} title="Create note in this folder">
+          <button className="inline-flex items-center gap-1 p-2 bg-transparent text-gray-600 dark:text-gray-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" onClick={handleCreateNote} title="Create note in this folder">
             <Plus size={16} />
             <FileText size={16} />
           </button>
-          <button className="folder-action-btn" onClick={handleCreateFolder} title="Create subfolder">
+          <button className="inline-flex items-center gap-1 p-2 bg-transparent text-gray-600 dark:text-gray-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" onClick={handleCreateFolder} title="Create subfolder">
             <Plus size={16} />
             <Folder size={16} />
           </button>

@@ -24,7 +24,7 @@ export function WelcomeScreen({
 
         <div className="welcome-actions">
           <button
-            className="welcome-action-btn primary"
+            className="inline-flex flex-col items-center gap-3 p-6 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors min-w-[120px]"
             onClick={onCreateNote}
             title="Create a new note"
           >
@@ -33,7 +33,7 @@ export function WelcomeScreen({
           </button>
 
           <button
-            className="welcome-action-btn"
+            className="inline-flex flex-col items-center gap-3 p-6 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors min-w-[120px]"
             onClick={onCreateFolder}
             title="Create a new folder"
           >
@@ -43,7 +43,7 @@ export function WelcomeScreen({
 
           {onFocusSearch && (
             <button
-              className="welcome-action-btn"
+              className="inline-flex flex-col items-center gap-3 p-6 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors min-w-[120px]"
               onClick={onFocusSearch}
               title="Search existing notes"
             >

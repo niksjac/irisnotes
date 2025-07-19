@@ -121,7 +121,7 @@ export function ResizableSidebar({
           className="absolute top-0 right-0 w-1 h-full cursor-col-resize bg-transparent transition-colors duration-100 hover:bg-blue-500 before:content-[''] before:absolute before:top-0 before:-left-0.5 before:-right-0.5 before:bottom-0"
           onMouseDown={handleMouseDown}
           style={{
-            backgroundColor: isResizing ? 'var(--primary)' : 'transparent'
+            backgroundColor: isResizing ? '#2563eb' : 'transparent'
           }}
         />
       )}

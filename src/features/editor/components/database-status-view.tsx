@@ -49,9 +49,9 @@ export function DatabaseStatusView() {
   };
 
   const getStatusColor = () => {
-    if (error) return '#e74c3c'; // Red for error
-    if (isLoading || refreshing) return '#f39c12'; // Orange for loading
-    return '#27ae60'; // Green for healthy
+    if (error) return 'bg-red-500';
+    if (isLoading || refreshing) return 'bg-yellow-500';
+    return 'bg-green-500';
   };
 
   const getStatusText = () => {
@@ -60,52 +60,22 @@ export function DatabaseStatusView() {
     return 'Healthy';
   };
 
+  const getConnectionStatusColor = () => {
+    return storageManager ? 'bg-green-500' : 'bg-red-500';
+  };
+
   return (
-    <div style={{
-      position: 'fixed',
-      top: '60px',
-      right: '20px',
-      width: '300px',
-      maxHeight: '80vh',
-      background: 'var(--bg-primary)',
-      border: '1px solid var(--border)',
-      borderRadius: '8px',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-      zIndex: 1000,
-      overflow: 'auto'
-    }}>
+    <div className="fixed top-[60px] right-5 w-[300px] max-h-[80vh] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-[1000] overflow-auto">
       {/* Header */}
-      <div style={{
-        padding: 'var(--space-md)',
-        borderBottom: '1px solid var(--border)',
-        background: 'var(--bg-secondary)'
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          <h3 style={{
-            margin: 0,
-            fontSize: 'var(--font-size-lg)',
-            fontWeight: '600',
-            color: 'var(--text)'
-          }}>
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+        <div className="flex items-center justify-between">
+          <h3 className="m-0 text-lg font-semibold text-gray-900 dark:text-gray-100">
             Database Status
           </h3>
           <button
             onClick={loadDatabaseInfo}
             disabled={refreshing}
-            style={{
-              padding: '4px 8px',
-              fontSize: 'var(--font-size-xs)',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              background: 'var(--bg-primary)',
-              color: 'var(--text)',
-              cursor: refreshing ? 'not-allowed' : 'pointer',
-              opacity: refreshing ? 0.6 : 1
-            }}
+            className="px-2 py-1 text-xs border border-gray-200 dark:border-gray-700 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
           >
             {refreshing ? '...' : '↻'}
           </button>
@@ -113,167 +83,81 @@ export function DatabaseStatusView() {
       </div>
 
       {/* Status Indicator */}
-      <div style={{
-        padding: 'var(--space-md)',
-        borderBottom: '1px solid var(--border)'
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--space-sm)'
-        }}>
-          <div style={{
-            width: '12px',
-            height: '12px',
-            borderRadius: '50%',
-            background: getStatusColor()
-          }} />
-          <span style={{
-            fontWeight: '500',
-            color: 'var(--text)',
-            fontSize: 'var(--font-size-sm)'
-          }}>
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2">
+          <div className={`w-3 h-3 rounded-full ${getStatusColor()}`} />
+          <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">
             {getStatusText()}
           </span>
         </div>
         {error && (
-          <div style={{
-            marginTop: 'var(--space-xs)',
-            padding: 'var(--space-sm)',
-            background: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '4px',
-            color: '#dc2626',
-            fontSize: 'var(--font-size-xs)'
-          }}>
+          <div className="mt-1 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-xs">
             {error}
           </div>
         )}
       </div>
 
       {/* Database Information */}
-      <div style={{ padding: 'var(--space-md)' }}>
-        <div style={{
-          display: 'grid',
-          gap: 'var(--space-md)'
-        }}>
+      <div className="p-4">
+        <div className="grid gap-4">
           {/* Backend Type */}
           <div>
-            <div style={{
-              fontSize: 'var(--font-size-xs)',
-              fontWeight: '500',
-              color: 'var(--text-3)',
-              marginBottom: '2px'
-            }}>
+            <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">
               Backend
             </div>
-            <div style={{
-              fontSize: 'var(--font-size-sm)',
-              color: 'var(--text)',
-              fontFamily: 'monospace'
-            }}>
+            <div className="text-sm text-gray-900 dark:text-gray-100 font-mono">
               {databaseInfo?.backend || 'Unknown'}
             </div>
           </div>
 
           {/* Notes Count */}
           <div>
-            <div style={{
-              fontSize: 'var(--font-size-xs)',
-              fontWeight: '500',
-              color: 'var(--text-3)',
-              marginBottom: '2px'
-            }}>
+            <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">
               Total Notes
             </div>
-            <div style={{
-              fontSize: 'var(--font-size-sm)',
-              color: 'var(--text)',
-              fontWeight: '500'
-            }}>
+            <div className="text-sm text-gray-900 dark:text-gray-100 font-medium">
               {databaseInfo?.note_count ?? notes.length}
             </div>
           </div>
 
           {/* Storage Size */}
           <div>
-            <div style={{
-              fontSize: 'var(--font-size-xs)',
-              fontWeight: '500',
-              color: 'var(--text-3)',
-              marginBottom: '2px'
-            }}>
+            <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">
               Storage Size
             </div>
-            <div style={{
-              fontSize: 'var(--font-size-sm)',
-              color: 'var(--text)'
-            }}>
+            <div className="text-sm text-gray-900 dark:text-gray-100">
               {formatBytes(databaseInfo?.storage_size)}
             </div>
           </div>
 
           {/* Last Sync */}
           <div>
-            <div style={{
-              fontSize: 'var(--font-size-xs)',
-              fontWeight: '500',
-              color: 'var(--text-3)',
-              marginBottom: '2px'
-            }}>
+            <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">
               Last Sync
             </div>
-            <div style={{
-              fontSize: 'var(--font-size-sm)',
-              color: 'var(--text)'
-            }}>
+            <div className="text-sm text-gray-900 dark:text-gray-100">
               {formatDate(databaseInfo?.last_sync)}
             </div>
           </div>
 
           {/* Available Storages */}
           <div>
-            <div style={{
-              fontSize: 'var(--font-size-xs)',
-              fontWeight: '500',
-              color: 'var(--text-3)',
-              marginBottom: '2px'
-            }}>
+            <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">
               Available Storages
             </div>
-            <div style={{
-              fontSize: 'var(--font-size-sm)',
-              color: 'var(--text)'
-            }}>
+            <div className="text-sm text-gray-900 dark:text-gray-100">
               {storageManager?.getStorages().join(', ') || 'None'}
             </div>
           </div>
 
           {/* Connection Status */}
           <div>
-            <div style={{
-              fontSize: 'var(--font-size-xs)',
-              fontWeight: '500',
-              color: 'var(--text-3)',
-              marginBottom: '2px'
-            }}>
+            <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5">
               Connection
             </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--space-xs)'
-            }}>
-              <div style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                background: storageManager ? '#27ae60' : '#e74c3c'
-              }} />
-              <span style={{
-                fontSize: 'var(--font-size-sm)',
-                color: 'var(--text)'
-              }}>
+            <div className="flex items-center gap-1">
+              <div className={`w-2 h-2 rounded-full ${getConnectionStatusColor()}`} />
+              <span className="text-sm text-gray-900 dark:text-gray-100">
                 {storageManager ? 'Connected' : 'Disconnected'}
               </span>
             </div>
@@ -281,28 +165,12 @@ export function DatabaseStatusView() {
         </div>
 
         {/* Actions */}
-        <div style={{
-          marginTop: 'var(--space-lg)',
-          paddingTop: 'var(--space-md)',
-          borderTop: '1px solid var(--border)'
-        }}>
-          <div style={{
-            display: 'grid',
-            gap: 'var(--space-sm)'
-          }}>
+        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="grid gap-2">
             <button
               onClick={loadDatabaseInfo}
               disabled={refreshing}
-              style={{
-                padding: 'var(--space-sm)',
-                fontSize: 'var(--font-size-xs)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                background: 'var(--bg-secondary)',
-                color: 'var(--text)',
-                cursor: refreshing ? 'not-allowed' : 'pointer',
-                opacity: refreshing ? 0.6 : 1
-              }}
+              className="p-2 text-xs border border-gray-200 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
             >
               Refresh Status
             </button>
@@ -311,16 +179,7 @@ export function DatabaseStatusView() {
               <button
                 onClick={() => storageManager.syncAllStorages()}
                 disabled={refreshing}
-                style={{
-                  padding: 'var(--space-sm)',
-                  fontSize: 'var(--font-size-xs)',
-                  border: '1px solid var(--primary)',
-                  borderRadius: '4px',
-                  background: 'var(--primary)',
-                  color: 'white',
-                  cursor: refreshing ? 'not-allowed' : 'pointer',
-                  opacity: refreshing ? 0.6 : 1
-                }}
+                className="p-2 text-xs border border-blue-500 dark:border-blue-400 rounded bg-blue-500 dark:bg-blue-600 text-white cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Sync All Storages
               </button>

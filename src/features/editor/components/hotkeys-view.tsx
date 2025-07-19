@@ -48,68 +48,44 @@ export function HotkeysView() {
     { key: 'Enter', description: 'New Paragraph', category: 'Editor - Structure' },
     { key: 'Shift+Enter', description: 'Line Break', category: 'Editor - Structure' },
 
-    // Editor movement
-    { key: 'Alt+↑', description: 'Move Line Up', category: 'Editor - Movement' },
-    { key: 'Alt+↓', description: 'Move Line Down', category: 'Editor - Movement' },
-    { key: 'Ctrl+Shift+Alt+↑', description: 'Copy Line Up', category: 'Editor - Movement' },
-    { key: 'Ctrl+Shift+Alt+↓', description: 'Copy Line Down', category: 'Editor - Movement' },
+    // Hotkey sequences (special multi-key shortcuts)
+    { key: 'Ctrl+K, N', description: 'Create New Note', category: 'Hotkey Sequences' },
+    { key: 'Ctrl+K, F', description: 'Create New Folder', category: 'Hotkey Sequences' },
+    { key: 'Ctrl+K, S', description: 'Focus Search', category: 'Hotkey Sequences' },
+    { key: 'Ctrl+K, R', description: 'Rename Current Note', category: 'Hotkey Sequences' },
+    { key: 'Ctrl+K, D', description: 'Delete Current Note', category: 'Hotkey Sequences' },
+    { key: 'Ctrl+K, C', description: 'Show Configuration', category: 'Hotkey Sequences' },
+    { key: 'Ctrl+K, H', description: 'Show Keyboard Shortcuts', category: 'Hotkey Sequences' },
+    { key: 'Ctrl+K, T', description: 'Toggle Toolbar Visibility', category: 'Hotkey Sequences' },
 
-    // Editor links
-    { key: 'Ctrl+Enter', description: 'Open Link at Cursor', category: 'Editor - Links' },
-
-    // Editor history
-    { key: 'Ctrl+Z', description: 'Undo', category: 'Editor - History' },
-    { key: 'Ctrl+Y', description: 'Redo', category: 'Editor - History' },
-    { key: 'Ctrl+Shift+Z', description: 'Redo (Alternative)', category: 'Editor - History' },
-
-    // Editor modes
-    { key: 'Ctrl+Shift+S', description: 'Toggle Source View', category: 'Editor - Modes' },
-
-    // Hotkey sequences
-    { key: 'Ctrl+K, R', description: 'Open App Config Folder', category: 'Sequences' },
+    // Navigation
+    { key: '↑/↓', description: 'Navigate Notes Tree', category: 'Navigation' },
+    { key: 'Enter', description: 'Open Selected Note', category: 'Navigation' },
+    { key: 'Tab', description: 'Focus Next Element', category: 'Navigation' },
+    { key: 'Shift+Tab', description: 'Focus Previous Element', category: 'Navigation' },
+    { key: 'Escape', description: 'Close Modal/Cancel', category: 'Navigation' }
   ];
 
-  const categories = Array.from(new Set(hotkeys.map(h => h.category))).sort();
+  const categories = Array.from(new Set(hotkeys.map(h => h.category)));
 
   const formatKey = (key: string) => {
     return key
-      .replace(/Ctrl/g, '⌘')
-      .replace(/Alt/g, '⌥')
-      .replace(/Shift/g, '⇧')
-      .replace(/Enter/g, '↵')
+      .replace(/Ctrl/g, 'Ctrl')
+      .replace(/Shift/g, 'Shift')
+      .replace(/Alt/g, 'Alt')
+      .replace(/Cmd/g, '⌘')
       .replace(/↑/g, '↑')
       .replace(/↓/g, '↓');
   };
 
   return (
-    <div style={{
-      padding: 'var(--space-lg)',
-      height: '100%',
-      overflow: 'auto',
-      background: 'var(--bg-primary)'
-    }}>
-      <h1 style={{
-        fontSize: 'var(--font-size-xl)',
-        fontWeight: '600',
-        margin: '0 0 var(--space-lg) 0',
-        color: 'var(--text)'
-      }}>
+    <div className="p-6 h-full overflow-auto bg-white dark:bg-gray-900">
+      <h1 className="text-xl font-semibold mb-6 text-gray-900 dark:text-gray-100">
         Keyboard Shortcuts
       </h1>
 
-      <div style={{
-        marginBottom: 'var(--space-lg)',
-        padding: 'var(--space-md)',
-        background: 'var(--bg-secondary)',
-        border: '1px solid var(--border)',
-        borderRadius: '6px'
-      }}>
-        <p style={{
-          margin: 0,
-          fontSize: 'var(--font-size-sm)',
-          color: 'var(--text-3)',
-          lineHeight: '1.5'
-        }}>
+      <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
+        <p className="m-0 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
           <strong>Note:</strong> On macOS, use Cmd (⌘) instead of Ctrl for most shortcuts.
           Hotkey sequences require pressing keys in order (e.g., Ctrl+K, then R).
         </p>
@@ -118,51 +94,18 @@ export function HotkeysView() {
       {categories.map(category => {
         const categoryHotkeys = hotkeys.filter(h => h.category === category);
         return (
-          <section key={category} style={{ marginBottom: 'var(--space-xl)' }}>
-            <h2 style={{
-              fontSize: 'var(--font-size-lg)',
-              fontWeight: '500',
-              margin: '0 0 var(--space-md) 0',
-              color: 'var(--text)',
-              borderBottom: '1px solid var(--border)',
-              paddingBottom: 'var(--space-sm)'
-            }}>
+          <section key={category} className="mb-8">
+            <h2 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
               {category}
             </h2>
 
-            <div style={{
-              display: 'grid',
-              gap: 'var(--space-xs)',
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border)',
-              borderRadius: '6px',
-              padding: 'var(--space-md)'
-            }}>
+            <div className="grid gap-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md p-4">
               {categoryHotkeys.map((hotkey, index) => (
-                <div key={index} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: 'var(--space-sm)',
-                  background: 'var(--bg-primary)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '4px'
-                }}>
-                  <span style={{
-                    color: 'var(--text)',
-                    fontSize: 'var(--font-size-sm)'
-                  }}>
+                <div key={index} className="flex items-center justify-between p-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded">
+                  <span className="text-gray-900 dark:text-gray-100 text-sm">
                     {hotkey.description}
                   </span>
-                  <code style={{
-                    background: 'var(--bg-tertiary)',
-                    color: 'var(--text)',
-                    padding: '2px 6px',
-                    borderRadius: '3px',
-                    fontSize: 'var(--font-size-xs)',
-                    fontFamily: 'monospace',
-                    border: '1px solid var(--border)'
-                  }}>
+                  <code className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-1.5 py-0.5 rounded text-xs font-mono border border-gray-200 dark:border-gray-600">
                     {formatKey(hotkey.key)}
                   </code>
                 </div>
@@ -172,28 +115,11 @@ export function HotkeysView() {
         );
       })}
 
-      <section style={{
-        marginTop: 'var(--space-xl)',
-        padding: 'var(--space-md)',
-        background: 'var(--bg-secondary)',
-        border: '1px solid var(--border)',
-        borderRadius: '6px'
-      }}>
-        <h3 style={{
-          fontSize: 'var(--font-size-lg)',
-          fontWeight: '500',
-          margin: '0 0 var(--space-sm) 0',
-          color: 'var(--text)'
-        }}>
+      <section className="mt-8 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
+        <h3 className="text-lg font-medium mb-2 text-gray-900 dark:text-gray-100">
           Tips
         </h3>
-        <ul style={{
-          margin: 0,
-          paddingLeft: 'var(--space-lg)',
-          color: 'var(--text-3)',
-          fontSize: 'var(--font-size-sm)',
-          lineHeight: '1.6'
-        }}>
+        <ul className="m-0 pl-6 text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
           <li>Most shortcuts work when focus is on the editor</li>
           <li>Formatting shortcuts apply to selected text or at cursor position</li>
           <li>List shortcuts work within list items to indent/outdent</li>

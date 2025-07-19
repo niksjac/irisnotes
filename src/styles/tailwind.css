@@ -1,174 +1,121 @@
 @import "tailwindcss";
 
-/* Enhanced Tailwind CSS v4 Theme Configuration with Open Props integration */
+/* Streamlined Tailwind CSS v4 Configuration for IrisNotes */
 @theme {
-  /* Import and extend Open Props color scale */
-  /* Primary colors based on Open Props blue scale */
-  --color-iris-primary-50: #eff6ff;
-  --color-iris-primary-100: #dbeafe;
-  --color-iris-primary-200: #bfdbfe;
-  --color-iris-primary-300: #93c5fd;
-  --color-iris-primary-400: #60a5fa;
-  --color-iris-primary-500: #3b82f6;
-  --color-iris-primary-600: #2563eb;
-  --color-iris-primary-700: #1d4ed8;
-  --color-iris-primary-800: #1e40af;
-  --color-iris-primary-900: #1e3a8a;
-
-  /* Surface colors based on Open Props gray scale */
-  --color-iris-surface-50: #f9fafb;
-  --color-iris-surface-100: #f3f4f6;
-  --color-iris-surface-200: #e5e7eb;
-  --color-iris-surface-300: #d1d5db;
-  --color-iris-surface-400: #9ca3af;
-  --color-iris-surface-500: #6b7280;
-  --color-iris-surface-600: #4b5563;
-  --color-iris-surface-700: #374151;
-  --color-iris-surface-800: #1f2937;
-  --color-iris-surface-900: #111827;
-
-  /* Semantic color mappings */
-  --color-iris-primary: var(--color-iris-primary-500);
-  --color-iris-primary-hover: var(--color-iris-primary-600);
-  --color-iris-primary-active: var(--color-iris-primary-700);
-  --color-iris-primary-alpha: rgb(59 130 246 / 0.125);
-
-  --color-iris-surface: var(--color-iris-surface-50);
-  --color-iris-surface-2: var(--color-iris-surface-100);
-  --color-iris-surface-3: var(--color-iris-surface-200);
-
-  --color-iris-bg-primary: #ffffff;
-  --color-iris-bg-secondary: var(--color-iris-surface-50);
-  --color-iris-bg-tertiary: var(--color-iris-surface-100);
-
-  --color-iris-text: var(--color-iris-surface-900);
-  --color-iris-text-2: var(--color-iris-surface-600);
-  --color-iris-text-3: var(--color-iris-surface-500);
-  --color-iris-text-primary: var(--color-iris-surface-900);
-  --color-iris-text-secondary: var(--color-iris-surface-600);
-  --color-iris-text-muted: var(--color-iris-surface-400);
-
-  --color-iris-border: var(--color-iris-surface-300);
-  --color-iris-border-hover: var(--color-iris-surface-400);
-
-  --color-iris-success: #10b981;
-  --color-iris-warning: #f59e0b;
-  --color-iris-error: #ef4444;
-
-  --color-iris-editor-bg: #ffffff;
-  --color-iris-editor-selection: var(--color-iris-primary-100);
-  --color-iris-editor-cursor: var(--color-iris-primary-500);
-
-  /* Layout dimensions */
+  /* Essential layout dimensions */
   --sidebar-width: 300px;
   --sidebar-collapsed-width: 0px;
   --activity-bar-width: 48px;
 
-  /* Enhanced spacing scale based on Open Props */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 0.75rem;
-  --spacing-lg: 1rem;
-  --spacing-xl: 1.25rem;
-  --spacing-2xl: 1.5rem;
-  --spacing-3xl: 2rem;
-
-  /* Typography scale */
-  --font-family-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-  --font-family-mono: 'Consolas', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Liberation Mono', 'Courier New', monospace;
-
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 1.875rem;
-
-  /* Radius scale */
-  --radius-none: 0;
-  --radius-sm: 0.125rem;
-  --radius-md: 0.25rem;
-  --radius-lg: 0.375rem;
-  --radius-xl: 0.5rem;
-  --radius-2xl: 0.75rem;
-  --radius-full: 9999px;
-
-  /* Shadow scale */
-  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
-
-  /* Editor-specific variables */
+  /* Editor-specific variables that change dynamically */
   --editor-font-size: 14px;
-  --editor-bg: var(--color-iris-editor-bg);
+  --editor-bg: #f9fafb;
 }
 
 /* Dark mode configuration */
 @media (prefers-color-scheme: dark) {
   @theme {
-    --color-iris-primary-alpha: rgb(59 130 246 / 0.15);
-
-    --color-iris-surface: var(--color-iris-surface-900);
-    --color-iris-surface-2: var(--color-iris-surface-800);
-    --color-iris-surface-3: var(--color-iris-surface-700);
-
-    --color-iris-bg-primary: var(--color-iris-surface-900);
-    --color-iris-bg-secondary: var(--color-iris-surface-800);
-    --color-iris-bg-tertiary: var(--color-iris-surface-700);
-
-    --color-iris-text: var(--color-iris-surface-50);
-    --color-iris-text-2: var(--color-iris-surface-300);
-    --color-iris-text-3: var(--color-iris-surface-400);
-    --color-iris-text-primary: var(--color-iris-surface-50);
-    --color-iris-text-secondary: var(--color-iris-surface-300);
-    --color-iris-text-muted: var(--color-iris-surface-500);
-
-    --color-iris-border: var(--color-iris-surface-700);
-    --color-iris-border-hover: var(--color-iris-surface-600);
-
-    --color-iris-editor-bg: var(--color-iris-surface-900);
-    --color-iris-editor-selection: var(--color-iris-primary-900);
-    --editor-bg: var(--color-iris-editor-bg);
+    --editor-bg: #111827;
   }
 }
 
-/* Custom utility classes */
+/* Custom utility classes for application-specific functionality */
 @layer utilities {
-  .__1 {
-    border: 5px solid red !important;
+  /* Focus management utilities */
+  .focus-indicator {
+    @apply relative;
   }
 
-  .__2 {
-    border: 5px solid blue !important;
+  .focus-indicator::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    background-color: #22c55e;
+    border: 1px solid white;
+    border-radius: 50%;
+    z-index: 100;
+    pointer-events: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   }
 
-  .__3 {
-    border: 5px solid green !important;
+  /* Debug border utilities for development */
+  .__1 { border: 5px solid #ef4444 !important; } /* red */
+  .__2 { border: 5px solid #3b82f6 !important; } /* blue */
+  .__3 { border: 5px solid #22c55e !important; } /* green */
+  .__4 { border: 5px solid #f59e0b !important; } /* amber */
+  .__5 { border: 5px solid #8b5cf6 !important; } /* violet */
+  .__6 { border: 5px solid #ec4899 !important; } /* pink */
+  .__7 { border: 5px solid #06b6d4 !important; } /* cyan */
+  .__8 { border: 5px solid #84cc16 !important; } /* lime */
+  .__9 { border: 5px solid #f97316 !important; } /* orange */
+  .__10 { border: 5px solid #6366f1 !important; } /* indigo */
+  .__11 { border: 5px solid #14b8a6 !important; } /* teal */
+  .__12 { border: 5px solid #eab308 !important; } /* yellow */
+  .__13 { border: 5px solid #dc2626 !important; } /* red-600 */
+  .__14 { border: 5px solid #7c3aed !important; } /* violet-600 */
+  .__15 { border: 5px solid #059669 !important; } /* emerald-600 */
+
+  /* Editor utilities */
+  .editor-container {
+    @apply h-full w-full overflow-auto;
   }
 
-  .debug-test {
-    background: red !important;
-    color: white !important;
-    padding: 10px !important;
+  .editor-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
   }
+
+  .editor-scrollbar::-webkit-scrollbar-track {
+    @apply bg-gray-200 dark:bg-gray-800;
+    border-radius: 4px;
+  }
+
+  .editor-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 dark:bg-gray-600;
+    border-radius: 4px;
+  }
+
+  .editor-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500 dark:bg-gray-500;
+  }
+
+  /* Layout utilities */
+  .layout-transition {
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  /* Component-specific utilities */
+  .btn-focus {
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+
+  .input-focus {
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+  }
+
+  /* Debug utilities (development only) */
+  .debug-border {
+    @apply border-2 border-red-500;
+  }
+
+  .debug-bg {
+    @apply bg-red-500 text-white;
+  }
+
 }
 
 /*
- * Iris Design System Integration with Tailwind CSS v4
+ * IrisNotes uses standard Tailwind classes with these custom additions:
+ * - Focus management: .focus-indicator for green circle indicators
+ * - Editor styling: .editor-container and .editor-scrollbar for consistent editor appearance
+ * - Layout transitions: .layout-transition for smooth animations
+ * - Focus utilities: .btn-focus and .input-focus for accessible interactive elements
  *
- * Use arbitrary values to access the design system:
- * - Colors: text-[var(--color-iris-text-primary)]
- * - Backgrounds: bg-[var(--color-iris-bg-primary)]
- * - Borders: border-[var(--color-iris-border)]
- * - Spacing: p-[var(--spacing-md)]
+ * ProseMirror editor styles are located in: src/features/editor/components/rich-editor/prosemirror.css
  *
- * Common patterns:
- * - Primary text: text-[var(--color-iris-text-primary)]
- * - Secondary text: text-[var(--color-iris-text-secondary)]
- * - Muted text: text-[var(--color-iris-text-muted)]
- * - Primary bg: bg-[var(--color-iris-bg-primary)]
- * - Surface bg: bg-[var(--color-iris-surface)]
+ * The application relies on Tailwind's built-in color, spacing, and typography scales
+ * rather than custom variables for maximum compatibility and performance.
  */

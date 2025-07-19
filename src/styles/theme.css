@@ -1,110 +1,35 @@
 /*
- * IrisNotes Legacy Theme File
+ * IrisNotes Essential Theme Variables
  *
- * NOTE: This file is being phased out in favor of Tailwind CSS v4
- * Open Props imports moved to: src/styles/tailwind.css
- * Scrollbar styles moved to: src/styles/components.css
+ * This file contains only essential CSS variables that cannot be replaced by Tailwind:
+ * - Editor-specific variables for dynamic font sizing (set by use-font-size.ts hook)
+ * - Core primary color for backward compatibility
  *
- * TODO: Migrate remaining CSS custom properties and remove this file
+ * Most styles have been migrated to Tailwind CSS classes.
  */
 
 :root {
-  /* App-specific theme variables - users can override these */
+  /* Core primary color - used by some components for compatibility */
   --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-active: #1e40af;
-  --primary-alpha: #3b82f620;
 
-  --surface: #f9fafb;
-  --surface-2: #f3f4f6;
-  --surface-3: #e5e7eb;
-
-  --bg-primary: #f9fafb;
-  --bg-secondary: #f3f4f6;
-  --bg-tertiary: #e5e7eb;
-
-  --text: #111827;
-  --text-2: #374151;
-  --text-3: #4b5563;
-  --text-primary: #111827;
-  --text-secondary: #374151;
-
-  --border: #d1d5db;
-  --border-hover: #9ca3af;
-
-  --success: #10b981;
-  --warning: #f59e0b;
-  --error: #ef4444;
-
+  /* Editor background - used by CodeMirror and ProseMirror components */
   --editor-bg: #f9fafb;
-  --editor-selection: #bfdbfe;
-  --editor-cursor: #2563eb;
 
-  --sidebar-width: 300px;
-  --sidebar-collapsed-width: 0px;
-  --activity-bar-width: 48px;
-
-  /* Typography */
-  --font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-  --font-mono: 'Consolas', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Liberation Mono', 'Courier New', monospace;
-  --font-size-xs: 0.5rem;
-  --font-size-sm: 0.75rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.1rem;
-  --font-size-xl: 1.25rem;
-
-  /* Editor-specific typography */
-  /* --editor-font-family: 'Consolas', 'Monaco', 'Menlo', 'Ubuntu Mono', 'Liberation Mono', 'Courier New', monospace; */
-  /* --editor-font-size: 11px; */
-
-  /* Spacing */
-  --space-xs: 0.25rem;
-  --space-sm: 0.5rem;
-  --space-md: 1rem;
-  --space-lg: 1.25rem;
-  --space-xl: 1.5rem;
-
-  /* Radius */
-  --radius-sm: 0.125rem;
-  --radius-md: 0.25rem;
-  --radius-lg: 0.375rem;
-
-  /* Shadows */
-  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  /* Editor-specific font size variables - dynamically updated by use-font-size.ts */
+  /* These cannot be replaced by Tailwind as they change at runtime */
+  --editor-font-size: 14px;
+  --editor-font-size-h1: 28px;
+  --editor-font-size-h2: 21px;
+  --editor-font-size-h3: 17px;
+  --editor-font-size-h4: 15px;
+  --editor-font-size-h5: 14px;
+  --editor-font-size-h6: 12px;
+  --editor-font-size-code: 12px;
 }
 
 /* Dark theme */
 @media (prefers-color-scheme: dark) {
   :root {
-    --primary-alpha: #3b82f625;
-
-    --surface: #111827;
-    --surface-2: #1f2937;
-    --surface-3: #374151;
-
-    --bg-primary: #111827;
-    --bg-secondary: #1f2937;
-    --bg-tertiary: #374151;
-
-    --text: #f3f4f6;
-    --text-2: #d1d5db;
-    --text-3: #9ca3af;
-    --text-primary: #f3f4f6;
-    --text-secondary: #d1d5db;
-
-    --border: #374151;
-    --border-hover: #4b5563;
-
     --editor-bg: #111827;
-    --editor-selection: #1e40af;
   }
 }
-
-/* Base app styles moved to Tailwind classes in index.html */
-
-
-
-/* Legacy theme file - being migrated to Tailwind CSS */
-/* Most styles moved to src/styles/tailwind.css and src/styles/components.css */

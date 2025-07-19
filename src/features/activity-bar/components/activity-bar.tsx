@@ -128,21 +128,8 @@ export function ActivityBar({
         <div className="mt-auto pt-2 border-t border-gray-300 dark:border-gray-600 flex flex-col gap-2 pl-0 pr-0 pb-1 items-center">
           {/* Font Size Indicator */}
           <div
-            className="flex items-center justify-center w-6 h-6 border-none rounded-none bg-transparent text-gray-600 dark:text-gray-400 cursor-default transition-all duration-200 text-lg font-normal p-0"
+            className="flex flex-col items-center justify-center gap-0.5 cursor-default text-gray-700 dark:text-gray-300 text-xs font-medium p-0.5 h-8"
             title={`Editor font size: ${fontSize}px (Ctrl+Plus/Minus to adjust)`}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '2px',
-              cursor: 'default',
-              color: 'var(--text-2)',
-              fontSize: '10px',
-              fontWeight: '500',
-              padding: '2px',
-              height: '32px'
-            }}
           >
             <Type size={12} />
             <span>{fontSize}px</span>

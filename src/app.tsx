@@ -3,10 +3,8 @@ import { MainLayout } from "./features/layout";
 
 // Import Tailwind first as base
 import "./styles/tailwind.css";
-// Legacy theme for compatibility during migration
+// Essential theme variables (editor font sizes, editor background)
 import "./styles/theme.css";
-import "./styles/components.css";
-import "./styles/focus-management.css";
 
 function AppContent() {
   return <MainLayout />;

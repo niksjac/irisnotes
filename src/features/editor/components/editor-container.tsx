@@ -45,29 +45,16 @@ export const EditorContainer = forwardRef<EditorContainerRef, EditorContainerPro
   }), [focusAndPositionAtEnd]);
 
   return (
-    <div style={{ position: 'relative', height: '100%' }}>
+    <div className="relative h-full">
       {/* View Mode Indicator */}
-      <div style={{
-        position: 'absolute',
-        top: '8px',
-        right: '8px',
-        zIndex: 1000,
-        display: 'flex',
-        alignItems: 'center',
-        gap: '4px',
-        padding: '4px 8px',
-        backgroundColor: showSourceView ? 'var(--bg-secondary)' : 'var(--primary-alpha)',
-        border: `1px solid ${showSourceView ? 'var(--border)' : 'var(--primary)'}`,
-        borderRadius: '4px',
-        fontSize: '11px',
-        fontWeight: '500',
-        color: showSourceView ? 'var(--text-3)' : 'var(--primary)',
-        cursor: 'pointer',
-        userSelect: 'none',
-        transition: 'all 0.2s ease'
-      }}
-      onClick={toggleView}
-      title={`Switch to ${showSourceView ? 'rich' : 'source'} editor (Ctrl+Shift+S)`}
+      <div
+        className={`absolute top-2 right-2 z-[1000] flex items-center gap-1 px-2 py-1 text-xs font-medium cursor-pointer select-none rounded transition-all duration-200 border ${
+          showSourceView
+            ? 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400'
+            : 'bg-blue-50 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+        }`}
+        onClick={toggleView}
+        title={`Switch to ${showSourceView ? 'rich' : 'source'} editor (Ctrl+Shift+S)`}
       >
         {showSourceView ? <Code size={12} /> : <FileText size={12} />}
         {showSourceView ? 'Source' : 'Rich'}

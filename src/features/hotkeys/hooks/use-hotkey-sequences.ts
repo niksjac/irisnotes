@@ -14,7 +14,7 @@ interface UseHotkeySequencesOptions {
 
 export const useHotkeySequences = ({ sequences, timeout = 2000 }: UseHotkeySequencesOptions) => {
   const currentSequence = useRef<string[]>([]);
-  const sequenceTimeout = useRef<number | null>(null);
+  const sequenceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isWaitingForSequence = useRef(false);
 
   const resetSequence = useCallback(() => {

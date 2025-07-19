@@ -2,9 +2,8 @@ import { forwardRef, useImperativeHandle } from 'react';
 import { RichEditorProps } from './types';
 import { editorSchema } from './schema';
 import { useEditorView } from './hooks/use-editor-view';
-import { useConfig } from '../../../../hooks/use-config';
 import { RichEditorToolbar } from './rich-editor-toolbar';
-import 'prosemirror-view/style/prosemirror.css';
+import './prosemirror.css';
 
 export interface RichEditorRef {
   focusAndPositionAtEnd: () => void;
@@ -13,12 +12,10 @@ export interface RichEditorRef {
 export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
   content,
   onChange,
-  placeholder = "Start writing...",
   readOnly = false,
   onToggleView,
   toolbarVisible = true
 }, ref) => {
-  const { config, loading } = useConfig();
   const { editorRef, editorView, focusAndPositionAtEnd } = useEditorView({
     content,
     onChange,
@@ -32,7 +29,7 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
   }), [focusAndPositionAtEnd]);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="h-full flex flex-col overflow-hidden __1">
       {toolbarVisible && (
         <RichEditorToolbar
           editorView={editorView}
@@ -41,9 +38,7 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
       )}
       <div
         ref={editorRef}
-        className="h-full overflow-hidden pt-2.5 pl-2.5"
-        data-placeholder={placeholder}
-        data-line-wrapping={!loading && config.editor.lineWrapping ? 'true' : 'false'}
+        className="pt-2.5 pl-2.5 __2"
       />
     </div>
   );
