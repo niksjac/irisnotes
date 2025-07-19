@@ -23,3 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 coverage/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+*storybook.log
+storybook-static
