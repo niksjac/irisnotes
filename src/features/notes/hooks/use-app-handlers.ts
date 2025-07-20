@@ -42,12 +42,15 @@ export function useAppHandlers({
     focusElement('editor');
   }, [isDualPaneMode, openNoteInPane, activePaneId, setSelectedNoteId, focusElement]);
 
-  const handleItemSelect = useCallback((_itemId: string, itemType: 'note' | 'category') => {
-    // Don't automatically open notes when just selecting them
-    // Notes will be opened via Enter/Space or double-click in the tree view
+  const handleItemSelect = useCallback((itemId: string, itemType: 'note' | 'category') => {
+    // Handle both note and category selection for proper navigation state
     if (itemType === 'category') {
       // For folders, we don't load them in the editor, just select them
       setSelectedNoteId(null);
+    } else if (itemType === 'note') {
+      // For notes, update the selection but don't open automatically
+      // Opening will be handled by onNoteSelect when appropriate (click, Enter, Space)
+      setSelectedNoteId(itemId);
     }
   }, [setSelectedNoteId]);
 

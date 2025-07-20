@@ -1,5 +1,5 @@
 import React from 'react';
-import { SidebarContent } from '../../sidebar';
+import { SidebarContent, useSidebarFocus } from '../../sidebar';
 import {
   useNotesData,
   useNotesSelection,
@@ -12,7 +12,10 @@ import {
 import { usePaneState } from '../hooks';
 import { useNotesStorage } from '../../notes/hooks';
 
-export const AppSidebar: React.FC = () => {
+// AppSidebar now has zero props - manages everything internally
+interface AppSidebarProps {}
+
+export const AppSidebar: React.FC<AppSidebarProps> = ({}) => {
   // Notes data - focused hooks
   const { notes } = useNotesData();
   const { selectedNoteId } = useNotesSelection();
@@ -54,6 +57,9 @@ export const AppSidebar: React.FC = () => {
     type: null
   });
 
+  // Focus management via dedicated hook
+  const { registerElement, getFocusClasses, focusElement, setFocusFromClick } = useSidebarFocus();
+
   // App handlers for integrated actions
   const {
     handleNoteClick,
@@ -72,7 +78,7 @@ export const AppSidebar: React.FC = () => {
     createNewNote,
     loadAllNotes: () => Promise.resolve(), // Handled by initialization
     loadNoteCategories: () => Promise.resolve([]),
-    focusElement: () => {} // No-op since focus management is handled at main layout level
+    focusElement // Pass the focus management function from our hook
   });
 
   return (
@@ -95,10 +101,10 @@ export const AppSidebar: React.FC = () => {
       onRenameNote={handleRenameNote}
       onRenameCategory={handleRenameCategory}
       noteCategories={noteCategories}
-      registerElement={() => {}} // No-op since focus management is handled at main layout level
-      getFocusClasses={() => ({})} // Return empty since focus management is handled at main layout level
-      focusElement={() => {}} // No-op since focus management is handled at main layout level
-      setFocusFromClick={() => {}} // No-op since focus management is handled at main layout level
+      registerElement={registerElement}
+      getFocusClasses={getFocusClasses}
+      focusElement={focusElement}
+      setFocusFromClick={setFocusFromClick}
     />
   );
 };
