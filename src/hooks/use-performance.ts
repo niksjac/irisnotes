@@ -153,7 +153,8 @@ export const useAsyncMemo = <T>(
     return () => {
       cancelled = true;
     };
-  }, deps);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [factory, ...deps]);
 
   return [state.value, state.loading, state.error];
 };

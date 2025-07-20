@@ -1044,7 +1044,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 
       const results = await this.db.select<Note[]>(sqlQuery, params);
       return { success: true, data: results };
-    } catch (error) {
+    } catch {
       // Fallback to LIKE search if FTS fails
       try {
         let fallbackQuery = 'SELECT * FROM notes WHERE deleted_at IS NULL AND (title LIKE ? OR content_plaintext LIKE ?)';

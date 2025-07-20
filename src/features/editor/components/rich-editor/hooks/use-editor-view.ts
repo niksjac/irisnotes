@@ -150,7 +150,7 @@ export function useEditorView({
       schema,
       onToggleView: onToggleView || (() => {})
     });
-  }, [schema]); // Removed onToggleView dependency to prevent re-renders
+  }, [schema, onToggleView]);
 
   // Memoize the editor configuration
   const editorConfig = useMemo(() => ({
@@ -234,7 +234,7 @@ export function useEditorView({
         viewRef.current = null;
       }
     };
-  }, [schema]); // Only schema dependency - others are stable
+  }, [schema, content, memoizedCreateState, debouncedOnChange, editorConfig]); // Added missing dependencies
 
   // Handle content updates more efficiently
   useEffect(() => {
@@ -285,12 +285,12 @@ export function useEditorView({
           );
 
           view.updateState(stateWithSelection);
-        } catch (fallbackError) {
+        } catch {
           view.updateState(newState);
         }
       }
     }
-  }, [content, schema]); // Removed memoizedCreateState dependency
+  }, [content, schema, memoizedCreateState, debouncedOnChange, editorConfig]);
 
   // Method to focus editor and position cursor at end
   const focusAndPositionAtEnd = useCallback(() => {

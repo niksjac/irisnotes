@@ -55,9 +55,10 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       },
     };
     nodeRefsMap.current.set(nodeData.id, nodeRef);
+    const refMap = nodeRefsMap.current;
 
     return () => {
-      nodeRefsMap.current.delete(nodeData.id);
+      refMap.delete(nodeData.id);
     };
   }, [nodeData.id, nodeData.name, nodeRefsMap]);
 
@@ -121,7 +122,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     <div
       ref={dragHandle}
       style={style}
-      className={`flex items-center justify-between px-2 py-1 my-0.5 rounded cursor-pointer transition-all duration-200 relative hover:bg-gray-200 dark:hover:bg-gray-700 ${selectedItemId === nodeData.id ? 'outline outline-2 outline-blue-500 outline-offset-[-2px]' : ''} ${nodeData.type === 'category' ? 'font-medium' : ''} ${isFocused ? 'outline outline-2 outline-blue-500 outline-offset-[-2px] bg-gray-200 dark:bg-gray-700' : ''} ${isOpen ? 'text-green-500 font-bold' : ''}`}
+      className={`flex items-center justify-between px-2 py-1 my-0.5 rounded cursor-pointer transition-all duration-200 relative hover:bg-gray-200 dark:hover:bg-gray-700 ${selectedItemId === nodeData.id ? 'outline-2 outline-blue-500 outline-offset-[-2px]' : ''} ${nodeData.type === 'category' ? 'font-medium' : ''} ${isFocused ? 'outline-2 outline-blue-500 outline-offset-[-2px] bg-gray-200 dark:bg-gray-700' : ''} ${isOpen ? 'text-green-500 font-bold' : ''}`}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
     >

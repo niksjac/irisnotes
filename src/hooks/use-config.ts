@@ -74,8 +74,8 @@ export const useConfig = () => {
       };
 
       setConfig(mergedConfig);
-        } catch (error) {
-
+    } catch {
+      // Failed to load config - use defaults
       const isDevelopment = import.meta.env.DEV;
       const defaultConfig: AppConfig = isDevelopment ? {
         ...DEFAULT_CONFIG,
@@ -86,7 +86,6 @@ export const useConfig = () => {
       } : DEFAULT_CONFIG;
 
       setConfig(defaultConfig);
-      await saveConfig(defaultConfig);
     } finally {
       setLoading(false);
     }

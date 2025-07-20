@@ -121,7 +121,7 @@ export const SourceEditor = forwardRef<SourceEditorRef, SourceEditorProps>(({
     return () => {
       view.destroy();
     };
-  }, [readOnly]); // Removed onToggleView from dependencies
+  }, [readOnly, content, onChange, onToggleView]);
 
   // Update content when it changes externally
   useEffect(() => {

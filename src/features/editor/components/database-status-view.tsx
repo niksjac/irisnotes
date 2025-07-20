@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useMultiStorageNotes } from '../../notes';
 
 interface DatabaseInfo {
@@ -13,7 +13,7 @@ export function DatabaseStatusView() {
   const [databaseInfo, setDatabaseInfo] = useState<DatabaseInfo | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadDatabaseInfo = async () => {
+  const loadDatabaseInfo = useCallback(async () => {
     if (!storageManager) return;
 
     setRefreshing(true);
@@ -30,11 +30,11 @@ export function DatabaseStatusView() {
     } finally {
       setRefreshing(false);
     }
-  };
+  }, [storageManager]);
 
   useEffect(() => {
     loadDatabaseInfo();
-  }, [storageManager]);
+  }, [loadDatabaseInfo]);
 
   const formatBytes = (bytes?: number) => {
     if (!bytes) return 'Unknown';

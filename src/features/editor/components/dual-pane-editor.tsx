@@ -44,7 +44,7 @@ export function DualPaneEditor({
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  }, [leftPaneWidth]);
+  }, []);
 
   return (
     <div className="dual-pane-container flex h-full w-full bg-gray-50 dark:bg-gray-900">

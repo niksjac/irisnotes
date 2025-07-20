@@ -16,7 +16,7 @@ export const useLineWrapping = () => {
         toolbarVisible: config.editor.toolbarVisible
       }
     });
-  }, [config.editor.lineWrapping, updateConfig]);
+  }, [config.editor.lineWrapping, config.editor.toolbarVisible, updateConfig]);
 
   return {
     isWrapping: config.editor.lineWrapping,

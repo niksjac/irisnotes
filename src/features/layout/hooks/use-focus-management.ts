@@ -22,15 +22,6 @@ export const useFocusManagement = (options: FocusManagementOptions = {}) => {
   // Refs to track element references
   const elementRefs = useRef<Map<FocusableElement, HTMLElement | null>>(new Map());
 
-  // Define the tab order
-  const tabOrder: FocusableElement[] = [
-    'activity-bar',
-    'sidebar-buttons',
-    'sidebar-search',
-    'sidebar-tree',
-    'editor'
-  ];
-
   // Check if an element is visible and should be focusable
   const isElementVisible = useCallback((element: FocusableElement): boolean => {
     const targetElement = elementRefs.current.get(element);
@@ -110,6 +101,15 @@ export const useFocusManagement = (options: FocusManagementOptions = {}) => {
 
   // Navigate to next/previous element in tab order
   const navigateTab = useCallback((direction: 'forward' | 'backward') => {
+    // Define the tab order inside the callback
+    const tabOrder: FocusableElement[] = [
+      'activity-bar',
+      'sidebar-buttons',
+      'sidebar-search',
+      'sidebar-tree',
+      'editor'
+    ];
+
     const currentIndex = tabOrder.indexOf(currentFocus);
     let attempts = 0;
     const maxAttempts = tabOrder.length;
