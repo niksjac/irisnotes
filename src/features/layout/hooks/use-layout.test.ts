@@ -303,7 +303,7 @@ describe('useLayout', () => {
       expect(result.current.activePaneId).toBe('right');
     });
 
-        it('handles rapid state changes correctly', () => {
+    it('handles rapid state changes correctly', () => {
       const { result } = renderHook(() => useLayout());
 
       // Rapid toggles of sidebar

@@ -1,5 +1,4 @@
 import { useFocusManagement } from '../../layout/hooks';
-import { LAYOUT_CONFIG } from '../../../shared/constants/layout';
 
 export const useActivityBarFocus = () => {
   const focusManagement = useFocusManagement({
@@ -13,14 +12,12 @@ export const useActivityBarFocus = () => {
       // Activity bar toggle if needed
     },
     sidebarCollapsed: false, // ActivityBar manages this state internally
-    activityBarVisible: true // ActivityBar manages visibility internally
+    activityBarVisible: true, // ActivityBar manages visibility internally
   });
 
   return {
-    focusClasses: focusManagement.getFocusClasses(LAYOUT_CONFIG.FOCUS.ACTIVITY_BAR_ID),
-    registerElement: (ref: HTMLElement | null) =>
-      focusManagement.registerElement(LAYOUT_CONFIG.FOCUS.ACTIVITY_BAR_ID, ref),
-    setFocusFromClick: () =>
-      focusManagement.setFocusFromClick(LAYOUT_CONFIG.FOCUS.ACTIVITY_BAR_ID)
+    focusClasses: focusManagement.getFocusClasses('activity-bar'),
+    registerElement: (ref: HTMLElement | null) => focusManagement.registerElement('activity-bar', ref),
+    setFocusFromClick: () => focusManagement.setFocusFromClick('activity-bar'),
   };
 };

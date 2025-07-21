@@ -11,42 +11,42 @@ export const parseTextWithColors = (text: string): string => {
   // {bg:yellow}text{/bg} or {bg:#fff3cd}text{/bg}
 
   const colorMap: { [key: string]: string } = {
-    'red': '#e74c3c',
-    'green': '#27ae60',
-    'blue': '#3498db',
-    'yellow': '#f39c12',
-    'orange': '#f39c12',
-    'purple': '#9b59b6',
-    'cyan': '#1abc9c',
-    'gray': '#95a5a6',
-    'grey': '#95a5a6',
-    'black': '#2c3e50',
-    'white': '#ffffff'
+    red: '#e74c3c',
+    green: '#27ae60',
+    blue: '#3498db',
+    yellow: '#f39c12',
+    orange: '#f39c12',
+    purple: '#9b59b6',
+    cyan: '#1abc9c',
+    gray: '#95a5a6',
+    grey: '#95a5a6',
+    black: '#2c3e50',
+    white: '#ffffff',
   };
 
   const backgroundColorMap: { [key: string]: string } = {
-    'yellow': '#fff3cd',
-    'red': '#f8d7da',
-    'green': '#d4edda',
-    'blue': '#d1ecf1',
-    'orange': '#ffeaa7',
-    'purple': '#e1bee7',
-    'cyan': '#b2dfdb',
-    'gray': '#f8f9fa',
-    'grey': '#f8f9fa',
+    yellow: '#fff3cd',
+    red: '#f8d7da',
+    green: '#d4edda',
+    blue: '#d1ecf1',
+    orange: '#ffeaa7',
+    purple: '#e1bee7',
+    cyan: '#b2dfdb',
+    gray: '#f8f9fa',
+    grey: '#f8f9fa',
     'light-gray': '#f8f9fa',
-    'light-grey': '#f8f9fa'
+    'light-grey': '#f8f9fa',
   };
 
   const sizeMap: { [key: string]: string } = {
-    'tiny': '10px',
-    'small': '12px',
-    'normal': '14px',
-    'medium': '16px',
-    'large': '18px',
-    'huge': '24px',
-    'xl': '28px',
-    'xxl': '32px'
+    tiny: '10px',
+    small: '12px',
+    normal: '14px',
+    medium: '16px',
+    large: '18px',
+    huge: '24px',
+    xl: '28px',
+    xxl: '32px',
   };
 
   let htmlContent = text;
@@ -54,88 +54,56 @@ export const parseTextWithColors = (text: string): string => {
   // Process formatting tags in order of nesting complexity
 
   // 1. Color markup
-  htmlContent = htmlContent.replace(
-    /\{color:([^}]+)\}(.*?)\{\/color\}/g,
-    (_match, colorName, content) => {
-      const color = colorMap[colorName.toLowerCase()] || colorName;
-      return `<span style="color: ${color}">${content}</span>`;
-    }
-  );
+  htmlContent = htmlContent.replace(/\{color:([^}]+)\}(.*?)\{\/color\}/g, (_match, colorName, content) => {
+    const color = colorMap[colorName.toLowerCase()] || colorName;
+    return `<span style="color: ${color}">${content}</span>`;
+  });
 
   // 2. Background color markup
-  htmlContent = htmlContent.replace(
-    /\{bg:([^}]+)\}(.*?)\{\/bg\}/g,
-    (_match, colorName, content) => {
-      const backgroundColor = backgroundColorMap[colorName.toLowerCase()] || colorName;
-      return `<span style="background-color: ${backgroundColor}; padding: 2px 4px; border-radius: 3px">${content}</span>`;
-    }
-  );
+  htmlContent = htmlContent.replace(/\{bg:([^}]+)\}(.*?)\{\/bg\}/g, (_match, colorName, content) => {
+    const backgroundColor = backgroundColorMap[colorName.toLowerCase()] || colorName;
+    return `<span style="background-color: ${backgroundColor}; padding: 2px 4px; border-radius: 3px">${content}</span>`;
+  });
 
   // 3. Font size markup
-  htmlContent = htmlContent.replace(
-    /\{size:([^}]+)\}(.*?)\{\/size\}/g,
-    (_match, sizeName, content) => {
-      const fontSize = sizeMap[sizeName.toLowerCase()] || sizeName;
-      return `<span style="font-size: ${fontSize}">${content}</span>`;
-    }
-  );
+  htmlContent = htmlContent.replace(/\{size:([^}]+)\}(.*?)\{\/size\}/g, (_match, sizeName, content) => {
+    const fontSize = sizeMap[sizeName.toLowerCase()] || sizeName;
+    return `<span style="font-size: ${fontSize}">${content}</span>`;
+  });
 
   // 4. Font family markup
-  htmlContent = htmlContent.replace(
-    /\{font:([^}]+)\}(.*?)\{\/font\}/g,
-    (_match, fontName, content) => {
-      // Clean the font name and ensure it's properly quoted
-      const cleanFontName = fontName.trim().replace(/['"]/g, '');
-      return `<span style="font-family: '${cleanFontName}', sans-serif">${content}</span>`;
-    }
-  );
+  htmlContent = htmlContent.replace(/\{font:([^}]+)\}(.*?)\{\/font\}/g, (_match, fontName, content) => {
+    // Clean the font name and ensure it's properly quoted
+    const cleanFontName = fontName.trim().replace(/['"]/g, '');
+    return `<span style="font-family: '${cleanFontName}', sans-serif">${content}</span>`;
+  });
 
   // 5. Simple formatting tags
   // Bold
-  htmlContent = htmlContent.replace(
-    /\{bold\}(.*?)\{\/bold\}/g,
-    '<strong>$1</strong>'
-  );
+  htmlContent = htmlContent.replace(/\{bold\}(.*?)\{\/bold\}/g, '<strong>$1</strong>');
 
   // Italic
-  htmlContent = htmlContent.replace(
-    /\{italic\}(.*?)\{\/italic\}/g,
-    '<em>$1</em>'
-  );
+  htmlContent = htmlContent.replace(/\{italic\}(.*?)\{\/italic\}/g, '<em>$1</em>');
 
   // Strikethrough
-  htmlContent = htmlContent.replace(
-    /\{strike\}(.*?)\{\/strike\}/g,
-    '<del>$1</del>'
-  );
+  htmlContent = htmlContent.replace(/\{strike\}(.*?)\{\/strike\}/g, '<del>$1</del>');
 
   // Underline
-  htmlContent = htmlContent.replace(
-    /\{underline\}(.*?)\{\/underline\}/g,
-    '<u>$1</u>'
-  );
+  htmlContent = htmlContent.replace(/\{underline\}(.*?)\{\/underline\}/g, '<u>$1</u>');
 
   // Code/monospace
-  htmlContent = htmlContent.replace(
-    /\{code\}(.*?)\{\/code\}/g,
-    '<code>$1</code>'
-  );
+  htmlContent = htmlContent.replace(/\{code\}(.*?)\{\/code\}/g, '<code>$1</code>');
 
   // Superscript
-  htmlContent = htmlContent.replace(
-    /\{sup\}(.*?)\{\/sup\}/g,
-    '<sup>$1</sup>'
-  );
+  htmlContent = htmlContent.replace(/\{sup\}(.*?)\{\/sup\}/g, '<sup>$1</sup>');
 
   // Subscript
-  htmlContent = htmlContent.replace(
-    /\{sub\}(.*?)\{\/sub\}/g,
-    '<sub>$1</sub>'
-  );
+  htmlContent = htmlContent.replace(/\{sub\}(.*?)\{\/sub\}/g, '<sub>$1</sub>');
 
   // Convert line breaks to paragraphs
-  const paragraphs = htmlContent.split('\n')
-    .map(line => line.trim() === '' ? '<p></p>' : `<p>${line}</p>`)
+  const paragraphs = htmlContent
+    .split('\n')
+    .map(line => (line.trim() === '' ? '<p></p>' : `<p>${line}</p>`))
     .join('');
 
   return paragraphs || '<p></p>';
@@ -152,7 +120,7 @@ export const serializeToCustomFormat = (html: string): string => {
     '#1abc9c': 'cyan',
     '#95a5a6': 'gray',
     '#2c3e50': 'black',
-    '#ffffff': 'white'
+    '#ffffff': 'white',
   };
 
   const backgroundColorMap: { [key: string]: string } = {
@@ -163,7 +131,7 @@ export const serializeToCustomFormat = (html: string): string => {
     '#ffeaa7': 'orange',
     '#e1bee7': 'purple',
     '#b2dfdb': 'cyan',
-    '#f8f9fa': 'gray'
+    '#f8f9fa': 'gray',
   };
 
   const sizeMap: { [key: string]: string } = {
@@ -174,7 +142,7 @@ export const serializeToCustomFormat = (html: string): string => {
     '18px': 'large',
     '24px': 'huge',
     '28px': 'xl',
-    '32px': 'xxl'
+    '32px': 'xxl',
   };
 
   // Remove HTML structure and convert back to custom format
@@ -224,18 +192,22 @@ export const serializeToCustomFormat = (html: string): string => {
 
 // Extract plain text from custom format for search indexing
 export const extractPlainText = (customText: string): string => {
-  return customText
-    // Remove all markup tags
-    .replace(/\{[^}]*\}(.*?)\{\/[^}]*\}/g, '$1')
-    .replace(/\{[^}]*\}/g, '')
-    .replace(/\{\/[^}]*\}/g, '')
-    // Clean up any remaining markup
-    .replace(/\{[^}]*\}/g, '')
-    .trim();
+  return (
+    customText
+      // Remove all markup tags
+      .replace(/\{[^}]*\}(.*?)\{\/[^}]*\}/g, '$1')
+      .replace(/\{[^}]*\}/g, '')
+      .replace(/\{\/[^}]*\}/g, '')
+      // Clean up any remaining markup
+      .replace(/\{[^}]*\}/g, '')
+      .trim()
+  );
 };
 
 // Parse custom format and extract metadata
-export const parseCustomFormatMetadata = (text: string): {
+export const parseCustomFormatMetadata = (
+  text: string
+): {
   plainText: string;
   colors: string[];
   backgrounds: string[];
@@ -248,30 +220,28 @@ export const parseCustomFormatMetadata = (text: string): {
   const plainText = extractPlainText(text);
 
   // Extract colors
-  const colors = [...new Set(text.match(/\{color:([^}]+)\}/g)?.map(match =>
-    match.replace(/\{color:([^}]+)\}/, '$1')
-  ) || [])];
+  const colors = [
+    ...new Set(text.match(/\{color:([^}]+)\}/g)?.map(match => match.replace(/\{color:([^}]+)\}/, '$1')) || []),
+  ];
 
   // Extract background colors
-  const backgrounds = [...new Set(text.match(/\{bg:([^}]+)\}/g)?.map(match =>
-    match.replace(/\{bg:([^}]+)\}/, '$1')
-  ) || [])];
+  const backgrounds = [
+    ...new Set(text.match(/\{bg:([^}]+)\}/g)?.map(match => match.replace(/\{bg:([^}]+)\}/, '$1')) || []),
+  ];
 
   // Extract fonts
-  const fonts = [...new Set(text.match(/\{font:([^}]+)\}/g)?.map(match =>
-    match.replace(/\{font:([^}]+)\}/, '$1')
-  ) || [])];
+  const fonts = [
+    ...new Set(text.match(/\{font:([^}]+)\}/g)?.map(match => match.replace(/\{font:([^}]+)\}/, '$1')) || []),
+  ];
 
   // Extract sizes
-  const sizes = [...new Set(text.match(/\{size:([^}]+)\}/g)?.map(match =>
-    match.replace(/\{size:([^}]+)\}/, '$1')
-  ) || [])];
+  const sizes = [
+    ...new Set(text.match(/\{size:([^}]+)\}/g)?.map(match => match.replace(/\{size:([^}]+)\}/, '$1')) || []),
+  ];
 
   // Extract formatting types
   const formattingTags = ['bold', 'italic', 'strike', 'underline', 'code', 'sup', 'sub'];
-  const formatting = formattingTags.filter(tag =>
-    text.includes(`{${tag}}`) && text.includes(`{/${tag}}`)
-  );
+  const formatting = formattingTags.filter(tag => text.includes(`{${tag}}`) && text.includes(`{/${tag}}`));
 
   const wordCount = plainText.split(/\s+/).filter(word => word.length > 0).length;
   const characterCount = plainText.length;
@@ -284,7 +254,7 @@ export const parseCustomFormatMetadata = (text: string): {
     sizes,
     formatting,
     wordCount,
-    characterCount
+    characterCount,
   };
 };
 
@@ -293,16 +263,11 @@ export const validateCustomFormat = (text: string): { isValid: boolean; errors: 
   const errors: string[] = [];
 
   // Define all supported tags
-  const supportedTags = [
-    'color', 'bg', 'size', 'font', 'bold', 'italic', 'strike',
-    'underline', 'code', 'sup', 'sub'
-  ];
+  const supportedTags = ['color', 'bg', 'size', 'font', 'bold', 'italic', 'strike', 'underline', 'code', 'sup', 'sub'];
 
   // Check for unmatched tags
   for (const tag of supportedTags) {
-    const openPattern = tag.includes(':') ?
-      new RegExp(`\\{${tag}:[^}]+\\}`, 'g') :
-      new RegExp(`\\{${tag}\\}`, 'g');
+    const openPattern = tag.includes(':') ? new RegExp(`\\{${tag}:[^}]+\\}`, 'g') : new RegExp(`\\{${tag}\\}`, 'g');
     const closePattern = new RegExp(`\\{\\/${tag}\\}`, 'g');
 
     const openTags = text.match(openPattern) || [];
@@ -344,24 +309,24 @@ export const validateCustomFormat = (text: string): { isValid: boolean; errors: 
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
 // Helper function to normalize color values
 export const normalizeColor = (color: string): string => {
   const colorMap: { [key: string]: string } = {
-    'red': '#e74c3c',
-    'green': '#27ae60',
-    'blue': '#3498db',
-    'yellow': '#f39c12',
-    'orange': '#f39c12',
-    'purple': '#9b59b6',
-    'cyan': '#1abc9c',
-    'gray': '#95a5a6',
-    'grey': '#95a5a6',
-    'black': '#2c3e50',
-    'white': '#ffffff'
+    red: '#e74c3c',
+    green: '#27ae60',
+    blue: '#3498db',
+    yellow: '#f39c12',
+    orange: '#f39c12',
+    purple: '#9b59b6',
+    cyan: '#1abc9c',
+    gray: '#95a5a6',
+    grey: '#95a5a6',
+    black: '#2c3e50',
+    white: '#ffffff',
   };
 
   const normalized = color.toLowerCase().trim();
@@ -370,22 +335,18 @@ export const normalizeColor = (color: string): string => {
 
 // Get all available formatting options
 export const getAvailableFormattingOptions = () => ({
-  colors: [
-    'red', 'green', 'blue', 'yellow', 'orange', 'purple',
-    'cyan', 'gray', 'black', 'white'
-  ],
-  backgroundColors: [
-    'yellow', 'red', 'green', 'blue', 'orange', 'purple',
-    'cyan', 'gray', 'light-gray'
-  ],
-  sizes: [
-    'tiny', 'small', 'normal', 'medium', 'large', 'huge', 'xl', 'xxl'
-  ],
+  colors: ['red', 'green', 'blue', 'yellow', 'orange', 'purple', 'cyan', 'gray', 'black', 'white'],
+  backgroundColors: ['yellow', 'red', 'green', 'blue', 'orange', 'purple', 'cyan', 'gray', 'light-gray'],
+  sizes: ['tiny', 'small', 'normal', 'medium', 'large', 'huge', 'xl', 'xxl'],
   fonts: [
-    'Arial', 'Georgia', 'Times New Roman', 'Courier New',
-    'Helvetica', 'Verdana', 'Trebuchet MS', 'Comic Sans MS'
+    'Arial',
+    'Georgia',
+    'Times New Roman',
+    'Courier New',
+    'Helvetica',
+    'Verdana',
+    'Trebuchet MS',
+    'Comic Sans MS',
   ],
-  formatting: [
-    'bold', 'italic', 'strike', 'underline', 'code', 'sup', 'sub'
-  ]
+  formatting: ['bold', 'italic', 'strike', 'underline', 'code', 'sup', 'sub'],
 });

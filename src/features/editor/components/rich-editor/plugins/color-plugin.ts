@@ -3,7 +3,7 @@ import { MarkSpec } from 'prosemirror-model';
 // Define color mark
 export const colorMark: MarkSpec = {
   attrs: {
-    color: { default: null }
+    color: { default: null },
   },
   parseDOM: [
     {
@@ -12,14 +12,10 @@ export const colorMark: MarkSpec = {
         const style = node.getAttribute('style');
         const match = style.match(/color:\s*([^;]+)/);
         return match ? { color: match[1].trim() } : false;
-      }
-    }
+      },
+    },
   ],
-  toDOM: (mark) => [
-    'span',
-    { style: `color: ${mark.attrs.color}` },
-    0
-  ]
+  toDOM: mark => ['span', { style: `color: ${mark.attrs.color}` }, 0],
 };
 
 // Helper function to toggle color mark
@@ -29,7 +25,12 @@ export const toggleColor = (color: string, schema: any) => (state: any, dispatch
   if (dispatch) {
     // Check if the selection already has this exact color
     const hasColor = state.doc.rangeHasMark(from, to, schema.marks.color);
-    const existingMark = hasColor && state.doc.resolve(from).marks().find((m: any) => m.type === schema.marks.color);
+    const existingMark =
+      hasColor &&
+      state.doc
+        .resolve(from)
+        .marks()
+        .find((m: any) => m.type === schema.marks.color);
 
     if (existingMark && existingMark.attrs.color === color) {
       // Remove the color if it's the same

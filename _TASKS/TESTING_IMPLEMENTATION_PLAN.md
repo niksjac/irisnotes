@@ -1,6 +1,7 @@
 # Testing Strategy Implementation Plan
 
 ## Overview
+
 Implementation plan to achieve comprehensive testing coverage with Playwright E2E testing and Storybook component documentation.
 
 **Current Status**: 6.54% coverage | Target: 80% coverage
@@ -12,6 +13,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 ## Phase 1: Foundation & Setup ✅ **COMPLETE**
 
 ### 1.1 Playwright E2E Setup
+
 - [x] Install Playwright with pnpm: `pnpm create playwright`
 - [x] Configure Playwright for Tauri desktop app testing
 - [x] Add Playwright scripts to package.json
@@ -19,6 +21,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 - [x] Verify Playwright can launch your app
 
 ### 1.2 Storybook Setup
+
 - [x] Install Storybook: `pnpm dlx storybook@latest init`
 - [x] Configure Storybook with Tailwind CSS v4
 - [x] Add theme switching addon: `pnpm add -D @storybook/addon-themes`
@@ -26,6 +29,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 - [x] Create first component story (Button)
 
 ### 1.3 Testing Infrastructure
+
 - [x] Add accessibility testing: `pnpm add -D @storybook/addon-a11y`
 - [x] Configure test-utils for consistent test rendering
 - [x] Setup coverage reporting integration
@@ -37,6 +41,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 ## Phase 2: Core Component Testing ✅ **COMPLETE**
 
 ### 2.1 Shared Components (Priority 1) ✅ **COMPLETE**
+
 - [x] Write tests for `src/shared/components/input.tsx`
 - [x] Write tests for `src/shared/components/modal.tsx`
 - [x] Add Storybook stories for all shared components
@@ -44,6 +49,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 - [x] Achieve 100% coverage for shared components (Button, Input, Modal)
 
 ### 2.2 Theme & Configuration ✅ **COMPLETE**
+
 - [x] Complete tests for existing theme hooks (use-theme-actions, use-theme-state)
 - [x] Test theme switching functionality
 - [x] Add comprehensive theme demo to Storybook
@@ -51,6 +57,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 - [x] Verify dark/light mode in Storybook
 
 ### 2.3 Layout Components ✅ **COMPLETE**
+
 - [x] Write tests for `src/features/layout/hooks/use-layout.ts`
 - [x] Test sidebar collapse/expand functionality
 - [x] Test dual-pane switching
@@ -62,6 +69,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 ## Phase 3: Business Logic Testing (Week 3)
 
 ### 3.1 Notes Management (Critical)
+
 - [ ] Test `src/features/notes/hooks/use-notes-data.ts`
 - [ ] Test `src/features/notes/hooks/use-notes-actions.ts`
 - [ ] Test note creation, editing, deletion workflows
@@ -69,6 +77,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 - [ ] Test category management
 
 ### 3.2 Storage Layer (Critical)
+
 - [ ] Test `src/features/notes/storage/adapters/sqlite-storage.ts`
 - [ ] Test storage manager configuration switching
 - [ ] Test database migrations and initialization
@@ -76,6 +85,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 - [ ] Test data persistence across sessions
 
 ### 3.3 Editor Functionality
+
 - [ ] Test `src/features/editor/hooks/use-editor-actions.ts`
 - [ ] Test rich text editor functionality
 - [ ] Test source/rich mode switching
@@ -87,6 +97,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 ## Phase 4: Integration Testing (Week 4)
 
 ### 4.1 Component Integration
+
 - [ ] Test editor components with real content
 - [ ] Test layout state management integration
 - [ ] Test notes tree view with real data
@@ -94,6 +105,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 - [ ] Test Jotai state synchronization
 
 ### 4.2 Database Integration
+
 - [ ] Test SQLite operations with real database
 - [ ] Test note relationships and associations
 - [ ] Test search functionality with indexed data
@@ -101,6 +113,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 - [ ] Test concurrent operations
 
 ### 4.3 Performance Testing
+
 - [ ] Test virtual scrolling with large note lists
 - [ ] Test lazy loading performance
 - [ ] Test memory usage optimization
@@ -112,6 +125,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 ## Phase 5: End-to-End Testing (Week 5)
 
 ### 5.1 Critical User Journeys
+
 - [ ] Test complete note creation workflow
 - [ ] Test note editing and saving
 - [ ] Test storage backend switching
@@ -119,6 +133,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 - [ ] Test search and organization features
 
 ### 5.2 Cross-Platform Testing
+
 - [ ] Test on Linux (primary)
 - [ ] Test on Windows compatibility
 - [ ] Test on macOS compatibility
@@ -126,6 +141,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 - [ ] Test keyboard navigation
 
 ### 5.3 Error Scenarios
+
 - [ ] Test database connection failures
 - [ ] Test file system permission errors
 - [ ] Test network interruption scenarios
@@ -137,6 +153,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 ## Phase 6: Documentation & CI (Week 6)
 
 ### 6.1 Storybook Enhancement
+
 - [ ] Document all component variations
 - [ ] Add interaction testing with @storybook/addon-interactions
 - [ ] Create design system documentation
@@ -144,6 +161,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 - [ ] Deploy Storybook for team access
 
 ### 6.2 CI/CD Integration
+
 - [ ] Add test running to GitHub Actions
 - [ ] Setup coverage reporting
 - [ ] Add Playwright tests to CI pipeline
@@ -151,6 +169,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 - [ ] Add quality gates for PRs
 
 ### 6.3 Team Documentation
+
 - [ ] Create testing guidelines document
 - [ ] Document component testing patterns
 - [ ] Create E2E testing cookbook
@@ -162,6 +181,7 @@ Implementation plan to achieve comprehensive testing coverage with Playwright E2
 ## Quick Commands Reference
 
 ### Testing Commands
+
 ```bash
 # Run all tests
 pnpm test
@@ -180,6 +200,7 @@ pnpm build-storybook
 ```
 
 ### Coverage Targets
+
 - **Overall**: 80% line coverage minimum
 - **Core Logic**: 90% coverage (storage, state management)
 - **Critical Paths**: 95% coverage (note CRUD operations)
@@ -190,6 +211,7 @@ pnpm build-storybook
 ## Success Metrics
 
 ### Technical Goals
+
 - [ ] Achieve 80%+ overall test coverage
 - [ ] Zero critical bugs in production
 - [ ] < 30 second test suite execution time
@@ -197,6 +219,7 @@ pnpm build-storybook
 - [ ] Comprehensive E2E coverage
 
 ### Team Goals
+
 - [ ] Improved developer confidence
 - [ ] Faster feature development
 - [ ] Better design-dev collaboration
@@ -206,6 +229,7 @@ pnpm build-storybook
 ---
 
 ## Notes
+
 - Use `pnpm` for all package management
 - Leverage existing Jotai state management in tests
 - Focus on user-centric testing approaches

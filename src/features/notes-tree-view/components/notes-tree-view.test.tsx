@@ -7,14 +7,18 @@ import type { NotesTreeViewProps } from '../types';
 
 // Mock react-arborist since it's complex to test
 interface MockTreeProps {
-  children: (props: { node: { data: unknown }; style: Record<string, unknown>; dragHandle: () => void }) => React.ReactNode;
+  children: (props: {
+    node: { data: unknown };
+    style: Record<string, unknown>;
+    dragHandle: () => void;
+  }) => React.ReactNode;
   data: unknown[];
   onMove: () => void;
 }
 
 vi.mock('react-arborist', () => ({
   Tree: ({ children, data }: MockTreeProps) => (
-    <div data-testid="tree-container">
+    <div data-testid='tree-container'>
       {data.map((item: unknown) => (
         <div key={(item as { id: string }).id} data-testid={`tree-item-${(item as { id: string }).id}`}>
           {children({ node: { data: item }, style: {}, dragHandle: vi.fn() })}
@@ -183,22 +187,22 @@ describe('NotesTreeView', () => {
 
   describe('Search Functionality', () => {
     it('should filter tree based on search query', () => {
-      render(<NotesTreeView {...mockProps} searchQuery="meeting" />);
+      render(<NotesTreeView {...mockProps} searchQuery='meeting' />);
 
       // Should show notes/categories matching the search
       expect(screen.getByText('Meeting Notes')).toBeInTheDocument();
     });
 
     it('should handle empty search results gracefully', () => {
-      render(<NotesTreeView {...mockProps} searchQuery="nonexistent" />);
+      render(<NotesTreeView {...mockProps} searchQuery='nonexistent' />);
 
       expect(screen.getByTestId('tree-container')).toBeInTheDocument();
     });
 
     it('should clear search results when query is empty', () => {
-      const { rerender } = render(<NotesTreeView {...mockProps} searchQuery="meeting" />);
+      const { rerender } = render(<NotesTreeView {...mockProps} searchQuery='meeting' />);
 
-      rerender(<NotesTreeView {...mockProps} searchQuery="" />);
+      rerender(<NotesTreeView {...mockProps} searchQuery='' />);
 
       expect(screen.getByText('Work')).toBeInTheDocument();
     });
@@ -206,14 +210,14 @@ describe('NotesTreeView', () => {
 
   describe('Selection State', () => {
     it('should highlight selected note', () => {
-      render(<NotesTreeView {...mockProps} selectedNoteId="note-1" />);
+      render(<NotesTreeView {...mockProps} selectedNoteId='note-1' />);
 
       const noteElement = screen.getByText('Meeting Notes');
       expect(noteElement).toHaveClass('text-green-500', 'font-bold');
     });
 
     it('should handle item selection', () => {
-      render(<NotesTreeView {...mockProps} selectedItemId="cat-1" selectedItemType="category" />);
+      render(<NotesTreeView {...mockProps} selectedItemId='cat-1' selectedItemType='category' />);
 
       // The selected category should be highlighted
       const workCategory = screen.getByText('Work');
@@ -248,8 +252,8 @@ describe('NotesTreeView', () => {
       const user = userEvent.setup();
       render(<NotesTreeView {...mockProps} />);
 
-      const container = screen.getByRole('button', { name: /notes tree view/i }) ||
-                        document.querySelector('[tabindex="0"]');
+      const container =
+        screen.getByRole('button', { name: /notes tree view/i }) || document.querySelector('[tabindex="0"]');
 
       if (container) {
         container.focus();
@@ -316,7 +320,7 @@ describe('NotesTreeView', () => {
   describe('Hoist Mode', () => {
     it('should enter hoist mode when hoist button is clicked', async () => {
       const user = userEvent.setup();
-      render(<NotesTreeView {...mockProps} selectedItemId="cat-1" selectedItemType="category" />);
+      render(<NotesTreeView {...mockProps} selectedItemId='cat-1' selectedItemType='category' />);
 
       const hoistButton = screen.getByTitle('Hoist Folder');
       await user.click(hoistButton);
@@ -330,7 +334,7 @@ describe('NotesTreeView', () => {
       const user = userEvent.setup();
 
       // First enter hoist mode
-      const { rerender } = render(<NotesTreeView {...mockProps} selectedItemId="cat-1" selectedItemType="category" />);
+      const { rerender } = render(<NotesTreeView {...mockProps} selectedItemId='cat-1' selectedItemType='category' />);
 
       const hoistButton = screen.getByTitle('Hoist Folder');
       await user.click(hoistButton);
@@ -375,7 +379,7 @@ describe('NotesTreeView', () => {
 
     it('should handle node deletion', async () => {
       const user = userEvent.setup();
-      render(<NotesTreeView {...mockProps} selectedItemId="note-1" selectedItemType="note" />);
+      render(<NotesTreeView {...mockProps} selectedItemId='note-1' selectedItemType='note' />);
 
       const deleteButton = screen.getByTitle('Delete Selected');
       await user.click(deleteButton);
@@ -385,7 +389,7 @@ describe('NotesTreeView', () => {
 
     it('should handle category deletion', async () => {
       const user = userEvent.setup();
-      render(<NotesTreeView {...mockProps} selectedItemId="cat-1" selectedItemType="category" />);
+      render(<NotesTreeView {...mockProps} selectedItemId='cat-1' selectedItemType='category' />);
 
       const deleteButton = screen.getByTitle('Delete Selected');
       await user.click(deleteButton);
@@ -486,9 +490,7 @@ describe('NotesTreeView', () => {
     });
 
     it('should handle invalid note-category relationships gracefully', () => {
-      const invalidNoteCategories = [
-        { noteId: 'non-existent-note', categoryId: 'non-existent-category' },
-      ];
+      const invalidNoteCategories = [{ noteId: 'non-existent-note', categoryId: 'non-existent-category' }];
 
       expect(() => {
         render(<NotesTreeView {...mockProps} noteCategories={invalidNoteCategories} />);
@@ -521,7 +523,7 @@ describe('NotesTreeView', () => {
   describe('Integration Workflows', () => {
     it('should handle complete note creation workflow', async () => {
       const user = userEvent.setup();
-      render(<NotesTreeView {...mockProps} selectedItemId="cat-1" selectedItemType="category" />);
+      render(<NotesTreeView {...mockProps} selectedItemId='cat-1' selectedItemType='category' />);
 
       // Create a new note in the selected category
       const createNoteButton = screen.getByTitle('Create Note');
@@ -535,7 +537,7 @@ describe('NotesTreeView', () => {
       const { rerender } = render(<NotesTreeView {...mockProps} />);
 
       // Apply search filter
-      rerender(<NotesTreeView {...mockProps} searchQuery="meeting" />);
+      rerender(<NotesTreeView {...mockProps} searchQuery='meeting' />);
 
       // Select filtered result
       const meetingNote = screen.getByText('Meeting Notes');
@@ -546,7 +548,7 @@ describe('NotesTreeView', () => {
 
     it('should handle complete hoist and navigate workflow', async () => {
       const user = userEvent.setup();
-      render(<NotesTreeView {...mockProps} selectedItemId="cat-1" selectedItemType="category" />);
+      render(<NotesTreeView {...mockProps} selectedItemId='cat-1' selectedItemType='category' />);
 
       // Hoist the category
       const hoistButton = screen.getByTitle('Hoist Folder');

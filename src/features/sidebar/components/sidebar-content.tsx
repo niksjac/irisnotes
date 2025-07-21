@@ -1,9 +1,9 @@
-import { useState, useCallback } from "react";
-import { SidebarButtons } from "./sidebar-buttons";
-import { SidebarSearch } from "./sidebar-search";
-import { NotesTreeView } from "../../notes-tree-view";
-import type { Note, Category } from "../../../types/database";
-import type { FocusableElement } from "../../layout";
+import { useState, useCallback } from 'react';
+import { SidebarButtons } from './sidebar-buttons';
+import { SidebarSearch } from './sidebar-search';
+import { NotesTreeView } from '../../notes-tree-view';
+import type { Note, Category } from '../../../types/database';
+import type { FocusableElement } from '../../layout';
 
 interface SidebarContentProps {
   notes: Note[];
@@ -58,14 +58,14 @@ export function SidebarContent({
   }, [focusElement]);
 
   return (
-    <div className="sidebar-content-wrapper">
+    <div className='sidebar-content-wrapper'>
       {/* Sidebar Buttons */}
       <SidebarButtons
         onCreateNote={() => onCreateNote()}
         onCreateFolder={() => onCreateFolder()}
         onFocusSearch={handleFocusSearch}
         focusClasses={getFocusClasses('sidebar-buttons')}
-        onRegisterElement={(ref) => registerElement('sidebar-buttons', ref)}
+        onRegisterElement={ref => registerElement('sidebar-buttons', ref)}
         onSetFocusFromClick={() => setFocusFromClick('sidebar-buttons')}
       />
 
@@ -74,7 +74,7 @@ export function SidebarContent({
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         focusClasses={getFocusClasses('sidebar-search')}
-        onRegisterElement={(ref) => registerElement('sidebar-search', ref)}
+        onRegisterElement={ref => registerElement('sidebar-search', ref)}
         onSetFocusFromClick={() => setFocusFromClick('sidebar-search')}
       />
 
@@ -97,7 +97,7 @@ export function SidebarContent({
         noteCategories={noteCategories || []}
         searchQuery={searchQuery}
         focusClasses={getFocusClasses('sidebar-tree')}
-        onRegisterElement={(ref) => registerElement('sidebar-tree', ref)}
+        onRegisterElement={ref => registerElement('sidebar-tree', ref)}
         onSetFocusFromClick={() => setFocusFromClick('sidebar-tree')}
       />
     </div>

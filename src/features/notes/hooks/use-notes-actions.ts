@@ -13,153 +13,177 @@ export const useNotesActions = () => {
     addNote,
     updateNote: updateNoteInState,
     removeNote,
-    clearError
+    clearError,
   } = useNotesData();
 
-  const {
-    setSelectedNoteIdForPane,
-    clearSelectionForPane
-  } = useNotesSelection();
+  const { setSelectedNoteIdForPane, clearSelectionForPane } = useNotesSelection();
 
   const { storageManager } = useNotesStorage();
 
-  const loadAllNotes = useCallback(async (filters?: NoteFilters) => {
-    setIsLoading(true);
-    setError(null);
+  const loadAllNotes = useCallback(
+    async (filters?: NoteFilters) => {
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const result = await storageManager.getNotes(filters);
-      if (result.success) {
-        updateNotes(result.data);
-      } else {
-        setError(result.error);
-      }
-    } catch (err) {
-      console.error('Failed to load notes:', err);
-      setError(`Failed to load notes: ${err}`);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [storageManager, setIsLoading, setError, updateNotes]);
-
-  const createNote = useCallback(async (params: CreateNoteParams, targetPane?: PaneId) => {
-    setError(null);
-
-    try {
-      const result = await storageManager.createNote(params);
-      if (result.success) {
-        const newNote = result.data;
-        addNote(newNote);
-
-        // Select the new note in the target pane
-        if (targetPane) {
-          setSelectedNoteIdForPane(targetPane, newNote.id);
+      try {
+        const result = await storageManager.getNotes(filters);
+        if (result.success) {
+          updateNotes(result.data);
         } else {
-          setSelectedNoteIdForPane('left', newNote.id);
+          setError(result.error);
         }
-
-        return { success: true, data: newNote };
-      } else {
-        setError(result.error);
-        return result;
+      } catch (err) {
+        console.error('Failed to load notes:', err);
+        setError(`Failed to load notes: ${err}`);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      const errorMsg = `Failed to create note: ${err}`;
-      setError(errorMsg);
-      return { success: false, error: errorMsg };
-    }
-  }, [storageManager, setError, addNote, setSelectedNoteIdForPane]);
+    },
+    [storageManager, setIsLoading, setError, updateNotes]
+  );
 
-  const updateNote = useCallback(async (params: UpdateNoteParams) => {
-    setError(null);
+  const createNote = useCallback(
+    async (params: CreateNoteParams, targetPane?: PaneId) => {
+      setError(null);
 
-    try {
-      const result = await storageManager.updateNote(params);
-      if (result.success) {
-        const updatedNote = result.data;
-        updateNoteInState(updatedNote);
-        return { success: true, data: updatedNote };
-      } else {
-        setError(result.error);
-        return result;
+      try {
+        const result = await storageManager.createNote(params);
+        if (result.success) {
+          const newNote = result.data;
+          addNote(newNote);
+
+          // Select the new note in the target pane
+          if (targetPane) {
+            setSelectedNoteIdForPane(targetPane, newNote.id);
+          } else {
+            setSelectedNoteIdForPane('left', newNote.id);
+          }
+
+          return { success: true, data: newNote };
+        } else {
+          setError(result.error);
+          return result;
+        }
+      } catch (err) {
+        const errorMsg = `Failed to create note: ${err}`;
+        setError(errorMsg);
+        return { success: false, error: errorMsg };
       }
-    } catch (err) {
-      const errorMsg = `Failed to update note: ${err}`;
-      setError(errorMsg);
-      return { success: false, error: errorMsg };
-    }
-  }, [storageManager, setError, updateNoteInState]);
+    },
+    [storageManager, setError, addNote, setSelectedNoteIdForPane]
+  );
 
-  const deleteNote = useCallback(async (noteId: string) => {
-    setError(null);
+  const updateNote = useCallback(
+    async (params: UpdateNoteParams) => {
+      setError(null);
 
-    try {
-      const result = await storageManager.deleteNote(noteId);
-      if (result.success) {
-        removeNote(noteId);
-
-        // Clear selection if the deleted note was selected
-        clearSelectionForPane('left');
-        clearSelectionForPane('right');
-
-        return { success: true };
-      } else {
-        setError(result.error);
-        return result;
+      try {
+        const result = await storageManager.updateNote(params);
+        if (result.success) {
+          const updatedNote = result.data;
+          updateNoteInState(updatedNote);
+          return { success: true, data: updatedNote };
+        } else {
+          setError(result.error);
+          return result;
+        }
+      } catch (err) {
+        const errorMsg = `Failed to update note: ${err}`;
+        setError(errorMsg);
+        return { success: false, error: errorMsg };
       }
-    } catch (err) {
-      const errorMsg = `Failed to delete note: ${err}`;
-      setError(errorMsg);
-      return { success: false, error: errorMsg };
-    }
-  }, [storageManager, setError, removeNote, clearSelectionForPane]);
+    },
+    [storageManager, setError, updateNoteInState]
+  );
 
-  const searchNotes = useCallback(async (query: string, filters?: NoteFilters) => {
-    setError(null);
+  const deleteNote = useCallback(
+    async (noteId: string) => {
+      setError(null);
 
-    try {
-      const result = await storageManager.searchNotes(query, filters);
-      if (result.success) {
-        return { success: true, data: result.data };
-      } else {
-        setError(result.error);
-        return result;
+      try {
+        const result = await storageManager.deleteNote(noteId);
+        if (result.success) {
+          removeNote(noteId);
+
+          // Clear selection if the deleted note was selected
+          clearSelectionForPane('left');
+          clearSelectionForPane('right');
+
+          return { success: true };
+        } else {
+          setError(result.error);
+          return result;
+        }
+      } catch (err) {
+        const errorMsg = `Failed to delete note: ${err}`;
+        setError(errorMsg);
+        return { success: false, error: errorMsg };
       }
-    } catch (err) {
-      const errorMsg = `Failed to search notes: ${err}`;
-      setError(errorMsg);
-      return { success: false, error: errorMsg };
-    }
-  }, [storageManager, setError]);
+    },
+    [storageManager, setError, removeNote, clearSelectionForPane]
+  );
 
-  const createNewNote = useCallback((targetPane?: PaneId) => {
-    return createNote({
-      title: 'Untitled Note',
-      content: '',
-      content_type: 'custom'
-    }, targetPane);
-  }, [createNote]);
+  const searchNotes = useCallback(
+    async (query: string, filters?: NoteFilters) => {
+      setError(null);
 
-  const updateNoteTitle = useCallback((noteId: string, title: string) => {
-    return updateNote({ id: noteId, title });
-  }, [updateNote]);
+      try {
+        const result = await storageManager.searchNotes(query, filters);
+        if (result.success) {
+          return { success: true, data: result.data };
+        } else {
+          setError(result.error);
+          return result;
+        }
+      } catch (err) {
+        const errorMsg = `Failed to search notes: ${err}`;
+        setError(errorMsg);
+        return { success: false, error: errorMsg };
+      }
+    },
+    [storageManager, setError]
+  );
 
-  const updateNoteContent = useCallback((noteId: string, content: string, contentType?: 'html' | 'markdown' | 'plain' | 'custom', contentRaw?: string) => {
-    const updateParams: UpdateNoteParams = {
-      id: noteId,
-      content
-    };
+  const createNewNote = useCallback(
+    (targetPane?: PaneId) => {
+      return createNote(
+        {
+          title: 'Untitled Note',
+          content: '',
+          content_type: 'custom',
+        },
+        targetPane
+      );
+    },
+    [createNote]
+  );
 
-    if (contentType !== undefined) {
-      updateParams.content_type = contentType;
-    }
+  const updateNoteTitle = useCallback(
+    (noteId: string, title: string) => {
+      return updateNote({ id: noteId, title });
+    },
+    [updateNote]
+  );
 
-    if (contentRaw !== undefined) {
-      updateParams.content_raw = contentRaw;
-    }
+  const updateNoteContent = useCallback(
+    (noteId: string, content: string, contentType?: 'html' | 'markdown' | 'plain' | 'custom', contentRaw?: string) => {
+      const updateParams: UpdateNoteParams = {
+        id: noteId,
+        content,
+      };
 
-    return updateNote(updateParams);
-  }, [updateNote]);
+      if (contentType !== undefined) {
+        updateParams.content_type = contentType;
+      }
+
+      if (contentRaw !== undefined) {
+        updateParams.content_raw = contentRaw;
+      }
+
+      return updateNote(updateParams);
+    },
+    [updateNote]
+  );
 
   return {
     loadAllNotes,

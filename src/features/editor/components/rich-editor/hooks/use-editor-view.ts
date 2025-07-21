@@ -19,10 +19,7 @@ interface UseEditorViewOptions {
 }
 
 // Debounce utility function with better typing
-function debounce<T extends (...args: any[]) => any>(
-  func: T,
-  delay: number
-): T & { cancel: () => void } {
+function debounce<T extends (...args: any[]) => any>(func: T, delay: number): T & { cancel: () => void } {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
   const debouncedFunc = ((...args: Parameters<T>) => {
@@ -77,9 +74,7 @@ const optimizedLinkClick = (
     // Search backwards for link start
     for (let i = index; i >= 0; i--) {
       const textNode = parent.child(i);
-      if (textNode.isText && textNode.marks.some(mark =>
-        mark.type === linkMarkType && mark.attrs.href === href
-      )) {
+      if (textNode.isText && textNode.marks.some(mark => mark.type === linkMarkType && mark.attrs.href === href)) {
         linkStart = $pos.start() + parent.child(i).nodeSize;
       } else {
         break;
@@ -89,9 +84,7 @@ const optimizedLinkClick = (
     // Search forwards for link end
     for (let i = index; i < parent.childCount; i++) {
       const textNode = parent.child(i);
-      if (textNode.isText && textNode.marks.some(mark =>
-        mark.type === linkMarkType && mark.attrs.href === href
-      )) {
+      if (textNode.isText && textNode.marks.some(mark => mark.type === linkMarkType && mark.attrs.href === href)) {
         linkEnd = $pos.start() + parent.child(i).nodeSize;
       } else {
         break;
@@ -107,13 +100,7 @@ const optimizedLinkClick = (
   return false;
 };
 
-export function useEditorView({
-  content,
-  onChange,
-  readOnly,
-  onToggleView,
-  schema
-}: UseEditorViewOptions) {
+export function useEditorView({ content, onChange, readOnly, onToggleView, schema }: UseEditorViewOptions) {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
@@ -144,25 +131,29 @@ export function useEditorView({
   }, [debouncedOnChange]);
 
   // Memoize the editor state creation
-  const memoizedCreateState = useCallback((doc: any) => {
-    return createEditorState({
-      doc,
-      schema,
-      onToggleView: onToggleView || (() => {})
-    });
-  }, [schema, onToggleView]);
+  const memoizedCreateState = useCallback(
+    (doc: any) => {
+      return createEditorState({
+        doc,
+        schema,
+        onToggleView: onToggleView || (() => {}),
+      });
+    },
+    [schema, onToggleView]
+  );
 
   // Memoize the editor configuration
-  const editorConfig = useMemo(() => ({
-    editable: () => !readOnly,
-    attributes: {
-      class: 'rich-editor-view',
-      spellcheck: 'false'
-    },
-    handleClickOn: optimizedLinkClick
-  }), [readOnly]);
-
-
+  const editorConfig = useMemo(
+    () => ({
+      editable: () => !readOnly,
+      attributes: {
+        class: 'rich-editor-view',
+        spellcheck: 'false',
+      },
+      handleClickOn: optimizedLinkClick,
+    }),
+    [readOnly]
+  );
 
   // Initialize editor view with proper cleanup
   useEffect(() => {
@@ -194,10 +185,10 @@ export function useEditorView({
     const view = new EditorView(editorRef.current, {
       state,
       ...editorConfig,
-      dispatchTransaction: localDispatchTransaction
+      dispatchTransaction: localDispatchTransaction,
     });
 
-        viewRef.current = view;
+    viewRef.current = view;
 
     // Store view reference on DOM element for external access
     setTimeout(() => {
@@ -211,11 +202,11 @@ export function useEditorView({
 
     // Add custom keymap
     const customKeymap = keymap({
-      'Mod-Enter': (state: any, dispatch: any) => openLinkAtCursor(state, dispatch, view)
+      'Mod-Enter': (state: any, dispatch: any) => openLinkAtCursor(state, dispatch, view),
     });
 
     const newState = view.state.reconfigure({
-      plugins: [customKeymap, ...view.state.plugins]
+      plugins: [customKeymap, ...view.state.plugins],
     });
 
     view.updateState(newState);
@@ -280,9 +271,7 @@ export function useEditorView({
           const preservedPos = Math.min(currentSelection.from, maxPos);
           const newSelection = TextSelection.near(newState.doc.resolve(preservedPos));
 
-          const stateWithSelection = newState.apply(
-            newState.tr.setSelection(newSelection)
-          );
+          const stateWithSelection = newState.apply(newState.tr.setSelection(newSelection));
 
           view.updateState(stateWithSelection);
         } catch {

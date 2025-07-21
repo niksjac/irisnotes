@@ -10,7 +10,7 @@ describe('useSidebarState', () => {
     store.set(sidebarCollapsedAtom, false);
 
     const { result } = renderHook(() => useSidebarState(), {
-      wrapper: ({ children }) => <Provider store={store}>{children}</Provider>
+      wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
     });
 
     expect(result.current.sidebarCollapsed).toBe(false);
@@ -21,7 +21,7 @@ describe('useSidebarState', () => {
     store.set(sidebarCollapsedAtom, false);
 
     const { result } = renderHook(() => useSidebarState(), {
-      wrapper: ({ children }) => <Provider store={store}>{children}</Provider>
+      wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
     });
 
     act(() => {

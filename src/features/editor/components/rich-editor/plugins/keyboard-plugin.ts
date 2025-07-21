@@ -98,8 +98,11 @@ export const copySelectionUp = (state: any, dispatch: any) => {
       const duplicatedBlock = block.copy(block.content);
 
       dispatch(
-        tr.insert(blockStart, duplicatedBlock)
-          .setSelection(selection.constructor.near(tr.doc.resolve(blockStart + duplicatedBlock.nodeSize + cursorOffset)))
+        tr
+          .insert(blockStart, duplicatedBlock)
+          .setSelection(
+            selection.constructor.near(tr.doc.resolve(blockStart + duplicatedBlock.nodeSize + cursorOffset))
+          )
           .scrollIntoView()
       );
     }
@@ -116,10 +119,7 @@ export const copySelectionUp = (state: any, dispatch: any) => {
       const adjustedFrom = originalFrom + content.size;
       const adjustedTo = originalTo + content.size;
 
-      dispatch(
-        newTr.setSelection(selection.constructor.create(newTr.doc, adjustedFrom, adjustedTo))
-          .scrollIntoView()
-      );
+      dispatch(newTr.setSelection(selection.constructor.create(newTr.doc, adjustedFrom, adjustedTo)).scrollIntoView());
     }
     return true;
   }
@@ -144,7 +144,8 @@ export const copySelectionDown = (state: any, dispatch: any) => {
       const duplicatedBlock = block.copy(block.content);
 
       dispatch(
-        tr.insert(blockEnd, duplicatedBlock)
+        tr
+          .insert(blockEnd, duplicatedBlock)
           .setSelection(selection.constructor.near(tr.doc.resolve(blockStart + cursorOffset)))
           .scrollIntoView()
       );
@@ -159,10 +160,7 @@ export const copySelectionDown = (state: any, dispatch: any) => {
     if (dispatch) {
       const newTr = tr.insert(originalTo, content.content);
       // Keep selection on the original content (position unchanged)
-      dispatch(
-        newTr.setSelection(selection.constructor.create(newTr.doc, originalFrom, originalTo))
-          .scrollIntoView()
-      );
+      dispatch(newTr.setSelection(selection.constructor.create(newTr.doc, originalFrom, originalTo)).scrollIntoView());
     }
     return true;
   }
@@ -184,9 +182,9 @@ export const openLinkAtCursor = (state: any, _dispatch: any, view?: any) => {
     // Find start of link
     while (linkStart > 0) {
       const prevPos = state.doc.resolve(linkStart - 1);
-      const hasLinkMark = prevPos.marks().find((mark: any) =>
-        mark.type.name === 'link' && mark.attrs.href === linkMark.attrs.href
-      );
+      const hasLinkMark = prevPos
+        .marks()
+        .find((mark: any) => mark.type.name === 'link' && mark.attrs.href === linkMark.attrs.href);
       if (!hasLinkMark) break;
       linkStart--;
     }
@@ -194,9 +192,9 @@ export const openLinkAtCursor = (state: any, _dispatch: any, view?: any) => {
     // Find end of link
     while (linkEnd < state.doc.content.size) {
       const nextPos = state.doc.resolve(linkEnd);
-      const hasLinkMark = nextPos.marks().find((mark: any) =>
-        mark.type.name === 'link' && mark.attrs.href === linkMark.attrs.href
-      );
+      const hasLinkMark = nextPos
+        .marks()
+        .find((mark: any) => mark.type.name === 'link' && mark.attrs.href === linkMark.attrs.href);
       if (!hasLinkMark) break;
       linkEnd++;
     }
@@ -231,7 +229,7 @@ export const handleEnter = (schema: any) => (state: any, dispatch: any) => {
 // Create comprehensive keymap with natural Enter behavior
 export const createBaseKeymap = (schema: any, colorKeymap: any, toggleSourceView: () => void) => ({
   // Natural Enter behavior
-  'Enter': handleEnter(schema),
+  Enter: handleEnter(schema),
 
   // Shift+Enter for line breaks (like Word/OneNote)
   'Shift-Enter': (state: any, dispatch: any) => {

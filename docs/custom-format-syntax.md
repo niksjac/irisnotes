@@ -5,12 +5,14 @@ IrisNotes supports a custom text formatting syntax that allows you to add visual
 ## Overview
 
 The custom format uses curly brace tags similar to BBCode or markup languages:
+
 - Simple tags: `{bold}text{/bold}`
 - Parameter tags: `{color:red}text{/color}`
 
 ## Text Formatting
 
 ### Basic Formatting
+
 ```
 {bold}Bold text{/bold}
 {italic}Italic text{/italic}
@@ -20,6 +22,7 @@ The custom format uses curly brace tags similar to BBCode or markup languages:
 ```
 
 ### Scientific Notation
+
 ```
 H{sup}2{/sup}O (water molecule)
 CO{sub}2{/sub} (carbon dioxide)
@@ -28,6 +31,7 @@ CO{sub}2{/sub} (carbon dioxide)
 ## Colors
 
 ### Text Colors
+
 ```
 {color:red}Red text{/color}
 {color:green}Green text{/color}
@@ -41,6 +45,7 @@ CO{sub}2{/sub} (carbon dioxide)
 ```
 
 ### Hex Colors
+
 ```
 {color:#e74c3c}Custom red{/color}
 {color:#27ae60}Custom green{/color}
@@ -48,6 +53,7 @@ CO{sub}2{/sub} (carbon dioxide)
 ```
 
 ### Background Colors
+
 ```
 {bg:yellow}Highlighted text{/bg}
 {bg:red}Important warning{/bg}
@@ -59,6 +65,7 @@ CO{sub}2{/sub} (carbon dioxide)
 ## Font Styling
 
 ### Font Sizes
+
 ```
 {size:tiny}Tiny text{/size}
 {size:small}Small text{/size}
@@ -71,6 +78,7 @@ CO{sub}2{/sub} (carbon dioxide)
 ```
 
 ### Custom Pixel Sizes
+
 ```
 {size:10px}10 pixel text{/size}
 {size:16px}16 pixel text{/size}
@@ -78,6 +86,7 @@ CO{sub}2{/sub} (carbon dioxide)
 ```
 
 ### Font Families
+
 ```
 {font:Arial}Arial text{/font}
 {font:Georgia}Georgia text{/font}
@@ -101,6 +110,7 @@ You can nest and combine multiple formatting tags:
 ## Examples
 
 ### Document Structure
+
 ```
 {size:xl}{bold}Main Heading{/bold}{/size}
 
@@ -112,6 +122,7 @@ Regular paragraph text with {bold}important{/bold} words and {italic}emphasis{/i
 ```
 
 ### Code Documentation
+
 ```
 {bold}Function:{/bold} {code}calculateTotal(){/code}
 
@@ -123,6 +134,7 @@ Regular paragraph text with {bold}important{/bold} words and {italic}emphasis{/i
 ```
 
 ### Scientific Notes
+
 ```
 {bold}Chemical Formula:{/bold} H{sub}2{/sub}SO{sub}4{/sub}
 
@@ -143,6 +155,7 @@ Regular paragraph text with {bold}important{/bold} words and {italic}emphasis{/i
 ## Validation
 
 The system validates syntax and will warn about:
+
 - Unmatched opening/closing tags
 - Unknown tag names
 - Empty parameter values
@@ -151,6 +164,7 @@ The system validates syntax and will warn about:
 ## Export Compatibility
 
 Notes in custom format can be:
+
 - Exported as `.txt` files preserving the markup
 - Converted to HTML for web display
 - Parsed to plain text for search indexing
@@ -159,6 +173,7 @@ Notes in custom format can be:
 ## Technical Implementation
 
 The custom format is processed in this order:
+
 1. Color markup (`{color:...}`)
 2. Background colors (`{bg:...}`)
 3. Font sizes (`{size:...}`)

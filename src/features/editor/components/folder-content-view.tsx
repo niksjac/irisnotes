@@ -55,27 +55,33 @@ export function FolderContentView({
 
   if (isEmpty) {
     return (
-      <div className="folder-content-view">
-        <div className="folder-header">
-          <div className="folder-title">
+      <div className='folder-content-view'>
+        <div className='folder-header'>
+          <div className='folder-title'>
             <FolderOpen size={20} />
             <h2>{selectedFolder.name}</h2>
           </div>
         </div>
 
-        <div className="folder-empty-state">
-          <div className="empty-icon">
+        <div className='folder-empty-state'>
+          <div className='empty-icon'>
             <Folder size={48} />
           </div>
           <h3>This folder is empty</h3>
           <p>Create your first note or subfolder to get started</p>
 
-          <div className="empty-actions">
-            <button className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors" onClick={handleCreateNote}>
+          <div className='empty-actions'>
+            <button
+              className='inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors'
+              onClick={handleCreateNote}
+            >
               <Plus size={16} />
               Create Note
             </button>
-            <button className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors" onClick={handleCreateFolder}>
+            <button
+              className='inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors'
+              onClick={handleCreateFolder}
+            >
               <Plus size={16} />
               Create Subfolder
             </button>
@@ -86,42 +92,46 @@ export function FolderContentView({
   }
 
   return (
-    <div className="folder-content-view">
-      <div className="folder-header">
-        <div className="folder-title">
+    <div className='folder-content-view'>
+      <div className='folder-header'>
+        <div className='folder-title'>
           <FolderOpen size={20} />
           <h2>{selectedFolder.name}</h2>
         </div>
-        <div className="folder-actions">
-          <button className="inline-flex items-center gap-1 p-2 bg-transparent text-gray-600 dark:text-gray-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" onClick={handleCreateNote} title="Create note in this folder">
+        <div className='folder-actions'>
+          <button
+            className='inline-flex items-center gap-1 p-2 bg-transparent text-gray-600 dark:text-gray-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
+            onClick={handleCreateNote}
+            title='Create note in this folder'
+          >
             <Plus size={16} />
             <FileText size={16} />
           </button>
-          <button className="inline-flex items-center gap-1 p-2 bg-transparent text-gray-600 dark:text-gray-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" onClick={handleCreateFolder} title="Create subfolder">
+          <button
+            className='inline-flex items-center gap-1 p-2 bg-transparent text-gray-600 dark:text-gray-400 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
+            onClick={handleCreateFolder}
+            title='Create subfolder'
+          >
             <Plus size={16} />
             <Folder size={16} />
           </button>
         </div>
       </div>
 
-      <div className="folder-content">
+      <div className='folder-content'>
         {/* Subfolders Section */}
         {subfolders.length > 0 && (
-          <div className="folder-section">
-            <h3 className="section-title">Folders</h3>
-            <div className="items-grid">
+          <div className='folder-section'>
+            <h3 className='section-title'>Folders</h3>
+            <div className='items-grid'>
               {subfolders.map(folder => (
-                <div
-                  key={folder.id}
-                  className="content-item folder-item"
-                  onClick={() => onFolderSelect(folder.id)}
-                >
-                  <div className="item-icon">
+                <div key={folder.id} className='content-item folder-item' onClick={() => onFolderSelect(folder.id)}>
+                  <div className='item-icon'>
                     <Folder size={24} />
                   </div>
-                  <div className="item-info">
-                    <h4 className="item-title">{folder.name}</h4>
-                    <p className="item-meta">Folder</p>
+                  <div className='item-info'>
+                    <h4 className='item-title'>{folder.name}</h4>
+                    <p className='item-meta'>Folder</p>
                   </div>
                 </div>
               ))}
@@ -131,21 +141,17 @@ export function FolderContentView({
 
         {/* Notes Section */}
         {folderNotes.length > 0 && (
-          <div className="folder-section">
-            <h3 className="section-title">Notes</h3>
-            <div className="items-grid">
+          <div className='folder-section'>
+            <h3 className='section-title'>Notes</h3>
+            <div className='items-grid'>
               {folderNotes.map(note => (
-                <div
-                  key={note.id}
-                  className="content-item note-item"
-                  onClick={() => onNoteSelect(note.id)}
-                >
-                  <div className="item-icon">
+                <div key={note.id} className='content-item note-item' onClick={() => onNoteSelect(note.id)}>
+                  <div className='item-icon'>
                     <FileText size={24} />
                   </div>
-                  <div className="item-info">
-                    <h4 className="item-title">{note.title}</h4>
-                    <p className="item-meta">
+                  <div className='item-info'>
+                    <h4 className='item-title'>{note.title}</h4>
+                    <p className='item-meta'>
                       {note.updated_at ? new Date(note.updated_at).toLocaleDateString() : 'No date'}
                     </p>
                   </div>

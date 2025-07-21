@@ -111,11 +111,11 @@ export const AllVariants: Story = {
     children: 'Button',
   },
   render: () => (
-    <div className="flex flex-wrap gap-4">
-      <Button variant="primary">Primary</Button>
-      <Button variant="secondary">Secondary</Button>
-      <Button variant="danger">Danger</Button>
-      <Button variant="ghost">Ghost</Button>
+    <div className='flex flex-wrap gap-4'>
+      <Button variant='primary'>Primary</Button>
+      <Button variant='secondary'>Secondary</Button>
+      <Button variant='danger'>Danger</Button>
+      <Button variant='ghost'>Ghost</Button>
     </div>
   ),
 };
@@ -126,10 +126,10 @@ export const AllSizes: Story = {
     children: 'Button',
   },
   render: () => (
-    <div className="flex flex-wrap items-center gap-4">
-      <Button size="sm">Small</Button>
-      <Button size="md">Medium</Button>
-      <Button size="lg">Large</Button>
+    <div className='flex flex-wrap items-center gap-4'>
+      <Button size='sm'>Small</Button>
+      <Button size='md'>Medium</Button>
+      <Button size='lg'>Large</Button>
     </div>
   ),
 };
@@ -141,7 +141,7 @@ export const DarkTheme: Story = {
   },
   parameters: {
     themes: {
-      themeOverride: 'dark'
+      themeOverride: 'dark',
     },
   },
 };

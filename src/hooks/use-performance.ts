@@ -20,7 +20,7 @@ export const usePerformance = (componentName: string) => {
     cleanupFunctions.current.push(cleanup);
   }, []);
 
-    // Memory monitoring (development only)
+  // Memory monitoring (development only)
   useEffect(() => {
     // Check if we're in development mode (Vite sets this)
     const isDevelopment = import.meta.env?.DEV || import.meta.env?.MODE === 'development';
@@ -29,7 +29,7 @@ export const usePerformance = (componentName: string) => {
       const logMetrics = () => {
         const metrics: PerformanceMetrics = {
           renderCount: renderCount.current,
-          lastRenderTime: lastRenderTime.current
+          lastRenderTime: lastRenderTime.current,
         };
 
         // Add memory info if available
@@ -67,11 +67,14 @@ export const usePerformance = (componentName: string) => {
   return {
     addCleanup,
     renderCount: renderCount.current,
-    getMetrics: useCallback(() => ({
-      renderCount: renderCount.current,
-      lastRenderTime: lastRenderTime.current,
-      memory: 'memory' in performance ? (performance as any).memory?.usedJSHeapSize : undefined
-    }), [])
+    getMetrics: useCallback(
+      () => ({
+        renderCount: renderCount.current,
+        lastRenderTime: lastRenderTime.current,
+        memory: 'memory' in performance ? (performance as any).memory?.usedJSHeapSize : undefined,
+      }),
+      []
+    ),
   };
 };
 
@@ -88,15 +91,18 @@ export const useDebounce = <T extends (...args: any[]) => any>(
     callbackRef.current = callback;
   }, [callback]);
 
-  const debouncedCallback = useCallback(((...args: Parameters<T>) => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
+  const debouncedCallback = useCallback(
+    ((...args: Parameters<T>) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
 
-    timeoutRef.current = setTimeout(() => {
-      callbackRef.current(...args);
-    }, delay);
-  }) as T & { cancel: () => void }, [delay]);
+      timeoutRef.current = setTimeout(() => {
+        callbackRef.current(...args);
+      }, delay);
+    }) as T & { cancel: () => void },
+    [delay]
+  );
 
   // Add cancel method
   debouncedCallback.cancel = useCallback(() => {
@@ -130,7 +136,7 @@ export const useAsyncMemo = <T>(
   }>({
     value: initialValue,
     loading: false,
-    error: null
+    error: null,
   });
 
   useEffect(() => {

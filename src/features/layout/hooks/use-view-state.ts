@@ -3,7 +3,7 @@ import {
   configViewActiveAtom,
   hotkeysViewActiveAtom,
   databaseStatusVisibleAtom,
-  activityBarVisibleAtom
+  activityBarVisibleAtom,
 } from '../../../atoms';
 
 export const useViewState = () => {

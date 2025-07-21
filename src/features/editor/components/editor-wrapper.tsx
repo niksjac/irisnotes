@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useCallback } from "react";
-import clsx from "clsx";
+import React, { useRef, useEffect, useCallback } from 'react';
+import clsx from 'clsx';
 
 interface EditorWrapperProps {
   children: React.ReactNode;
@@ -13,7 +13,7 @@ export function EditorWrapper({
   children,
   focusClasses = {},
   onRegisterElement,
-  onSetFocusFromClick
+  onSetFocusFromClick,
 }: EditorWrapperProps) {
   const editorRef = useRef<HTMLDivElement>(null);
 
@@ -34,25 +34,25 @@ export function EditorWrapper({
         return false;
       },
 
-             // 2. Try CodeMirror editor
-       () => {
-         const codeMirrorEditor = editorRef.current!.querySelector('.cm-editor') as HTMLElement;
-         if (codeMirrorEditor) {
-           const cmView = (codeMirrorEditor as any).cmView;
-           if (cmView) {
-             cmView.focus();
-             return true;
-           }
+      // 2. Try CodeMirror editor
+      () => {
+        const codeMirrorEditor = editorRef.current!.querySelector('.cm-editor') as HTMLElement;
+        if (codeMirrorEditor) {
+          const cmView = (codeMirrorEditor as any).cmView;
+          if (cmView) {
+            cmView.focus();
+            return true;
+          }
 
-           // Fallback: focus content area
-           const contentArea = codeMirrorEditor.querySelector('.cm-content') as HTMLElement;
-           if (contentArea) {
-             contentArea.focus();
-             return true;
-           }
-         }
-         return false;
-       },
+          // Fallback: focus content area
+          const contentArea = codeMirrorEditor.querySelector('.cm-content') as HTMLElement;
+          if (contentArea) {
+            contentArea.focus();
+            return true;
+          }
+        }
+        return false;
+      },
 
       // 3. Try any focusable element inside editor
       () => {
@@ -70,14 +70,13 @@ export function EditorWrapper({
       () => {
         editorRef.current!.focus();
         return true;
-      }
+      },
     ];
 
     // Try each approach until one succeeds
     for (const approach of approaches) {
       try {
         if (approach()) {
-
           return;
         }
       } catch (error) {
@@ -110,12 +109,7 @@ export function EditorWrapper({
   };
 
   return (
-    <div
-      ref={editorRef}
-      className={clsx("editor-wrapper", focusClasses)}
-      tabIndex={0}
-      onClick={handleClick}
-    >
+    <div ref={editorRef} className={clsx('editor-wrapper', focusClasses)} tabIndex={0} onClick={handleClick}>
       {children}
     </div>
   );

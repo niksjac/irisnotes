@@ -45,7 +45,11 @@ describe('TreeNode', () => {
     ...overrides,
   });
 
-  const createMockCategoryNode = (id: string, name: string, overrides: Partial<MockArboristNode> = {}): MockArboristNode => ({
+  const createMockCategoryNode = (
+    id: string,
+    name: string,
+    overrides: Partial<MockArboristNode> = {}
+  ): MockArboristNode => ({
     id,
     name,
     type: 'category',
@@ -123,21 +127,21 @@ describe('TreeNode', () => {
     });
 
     it('should apply focus styles when item is navigated', () => {
-      render(<TreeNode {...mockProps} navigatedItemId="test-node" />);
+      render(<TreeNode {...mockProps} navigatedItemId='test-node' />);
 
       const container = screen.getByRole('button').parentElement;
       expect(container).toHaveStyle('background-color: rgb(233 245 255)'); // bg-blue-50
     });
 
     it('should apply selection styles when item is selected', () => {
-      render(<TreeNode {...mockProps} selectedItemId="test-node" />);
+      render(<TreeNode {...mockProps} selectedItemId='test-node' />);
 
       const container = screen.getByRole('button').parentElement;
       expect(container).toHaveStyle('background-color: rgb(147 197 253)'); // bg-blue-300
     });
 
     it('should apply open note styles when note is selected and open', () => {
-      render(<TreeNode {...mockProps} selectedNoteId="test-node" />);
+      render(<TreeNode {...mockProps} selectedNoteId='test-node' />);
 
       const nodeText = screen.getByText('Test Node');
       expect(nodeText).toHaveClass('text-green-500', 'font-bold');
@@ -151,13 +155,7 @@ describe('TreeNode', () => {
         isLeaf: false,
       });
 
-      render(
-        <TreeNode
-          {...mockProps}
-          node={categoryNode}
-          expandedNodes={new Set(['cat-1'])}
-        />
-      );
+      render(<TreeNode {...mockProps} node={categoryNode} expandedNodes={new Set(['cat-1'])} />);
 
       const chevronDown = screen.getByRole('button').querySelector('.lucide-chevron-down');
       expect(chevronDown).toBeInTheDocument();
@@ -273,7 +271,7 @@ describe('TreeNode', () => {
     });
 
     it('should show input field when editingItemId matches node id', () => {
-      render(<TreeNode {...mockProps} editingItemId="test-node" />);
+      render(<TreeNode {...mockProps} editingItemId='test-node' />);
 
       const input = screen.getByDisplayValue('Test Node');
       expect(input).toBeInTheDocument();
@@ -281,7 +279,7 @@ describe('TreeNode', () => {
 
     it('should save changes on Enter key', async () => {
       const user = userEvent.setup();
-      render(<TreeNode {...mockProps} editingItemId="test-node" />);
+      render(<TreeNode {...mockProps} editingItemId='test-node' />);
 
       const input = screen.getByDisplayValue('Test Node');
       await user.clear(input);
@@ -293,7 +291,7 @@ describe('TreeNode', () => {
 
     it('should cancel editing on Escape key', async () => {
       const user = userEvent.setup();
-      render(<TreeNode {...mockProps} editingItemId="test-node" />);
+      render(<TreeNode {...mockProps} editingItemId='test-node' />);
 
       const input = screen.getByDisplayValue('Test Node');
       await user.clear(input);
@@ -306,7 +304,7 @@ describe('TreeNode', () => {
 
     it('should save changes on blur', async () => {
       const user = userEvent.setup();
-      render(<TreeNode {...mockProps} editingItemId="test-node" />);
+      render(<TreeNode {...mockProps} editingItemId='test-node' />);
 
       const input = screen.getByDisplayValue('Test Node');
       await user.clear(input);
@@ -318,7 +316,7 @@ describe('TreeNode', () => {
 
     it('should not save empty names', async () => {
       const user = userEvent.setup();
-      render(<TreeNode {...mockProps} editingItemId="test-node" />);
+      render(<TreeNode {...mockProps} editingItemId='test-node' />);
 
       const input = screen.getByDisplayValue('Test Node');
       await user.clear(input);
@@ -329,7 +327,7 @@ describe('TreeNode', () => {
 
     it('should not save unchanged names', async () => {
       const user = userEvent.setup();
-      render(<TreeNode {...mockProps} editingItemId="test-node" />);
+      render(<TreeNode {...mockProps} editingItemId='test-node' />);
 
       await user.keyboard('{Enter}');
 
@@ -340,7 +338,7 @@ describe('TreeNode', () => {
       const user = userEvent.setup();
       const categoryNode = createMockCategoryNode('cat-1', 'Test Category');
 
-      render(<TreeNode {...mockProps} node={categoryNode} editingItemId="cat-1" />);
+      render(<TreeNode {...mockProps} node={categoryNode} editingItemId='cat-1' />);
 
       const input = screen.getByDisplayValue('Test Category');
       await user.clear(input);
@@ -409,14 +407,14 @@ describe('TreeNode', () => {
     it('should highlight selected category icon', () => {
       const categoryNode = createMockCategoryNode('cat-1', 'Test Category');
 
-      render(<TreeNode {...mockProps} node={categoryNode} selectedItemId="cat-1" />);
+      render(<TreeNode {...mockProps} node={categoryNode} selectedItemId='cat-1' />);
 
       const icon = screen.getByRole('button').querySelector('.lucide-folder');
       expect(icon).toHaveClass('text-blue-500');
     });
 
     it('should highlight open note icon', () => {
-      render(<TreeNode {...mockProps} selectedNoteId="test-node" />);
+      render(<TreeNode {...mockProps} selectedNoteId='test-node' />);
 
       const icon = screen.getByRole('button').querySelector('.lucide-file-text');
       expect(icon).toHaveClass('text-green-500');
@@ -524,7 +522,10 @@ describe('TreeNode', () => {
     });
 
     it('should handle undefined children gracefully', () => {
-      const nodeWithUndefinedChildren = { ...createMockNode(), children: undefined };
+      const nodeWithUndefinedChildren = {
+        ...createMockNode(),
+        children: undefined,
+      };
 
       expect(() => {
         render(<TreeNode {...mockProps} node={nodeWithUndefinedChildren} />);

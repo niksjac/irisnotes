@@ -5,7 +5,7 @@ import { Input } from './input';
 describe('Input', () => {
   describe('rendering', () => {
     it('renders basic input', () => {
-      render(<Input placeholder="Enter text" />);
+      render(<Input placeholder='Enter text' />);
 
       const input = screen.getByRole('textbox');
       expect(input).toBeInTheDocument();
@@ -13,7 +13,7 @@ describe('Input', () => {
     });
 
     it('renders with label', () => {
-      render(<Input label="Username" placeholder="Enter username" />);
+      render(<Input label='Username' placeholder='Enter username' />);
 
       const label = screen.getByText('Username');
       const input = screen.getByRole('textbox');
@@ -24,13 +24,13 @@ describe('Input', () => {
     });
 
     it('renders with help text', () => {
-      render(<Input helpText="Must be at least 8 characters" />);
+      render(<Input helpText='Must be at least 8 characters' />);
 
       expect(screen.getByText('Must be at least 8 characters')).toBeInTheDocument();
     });
 
     it('renders with error message', () => {
-      render(<Input error="This field is required" />);
+      render(<Input error='This field is required' />);
 
       const errorMessage = screen.getByText('This field is required');
       expect(errorMessage).toBeInTheDocument();
@@ -38,26 +38,21 @@ describe('Input', () => {
     });
 
     it('prioritizes error over help text', () => {
-      render(
-        <Input
-          error="This field is required"
-          helpText="This should not be visible"
-        />
-      );
+      render(<Input error='This field is required' helpText='This should not be visible' />);
 
       expect(screen.getByText('This field is required')).toBeInTheDocument();
       expect(screen.queryByText('This should not be visible')).not.toBeInTheDocument();
     });
 
     it('applies error styling when error prop is present', () => {
-      render(<Input error="Error message" />);
+      render(<Input error='Error message' />);
 
       const input = screen.getByRole('textbox');
       expect(input).toHaveClass('border-red-300', 'focus:border-red-500', 'focus:ring-red-500');
     });
 
     it('renders with custom id', () => {
-      render(<Input id="custom-input" label="Custom" />);
+      render(<Input id='custom-input' label='Custom' />);
 
       const input = screen.getByRole('textbox');
       const label = screen.getByText('Custom');
@@ -67,11 +62,11 @@ describe('Input', () => {
     });
 
     it('generates unique id when not provided', () => {
-      const { rerender } = render(<Input label="First" />);
+      const { rerender } = render(<Input label='First' />);
       const firstInput = screen.getByRole('textbox');
       const firstId = firstInput.getAttribute('id');
 
-      rerender(<Input label="Second" />);
+      rerender(<Input label='Second' />);
       const secondInput = screen.getByRole('textbox');
       const secondId = secondInput.getAttribute('id');
 
@@ -108,7 +103,7 @@ describe('Input', () => {
       expect(handleBlur).toHaveBeenCalledTimes(1);
     });
 
-            it('supports keyboard navigation', () => {
+    it('supports keyboard navigation', () => {
       render(<Input />);
 
       const input = screen.getByRole('textbox');
@@ -121,7 +116,7 @@ describe('Input', () => {
 
   describe('states', () => {
     it('handles disabled state', () => {
-      render(<Input disabled placeholder="Disabled input" />);
+      render(<Input disabled placeholder='Disabled input' />);
 
       const input = screen.getByRole('textbox');
       expect(input).toBeDisabled();
@@ -136,7 +131,7 @@ describe('Input', () => {
     });
 
     it('handles readonly state', () => {
-      render(<Input readOnly value="Read-only value" />);
+      render(<Input readOnly value='Read-only value' />);
 
       const input = screen.getByRole('textbox');
       expect(input).toHaveAttribute('readonly');
@@ -146,14 +141,14 @@ describe('Input', () => {
 
   describe('styling', () => {
     it('applies custom className', () => {
-      render(<Input className="custom-class" />);
+      render(<Input className='custom-class' />);
 
       const input = screen.getByRole('textbox');
       expect(input).toHaveClass('custom-class');
     });
 
     it('maintains base styling with custom className', () => {
-      render(<Input className="custom-class" />);
+      render(<Input className='custom-class' />);
 
       const input = screen.getByRole('textbox');
       expect(input).toHaveClass('block', 'w-full', 'rounded-md', 'custom-class');
@@ -163,25 +158,20 @@ describe('Input', () => {
       render(<Input />);
 
       const input = screen.getByRole('textbox');
-      expect(input).toHaveClass(
-        'focus:border-blue-500',
-        'focus:outline-none',
-        'focus:ring-1',
-        'focus:ring-blue-500'
-      );
+      expect(input).toHaveClass('focus:border-blue-500', 'focus:outline-none', 'focus:ring-1', 'focus:ring-blue-500');
     });
   });
 
   describe('accessibility', () => {
     it('has proper ARIA attributes', () => {
-      render(<Input label="Username" error="Required field" />);
+      render(<Input label='Username' error='Required field' />);
 
       const input = screen.getByRole('textbox');
       expect(input).toHaveAccessibleName('Username');
     });
 
     it('associates error message with input', () => {
-      render(<Input error="This field is required" />);
+      render(<Input error='This field is required' />);
 
       const errorMessage = screen.getByText('This field is required');
 
@@ -190,20 +180,15 @@ describe('Input', () => {
     });
 
     it('supports ARIA attributes', () => {
-      render(
-        <Input
-          aria-label="Search input"
-          aria-describedby="search-help"
-        />
-      );
+      render(<Input aria-label='Search input' aria-describedby='search-help' />);
 
       const input = screen.getByRole('textbox');
       expect(input).toHaveAttribute('aria-label', 'Search input');
       expect(input).toHaveAttribute('aria-describedby', 'search-help');
     });
 
-        it('maintains focus order with label', () => {
-      render(<Input label="Focus test" />);
+    it('maintains focus order with label', () => {
+      render(<Input label='Focus test' />);
 
       const label = screen.getByText('Focus test');
       const input = screen.getByRole('textbox');
@@ -217,18 +202,18 @@ describe('Input', () => {
 
   describe('input types', () => {
     it('supports different input types', () => {
-      const { rerender } = render(<Input type="email" />);
+      const { rerender } = render(<Input type='email' />);
       expect(screen.getByRole('textbox')).toHaveAttribute('type', 'email');
 
-      rerender(<Input type="password" />);
+      rerender(<Input type='password' />);
       expect(screen.getByDisplayValue('')).toHaveAttribute('type', 'password');
 
-      rerender(<Input type="number" />);
+      rerender(<Input type='number' />);
       expect(screen.getByRole('spinbutton')).toHaveAttribute('type', 'number');
     });
 
     it('supports input patterns and validation', () => {
-      render(<Input type="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" />);
+      render(<Input type='email' pattern='[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$' />);
 
       const input = screen.getByRole('textbox');
       expect(input).toHaveAttribute('pattern');

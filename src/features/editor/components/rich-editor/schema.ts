@@ -9,7 +9,7 @@ import {
   strikethroughMark,
   fontFamilyMark,
   fontSizeMark,
-  backgroundColorMark
+  backgroundColorMark,
 } from './plugins/formatting-marks';
 
 // Create extended schema with lists and all formatting marks
@@ -23,5 +23,5 @@ export const editorSchema = new Schema({
     .addToEnd('superscript', superscriptMark)
     .addToEnd('subscript', subscriptMark)
     .addToEnd('underline', underlineMark)
-    .addToEnd('strikethrough', strikethroughMark)
+    .addToEnd('strikethrough', strikethroughMark),
 });

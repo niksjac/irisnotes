@@ -1,5 +1,14 @@
 import type { StorageAdapter, SingleStorageManager, StorageConfig, StorageResult, VoidStorageResult } from './types';
-import type { Note, NoteFilters, CreateNoteParams, UpdateNoteParams, Category, Tag, CreateCategoryParams, CreateTagParams } from '../../../types/database';
+import type {
+  Note,
+  NoteFilters,
+  CreateNoteParams,
+  UpdateNoteParams,
+  Category,
+  Tag,
+  CreateCategoryParams,
+  CreateTagParams,
+} from '../../../types/database';
 import { SQLiteStorageAdapter } from './adapters/sqlite-storage';
 
 export class SingleStorageManagerImpl implements SingleStorageManager {
@@ -8,24 +17,32 @@ export class SingleStorageManagerImpl implements SingleStorageManager {
 
   async setActiveStorage(config: StorageConfig): Promise<VoidStorageResult> {
     try {
-
       // Create the appropriate storage adapter based on config
       let adapter: StorageAdapter;
 
       switch (config.backend) {
         case 'sqlite':
           if (!config.sqlite?.database_path) {
-            return { success: false, error: 'SQLite database path is required' };
+            return {
+              success: false,
+              error: 'SQLite database path is required',
+            };
           }
           adapter = new SQLiteStorageAdapter(config);
           break;
 
         case 'file-system':
           if (!config.fileSystem?.notes_directory) {
-            return { success: false, error: 'File system notes directory is required' };
+            return {
+              success: false,
+              error: 'File system notes directory is required',
+            };
           }
           // TODO: Implement FileSystemStorageAdapter
-          return { success: false, error: 'File system storage not yet implemented' };
+          return {
+            success: false,
+            error: 'File system storage not yet implemented',
+          };
 
         case 'cloud':
           if (!config.cloud?.provider) {
@@ -35,7 +52,10 @@ export class SingleStorageManagerImpl implements SingleStorageManager {
           return { success: false, error: 'Cloud storage not yet implemented' };
 
         default:
-          return { success: false, error: `Unsupported storage backend: ${config.backend}` };
+          return {
+            success: false,
+            error: `Unsupported storage backend: ${config.backend}`,
+          };
       }
 
       // Initialize the new storage adapter
@@ -43,7 +63,10 @@ export class SingleStorageManagerImpl implements SingleStorageManager {
 
       if (!initResult.success) {
         console.error('❌ Storage adapter initialization failed:', initResult.error);
-        return { success: false, error: `Failed to initialize ${config.backend} storage: ${initResult.error}` };
+        return {
+          success: false,
+          error: `Failed to initialize ${config.backend} storage: ${initResult.error}`,
+        };
       }
 
       // Set as active storage
@@ -53,7 +76,10 @@ export class SingleStorageManagerImpl implements SingleStorageManager {
       return { success: true };
     } catch (error) {
       console.error('❌ Failed to set active storage:', error);
-      return { success: false, error: `Failed to set active storage: ${error}` };
+      return {
+        success: false,
+        error: `Failed to set active storage: ${error}`,
+      };
     }
   }
 
@@ -68,7 +94,10 @@ export class SingleStorageManagerImpl implements SingleStorageManager {
   // Helper method to ensure storage is active
   private ensureActiveStorage(): StorageResult<StorageAdapter> {
     if (!this.activeStorage) {
-      return { success: false, error: 'No active storage. Please configure a storage backend first.' };
+      return {
+        success: false,
+        error: 'No active storage. Please configure a storage backend first.',
+      };
     }
     return { success: true, data: this.activeStorage };
   }
@@ -202,15 +231,17 @@ export class SingleStorageManagerImpl implements SingleStorageManager {
     return { success: true }; // No-op if storage doesn't support sync
   }
 
-  async getStorageInfo(): Promise<StorageResult<{
-    backend: 'sqlite' | 'file-system' | 'cloud';
-    note_count: number;
-    category_count: number;
-    tag_count: number;
-    attachment_count: number;
-    last_sync?: string;
-    storage_size?: number;
-  }>> {
+  async getStorageInfo(): Promise<
+    StorageResult<{
+      backend: 'sqlite' | 'file-system' | 'cloud';
+      note_count: number;
+      category_count: number;
+      tag_count: number;
+      attachment_count: number;
+      last_sync?: string;
+      storage_size?: number;
+    }>
+  > {
     const storageResult = this.ensureActiveStorage();
     if (!storageResult.success) {
       return { success: false, error: storageResult.error };

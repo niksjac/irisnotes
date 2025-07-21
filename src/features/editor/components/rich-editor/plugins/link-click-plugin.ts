@@ -4,18 +4,20 @@ import { Decoration, DecorationSet } from 'prosemirror-view';
 // State to track link click effects
 interface LinkClickState {
   decorations: DecorationSet;
-  activeEffect?: {
-    from: number;
-    to: number;
-    timeout: ReturnType<typeof setTimeout>;
-  } | undefined;
+  activeEffect?:
+    | {
+        from: number;
+        to: number;
+        timeout: ReturnType<typeof setTimeout>;
+      }
+    | undefined;
 }
 
 export const linkClickPlugin = new Plugin<LinkClickState>({
   state: {
     init() {
       return {
-        decorations: DecorationSet.empty
+        decorations: DecorationSet.empty,
       };
     },
     apply(tr, value) {
@@ -32,7 +34,7 @@ export const linkClickPlugin = new Plugin<LinkClickState>({
 
         // Create new decoration for the clicked link
         const decoration = Decoration.inline(from, to, {
-          class: 'link-clicked-effect'
+          class: 'link-clicked-effect',
         });
 
         // Set timeout to remove effect after 300ms
@@ -42,7 +44,7 @@ export const linkClickPlugin = new Plugin<LinkClickState>({
 
         return {
           decorations: DecorationSet.create(tr.doc, [decoration]),
-          activeEffect: { from, to, timeout }
+          activeEffect: { from, to, timeout },
         };
       }
 
@@ -54,26 +56,28 @@ export const linkClickPlugin = new Plugin<LinkClickState>({
         }
         return {
           decorations: DecorationSet.empty,
-          activeEffect: undefined
+          activeEffect: undefined,
         };
       }
 
       // Map decorations through the transaction
       return {
         decorations: value.decorations.map(tr.mapping, tr.doc),
-        activeEffect: value.activeEffect ? {
-          ...value.activeEffect,
-          from: tr.mapping.map(value.activeEffect.from),
-          to: tr.mapping.map(value.activeEffect.to)
-        } : undefined
+        activeEffect: value.activeEffect
+          ? {
+              ...value.activeEffect,
+              from: tr.mapping.map(value.activeEffect.from),
+              to: tr.mapping.map(value.activeEffect.to),
+            }
+          : undefined,
       };
-    }
+    },
   },
   props: {
     decorations(state) {
       return this.getState(state)?.decorations;
-    }
-  }
+    },
+  },
 });
 
 // Helper function to trigger link click effect

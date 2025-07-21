@@ -8,23 +8,23 @@ const meta = {
     layout: 'centered',
     docs: {
       description: {
-        component: 'A flexible input component with label, error states, and help text support.'
-      }
-    }
+        component: 'A flexible input component with label, error states, and help text support.',
+      },
+    },
   },
   tags: ['autodocs'],
   argTypes: {
     label: {
       control: { type: 'text' },
-      description: 'Label for the input field'
+      description: 'Label for the input field',
     },
     error: {
       control: { type: 'text' },
-      description: 'Error message to display'
+      description: 'Error message to display',
     },
     helpText: {
       control: { type: 'text' },
-      description: 'Help text to display below input'
+      description: 'Help text to display below input',
     },
     placeholder: {
       control: { type: 'text' },
@@ -38,7 +38,7 @@ const meta = {
     type: {
       control: { type: 'select' },
       options: ['text', 'email', 'password', 'number', 'tel', 'url', 'search'],
-    }
+    },
   },
 } satisfies Meta<typeof Input>;
 
@@ -149,119 +149,70 @@ export const Search: Story = {
 // Form example
 export const FormExample: Story = {
   render: () => (
-    <div className="space-y-6 w-80">
-      <Input
-        label="Full Name"
-        placeholder="John Doe"
-        required
-      />
-      <Input
-        label="Email"
-        type="email"
-        placeholder="john@example.com"
-        required
-      />
-      <Input
-        label="Phone"
-        type="tel"
-        placeholder="+1 (555) 123-4567"
-        helpText="Include country code"
-      />
-      <Input
-        label="Age"
-        type="number"
-        placeholder="25"
-        min={18}
-        max={100}
-      />
-      <Input
-        label="Website"
-        type="url"
-        placeholder="https://example.com"
-      />
+    <div className='space-y-6 w-80'>
+      <Input label='Full Name' placeholder='John Doe' required />
+      <Input label='Email' type='email' placeholder='john@example.com' required />
+      <Input label='Phone' type='tel' placeholder='+1 (555) 123-4567' helpText='Include country code' />
+      <Input label='Age' type='number' placeholder='25' min={18} max={100} />
+      <Input label='Website' type='url' placeholder='https://example.com' />
     </div>
   ),
   parameters: {
     docs: {
       description: {
-        story: 'Example of multiple inputs in a form layout.'
-      }
-    }
-  }
+        story: 'Example of multiple inputs in a form layout.',
+      },
+    },
+  },
 };
 
 // States showcase
 export const AllStates: Story = {
   render: () => (
-    <div className="space-y-6 w-80">
-      <Input
-        label="Normal State"
-        placeholder="Normal input"
-      />
-      <Input
-        label="With Help Text"
-        placeholder="Input with help"
-        helpText="This is helpful information"
-      />
-      <Input
-        label="Error State"
-        placeholder="Input with error"
-        error="This field has an error"
-        value="invalid input"
-      />
-      <Input
-        label="Disabled State"
-        placeholder="Disabled input"
-        disabled
-      />
-      <Input
-        label="Required Field"
-        placeholder="Required input"
-        required
-        helpText="This field is required"
-      />
+    <div className='space-y-6 w-80'>
+      <Input label='Normal State' placeholder='Normal input' />
+      <Input label='With Help Text' placeholder='Input with help' helpText='This is helpful information' />
+      <Input label='Error State' placeholder='Input with error' error='This field has an error' value='invalid input' />
+      <Input label='Disabled State' placeholder='Disabled input' disabled />
+      <Input label='Required Field' placeholder='Required input' required helpText='This field is required' />
     </div>
   ),
   parameters: {
     docs: {
       description: {
-        story: 'Showcase of all possible input states.'
-      }
-    }
-  }
+        story: 'Showcase of all possible input states.',
+      },
+    },
+  },
 };
 
 // Accessibility example
 export const AccessibilityExample: Story = {
   render: () => (
-    <div className="space-y-6 w-80">
+    <div className='space-y-6 w-80'>
       <Input
-        label="Accessible Input"
-        placeholder="Proper label association"
-        helpText="Screen readers will announce this help text"
-        aria-describedby="help-text"
+        label='Accessible Input'
+        placeholder='Proper label association'
+        helpText='Screen readers will announce this help text'
+        aria-describedby='help-text'
       />
       <Input
-        label="Error with ARIA"
-        placeholder="Input with error"
-        error="This error will be announced by screen readers"
+        label='Error with ARIA'
+        placeholder='Input with error'
+        error='This error will be announced by screen readers'
         aria-invalid={true}
-        aria-describedby="error-message"
+        aria-describedby='error-message'
       />
-      <Input
-        aria-label="Search without visible label"
-        placeholder="Search..."
-        type="search"
-      />
+      <Input aria-label='Search without visible label' placeholder='Search...' type='search' />
     </div>
   ),
   parameters: {
     docs: {
       description: {
-        story: 'Examples demonstrating accessibility features and ARIA attributes.'
-      }
-    }
-  }
+        story: 'Examples demonstrating accessibility features and ARIA attributes.',
+      },
+    },
+  },
 };
 
 // Dark theme example
@@ -273,7 +224,7 @@ export const DarkTheme: Story = {
   },
   parameters: {
     themes: {
-      themeOverride: 'dark'
+      themeOverride: 'dark',
     },
   },
 };

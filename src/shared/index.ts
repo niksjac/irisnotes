@@ -8,5 +8,5 @@ export {
   parseCustomFormatMetadata,
   validateCustomFormat,
   normalizeColor,
-  getAvailableFormattingOptions
+  getAvailableFormattingOptions,
 } from './utils/text-parser';

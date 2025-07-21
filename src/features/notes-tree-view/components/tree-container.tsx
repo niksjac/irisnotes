@@ -89,12 +89,12 @@ export function TreeContainer({
   );
 
   return (
-    <div ref={treeContainerRef} className="flex-1 overflow-hidden p-1">
+    <div ref={treeContainerRef} className='flex-1 overflow-hidden p-1'>
       <Tree
         ref={treeRef}
         data={treeData}
         openByDefault={true}
-        width="100%"
+        width='100%'
         height={treeState.treeHeight}
         indent={20}
         rowHeight={32}

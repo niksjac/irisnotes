@@ -6,7 +6,7 @@ export const selectedItemAtom = atom<{
   type: 'note' | 'category' | null;
 }>({
   id: null,
-  type: null
+  type: null,
 });
 
 export const selectedNoteIdAtom = atom<string | null>(null);
@@ -48,13 +48,13 @@ export const focusManagementAtom = atom<any>({
 });
 
 // Derived atoms
-export const selectedNoteAtom = atom((get) => {
+export const selectedNoteAtom = atom(get => {
   const notes = get(notesAtom);
   const selectedNoteId = get(selectedNoteIdAtom);
   return notes.find(note => note.id === selectedNoteId) || null;
 });
 
-export const selectedFolderAtom = atom((get) => {
+export const selectedFolderAtom = atom(get => {
   const selectedItem = get(selectedItemAtom);
   const categories = get(categoriesAtom);
 
@@ -69,5 +69,5 @@ export const notesForPaneAtom = atom<{
   right: any;
 }>({
   left: null,
-  right: null
+  right: null,
 });

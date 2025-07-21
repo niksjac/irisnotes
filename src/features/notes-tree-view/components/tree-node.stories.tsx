@@ -10,7 +10,8 @@ const meta = {
     layout: 'padded',
     docs: {
       description: {
-        component: 'A tree node component that represents either a note or category in the notes tree view. Supports editing, drag & drop, selection states, focus management, and interactive operations.',
+        component:
+          'A tree node component that represents either a note or category in the notes tree view. Supports editing, drag & drop, selection states, focus management, and interactive operations.',
       },
     },
   },
@@ -64,14 +65,18 @@ const createMockCategory = (id: string, name: string, hasChildren = false): Arbo
     description: `${name} description`,
     sort_order: 0,
   } as Category,
-  children: hasChildren ? [{
-    id: `${id}-child`,
-    data: {} as Note,
-    children: [],
-    isLeaf: true,
-    isOpen: false,
-    level: 1
-  }] : [],
+  children: hasChildren
+    ? [
+        {
+          id: `${id}-child`,
+          data: {} as Note,
+          children: [],
+          isLeaf: true,
+          isOpen: false,
+          level: 1,
+        },
+      ]
+    : [],
   isLeaf: !hasChildren,
   isOpen: false,
   level: 0,
@@ -223,28 +228,39 @@ export const InteractiveNote: Story = {
     const node = createMockNote('note-1', 'Interactive Note');
 
     return (
-      <div className="w-80 p-4 border rounded-lg">
-        <div className="mb-4 space-y-2 text-sm">
-          <div>State: {selectedNoteId ? 'Open' : selectedItemId ? 'Selected' : navigatedItemId ? 'Focused' : editingItemId ? 'Editing' : 'Default'}</div>
-          <div className="flex gap-2">
+      <div className='w-80 p-4 border rounded-lg'>
+        <div className='mb-4 space-y-2 text-sm'>
+          <div>
+            State:{' '}
+            {selectedNoteId
+              ? 'Open'
+              : selectedItemId
+                ? 'Selected'
+                : navigatedItemId
+                  ? 'Focused'
+                  : editingItemId
+                    ? 'Editing'
+                    : 'Default'}
+          </div>
+          <div className='flex gap-2'>
             <button
               onClick={() => {
                 setSelectedItemId('note-1');
                 setNavigatedItemId('note-1');
               }}
-              className="px-2 py-1 bg-blue-500 text-white rounded text-xs"
+              className='px-2 py-1 bg-blue-500 text-white rounded text-xs'
             >
               Select
             </button>
             <button
               onClick={() => setSelectedNoteId('note-1')}
-              className="px-2 py-1 bg-green-500 text-white rounded text-xs"
+              className='px-2 py-1 bg-green-500 text-white rounded text-xs'
             >
               Open
             </button>
             <button
               onClick={() => setEditingItemId('note-1')}
-              className="px-2 py-1 bg-orange-500 text-white rounded text-xs"
+              className='px-2 py-1 bg-orange-500 text-white rounded text-xs'
             >
               Edit
             </button>
@@ -255,7 +271,7 @@ export const InteractiveNote: Story = {
                 setSelectedNoteId(null);
                 setEditingItemId(null);
               }}
-              className="px-2 py-1 bg-gray-500 text-white rounded text-xs"
+              className='px-2 py-1 bg-gray-500 text-white rounded text-xs'
             >
               Reset
             </button>
@@ -278,7 +294,7 @@ export const InteractiveNote: Story = {
             setNavigatedItemId(id);
             console.log('Item selected:', id, type);
           }}
-          onNoteSelect={(id) => {
+          onNoteSelect={id => {
             setSelectedNoteId(id);
             console.log('Note opened:', id);
           }}
@@ -297,7 +313,8 @@ export const InteractiveNote: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Interactive note node demonstrating all possible states and interactions. Click buttons to change state and interact with the node.',
+        story:
+          'Interactive note node demonstrating all possible states and interactions. Click buttons to change state and interact with the node.',
       },
     },
   },
@@ -327,29 +344,28 @@ export const InteractiveCategory: Story = {
     };
 
     return (
-      <div className="w-80 p-4 border rounded-lg">
-        <div className="mb-4 space-y-2 text-sm">
-          <div>State: {editingItemId ? 'Editing' : selectedItemId ? 'Selected' : navigatedItemId ? 'Focused' : 'Default'}</div>
+      <div className='w-80 p-4 border rounded-lg'>
+        <div className='mb-4 space-y-2 text-sm'>
+          <div>
+            State: {editingItemId ? 'Editing' : selectedItemId ? 'Selected' : navigatedItemId ? 'Focused' : 'Default'}
+          </div>
           <div>Expanded: {expandedNodes.has('cat-1') ? 'Yes' : 'No'}</div>
-          <div className="flex gap-2 flex-wrap">
+          <div className='flex gap-2 flex-wrap'>
             <button
               onClick={() => {
                 setSelectedItemId('cat-1');
                 setNavigatedItemId('cat-1');
               }}
-              className="px-2 py-1 bg-blue-500 text-white rounded text-xs"
+              className='px-2 py-1 bg-blue-500 text-white rounded text-xs'
             >
               Select
             </button>
-            <button
-              onClick={toggleExpansion}
-              className="px-2 py-1 bg-purple-500 text-white rounded text-xs"
-            >
+            <button onClick={toggleExpansion} className='px-2 py-1 bg-purple-500 text-white rounded text-xs'>
               Toggle
             </button>
             <button
               onClick={() => setEditingItemId('cat-1')}
-              className="px-2 py-1 bg-orange-500 text-white rounded text-xs"
+              className='px-2 py-1 bg-orange-500 text-white rounded text-xs'
             >
               Edit
             </button>
@@ -359,7 +375,7 @@ export const InteractiveCategory: Story = {
                 setNavigatedItemId(null);
                 setEditingItemId(null);
               }}
-              className="px-2 py-1 bg-gray-500 text-white rounded text-xs"
+              className='px-2 py-1 bg-gray-500 text-white rounded text-xs'
             >
               Reset
             </button>
@@ -398,7 +414,8 @@ export const InteractiveCategory: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Interactive category node with expansion/collapse functionality. Demonstrates all category states and interactions.',
+        story:
+          'Interactive category node with expansion/collapse functionality. Demonstrates all category states and interactions.',
       },
     },
   },
@@ -408,43 +425,47 @@ export const InteractiveCategory: Story = {
 export const AllStates: Story = {
   args: defaultProps,
   render: () => (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Note States</h3>
-      <div className="grid grid-cols-2 gap-4">
+    <div className='space-y-4'>
+      <h3 className='text-lg font-semibold'>Note States</h3>
+      <div className='grid grid-cols-2 gap-4'>
         <div>
-          <h4 className="text-sm font-medium mb-2">Default Note</h4>
+          <h4 className='text-sm font-medium mb-2'>Default Note</h4>
           <TreeNode {...defaultProps} node={createMockNote('note-1', 'Default Note')} />
         </div>
         <div>
-          <h4 className="text-sm font-medium mb-2">Selected Note</h4>
-          <TreeNode {...defaultProps} node={createMockNote('note-2', 'Selected Note')} selectedItemId="note-2" />
+          <h4 className='text-sm font-medium mb-2'>Selected Note</h4>
+          <TreeNode {...defaultProps} node={createMockNote('note-2', 'Selected Note')} selectedItemId='note-2' />
         </div>
         <div>
-          <h4 className="text-sm font-medium mb-2">Focused Note</h4>
-          <TreeNode {...defaultProps} node={createMockNote('note-3', 'Focused Note')} navigatedItemId="note-3" />
+          <h4 className='text-sm font-medium mb-2'>Focused Note</h4>
+          <TreeNode {...defaultProps} node={createMockNote('note-3', 'Focused Note')} navigatedItemId='note-3' />
         </div>
         <div>
-          <h4 className="text-sm font-medium mb-2">Open Note</h4>
-          <TreeNode {...defaultProps} node={createMockNote('note-4', 'Open Note')} selectedNoteId="note-4" />
+          <h4 className='text-sm font-medium mb-2'>Open Note</h4>
+          <TreeNode {...defaultProps} node={createMockNote('note-4', 'Open Note')} selectedNoteId='note-4' />
         </div>
       </div>
 
-      <h3 className="text-lg font-semibold mt-8">Category States</h3>
-      <div className="grid grid-cols-2 gap-4">
+      <h3 className='text-lg font-semibold mt-8'>Category States</h3>
+      <div className='grid grid-cols-2 gap-4'>
         <div>
-          <h4 className="text-sm font-medium mb-2">Collapsed Category</h4>
+          <h4 className='text-sm font-medium mb-2'>Collapsed Category</h4>
           <TreeNode {...defaultProps} node={createMockCategory('cat-1', 'Collapsed', true)} />
         </div>
         <div>
-          <h4 className="text-sm font-medium mb-2">Expanded Category</h4>
-          <TreeNode {...defaultProps} node={createMockCategory('cat-2', 'Expanded', true)} expandedNodes={new Set(['cat-2'])} />
+          <h4 className='text-sm font-medium mb-2'>Expanded Category</h4>
+          <TreeNode
+            {...defaultProps}
+            node={createMockCategory('cat-2', 'Expanded', true)}
+            expandedNodes={new Set(['cat-2'])}
+          />
         </div>
         <div>
-          <h4 className="text-sm font-medium mb-2">Selected Category</h4>
-          <TreeNode {...defaultProps} node={createMockCategory('cat-3', 'Selected', true)} selectedItemId="cat-3" />
+          <h4 className='text-sm font-medium mb-2'>Selected Category</h4>
+          <TreeNode {...defaultProps} node={createMockCategory('cat-3', 'Selected', true)} selectedItemId='cat-3' />
         </div>
         <div>
-          <h4 className="text-sm font-medium mb-2">Empty Category</h4>
+          <h4 className='text-sm font-medium mb-2'>Empty Category</h4>
           <TreeNode {...defaultProps} node={createMockCategory('cat-4', 'Empty', false)} />
         </div>
       </div>

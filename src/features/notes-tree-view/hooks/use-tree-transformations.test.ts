@@ -58,17 +58,13 @@ describe('useTreeTransformations', () => {
 
   describe('Basic Functionality', () => {
     it('should return original data when no transformations applied', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations(mockTreeData, null, '', false)
-      );
+      const { result } = renderHook(() => useTreeTransformations(mockTreeData, null, '', false));
 
       expect(result.current).toEqual(mockTreeData);
     });
 
     it('should handle empty tree data', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations([], null, '', false)
-      );
+      const { result } = renderHook(() => useTreeTransformations([], null, '', false));
 
       expect(result.current).toEqual([]);
     });
@@ -76,9 +72,7 @@ describe('useTreeTransformations', () => {
 
   describe('Search Functionality', () => {
     it('should filter tree based on search query', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations(mockTreeData, null, 'meeting', false)
-      );
+      const { result } = renderHook(() => useTreeTransformations(mockTreeData, null, 'meeting', false));
 
       const transformedData = result.current;
 
@@ -100,9 +94,7 @@ describe('useTreeTransformations', () => {
     });
 
     it('should filter categories based on category name search', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations(mockTreeData, null, 'personal', false)
-      );
+      const { result } = renderHook(() => useTreeTransformations(mockTreeData, null, 'personal', false));
 
       const transformedData = result.current;
 
@@ -120,9 +112,7 @@ describe('useTreeTransformations', () => {
     });
 
     it('should handle case-insensitive search', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations(mockTreeData, null, 'MEETING', false)
-      );
+      const { result } = renderHook(() => useTreeTransformations(mockTreeData, null, 'MEETING', false));
 
       const transformedData = result.current;
 
@@ -133,9 +123,7 @@ describe('useTreeTransformations', () => {
     });
 
     it('should preserve parent categories when child notes match', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations(mockTreeData, null, 'alpha', false)
-      );
+      const { result } = renderHook(() => useTreeTransformations(mockTreeData, null, 'alpha', false));
 
       const transformedData = result.current;
 
@@ -153,9 +141,7 @@ describe('useTreeTransformations', () => {
     });
 
     it('should filter orphaned notes based on search', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations(mockTreeData, null, 'orphaned', false)
-      );
+      const { result } = renderHook(() => useTreeTransformations(mockTreeData, null, 'orphaned', false));
 
       const transformedData = result.current;
 
@@ -166,9 +152,7 @@ describe('useTreeTransformations', () => {
     });
 
     it('should return empty result when no matches found', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations(mockTreeData, null, 'nonexistent', false)
-      );
+      const { result } = renderHook(() => useTreeTransformations(mockTreeData, null, 'nonexistent', false));
 
       expect(result.current).toEqual([]);
     });
@@ -176,9 +160,7 @@ describe('useTreeTransformations', () => {
 
   describe('Sorting Functionality', () => {
     it('should sort categories and notes alphabetically when enabled', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations(mockTreeData, null, '', true)
-      );
+      const { result } = renderHook(() => useTreeTransformations(mockTreeData, null, '', true));
 
       const transformedData = result.current;
 
@@ -195,9 +177,7 @@ describe('useTreeTransformations', () => {
     });
 
     it('should maintain original order when sorting disabled', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations(mockTreeData, null, '', false)
-      );
+      const { result } = renderHook(() => useTreeTransformations(mockTreeData, null, '', false));
 
       const transformedData = result.current;
 
@@ -208,9 +188,7 @@ describe('useTreeTransformations', () => {
     });
 
     it('should sort nested categories and notes recursively', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations(mockTreeData, null, '', true)
-      );
+      const { result } = renderHook(() => useTreeTransformations(mockTreeData, null, '', true));
 
       const transformedData = result.current;
 
@@ -229,9 +207,7 @@ describe('useTreeTransformations', () => {
 
   describe('Hoisting Functionality', () => {
     it('should show only hoisted folder contents when hoisted', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations(mockTreeData, 'cat-1', '', false)
-      );
+      const { result } = renderHook(() => useTreeTransformations(mockTreeData, 'cat-1', '', false));
 
       const transformedData = result.current;
 
@@ -245,9 +221,7 @@ describe('useTreeTransformations', () => {
     });
 
     it('should handle hoisting of nested categories', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations(mockTreeData, 'cat-2', '', false)
-      );
+      const { result } = renderHook(() => useTreeTransformations(mockTreeData, 'cat-2', '', false));
 
       const transformedData = result.current;
 
@@ -258,9 +232,7 @@ describe('useTreeTransformations', () => {
     });
 
     it('should return empty array when hoisting non-existent folder', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations(mockTreeData, 'non-existent', '', false)
-      );
+      const { result } = renderHook(() => useTreeTransformations(mockTreeData, 'non-existent', '', false));
 
       expect(result.current).toEqual([]);
     });
@@ -276,17 +248,13 @@ describe('useTreeTransformations', () => {
         },
       ];
 
-      const { result } = renderHook(() =>
-        useTreeTransformations(emptyTreeData, 'empty-cat', '', false)
-      );
+      const { result } = renderHook(() => useTreeTransformations(emptyTreeData, 'empty-cat', '', false));
 
       expect(result.current).toEqual([]);
     });
 
     it('should handle hoisting note (should return empty)', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations(mockTreeData, 'note-1', '', false)
-      );
+      const { result } = renderHook(() => useTreeTransformations(mockTreeData, 'note-1', '', false));
 
       // Notes don't have children, so hoisting should return empty
       expect(result.current).toEqual([]);
@@ -295,9 +263,7 @@ describe('useTreeTransformations', () => {
 
   describe('Combined Transformations', () => {
     it('should apply search and sorting together', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations(mockTreeData, null, 'project', true)
-      );
+      const { result } = renderHook(() => useTreeTransformations(mockTreeData, null, 'project', true));
 
       const transformedData = result.current;
 
@@ -311,9 +277,7 @@ describe('useTreeTransformations', () => {
     });
 
     it('should apply search on hoisted content', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations(mockTreeData, 'cat-1', 'meeting', false)
-      );
+      const { result } = renderHook(() => useTreeTransformations(mockTreeData, 'cat-1', 'meeting', false));
 
       const transformedData = result.current;
 
@@ -324,9 +288,7 @@ describe('useTreeTransformations', () => {
     });
 
     it('should apply sorting on hoisted content', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations(mockTreeData, 'cat-1', '', true)
-      );
+      const { result } = renderHook(() => useTreeTransformations(mockTreeData, 'cat-1', '', true));
 
       const transformedData = result.current;
 
@@ -337,9 +299,7 @@ describe('useTreeTransformations', () => {
     });
 
     it('should apply all transformations together', () => {
-      const { result } = renderHook(() =>
-        useTreeTransformations(mockTreeData, 'cat-1', 'notes', true)
-      );
+      const { result } = renderHook(() => useTreeTransformations(mockTreeData, 'cat-1', 'notes', true));
 
       const transformedData = result.current;
 
@@ -381,9 +341,7 @@ describe('useTreeTransformations', () => {
         },
       ];
 
-      const { result } = renderHook(() =>
-        useTreeTransformations(deepTreeData, null, 'deep', true)
-      );
+      const { result } = renderHook(() => useTreeTransformations(deepTreeData, null, 'deep', true));
 
       const transformedData = result.current;
 
@@ -404,10 +362,9 @@ describe('useTreeTransformations', () => {
 
   describe('Data Updates', () => {
     it('should recompute when tree data changes', () => {
-      const { result, rerender } = renderHook(
-        ({ treeData }) => useTreeTransformations(treeData, null, '', false),
-        { initialProps: { treeData: mockTreeData.slice(0, 1) } }
-      );
+      const { result, rerender } = renderHook(({ treeData }) => useTreeTransformations(treeData, null, '', false), {
+        initialProps: { treeData: mockTreeData.slice(0, 1) },
+      });
 
       expect(result.current).toHaveLength(1);
 
@@ -419,7 +376,8 @@ describe('useTreeTransformations', () => {
 
     it('should recompute when hoisted folder changes', () => {
       const { result, rerender } = renderHook(
-        ({ hoistedFolderId }: { hoistedFolderId: string | null }) => useTreeTransformations(mockTreeData, hoistedFolderId, '', false),
+        ({ hoistedFolderId }: { hoistedFolderId: string | null }) =>
+          useTreeTransformations(mockTreeData, hoistedFolderId, '', false),
         { initialProps: { hoistedFolderId: null as string | null } }
       );
 

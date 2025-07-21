@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { appConfigDir } from "@tauri-apps/api/path";
-import { readTextFile, exists } from "@tauri-apps/plugin-fs";
+import { appConfigDir } from '@tauri-apps/api/path';
+import { readTextFile, exists } from '@tauri-apps/plugin-fs';
 
 export const useTheme = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -24,11 +24,9 @@ export const useTheme = () => {
         styleElement.id = 'user-theme-styles';
         styleElement.textContent = themeCSS;
         document.head.appendChild(styleElement);
-
-
       }
     } catch (error) {
-      console.error("Failed to load user theme:", error);
+      console.error('Failed to load user theme:', error);
     }
   };
 
@@ -43,6 +41,6 @@ export const useTheme = () => {
   return {
     darkMode,
     loadUserTheme,
-    toggleDarkMode
+    toggleDarkMode,
   };
 };

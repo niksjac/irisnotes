@@ -26,6 +26,7 @@ The development environment is configured to use local storage by default:
 ## Customization
 
 You can modify `app-config.json` to:
+
 - Change storage backend (`sqlite`, `file-system`, or `cloud`)
 - Adjust file paths
 - Toggle debug features

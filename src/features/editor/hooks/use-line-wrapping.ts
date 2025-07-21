@@ -1,26 +1,28 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { useAtom } from 'jotai';
+import { isWrappingAtom } from '../../../atoms';
 import { useConfig } from '../../../hooks/use-config';
 
 export const useLineWrapping = () => {
-  const { config, updateConfig, loading } = useConfig();
+  const [isWrapping, setIsWrapping] = useAtom(isWrappingAtom);
+  const { config, loading } = useConfig();
+  const initializedRef = useRef(false);
+
+  // Initialize atom from config on startup only (not when atom changes)
+  useEffect(() => {
+    if (!loading && !initializedRef.current) {
+      setIsWrapping(config.editor.lineWrapping);
+      initializedRef.current = true;
+    }
+  }, [config.editor.lineWrapping, loading, setIsWrapping]);
 
   const toggleLineWrapping = useCallback(() => {
-    const newWrappingState = !config.editor.lineWrapping;
-
-
-
-    // Update config - this will trigger the useEffect in RichEditor component
-    updateConfig({
-      editor: {
-        lineWrapping: newWrappingState,
-        toolbarVisible: config.editor.toolbarVisible
-      }
-    });
-  }, [config.editor.lineWrapping, config.editor.toolbarVisible, updateConfig]);
+    setIsWrapping(prev => !prev); // Immediate UI update
+  }, [setIsWrapping]);
 
   return {
-    isWrapping: config.editor.lineWrapping,
+    isWrapping,
     toggleLineWrapping,
-    loading
+    loading,
   };
 };

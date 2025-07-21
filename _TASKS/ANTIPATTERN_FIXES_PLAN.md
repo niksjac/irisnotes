@@ -1,6 +1,7 @@
 # Antipattern Fixes Implementation Plan
 
 ## Overview
+
 This plan addresses critical antipatterns and bad practices identified in the IrisNotes codebase to improve code quality, maintainability, performance, and user experience.
 
 ## 🔴 Priority 1: Critical Issues (Week 1-2)
@@ -8,13 +9,16 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
 ### 1.1 Replace `any` Types with Proper TypeScript Interfaces
 
 **Affected Files:**
+
 - `src/atoms/index.ts`
 - `src/atoms/actions.ts`
 - `src/types/index.ts`
 - Various component files
 
 **Implementation Steps:**
+
 1. **Create proper type definitions**
+
    ```typescript
    // src/types/atoms.ts
    export interface FocusManagement {
@@ -32,6 +36,7 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
    ```
 
 2. **Update atom definitions**
+
    ```typescript
    // Before
    export const notesAtom = atom<any[]>([]);
@@ -51,10 +56,13 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
 ### 1.2 Implement Deterministic ID Generation
 
 **Affected Files:**
+
 - `src/shared/components/input.tsx`
 
 **Implementation Steps:**
+
 1. **Create ID generation utility**
+
    ```typescript
    // src/shared/utils/id-generation.ts
    let idCounter = 0;
@@ -74,6 +82,7 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
    ```
 
 2. **Update Input component**
+
    ```typescript
    // Before
    const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
@@ -90,13 +99,16 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
 ### 1.3 Remove Debug Console Statements
 
 **Affected Files:**
+
 - `src/features/notes/hooks/use-notes-storage.ts`
 - `src/features/notes/storage/single-storage-manager.ts`
 - `src/features/notes/hooks/use-single-storage-notes.ts`
 - Other files with console logging
 
 **Implementation Steps:**
+
 1. **Create proper logging system**
+
    ```typescript
    // src/utils/logger.ts
    type LogLevel = 'debug' | 'info' | 'warn' | 'error';
@@ -113,16 +125,25 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
        console[level](`${prefix} ${message}`, ...args);
      }
 
-     debug(message: string, ...args: any[]) { this.log('debug', message, ...args); }
-     info(message: string, ...args: any[]) { this.log('info', message, ...args); }
-     warn(message: string, ...args: any[]) { this.log('warn', message, ...args); }
-     error(message: string, ...args: any[]) { this.log('error', message, ...args); }
+     debug(message: string, ...args: any[]) {
+       this.log('debug', message, ...args);
+     }
+     info(message: string, ...args: any[]) {
+       this.log('info', message, ...args);
+     }
+     warn(message: string, ...args: any[]) {
+       this.log('warn', message, ...args);
+     }
+     error(message: string, ...args: any[]) {
+       this.log('error', message, ...args);
+     }
    }
 
    export const logger = new Logger();
    ```
 
 2. **Replace console statements**
+
    ```typescript
    // Before
    console.log('🚀 useNotesStorage: Starting initialization...');
@@ -152,7 +173,9 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
 ### 2.1 Add React Error Boundaries
 
 **Implementation Steps:**
+
 1. **Create Error Boundary component**
+
    ```typescript
    // src/shared/components/error-boundary.tsx
    interface ErrorBoundaryState {
@@ -196,9 +219,11 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
 ### 2.2 Complete or Remove TODO Features
 
 **Affected Files:**
+
 - `src/features/notes/storage/single-storage-manager.ts`
 
 **Implementation Steps:**
+
 1. **For File System Storage**
    - Either implement basic file system adapter
    - Or remove from UI and mark as "Coming Soon"
@@ -213,7 +238,7 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
    // Instead of generic "not implemented"
    return {
      success: false,
-     error: 'File system storage is planned for v2.0. Please use SQLite storage for now.'
+     error: 'File system storage is planned for v2.0. Please use SQLite storage for now.',
    };
    ```
 
@@ -223,7 +248,9 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
 ### 2.3 Extract Hardcoded Values to Constants
 
 **Implementation Steps:**
+
 1. **Create constants file**
+
    ```typescript
    // src/constants/performance.ts
    export const PERFORMANCE_MONITORING = {
@@ -241,6 +268,7 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
    ```
 
 2. **Replace hardcoded values**
+
    ```typescript
    // Before
    const interval = setInterval(logMetrics, 10000);
@@ -258,10 +286,12 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
 ### 3.1 Improve Accessibility
 
 **Implementation Steps:**
+
 1. **Fix ID generation for accessibility**
    - Already covered in Priority 1.2
 
 2. **Add ARIA labels**
+
    ```typescript
    // src/shared/components/input.tsx
    <input
@@ -287,7 +317,9 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
 ### 3.2 Performance Optimizations
 
 **Implementation Steps:**
+
 1. **Add React.memo to expensive components**
+
    ```typescript
    // For components that render frequently
    export const NotesTreeView = React.memo(function NotesTreeView(props) {
@@ -296,6 +328,7 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
    ```
 
 2. **Optimize useEffect dependencies**
+
    ```typescript
    // Before - object dependency causes re-renders
    useEffect(() => {
@@ -323,7 +356,9 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
 ### 3.3 Add Proper Logging System Integration
 
 **Implementation Steps:**
+
 1. **Extend logger with categories**
+
    ```typescript
    // src/utils/logger.ts
    export const createLogger = (category: string) => ({
@@ -345,16 +380,19 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
 ## Implementation Timeline
 
 ### Week 1-2: Critical Issues
+
 - [ ] Replace `any` types (8-12h)
 - [x] Implement deterministic ID generation (2-3h) ✅ **COMPLETED**
 - [x] Remove debug console statements (4-6h) ✅ **COMPLETED**
 
 ### Week 3-4: Important Issues
+
 - [ ] Add React error boundaries (4-5h)
 - [ ] Complete/remove TODO features (2-3h)
 - [ ] Extract hardcoded values (3-4h)
 
 ### Week 5-6: Enhancement Issues
+
 - [ ] Improve accessibility (6-8h)
 - [ ] Performance optimizations (8-10h)
 - [ ] Proper logging integration (4-5h)
@@ -362,6 +400,7 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
 ## Testing Strategy
 
 ### After Each Priority Phase:
+
 1. **Type Safety Verification**
    - Run `tsc --noEmit` to ensure no type errors
    - Verify IDE intellisense works correctly
@@ -383,16 +422,19 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
 ## Success Metrics
 
 ### Code Quality
+
 - [ ] Zero TypeScript `any` types in critical paths
 - [ ] All console.log statements removed/replaced
 - [ ] 100% deterministic ID generation
 
 ### User Experience
+
 - [ ] No app crashes from unhandled errors
 - [ ] Improved accessibility score
 - [ ] Better performance metrics
 
 ### Developer Experience
+
 - [ ] Better IDE support with proper types
 - [ ] Clearer error messages
 - [ ] More maintainable codebase
@@ -400,20 +442,24 @@ This plan addresses critical antipatterns and bad practices identified in the Ir
 ## Risk Assessment
 
 ### Low Risk
+
 - ID generation fixes
 - Console statement removal
 - Constants extraction
 
 ### Medium Risk
+
 - TypeScript type replacements (potential compilation issues)
 - Performance optimizations (potential behavior changes)
 
 ### High Risk
+
 - Error boundary implementation (must not break existing error handling)
 
 ## Rollback Strategy
 
 For each change:
+
 1. Create feature branch
 2. Test thoroughly before merging
 3. Keep commits small and focused
@@ -422,11 +468,13 @@ For each change:
 ## Post-Implementation
 
 ### Documentation Updates
+
 - Update README with new logging system
 - Document accessibility improvements
 - Update development guidelines
 
 ### Monitoring
+
 - Set up error tracking for Error Boundaries
 - Monitor performance metrics
 - Track accessibility compliance
@@ -436,13 +484,16 @@ For each change:
 ## ✅ Completed Tasks
 
 ### Priority 1.2: Deterministic ID Generation (COMPLETED)
+
 **Date Completed:** `date +%Y-%m-%d`
 **Files Modified:**
+
 - ✅ `src/shared/utils/id-generation.ts` - Created new utility with deterministic ID generation
 - ✅ `src/shared/components/input.tsx` - Updated to use `generateId()` instead of `Math.random()`
 - ✅ `src/shared/index.ts` - Added exports for new ID generation utilities
 
 **Implementation Results:**
+
 - ✅ Replaced `Math.random().toString(36)` with deterministic counter-based IDs
 - ✅ Added crypto.randomUUID() support for secure IDs when available
 - ✅ Created utility functions: `generateId()`, `generateSecureId()`, `resetIdCounter()`, `getCurrentCounter()`
@@ -451,14 +502,17 @@ For each change:
 - ✅ Build successful - no regressions
 
 **Benefits Achieved:**
+
 - 🎯 **Accessibility**: Fixed non-deterministic ID generation that could break screen readers
 - 🎯 **Testing**: IDs are now predictable for automated testing
 - 🎯 **SSR Compatibility**: IDs will be consistent between server and client rendering
 - 🎯 **Debugging**: IDs are now human-readable and sequential
 
 ### Priority 1.3: Debug Console Statements Cleanup (COMPLETED)
+
 **Date Completed:** `date +%Y-%m-%d`
 **Files Modified:**
+
 - ✅ `src/features/notes/hooks/use-notes.ts` - Removed example note debug logging
 - ✅ `src/features/notes/hooks/use-notes-storage.ts` - Removed initialization debug logs
 - ✅ `src/features/notes/hooks/use-single-storage-notes.ts` - Removed storage setup debug logs
@@ -473,6 +527,7 @@ For each change:
 - ✅ `src/hooks/use-config.ts` - Removed config loading debug logs
 
 **Implementation Results:**
+
 - ✅ Removed ~40+ debug console.log statements with emoji prefixes (🔧, ✅, 🚀, etc.)
 - ✅ Kept legitimate console.error statements for actual error handling
 - ✅ Cleaned up development experience - no more console spam

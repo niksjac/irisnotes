@@ -9,7 +9,6 @@ export const useNotesInitialization = () => {
   // Load notes when storage is initialized
   useEffect(() => {
     if (isInitialized) {
-
       loadAllNotes();
     }
   }, [isInitialized, loadAllNotes]);

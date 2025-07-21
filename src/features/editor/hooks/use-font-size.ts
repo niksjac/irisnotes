@@ -9,9 +9,9 @@ interface FontSizeConfig {
 
 const DEFAULT_CONFIG: FontSizeConfig = {
   baseFontSize: 14, // Default base font size in px
-  minFontSize: 8,   // Minimum font size
-  maxFontSize: 32,  // Maximum font size
-  increment: 2      // Increment step
+  minFontSize: 8, // Minimum font size
+  maxFontSize: 32, // Maximum font size
+  increment: 2, // Increment step
 };
 
 export const useFontSize = (config: Partial<FontSizeConfig> = {}) => {
@@ -24,14 +24,14 @@ export const useFontSize = (config: Partial<FontSizeConfig> = {}) => {
     const base = fontSize;
     return {
       base,
-      h1: Math.round(base * 2.0),    // 2x base size for H1
-      h2: Math.round(base * 1.5),    // 1.5x base size for H2
-      h3: Math.round(base * 1.25),   // 1.25x base size for H3
-      h4: Math.round(base * 1.1),    // 1.1x base size for H4
-      h5: base,                      // Same as base for H5
-      h6: Math.round(base * 0.9),    // 0.9x base size for H6
+      h1: Math.round(base * 2.0), // 2x base size for H1
+      h2: Math.round(base * 1.5), // 1.5x base size for H2
+      h3: Math.round(base * 1.25), // 1.25x base size for H3
+      h4: Math.round(base * 1.1), // 1.1x base size for H4
+      h5: base, // Same as base for H5
+      h6: Math.round(base * 0.9), // 0.9x base size for H6
       small: Math.round(base * 0.875), // Smaller text
-      code: Math.round(base * 0.9)   // Code text slightly smaller
+      code: Math.round(base * 0.9), // Code text slightly smaller
     };
   }, [fontSize]);
 
@@ -57,13 +57,13 @@ export const useFontSize = (config: Partial<FontSizeConfig> = {}) => {
   }, [finalConfig.baseFontSize]);
 
   // Set specific font size (with bounds checking)
-  const setSpecificFontSize = useCallback((size: number) => {
-    const clampedSize = Math.max(
-      finalConfig.minFontSize,
-      Math.min(size, finalConfig.maxFontSize)
-    );
-    setFontSize(clampedSize);
-  }, [finalConfig.minFontSize, finalConfig.maxFontSize]);
+  const setSpecificFontSize = useCallback(
+    (size: number) => {
+      const clampedSize = Math.max(finalConfig.minFontSize, Math.min(size, finalConfig.maxFontSize));
+      setFontSize(clampedSize);
+    },
+    [finalConfig.minFontSize, finalConfig.maxFontSize]
+  );
 
   // Apply font sizes to CSS custom properties
   useEffect(() => {
@@ -92,6 +92,6 @@ export const useFontSize = (config: Partial<FontSizeConfig> = {}) => {
     canIncrease: fontSize < finalConfig.maxFontSize,
     canDecrease: fontSize > finalConfig.minFontSize,
     isAtDefault: fontSize === finalConfig.baseFontSize,
-    config: finalConfig
+    config: finalConfig,
   };
 };

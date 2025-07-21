@@ -9,8 +9,5 @@
     "esModuleInterop": true,
     "types": ["node", "vite/client"]
   },
-  "include": [
-    "vite.config.ts",
-    "*.config.*"
-  ]
+  "include": ["vite.config.ts", "*.config.*"]
 }

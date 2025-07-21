@@ -64,8 +64,8 @@ export const useLayout = () => {
     updateConfig({
       editor: {
         ...config.editor,
-        toolbarVisible: newVisibility
-      }
+        toolbarVisible: newVisibility,
+      },
     });
   };
 
@@ -86,6 +86,6 @@ export const useLayout = () => {
     toggleDatabaseStatus,
     toggleDualPaneMode,
     setActivePane,
-    toggleToolbar
+    toggleToolbar,
   };
 };

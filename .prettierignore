@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+build/
+coverage/
+storybook-static/
+
+# Generated files
+src-tauri/target/
+src-tauri/gen/
+
+# Storybook
+.storybook/
+
+# Test outputs
+test-results/
+playwright-report/
+
+# Environment and config files
+.env*
+
+# Logs
+*.log
+
+# Cache directories
+.cache/
+
+# OS generated files
+.DS_Store
+Thumbs.db

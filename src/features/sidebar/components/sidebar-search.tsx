@@ -1,5 +1,5 @@
-import { useRef, useEffect } from "react";
-import clsx from "clsx";
+import { useRef, useEffect } from 'react';
+import clsx from 'clsx';
 
 interface SidebarSearchProps {
   searchQuery: string;
@@ -14,10 +14,10 @@ interface SidebarSearchProps {
 export function SidebarSearch({
   searchQuery,
   onSearchChange,
-  placeholder = "Search notes...",
+  placeholder = 'Search notes...',
   focusClasses = {},
   onRegisterElement,
-  onSetFocusFromClick
+  onSetFocusFromClick,
 }: SidebarSearchProps) {
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -51,18 +51,18 @@ export function SidebarSearch({
   return (
     <div
       ref={searchRef}
-      className={clsx("sidebar-search", "tree-search", focusClasses)}
+      className={clsx('sidebar-search', 'tree-search', focusClasses)}
       tabIndex={0}
       onClick={handleClick}
     >
       <input
         ref={inputRef}
-        type="text"
+        type='text'
         placeholder={placeholder}
         value={searchQuery}
-        onChange={(e) => onSearchChange(e.target.value)}
-        onClick={(e) => e.stopPropagation()}
-        className="tree-search-input"
+        onChange={e => onSearchChange(e.target.value)}
+        onClick={e => e.stopPropagation()}
+        className='tree-search-input'
       />
     </div>
   );

@@ -13,7 +13,7 @@ export const useNotesNavigation = () => {
     openNoteInPane,
     getSelectedNoteForPane,
     clearSelection,
-    clearSelectionForPane
+    clearSelectionForPane,
   } = useNotesSelection();
 
   const { notes } = useNotesData();
@@ -22,14 +22,17 @@ export const useNotesNavigation = () => {
     return selectedNoteId ? notes.find(note => note.id === selectedNoteId) || null : null;
   }, [selectedNoteId, notes]);
 
-  const getSelectedNoteById = useCallback((noteId: string) => {
-    return notes.find(note => note.id === noteId) || null;
-  }, [notes]);
+  const getSelectedNoteById = useCallback(
+    (noteId: string) => {
+      return notes.find(note => note.id === noteId) || null;
+    },
+    [notes]
+  );
 
   const getNotesForPane = useCallback(() => {
     return {
       left: getSelectedNoteForPane('left', notes),
-      right: getSelectedNoteForPane('right', notes)
+      right: getSelectedNoteForPane('right', notes),
     };
   }, [getSelectedNoteForPane, notes]);
 

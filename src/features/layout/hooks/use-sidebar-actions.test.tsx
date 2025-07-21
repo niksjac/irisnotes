@@ -11,7 +11,7 @@ describe('useSidebarActions', () => {
       store.set(sidebarCollapsedAtom, true);
 
       const { result } = renderHook(() => useSidebarActions(), {
-        wrapper: ({ children }) => <Provider store={store}>{children}</Provider>
+        wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
       });
 
       act(() => {
@@ -28,7 +28,7 @@ describe('useSidebarActions', () => {
       store.set(sidebarCollapsedAtom, false);
 
       const { result } = renderHook(() => useSidebarActions(), {
-        wrapper: ({ children }) => <Provider store={store}>{children}</Provider>
+        wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
       });
 
       act(() => {
@@ -56,7 +56,7 @@ describe('useSidebarActions', () => {
       store.set(sidebarCollapsedAtom, false);
 
       const { result } = renderHook(() => useSidebarActions(), {
-        wrapper: ({ children }) => <Provider store={store}>{children}</Provider>
+        wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
       });
 
       act(() => {
@@ -71,7 +71,7 @@ describe('useSidebarActions', () => {
       store.set(sidebarCollapsedAtom, true);
 
       const { result } = renderHook(() => useSidebarActions(), {
-        wrapper: ({ children }) => <Provider store={store}>{children}</Provider>
+        wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
       });
 
       act(() => {

@@ -1,5 +1,5 @@
 // Common Tauri API mocks for testing
-import { vi } from 'vitest'
+import { vi } from 'vitest';
 
 // File system mock factory
 export const createFileSystemMock = (customMocks: Partial<any> = {}) => ({
@@ -13,7 +13,7 @@ export const createFileSystemMock = (customMocks: Partial<any> = {}) => ({
   copy: vi.fn().mockResolvedValue(undefined),
   rename: vi.fn().mockResolvedValue(undefined),
   ...customMocks,
-})
+});
 
 // Path operations mock factory
 export const createPathMock = (customMocks: Partial<any> = {}) => ({
@@ -22,21 +22,21 @@ export const createPathMock = (customMocks: Partial<any> = {}) => ({
   homeDir: vi.fn().mockResolvedValue('/mock/home'),
   documentDir: vi.fn().mockResolvedValue('/mock/documents'),
   join: vi.fn().mockImplementation((...parts) => parts.join('/')),
-  dirname: vi.fn().mockImplementation((path) => path.split('/').slice(0, -1).join('/')),
-  basename: vi.fn().mockImplementation((path) => path.split('/').pop()),
-  extname: vi.fn().mockImplementation((path) => {
-    const parts = path.split('.')
-    return parts.length > 1 ? `.${parts.pop()}` : ''
+  dirname: vi.fn().mockImplementation(path => path.split('/').slice(0, -1).join('/')),
+  basename: vi.fn().mockImplementation(path => path.split('/').pop()),
+  extname: vi.fn().mockImplementation(path => {
+    const parts = path.split('.');
+    return parts.length > 1 ? `.${parts.pop()}` : '';
   }),
   resolve: vi.fn().mockImplementation((...parts) => '/' + parts.join('/').replace(/\/+/g, '/')),
   ...customMocks,
-})
+});
 
 // Core invoke mock factory
 export const createCoreMock = (customMocks: Partial<any> = {}) => ({
   invoke: vi.fn().mockResolvedValue({}),
   ...customMocks,
-})
+});
 
 // Event system mock factory
 export const createEventMock = (customMocks: Partial<any> = {}) => ({
@@ -44,7 +44,7 @@ export const createEventMock = (customMocks: Partial<any> = {}) => ({
   emit: vi.fn().mockResolvedValue(undefined),
   once: vi.fn().mockResolvedValue(() => {}),
   ...customMocks,
-})
+});
 
 // Window operations mock factory
 export const createWindowMock = (customMocks: Partial<any> = {}) => ({
@@ -60,7 +60,7 @@ export const createWindowMock = (customMocks: Partial<any> = {}) => ({
     isVisible: vi.fn().mockResolvedValue(true),
   }),
   ...customMocks,
-})
+});
 
 // SQL plugin mock factory
 export const createSQLMock = (customMocks: Partial<any> = {}) => ({
@@ -72,26 +72,28 @@ export const createSQLMock = (customMocks: Partial<any> = {}) => ({
     }),
   },
   ...customMocks,
-})
+});
 
 // All-in-one mock setup function
-export const setupTauriMocks = (overrides: {
-  fs?: Partial<any>
-  path?: Partial<any>
-  core?: Partial<any>
-  event?: Partial<any>
-  window?: Partial<any>
-  sql?: Partial<any>
-} = {}) => {
-  vi.mock('@tauri-apps/plugin-fs', () => createFileSystemMock(overrides.fs))
-  vi.mock('@tauri-apps/api/path', () => createPathMock(overrides.path))
-  vi.mock('@tauri-apps/api/core', () => createCoreMock(overrides.core))
-  vi.mock('@tauri-apps/api/event', () => createEventMock(overrides.event))
-  vi.mock('@tauri-apps/api/window', () => createWindowMock(overrides.window))
-  vi.mock('@tauri-apps/plugin-sql', () => createSQLMock(overrides.sql))
-}
+export const setupTauriMocks = (
+  overrides: {
+    fs?: Partial<any>;
+    path?: Partial<any>;
+    core?: Partial<any>;
+    event?: Partial<any>;
+    window?: Partial<any>;
+    sql?: Partial<any>;
+  } = {}
+) => {
+  vi.mock('@tauri-apps/plugin-fs', () => createFileSystemMock(overrides.fs));
+  vi.mock('@tauri-apps/api/path', () => createPathMock(overrides.path));
+  vi.mock('@tauri-apps/api/core', () => createCoreMock(overrides.core));
+  vi.mock('@tauri-apps/api/event', () => createEventMock(overrides.event));
+  vi.mock('@tauri-apps/api/window', () => createWindowMock(overrides.window));
+  vi.mock('@tauri-apps/plugin-sql', () => createSQLMock(overrides.sql));
+};
 
 // Reset all mocks
 export const resetTauriMocks = () => {
-  vi.clearAllMocks()
-}
+  vi.clearAllMocks();
+};

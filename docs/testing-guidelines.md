@@ -37,92 +37,92 @@ tests/                        # E2E tests (Playwright)
 ### 1. Component Testing
 
 ```tsx
-import { render, screen, fireEvent } from '../__tests__/test-utils'
-import { Button } from './button'
+import { render, screen, fireEvent } from '../__tests__/test-utils';
+import { Button } from './button';
 
 describe('Button', () => {
   it('renders with correct variant', () => {
-    render(<Button variant="primary">Click me</Button>)
+    render(<Button variant='primary'>Click me</Button>);
 
-    const button = screen.getByRole('button', { name: /click me/i })
-    expect(button).toHaveClass('bg-blue-600')
-  })
+    const button = screen.getByRole('button', { name: /click me/i });
+    expect(button).toHaveClass('bg-blue-600');
+  });
 
   it('handles loading state', () => {
-    render(<Button loading>Loading</Button>)
+    render(<Button loading>Loading</Button>);
 
-    expect(screen.getByRole('button')).toBeDisabled()
-    expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument() // Loading spinner
-  })
-})
+    expect(screen.getByRole('button')).toBeDisabled();
+    expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument(); // Loading spinner
+  });
+});
 ```
 
 ### 2. Hook Testing with Jotai
 
 ```tsx
-import { renderHook, act } from '../__tests__/test-utils'
-import { useTheme } from './use-theme'
-import { themeAtom } from '../atoms'
+import { renderHook, act } from '../__tests__/test-utils';
+import { useTheme } from './use-theme';
+import { themeAtom } from '../atoms';
 
 describe('useTheme', () => {
   it('toggles theme correctly', () => {
     const { result } = renderHook(() => useTheme(), {
-      initialValues: [[themeAtom, 'light']]
-    })
+      initialValues: [[themeAtom, 'light']],
+    });
 
     act(() => {
-      result.current.toggleTheme()
-    })
+      result.current.toggleTheme();
+    });
 
-    expect(result.current.theme).toBe('dark')
-  })
-})
+    expect(result.current.theme).toBe('dark');
+  });
+});
 ```
 
 ### 3. Storage Layer Testing
 
 ```tsx
-import { createMockStorageAdapter, createMockNote } from '../__tests__/test-utils'
+import { createMockStorageAdapter, createMockNote } from '../__tests__/test-utils';
 
 describe('NotesStorage', () => {
   it('creates note successfully', async () => {
-    const mockStorage = createMockStorageAdapter()
-    const mockNote = createMockNote({ title: 'Test Note' })
+    const mockStorage = createMockStorageAdapter();
+    const mockNote = createMockNote({ title: 'Test Note' });
 
-    mockStorage.createNote.mockResolvedValue({ data: mockNote, error: null })
+    mockStorage.createNote.mockResolvedValue({ data: mockNote, error: null });
 
     const result = await mockStorage.createNote({
       title: 'Test Note',
-      content: '<p>Content</p>'
-    })
+      content: '<p>Content</p>',
+    });
 
-    expect(result.data).toEqual(mockNote)
+    expect(result.data).toEqual(mockNote);
     expect(mockStorage.createNote).toHaveBeenCalledWith({
       title: 'Test Note',
-      content: '<p>Content</p>'
-    })
-  })
-})
+      content: '<p>Content</p>',
+    });
+  });
+});
 ```
 
 ### 4. Tauri API Testing
 
 ```tsx
-import { mockTauriAPIs } from '../__tests__/test-utils'
+import { mockTauriAPIs } from '../__tests__/test-utils';
 
 describe('FileManager', () => {
   beforeEach(() => {
-    mockTauriAPIs()
-  })
+    mockTauriAPIs();
+  });
 
   it('reads file content', async () => {
-    const { readTextFile } = await import('@tauri-apps/plugin-fs')
-    ;(readTextFile as any).mockResolvedValue('file content')
+    const { readTextFile } = await import('@tauri-apps/plugin-fs');
+    (readTextFile as any).mockResolvedValue('file content');
 
-    const content = await readTextFile('/path/to/file')
-    expect(content).toBe('file content')
-  })
-})
+    const content = await readTextFile('/path/to/file');
+    expect(content).toBe('file content');
+  });
+});
 ```
 
 ## E2E Testing with Playwright
@@ -130,37 +130,37 @@ describe('FileManager', () => {
 ### Basic App Testing
 
 ```typescript
-import { test, expect } from '@playwright/test'
+import { test, expect } from '@playwright/test';
 
 test('app launches successfully', async ({ page }) => {
-  await page.goto('/')
-  await expect(page).toHaveTitle(/Tauri \+ React \+ Typescript/)
+  await page.goto('/');
+  await expect(page).toHaveTitle(/Tauri \+ React \+ Typescript/);
 
   // Wait for app initialization
-  await page.waitForTimeout(1000)
-  expect(page.locator('body')).toBeVisible()
-})
+  await page.waitForTimeout(1000);
+  expect(page.locator('body')).toBeVisible();
+});
 ```
 
 ### User Workflow Testing
 
 ```typescript
 test('note creation workflow', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/');
 
   // Click new note button
-  await page.getByRole('button', { name: /new note/i }).click()
+  await page.getByRole('button', { name: /new note/i }).click();
 
   // Fill in note details
-  await page.fill('[data-testid="note-title"]', 'My Test Note')
-  await page.fill('[data-testid="note-content"]', 'This is test content')
+  await page.fill('[data-testid="note-title"]', 'My Test Note');
+  await page.fill('[data-testid="note-content"]', 'This is test content');
 
   // Save note
-  await page.getByRole('button', { name: /save/i }).click()
+  await page.getByRole('button', { name: /save/i }).click();
 
   // Verify note appears in list
-  await expect(page.getByText('My Test Note')).toBeVisible()
-})
+  await expect(page.getByText('My Test Note')).toBeVisible();
+});
 ```
 
 ## Storybook Component Documentation
@@ -168,8 +168,8 @@ test('note creation workflow', async ({ page }) => {
 ### Basic Story Structure
 
 ```tsx
-import type { Meta, StoryObj } from '@storybook/react'
-import { Button } from './button'
+import type { Meta, StoryObj } from '@storybook/react';
+import { Button } from './button';
 
 const meta = {
   title: 'Shared/Button',
@@ -178,32 +178,32 @@ const meta = {
     layout: 'centered',
     docs: {
       description: {
-        component: 'A flexible button component with multiple variants and sizes.'
-      }
-    }
+        component: 'A flexible button component with multiple variants and sizes.',
+      },
+    },
   },
   tags: ['autodocs'],
-} satisfies Meta<typeof Button>
+} satisfies Meta<typeof Button>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
     children: 'Button',
   },
-}
+};
 
 export const AllVariants: Story = {
   render: () => (
-    <div className="flex gap-4">
-      <Button variant="primary">Primary</Button>
-      <Button variant="secondary">Secondary</Button>
-      <Button variant="danger">Danger</Button>
-      <Button variant="ghost">Ghost</Button>
+    <div className='flex gap-4'>
+      <Button variant='primary'>Primary</Button>
+      <Button variant='secondary'>Secondary</Button>
+      <Button variant='danger'>Danger</Button>
+      <Button variant='ghost'>Ghost</Button>
     </div>
   ),
-}
+};
 ```
 
 ## Testing Conventions
@@ -220,16 +220,16 @@ export const AllVariants: Story = {
 describe('ComponentName', () => {
   describe('rendering', () => {
     // Tests for different render scenarios
-  })
+  });
 
   describe('interactions', () => {
     // Tests for user interactions
-  })
+  });
 
   describe('edge cases', () => {
     // Tests for error states, empty states, etc.
-  })
-})
+  });
+});
 ```
 
 ### 3. Test Data
@@ -272,15 +272,15 @@ open coverage/index.html
 ### In Tests
 
 ```tsx
-import { axe, toHaveNoViolations } from 'jest-axe'
+import { axe, toHaveNoViolations } from 'jest-axe';
 
-expect.extend(toHaveNoViolations)
+expect.extend(toHaveNoViolations);
 
 test('has no accessibility violations', async () => {
-  const { container } = render(<Button>Click me</Button>)
-  const results = await axe(container)
-  expect(results).toHaveNoViolations()
-})
+  const { container } = render(<Button>Click me</Button>);
+  const results = await axe(container);
+  expect(results).toHaveNoViolations();
+});
 ```
 
 ## Performance Testing
@@ -288,28 +288,28 @@ test('has no accessibility violations', async () => {
 ### Component Performance
 
 ```tsx
-import { measureRenderTime } from '../__tests__/test-utils'
+import { measureRenderTime } from '../__tests__/test-utils';
 
 test('renders within acceptable time', async () => {
   const renderTime = await measureRenderTime(() => {
-    render(<LargeComponentTree />)
-  })
+    render(<LargeComponentTree />);
+  });
 
-  expect(renderTime).toBeLessThan(100) // 100ms threshold
-})
+  expect(renderTime).toBeLessThan(100); // 100ms threshold
+});
 ```
 
 ### E2E Performance
 
 ```typescript
 test('app loads within 5 seconds', async ({ page }) => {
-  const start = Date.now()
-  await page.goto('/')
-  await page.waitForLoadState('networkidle')
-  const loadTime = Date.now() - start
+  const start = Date.now();
+  await page.goto('/');
+  await page.waitForLoadState('networkidle');
+  const loadTime = Date.now() - start;
 
-  expect(loadTime).toBeLessThan(5000)
-})
+  expect(loadTime).toBeLessThan(5000);
+});
 ```
 
 ## Common Testing Utilities
@@ -320,23 +320,23 @@ test('app loads within 5 seconds', async ({ page }) => {
 // In test-utils.tsx
 export const expectElementToHaveClasses = (element: Element, classes: string[]) => {
   classes.forEach(className => {
-    expect(element).toHaveClass(className)
-  })
-}
+    expect(element).toHaveClass(className);
+  });
+};
 ```
 
 ### Async Testing
 
 ```typescript
-import { waitFor, waitForElementToBeRemoved } from '@testing-library/react'
+import { waitFor, waitForElementToBeRemoved } from '@testing-library/react';
 
 // Wait for async operations
 await waitFor(() => {
-  expect(screen.getByText('Loaded')).toBeInTheDocument()
-})
+  expect(screen.getByText('Loaded')).toBeInTheDocument();
+});
 
 // Wait for element removal
-await waitForElementToBeRemoved(() => screen.queryByText('Loading...'))
+await waitForElementToBeRemoved(() => screen.queryByText('Loading...'));
 ```
 
 ## Debugging Tests
@@ -370,13 +370,13 @@ pnpm test:e2e:report
 ### Console Debugging in Tests
 
 ```tsx
-import { screen } from '@testing-library/react'
+import { screen } from '@testing-library/react';
 
 // Debug rendered DOM
-screen.debug()
+screen.debug();
 
 // Debug specific element
-screen.debug(screen.getByRole('button'))
+screen.debug(screen.getByRole('button'));
 ```
 
 ## Best Practices

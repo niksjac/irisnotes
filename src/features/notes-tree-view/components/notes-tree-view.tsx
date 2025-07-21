@@ -147,7 +147,7 @@ export function NotesTreeView({
   return (
     <div
       ref={containerRef}
-      className={clsx("flex flex-col h-full overflow-hidden outline-none", focusClasses)}
+      className={clsx('flex flex-col h-full overflow-hidden outline-none', focusClasses)}
       tabIndex={0}
       onClick={handleContainerClick}
       onFocus={handleContainerFocus}
@@ -168,11 +168,11 @@ export function NotesTreeView({
       />
 
       {hoistedFolder && (
-        <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900 border-b border-blue-200 dark:border-blue-700 text-center">
-          <span className="text-sm text-blue-600 dark:text-blue-300">
-            Showing contents of: <strong className="text-blue-700 dark:text-blue-200">{hoistedFolder.name}</strong>
+        <div className='px-4 py-2 bg-blue-50 dark:bg-blue-900 border-b border-blue-200 dark:border-blue-700 text-center'>
+          <span className='text-sm text-blue-600 dark:text-blue-300'>
+            Showing contents of: <strong className='text-blue-700 dark:text-blue-200'>{hoistedFolder.name}</strong>
           </span>
-          <small className="block text-xs text-blue-500 dark:text-blue-400">Press Escape to exit hoist mode</small>
+          <small className='block text-xs text-blue-500 dark:text-blue-400'>Press Escape to exit hoist mode</small>
         </div>
       )}
 

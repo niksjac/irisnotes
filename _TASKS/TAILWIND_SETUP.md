@@ -7,17 +7,21 @@ Tailwind CSS v4 has been successfully installed and configured in your project. 
 ## 🔧 What Was Done
 
 ### 1. **Dependencies Installed**
+
 - `tailwindcss@4.1.11` - Core Tailwind CSS v4 framework
 - `@tailwindcss/vite@4.1.11` - Vite plugin for optimal performance
 - `autoprefixer` - CSS vendor prefixing (dev dependency)
 
 ### 2. **Configuration Files**
+
 - **`vite.config.ts`** - Added Tailwind Vite plugin
 - **`src/styles/tailwind.css`** - Main Tailwind CSS file with theme configuration
 - **`src/App.tsx`** - Added Tailwind CSS import (loads first)
 
 ### 3. **Theme Configuration**
+
 The `src/styles/tailwind.css` file includes:
+
 - Custom theme variables matching your existing `--iris-*` CSS variables
 - Dark mode support via `@media (prefers-color-scheme: dark)`
 - Spacing, typography, colors, and layout configuration
@@ -35,6 +39,7 @@ The `src/styles/tailwind.css` file includes:
 ### Example Migration
 
 **Before (CSS):**
+
 ```css
 .button {
   padding: 0.5rem 1rem;
@@ -50,8 +55,9 @@ The `src/styles/tailwind.css` file includes:
 ```
 
 **After (Tailwind):**
+
 ```tsx
-<button className="px-4 py-2 bg-blue-600 text-white rounded transition-all duration-200 hover:bg-blue-700">
+<button className='px-4 py-2 bg-blue-600 text-white rounded transition-all duration-200 hover:bg-blue-700'>
   Button
 </button>
 ```
@@ -59,6 +65,7 @@ The `src/styles/tailwind.css` file includes:
 ### Available Custom Colors
 
 Your existing iris colors are available in Tailwind:
+
 - `bg-iris-primary`, `text-iris-primary`, `border-iris-primary`
 - `bg-iris-surface`, `bg-iris-surface-2`, `bg-iris-surface-3`
 - `bg-iris-text`, `text-iris-text-2`, `text-iris-text-3`
@@ -67,6 +74,7 @@ Your existing iris colors are available in Tailwind:
 ### Coexistence Strategy
 
 Both CSS and Tailwind work together:
+
 - **Keep existing CSS** for complex components during migration
 - **Add Tailwind utilities** for new features
 - **Gradually replace** CSS classes with Tailwind utilities
@@ -129,9 +137,11 @@ pnpm run build
 ## Migration from CSS Custom Properties to Tailwind
 
 ### Current Setup
+
 You have both CSS custom properties (`--iris-*`) and Tailwind CSS v4 running simultaneously. Here's how to migrate components:
 
 ### Color Migration
+
 ```css
 /* Old CSS approach */
 .my-component {
@@ -144,14 +154,13 @@ You have both CSS custom properties (`--iris-*`) and Tailwind CSS v4 running sim
 ```
 
 ```jsx
-<div className="text-iris-primary bg-iris-secondary border border-iris">
-  My component
-</div>
+<div className='text-iris-primary bg-iris-secondary border border-iris'>My component</div>
 ```
 
 ### Common Migration Patterns
 
 #### Text Colors
+
 ```jsx
 // Before: style={{ color: 'var(--iris-text-primary)' }}
 // After: className="text-iris-primary"
@@ -164,6 +173,7 @@ You have both CSS custom properties (`--iris-*`) and Tailwind CSS v4 running sim
 ```
 
 #### Backgrounds
+
 ```jsx
 // Before: style={{ background: 'var(--iris-bg-primary)' }}
 // After: className="bg-iris-primary"
@@ -176,6 +186,7 @@ You have both CSS custom properties (`--iris-*`) and Tailwind CSS v4 running sim
 ```
 
 #### Spacing
+
 ```jsx
 // Before: style={{ padding: 'var(--iris-space-md)' }}
 // After: className="p-3" // 0.75rem
@@ -188,6 +199,7 @@ You have both CSS custom properties (`--iris-*`) and Tailwind CSS v4 running sim
 ```
 
 #### Borders & Radius
+
 ```jsx
 // Before: style={{ borderRadius: 'var(--iris-radius-md)' }}
 // After: className="rounded" // 0.25rem
@@ -241,7 +253,7 @@ function Button({ children }: { children: React.ReactNode }) {
 // After: Using Tailwind classes
 function Button({ children }: { children: React.ReactNode }) {
   return (
-    <button className="px-3 py-2 bg-[var(--color-iris-primary)] text-white border border-iris rounded hover:bg-[var(--color-iris-primary-hover)] transition-colors">
+    <button className='px-3 py-2 bg-[var(--color-iris-primary)] text-white border border-iris rounded hover:bg-[var(--color-iris-primary-hover)] transition-colors'>
       {children}
     </button>
   );
@@ -249,9 +261,11 @@ function Button({ children }: { children: React.ReactNode }) {
 ```
 
 ### Dark Mode Support
+
 Dark mode works automatically with the `@media (prefers-color-scheme: dark)` in your Tailwind theme. No additional classes needed.
 
 ### Benefits of This Approach
+
 - ✅ Maintains design consistency with your existing `--iris-*` variables
 - ✅ Leverages Tailwind's utility system and performance optimizations
 - ✅ Provides both semantic names (`text-iris-primary`) and scale access (`--color-iris-primary-300`)

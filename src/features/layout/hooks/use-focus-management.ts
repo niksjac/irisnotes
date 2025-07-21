@@ -1,11 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-export type FocusableElement =
-  | 'activity-bar'
-  | 'sidebar-buttons'
-  | 'sidebar-search'
-  | 'sidebar-tree'
-  | 'editor';
+export type FocusableElement = 'activity-bar' | 'sidebar-buttons' | 'sidebar-search' | 'sidebar-tree' | 'editor';
 
 interface FocusManagementOptions {
   onFocusChange?: (element: FocusableElement) => void;
@@ -23,25 +18,28 @@ export const useFocusManagement = (options: FocusManagementOptions = {}) => {
   const elementRefs = useRef<Map<FocusableElement, HTMLElement | null>>(new Map());
 
   // Check if an element is visible and should be focusable
-  const isElementVisible = useCallback((element: FocusableElement): boolean => {
-    const targetElement = elementRefs.current.get(element);
-    if (!targetElement) return false;
+  const isElementVisible = useCallback(
+    (element: FocusableElement): boolean => {
+      const targetElement = elementRefs.current.get(element);
+      if (!targetElement) return false;
 
-    // Check if element exists in DOM and is visible
-    if (targetElement.offsetParent === null) return false;
+      // Check if element exists in DOM and is visible
+      if (targetElement.offsetParent === null) return false;
 
-    // Special checks for sidebar elements
-    if (element === 'sidebar-buttons' || element === 'sidebar-search' || element === 'sidebar-tree') {
-      return !options.sidebarCollapsed;
-    }
+      // Special checks for sidebar elements
+      if (element === 'sidebar-buttons' || element === 'sidebar-search' || element === 'sidebar-tree') {
+        return !options.sidebarCollapsed;
+      }
 
-    // Special check for activity bar
-    if (element === 'activity-bar') {
-      return options.activityBarVisible !== false;
-    }
+      // Special check for activity bar
+      if (element === 'activity-bar') {
+        return options.activityBarVisible !== false;
+      }
 
-    return true;
-  }, [options.sidebarCollapsed, options.activityBarVisible]);
+      return true;
+    },
+    [options.sidebarCollapsed, options.activityBarVisible]
+  );
 
   // Register an element for focus management
   const registerElement = useCallback((element: FocusableElement, ref: HTMLElement | null) => {
@@ -49,100 +47,112 @@ export const useFocusManagement = (options: FocusManagementOptions = {}) => {
   }, []);
 
   // Focus a specific element
-  const focusElement = useCallback((element: FocusableElement, byTab: boolean = false, autoShow: boolean = true) => {
-    // Ensure the element is visible before focusing (only if autoShow is true)
-    if (autoShow && !byTab) {
-      // Only auto-show when using dedicated hotkeys, not tab navigation or clicks
-      if ((element === 'sidebar-buttons' || element === 'sidebar-search' || element === 'sidebar-tree') && options.onToggleSidebar) {
-        // Show sidebar if focusing any sidebar element
-        options.onToggleSidebar();
-      } else if (element === 'activity-bar' && options.onToggleActivityBar) {
-        // Show activity bar if focusing it
-        options.onToggleActivityBar();
+  const focusElement = useCallback(
+    (element: FocusableElement, byTab: boolean = false, autoShow: boolean = true) => {
+      // Ensure the element is visible before focusing (only if autoShow is true)
+      if (autoShow && !byTab) {
+        // Only auto-show when using dedicated hotkeys, not tab navigation or clicks
+        if (
+          (element === 'sidebar-buttons' || element === 'sidebar-search' || element === 'sidebar-tree') &&
+          options.onToggleSidebar
+        ) {
+          // Show sidebar if focusing any sidebar element
+          options.onToggleSidebar();
+        } else if (element === 'activity-bar' && options.onToggleActivityBar) {
+          // Show activity bar if focusing it
+          options.onToggleActivityBar();
+        }
       }
-    }
 
-    const targetElement = elementRefs.current.get(element);
-    if (targetElement) {
-      // Update focus state immediately
+      const targetElement = elementRefs.current.get(element);
+      if (targetElement) {
+        // Update focus state immediately
+        setCurrentFocus(element);
+        setIsTabNavigating(byTab);
+
+        // Only focus DOM element for non-editor elements to avoid disrupting editor internals
+        if (element !== 'editor') {
+          requestAnimationFrame(() => {
+            if (targetElement.focus) {
+              targetElement.focus();
+            }
+          });
+        }
+
+        // Call the focus change callback
+        options.onFocusChange?.(element);
+
+        // Clear tab navigation flag after a short delay
+        if (byTab) {
+          setTimeout(() => setIsTabNavigating(false), 100);
+        }
+      }
+    },
+    [options]
+  );
+
+  // Set focus from mouse click (no auto-show, no DOM focus)
+  const setFocusFromClick = useCallback(
+    (element: FocusableElement) => {
+      // Clear any pending tab navigation state
+      setIsTabNavigating(false);
+
+      // Update visual focus indicator
       setCurrentFocus(element);
-      setIsTabNavigating(byTab);
-
-      // Only focus DOM element for non-editor elements to avoid disrupting editor internals
-      if (element !== 'editor') {
-        requestAnimationFrame(() => {
-          if (targetElement.focus) {
-            targetElement.focus();
-          }
-        });
-      }
 
       // Call the focus change callback
       options.onFocusChange?.(element);
-
-      // Clear tab navigation flag after a short delay
-      if (byTab) {
-        setTimeout(() => setIsTabNavigating(false), 100);
-      }
-    }
-  }, [options]);
-
-  // Set focus from mouse click (no auto-show, no DOM focus)
-  const setFocusFromClick = useCallback((element: FocusableElement) => {
-    // Clear any pending tab navigation state
-    setIsTabNavigating(false);
-
-    // Update visual focus indicator
-    setCurrentFocus(element);
-
-    // Call the focus change callback
-    options.onFocusChange?.(element);
-  }, [options]);
+    },
+    [options]
+  );
 
   // Navigate to next/previous element in tab order
-  const navigateTab = useCallback((direction: 'forward' | 'backward') => {
-    // Define the tab order inside the callback
-    const tabOrder: FocusableElement[] = [
-      'activity-bar',
-      'sidebar-buttons',
-      'sidebar-search',
-      'sidebar-tree',
-      'editor'
-    ];
+  const navigateTab = useCallback(
+    (direction: 'forward' | 'backward') => {
+      // Define the tab order inside the callback
+      const tabOrder: FocusableElement[] = [
+        'activity-bar',
+        'sidebar-buttons',
+        'sidebar-search',
+        'sidebar-tree',
+        'editor',
+      ];
 
-    const currentIndex = tabOrder.indexOf(currentFocus);
-    let attempts = 0;
-    const maxAttempts = tabOrder.length;
+      const currentIndex = tabOrder.indexOf(currentFocus);
+      let attempts = 0;
+      const maxAttempts = tabOrder.length;
 
-         const findNextFocusableElement = (startIndex: number): FocusableElement | null => {
-       let nextIndex: number;
+      const findNextFocusableElement = (startIndex: number): FocusableElement | null => {
+        let nextIndex: number;
 
-       if (direction === 'forward') {
-         nextIndex = (startIndex + 1) % tabOrder.length;
-       } else {
-         nextIndex = startIndex === 0 ? tabOrder.length - 1 : startIndex - 1;
-       }
+        if (direction === 'forward') {
+          nextIndex = (startIndex + 1) % tabOrder.length;
+        } else {
+          nextIndex = startIndex === 0 ? tabOrder.length - 1 : startIndex - 1;
+        }
 
-       const nextElement = tabOrder[nextIndex];
-       attempts++;
+        const nextElement = tabOrder[nextIndex];
+        attempts++;
 
-       // Prevent infinite loop or invalid index
-       if (attempts >= maxAttempts || !nextElement) return null;
+        // Prevent infinite loop or invalid index
+        if (attempts >= maxAttempts || !nextElement) return null;
 
-       // Check if element is visible and focusable
-       if (isElementVisible(nextElement)) {
-         return nextElement;
-       } else {
-         // Skip to next element
-         return findNextFocusableElement(nextIndex);
-       }
-     };
+        // Check if element is visible and focusable
+        if (isElementVisible(nextElement)) {
+          return nextElement;
+        } else {
+          // Skip to next element
+          return findNextFocusableElement(nextIndex);
+        }
+      };
 
-    const nextElement = findNextFocusableElement(currentIndex);
-    if (nextElement && nextElement !== currentFocus) {
-      focusElement(nextElement, true);
-    }
-  }, [currentFocus, focusElement, isElementVisible]);
+      const nextElement = findNextFocusableElement(currentIndex);
+      if (nextElement && nextElement !== currentFocus) {
+        focusElement(nextElement, true);
+      }
+    },
+    [currentFocus, focusElement, isElementVisible]
+  );
 
   // Handle global keyboard events
   useEffect(() => {
@@ -192,19 +202,25 @@ export const useFocusManagement = (options: FocusManagementOptions = {}) => {
   }, [navigateTab, focusElement, currentFocus]);
 
   // Helper to check if an element is currently focused
-  const isFocused = useCallback((element: FocusableElement) => {
-    return currentFocus === element;
-  }, [currentFocus]);
+  const isFocused = useCallback(
+    (element: FocusableElement) => {
+      return currentFocus === element;
+    },
+    [currentFocus]
+  );
 
   // Get focus indicator classes
-  const getFocusClasses = useCallback((element: FocusableElement) => {
-    const isCurrent = currentFocus === element;
-    return {
-      'focus-managed': true,
-      'focus-current': isCurrent,
-      'focus-tab-navigating': isCurrent && isTabNavigating,
-    };
-  }, [currentFocus, isTabNavigating]);
+  const getFocusClasses = useCallback(
+    (element: FocusableElement) => {
+      const isCurrent = currentFocus === element;
+      return {
+        'focus-managed': true,
+        'focus-current': isCurrent,
+        'focus-tab-navigating': isCurrent && isTabNavigating,
+      };
+    },
+    [currentFocus, isTabNavigating]
+  );
 
   return {
     currentFocus,

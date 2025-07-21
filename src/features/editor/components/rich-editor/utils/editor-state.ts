@@ -40,17 +40,14 @@ class SharedPluginManager {
       this.sharedPlugins.set(`gapCursor-${schemaKey}`, gapCursor());
     }
 
-    return [
-      this.sharedPlugins.get(`dropCursor-${schemaKey}`)!,
-      this.sharedPlugins.get(`gapCursor-${schemaKey}`)!
-    ];
+    return [this.sharedPlugins.get(`dropCursor-${schemaKey}`)!, this.sharedPlugins.get(`gapCursor-${schemaKey}`)!];
   }
 
   createStatefulPlugins(schema: Schema, onToggleView: () => void): Plugin[] {
     // Create fresh instances of stateful plugins for each editor
     const myKeymap = keymap({
       ...baseKeymap,
-      ...createBaseKeymap(schema, colorKeymap(schema), onToggleView)
+      ...createBaseKeymap(schema, colorKeymap(schema), onToggleView),
     });
 
     return [
@@ -58,7 +55,7 @@ class SharedPluginManager {
       myKeymap,
       history({ newGroupDelay: 20 }), // History plugin maintains per-editor state
       currentLineHighlightPlugin, // Stateful - needs separate instance
-      linkClickPlugin // Stateful - needs separate instance
+      linkClickPlugin, // Stateful - needs separate instance
     ];
   }
 
@@ -85,14 +82,11 @@ export function createEditorState({ doc, schema, onToggleView }: CreateEditorSta
   const statefulPlugins = pluginManager.createStatefulPlugins(schema, onToggleView);
 
   // Combine shared and stateful plugins
-  const plugins: Plugin[] = [
-    ...statefulPlugins,
-    ...sharedPlugins
-  ];
+  const plugins: Plugin[] = [...statefulPlugins, ...sharedPlugins];
 
   return EditorState.create({
     doc,
-    plugins
+    plugins,
   });
 }
 

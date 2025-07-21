@@ -40,15 +40,7 @@
     "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true
   },
-  "include": [
-    "src/**/*",
-    "src/vite-env.d.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "src-tauri/**/*",
-    "target/**/*"
-  ],
+  "include": ["src/**/*", "src/vite-env.d.ts"],
+  "exclude": ["node_modules", "dist", "src-tauri/**/*", "target/**/*"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

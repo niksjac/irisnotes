@@ -1,7 +1,7 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
-import { resolve } from "path";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import { resolve } from 'path';
 
 const host = process.env.TAURI_DEV_HOST;
 
@@ -21,14 +21,14 @@ export default defineConfig(() => ({
     host: host || false,
     hmr: host
       ? {
-          protocol: "ws",
+          protocol: 'ws',
           host,
           port: 1421,
         }
       : undefined,
     watch: {
       // 3. tell vite to ignore watching `src-tauri`
-      ignored: ["**/src-tauri/**"],
+      ignored: ['**/src-tauri/**'],
     },
   },
 
@@ -52,7 +52,7 @@ export default defineConfig(() => ({
             'prosemirror-schema-basic',
             'prosemirror-schema-list',
             'prosemirror-dropcursor',
-            'prosemirror-gapcursor'
+            'prosemirror-gapcursor',
           ],
           'vendor-codemirror': [
             '@codemirror/view',
@@ -62,7 +62,7 @@ export default defineConfig(() => ({
             '@codemirror/commands',
             '@codemirror/search',
             '@codemirror/autocomplete',
-            '@codemirror/language'
+            '@codemirror/language',
           ],
           'vendor-tauri': [
             '@tauri-apps/api',
@@ -73,10 +73,10 @@ export default defineConfig(() => ({
             '@tauri-apps/plugin-notification',
             '@tauri-apps/plugin-sql',
             '@tauri-apps/plugin-window-state',
-            '@tauri-apps/plugin-global-shortcut'
-          ]
-        }
-      }
+            '@tauri-apps/plugin-global-shortcut',
+          ],
+        },
+      },
     },
 
     // Optimize for production
@@ -84,36 +84,30 @@ export default defineConfig(() => ({
     terserOptions: {
       compress: {
         drop_console: true,
-        drop_debugger: true
-      }
+        drop_debugger: true,
+      },
     },
 
     // Enable source maps for debugging
     sourcemap: true,
 
     // Reduce bundle size
-    chunkSizeWarningLimit: 1000
+    chunkSizeWarningLimit: 1000,
   },
 
   // Path resolution
   resolve: {
     alias: {
-      "@": resolve(__dirname, "src"),
-      "@/features": resolve(__dirname, "src/features"),
-      "@/components": resolve(__dirname, "src/components"),
-      "@/utils": resolve(__dirname, "src/utils"),
-      "@/types": resolve(__dirname, "src/types")
-    }
+      '@': resolve(__dirname, 'src'),
+      '@/features': resolve(__dirname, 'src/features'),
+      '@/components': resolve(__dirname, 'src/components'),
+      '@/utils': resolve(__dirname, 'src/utils'),
+      '@/types': resolve(__dirname, 'src/types'),
+    },
   },
 
   // Optimize dependencies
   optimizeDeps: {
-    include: [
-      'react',
-      'react-dom',
-      'prosemirror-state',
-      'prosemirror-view',
-      'prosemirror-model'
-    ]
-  }
+    include: ['react', 'react-dom', 'prosemirror-state', 'prosemirror-view', 'prosemirror-model'],
+  },
 }));

@@ -12,7 +12,7 @@ export const useNotesSelection = () => {
     right: string | null;
   }>({
     left: null,
-    right: null
+    right: null,
   });
 
   const setSelectedNoteIdForPane = useCallback((paneId: PaneId, noteId: string | null) => {
@@ -23,10 +23,13 @@ export const useNotesSelection = () => {
     setSelectedNoteIds(prev => ({ ...prev, [paneId]: noteId }));
   }, []);
 
-  const getSelectedNoteForPane = useCallback((paneId: PaneId, notes: Note[]) => {
-    const noteId = selectedNoteIds[paneId];
-    return noteId ? notes.find(note => note.id === noteId) || null : null;
-  }, [selectedNoteIds]);
+  const getSelectedNoteForPane = useCallback(
+    (paneId: PaneId, notes: Note[]) => {
+      const noteId = selectedNoteIds[paneId];
+      return noteId ? notes.find(note => note.id === noteId) || null : null;
+    },
+    [selectedNoteIds]
+  );
 
   const clearSelection = useCallback(() => {
     setSelectedNoteId(null);

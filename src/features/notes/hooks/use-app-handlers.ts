@@ -28,87 +28,108 @@ export function useAppHandlers({
   createNewNote,
   loadAllNotes,
   loadNoteCategories,
-  focusElement
+  focusElement,
 }: UseAppHandlersProps) {
+  const handleNoteClick = useCallback(
+    (noteId: string) => {
+      if (isDualPaneMode) {
+        openNoteInPane(noteId, activePaneId);
+      } else {
+        setSelectedNoteId(noteId);
+      }
 
-  const handleNoteClick = useCallback((noteId: string) => {
-    if (isDualPaneMode) {
-      openNoteInPane(noteId, activePaneId);
-    } else {
-      setSelectedNoteId(noteId);
-    }
+      // Focus the editor after note selection for keyboard interaction
+      focusElement('editor');
+    },
+    [isDualPaneMode, openNoteInPane, activePaneId, setSelectedNoteId, focusElement]
+  );
 
-    // Focus the editor after note selection for keyboard interaction
-    focusElement('editor');
-  }, [isDualPaneMode, openNoteInPane, activePaneId, setSelectedNoteId, focusElement]);
+  const handleItemSelect = useCallback(
+    (itemId: string, itemType: 'note' | 'category') => {
+      // Handle both note and category selection for proper navigation state
+      if (itemType === 'category') {
+        // For folders, we don't load them in the editor, just select them
+        setSelectedNoteId(null);
+      } else if (itemType === 'note') {
+        // For notes, update the selection but don't open automatically
+        // Opening will be handled by onNoteSelect when appropriate (click, Enter, Space)
+        setSelectedNoteId(itemId);
+      }
+    },
+    [setSelectedNoteId]
+  );
 
-  const handleItemSelect = useCallback((itemId: string, itemType: 'note' | 'category') => {
-    // Handle both note and category selection for proper navigation state
-    if (itemType === 'category') {
-      // For folders, we don't load them in the editor, just select them
+  const handleTitleChange = useCallback(
+    (noteId: string, title: string) => {
+      updateNoteTitle(noteId, title);
+    },
+    [updateNoteTitle]
+  );
+
+  const handleContentChange = useCallback(
+    (noteId: string, content: string) => {
+      updateNoteContent(noteId, content);
+    },
+    [updateNoteContent]
+  );
+
+  const handleFolderSelect = useCallback(
+    (_folderId: string) => {
       setSelectedNoteId(null);
-    } else if (itemType === 'note') {
-      // For notes, update the selection but don't open automatically
-      // Opening will be handled by onNoteSelect when appropriate (click, Enter, Space)
-      setSelectedNoteId(itemId);
-    }
-  }, [setSelectedNoteId]);
+    },
+    [setSelectedNoteId]
+  );
 
-  const handleTitleChange = useCallback((noteId: string, title: string) => {
-    updateNoteTitle(noteId, title);
-  }, [updateNoteTitle]);
+  const handleCreateNote = useCallback(
+    async (parentCategoryId?: string) => {
+      if (!storageManager) return;
 
-  const handleContentChange = useCallback((noteId: string, content: string) => {
-    updateNoteContent(noteId, content);
-  }, [updateNoteContent]);
+      try {
+        const result = await createNewNote();
+        if (result.success && result.data && parentCategoryId) {
+          // Add the note to the category
+          const storage = storageManager.getActiveStorage();
+          if (!storage) {
+            return;
+          }
 
-  const handleFolderSelect = useCallback((_folderId: string) => {
-    setSelectedNoteId(null);
-  }, [setSelectedNoteId]);
+          await storage.addNoteToCategory(result.data.id, parentCategoryId);
+          // Reload note categories to update the tree
+          await loadNoteCategories();
+        }
+      } catch (error) {
+        console.error('Failed to create note:', error);
+      }
+    },
+    [storageManager, createNewNote, loadNoteCategories]
+  );
 
-  const handleCreateNote = useCallback(async (parentCategoryId?: string) => {
-    if (!storageManager) return;
+  const handleDeleteNote = useCallback(
+    async (noteId: string) => {
+      if (!storageManager) return;
 
-    try {
-      const result = await createNewNote();
-      if (result.success && result.data && parentCategoryId) {
-        // Add the note to the category
+      try {
         const storage = storageManager.getActiveStorage();
         if (!storage) {
-
           return;
         }
 
-        await storage.addNoteToCategory(result.data.id, parentCategoryId);
-        // Reload note categories to update the tree
-        await loadNoteCategories();
+        await storage.deleteNote(noteId);
+        // Reload notes to update the UI
+        await loadAllNotes();
+      } catch (error) {
+        console.error('Failed to delete note:', error);
       }
-    } catch (error) {
-      console.error('Failed to create note:', error);
-    }
-  }, [storageManager, createNewNote, loadNoteCategories]);
+    },
+    [storageManager, loadAllNotes]
+  );
 
-  const handleDeleteNote = useCallback(async (noteId: string) => {
-    if (!storageManager) return;
-
-    try {
-      const storage = storageManager.getActiveStorage();
-      if (!storage) {
-
-        return;
-      }
-
-      await storage.deleteNote(noteId);
-      // Reload notes to update the UI
-      await loadAllNotes();
-    } catch (error) {
-      console.error('Failed to delete note:', error);
-    }
-  }, [storageManager, loadAllNotes]);
-
-  const handleRenameNote = useCallback(async (noteId: string, newTitle: string) => {
-    await updateNoteTitle(noteId, newTitle);
-  }, [updateNoteTitle]);
+  const handleRenameNote = useCallback(
+    async (noteId: string, newTitle: string) => {
+      await updateNoteTitle(noteId, newTitle);
+    },
+    [updateNoteTitle]
+  );
 
   return {
     handleNoteClick,
@@ -118,6 +139,6 @@ export function useAppHandlers({
     handleFolderSelect,
     handleCreateNote,
     handleDeleteNote,
-    handleRenameNote
+    handleRenameNote,
   };
 }

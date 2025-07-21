@@ -1,6 +1,19 @@
 import Database from '@tauri-apps/plugin-sql';
 import type { StorageAdapter, StorageConfig, StorageResult } from '../types';
-import type { Note, CreateNoteParams, UpdateNoteParams, NoteFilters, Category, Tag, NoteRelationship, Attachment, NoteVersion, Setting, CreateCategoryParams, CreateTagParams } from '../../../../types/database';
+import type {
+  Note,
+  CreateNoteParams,
+  UpdateNoteParams,
+  NoteFilters,
+  Category,
+  Tag,
+  NoteRelationship,
+  Attachment,
+  NoteVersion,
+  Setting,
+  CreateCategoryParams,
+  CreateTagParams,
+} from '../../../../types/database';
 
 // Complete SQLite storage adapter implementation
 export class SQLiteStorageAdapter implements StorageAdapter {
@@ -11,7 +24,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
     this.config = config;
   }
 
-    async init(): Promise<StorageResult<void>> {
+  async init(): Promise<StorageResult<void>> {
     try {
       // Initialize SQLite database connection
       const dbPath = this.config.sqlite?.database_path || 'notes.db';
@@ -24,7 +37,10 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       return { success: true, data: undefined };
     } catch (error) {
       console.error('❌ Failed to initialize SQLite database:', error);
-      return { success: false, error: `Failed to initialize SQLite database: ${error}` };
+      return {
+        success: false,
+        error: `Failed to initialize SQLite database: ${error}`,
+      };
     }
   }
 
@@ -157,7 +173,9 @@ export class SQLiteStorageAdapter implements StorageAdapter {
     await this.db.execute(`CREATE INDEX IF NOT EXISTS idx_tags_name ON tags(name)`);
 
     // Insert default categories if they don't exist
-    const existingCategories = await this.db.select<Array<{ count: number }>>('SELECT COUNT(*) as count FROM categories');
+    const existingCategories = await this.db.select<Array<{ count: number }>>(
+      'SELECT COUNT(*) as count FROM categories'
+    );
     if (existingCategories.length === 0 || (existingCategories[0]?.count ?? 0) === 0) {
       await this.db.execute(`
         INSERT INTO categories (id, name, description, sort_order) VALUES
@@ -166,7 +184,6 @@ export class SQLiteStorageAdapter implements StorageAdapter {
         ('projects', 'Projects', 'Project-related notes and documentation', 2)
       `);
     }
-
   }
 
   getConfig(): StorageConfig {
@@ -225,11 +242,8 @@ export class SQLiteStorageAdapter implements StorageAdapter {
     }
 
     try {
-      const results = await this.db.select<Note[]>(
-        'SELECT * FROM notes WHERE id = ? AND deleted_at IS NULL',
-        [id]
-      );
-      const note = results.length > 0 ? results[0] as Note : null;
+      const results = await this.db.select<Note[]>('SELECT * FROM notes WHERE id = ? AND deleted_at IS NULL', [id]);
+      const note = results.length > 0 ? (results[0] as Note) : null;
       return { success: true, data: note };
     } catch (error) {
       return { success: false, error: `Failed to get note: ${error}` };
@@ -265,9 +279,18 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       `;
 
       await this.db.execute(insertQuery, [
-        id, title, content, contentType, contentRaw,
-        now, now, false, false,
-        wordCount, characterCount, contentPlaintext
+        id,
+        title,
+        content,
+        contentType,
+        contentRaw,
+        now,
+        now,
+        false,
+        false,
+        wordCount,
+        characterCount,
+        contentPlaintext,
       ]);
 
       // Handle category assignments
@@ -298,7 +321,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
         is_archived: false,
         word_count: wordCount,
         character_count: characterCount,
-        content_plaintext: contentPlaintext
+        content_plaintext: contentPlaintext,
       };
 
       return { success: true, data: newNote };
@@ -362,10 +385,9 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       await this.db.execute(updateQuery, queryParams);
 
       // Get the updated note
-      const results = await this.db.select<Note[]>(
-        'SELECT * FROM notes WHERE id = ? AND deleted_at IS NULL',
-        [params.id]
-      );
+      const results = await this.db.select<Note[]>('SELECT * FROM notes WHERE id = ? AND deleted_at IS NULL', [
+        params.id,
+      ]);
 
       if (results.length === 0) {
         return { success: false, error: 'Note not found' };
@@ -385,10 +407,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 
     try {
       const now = new Date().toISOString();
-      await this.db.execute(
-        'UPDATE notes SET deleted_at = ? WHERE id = ?',
-        [now, id]
-      );
+      await this.db.execute('UPDATE notes SET deleted_at = ? WHERE id = ?', [now, id]);
       return { success: true, data: undefined };
     } catch (error) {
       return { success: false, error: `Failed to delete note: ${error}` };
@@ -416,7 +435,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 
     try {
       const results = await this.db.select<Category[]>('SELECT * FROM categories WHERE id = ?', [id]);
-      const category = results.length > 0 ? results[0] as Category : null;
+      const category = results.length > 0 ? (results[0] as Category) : null;
       return { success: true, data: category };
     } catch (error) {
       return { success: false, error: `Failed to get category: ${error}` };
@@ -439,8 +458,15 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       `;
 
       await this.db.execute(insertQuery, [
-        id, params.name, params.description || '', params.color || null,
-        params.icon || null, params.parent_id || null, sortOrder, now, now
+        id,
+        params.name,
+        params.description || '',
+        params.color || null,
+        params.icon || null,
+        params.parent_id || null,
+        sortOrder,
+        now,
+        now,
       ]);
 
       const newCategory: Category = {
@@ -452,7 +478,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
         parent_id: params.parent_id || null,
         sort_order: sortOrder,
         created_at: now,
-        updated_at: now
+        updated_at: now,
       };
 
       return { success: true, data: newCategory };
@@ -545,7 +571,10 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       const results = await this.db.select<Note[]>(query, [categoryId]);
       return { success: true, data: results };
     } catch (error) {
-      return { success: false, error: `Failed to get category notes: ${error}` };
+      return {
+        success: false,
+        error: `Failed to get category notes: ${error}`,
+      };
     }
   }
 
@@ -562,7 +591,10 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       );
       return { success: true, data: undefined };
     } catch (error) {
-      return { success: false, error: `Failed to add note to category: ${error}` };
+      return {
+        success: false,
+        error: `Failed to add note to category: ${error}`,
+      };
     }
   }
 
@@ -572,13 +604,13 @@ export class SQLiteStorageAdapter implements StorageAdapter {
     }
 
     try {
-      await this.db.execute(
-        'DELETE FROM note_categories WHERE note_id = ? AND category_id = ?',
-        [noteId, categoryId]
-      );
+      await this.db.execute('DELETE FROM note_categories WHERE note_id = ? AND category_id = ?', [noteId, categoryId]);
       return { success: true, data: undefined };
     } catch (error) {
-      return { success: false, error: `Failed to remove note from category: ${error}` };
+      return {
+        success: false,
+        error: `Failed to remove note from category: ${error}`,
+      };
     }
   }
 
@@ -603,7 +635,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 
     try {
       const results = await this.db.select<Tag[]>('SELECT * FROM tags WHERE id = ?', [id]);
-      const tag = results.length > 0 ? results[0] as Tag : null;
+      const tag = results.length > 0 ? (results[0] as Tag) : null;
       return { success: true, data: tag };
     } catch (error) {
       return { success: false, error: `Failed to get tag: ${error}` };
@@ -624,9 +656,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
         VALUES (?, ?, ?, ?, ?, ?)
       `;
 
-      await this.db.execute(insertQuery, [
-        id, params.name, params.color || null, params.description || '', now, now
-      ]);
+      await this.db.execute(insertQuery, [id, params.name, params.color || null, params.description || '', now, now]);
 
       const newTag: Tag = {
         id,
@@ -634,7 +664,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
         color: params.color || null,
         description: params.description || '',
         created_at: now,
-        updated_at: now
+        updated_at: now,
       };
 
       return { success: true, data: newTag };
@@ -726,10 +756,11 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 
     try {
       const now = new Date().toISOString();
-      await this.db.execute(
-        'INSERT OR IGNORE INTO note_tags (note_id, tag_id, created_at) VALUES (?, ?, ?)',
-        [noteId, tagId, now]
-      );
+      await this.db.execute('INSERT OR IGNORE INTO note_tags (note_id, tag_id, created_at) VALUES (?, ?, ?)', [
+        noteId,
+        tagId,
+        now,
+      ]);
       return { success: true, data: undefined };
     } catch (error) {
       return { success: false, error: `Failed to add note tag: ${error}` };
@@ -742,10 +773,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
     }
 
     try {
-      await this.db.execute(
-        'DELETE FROM note_tags WHERE note_id = ? AND tag_id = ?',
-        [noteId, tagId]
-      );
+      await this.db.execute('DELETE FROM note_tags WHERE note_id = ? AND tag_id = ?', [noteId, tagId]);
       return { success: true, data: undefined };
     } catch (error) {
       return { success: false, error: `Failed to remove note tag: ${error}` };
@@ -765,11 +793,19 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       );
       return { success: true, data: results };
     } catch (error) {
-      return { success: false, error: `Failed to get note relationships: ${error}` };
+      return {
+        success: false,
+        error: `Failed to get note relationships: ${error}`,
+      };
     }
   }
 
-  async createNoteRelationship(sourceId: string, targetId: string, type: 'reference' | 'child' | 'related', description?: string): Promise<StorageResult<NoteRelationship>> {
+  async createNoteRelationship(
+    sourceId: string,
+    targetId: string,
+    type: 'reference' | 'child' | 'related',
+    description?: string
+  ): Promise<StorageResult<NoteRelationship>> {
     if (!this.db) {
       return { success: false, error: 'Database not initialized' };
     }
@@ -783,9 +819,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
         VALUES (?, ?, ?, ?, ?, ?)
       `;
 
-      await this.db.execute(insertQuery, [
-        id, sourceId, targetId, type, description || '', now
-      ]);
+      await this.db.execute(insertQuery, [id, sourceId, targetId, type, description || '', now]);
 
       const newRelationship: NoteRelationship = {
         id,
@@ -793,12 +827,15 @@ export class SQLiteStorageAdapter implements StorageAdapter {
         target_note_id: targetId,
         relationship_type: type,
         description: description || '',
-        created_at: now
+        created_at: now,
       };
 
       return { success: true, data: newRelationship };
     } catch (error) {
-      return { success: false, error: `Failed to create note relationship: ${error}` };
+      return {
+        success: false,
+        error: `Failed to create note relationship: ${error}`,
+      };
     }
   }
 
@@ -811,7 +848,10 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       await this.db.execute('DELETE FROM note_relationships WHERE id = ?', [id]);
       return { success: true, data: undefined };
     } catch (error) {
-      return { success: false, error: `Failed to delete note relationship: ${error}` };
+      return {
+        success: false,
+        error: `Failed to delete note relationship: ${error}`,
+      };
     }
   }
 
@@ -828,11 +868,21 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       );
       return { success: true, data: results };
     } catch (error) {
-      return { success: false, error: `Failed to get note attachments: ${error}` };
+      return {
+        success: false,
+        error: `Failed to get note attachments: ${error}`,
+      };
     }
   }
 
-  async createAttachment(noteId: string, filename: string, originalFilename: string, filePath: string, mimeType: string, fileSize: number): Promise<StorageResult<Attachment>> {
+  async createAttachment(
+    noteId: string,
+    filename: string,
+    originalFilename: string,
+    filePath: string,
+    mimeType: string,
+    fileSize: number
+  ): Promise<StorageResult<Attachment>> {
     if (!this.db) {
       return { success: false, error: 'Database not initialized' };
     }
@@ -846,9 +896,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
-      await this.db.execute(insertQuery, [
-        id, noteId, filename, originalFilename, filePath, mimeType, fileSize, now
-      ]);
+      await this.db.execute(insertQuery, [id, noteId, filename, originalFilename, filePath, mimeType, fileSize, now]);
 
       const newAttachment: Attachment = {
         id,
@@ -858,7 +906,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
         file_path: filePath,
         mime_type: mimeType,
         file_size: fileSize,
-        created_at: now
+        created_at: now,
       };
 
       return { success: true, data: newAttachment };
@@ -918,9 +966,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
         VALUES (?, ?, ?, ?, ?, ?)
       `;
 
-      await this.db.execute(insertQuery, [
-        id, noteId, title, content, nextVersion, now
-      ]);
+      await this.db.execute(insertQuery, [id, noteId, title, content, nextVersion, now]);
 
       const newVersion: NoteVersion = {
         id,
@@ -928,12 +974,15 @@ export class SQLiteStorageAdapter implements StorageAdapter {
         title,
         content,
         version_number: nextVersion,
-        created_at: now
+        created_at: now,
       };
 
       return { success: true, data: newVersion };
     } catch (error) {
-      return { success: false, error: `Failed to create note version: ${error}` };
+      return {
+        success: false,
+        error: `Failed to create note version: ${error}`,
+      };
     }
   }
 
@@ -946,7 +995,10 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       await this.db.execute('DELETE FROM note_versions WHERE id = ?', [id]);
       return { success: true, data: undefined };
     } catch (error) {
-      return { success: false, error: `Failed to delete note version: ${error}` };
+      return {
+        success: false,
+        error: `Failed to delete note version: ${error}`,
+      };
     }
   }
 
@@ -958,7 +1010,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 
     try {
       const results = await this.db.select<Setting[]>('SELECT * FROM settings WHERE key = ?', [key]);
-      const setting = results.length > 0 ? results[0] as Setting : null;
+      const setting = results.length > 0 ? (results[0] as Setting) : null;
       return { success: true, data: setting };
     } catch (error) {
       return { success: false, error: `Failed to get setting: ${error}` };
@@ -1047,7 +1099,8 @@ export class SQLiteStorageAdapter implements StorageAdapter {
     } catch {
       // Fallback to LIKE search if FTS fails
       try {
-        let fallbackQuery = 'SELECT * FROM notes WHERE deleted_at IS NULL AND (title LIKE ? OR content_plaintext LIKE ?)';
+        let fallbackQuery =
+          'SELECT * FROM notes WHERE deleted_at IS NULL AND (title LIKE ? OR content_plaintext LIKE ?)';
         const fallbackParams: any[] = [`%${query}%`, `%${query}%`];
 
         if (filters?.is_pinned !== undefined) {
@@ -1072,7 +1125,10 @@ export class SQLiteStorageAdapter implements StorageAdapter {
         const results = await this.db.select<Note[]>(fallbackQuery, fallbackParams);
         return { success: true, data: results };
       } catch (fallbackError) {
-        return { success: false, error: `Failed to search notes: ${fallbackError}` };
+        return {
+          success: false,
+          error: `Failed to search notes: ${fallbackError}`,
+        };
       }
     }
   }
@@ -1082,15 +1138,17 @@ export class SQLiteStorageAdapter implements StorageAdapter {
     return { success: true, data: undefined };
   }
 
-  async getStorageInfo(): Promise<StorageResult<{
-    backend: 'sqlite';
-    note_count: number;
-    category_count: number;
-    tag_count: number;
-    attachment_count: number;
-    last_sync?: string;
-    storage_size?: number;
-  }>> {
+  async getStorageInfo(): Promise<
+    StorageResult<{
+      backend: 'sqlite';
+      note_count: number;
+      category_count: number;
+      tag_count: number;
+      attachment_count: number;
+      last_sync?: string;
+      storage_size?: number;
+    }>
+  > {
     if (!this.db) {
       return { success: false, error: 'Database not initialized' };
     }
@@ -1099,12 +1157,8 @@ export class SQLiteStorageAdapter implements StorageAdapter {
       const noteCountResult = await this.db.select<{ count: number }[]>(
         'SELECT COUNT(*) as count FROM notes WHERE deleted_at IS NULL'
       );
-      const categoryCountResult = await this.db.select<{ count: number }[]>(
-        'SELECT COUNT(*) as count FROM categories'
-      );
-      const tagCountResult = await this.db.select<{ count: number }[]>(
-        'SELECT COUNT(*) as count FROM tags'
-      );
+      const categoryCountResult = await this.db.select<{ count: number }[]>('SELECT COUNT(*) as count FROM categories');
+      const tagCountResult = await this.db.select<{ count: number }[]>('SELECT COUNT(*) as count FROM tags');
       const attachmentCountResult = await this.db.select<{ count: number }[]>(
         'SELECT COUNT(*) as count FROM attachments'
       );
@@ -1117,8 +1171,8 @@ export class SQLiteStorageAdapter implements StorageAdapter {
           category_count: categoryCountResult[0]?.count || 0,
           tag_count: tagCountResult[0]?.count || 0,
           attachment_count: attachmentCountResult[0]?.count || 0,
-          last_sync: new Date().toISOString()
-        }
+          last_sync: new Date().toISOString(),
+        },
       };
     } catch (error) {
       return { success: false, error: `Failed to get storage info: ${error}` };

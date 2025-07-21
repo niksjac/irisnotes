@@ -41,68 +41,77 @@ export const useHotkeySequences = ({ sequences, timeout = 2000 }: UseHotkeySeque
     return modifiers.length > 0 ? `${modifiers.join('+')}-${key}` : key;
   }, []);
 
-  const findMatchingSequence = useCallback((keySequence: string[]) => {
-    return sequences.find(seq => {
-      if (seq.keys.length !== keySequence.length) return false;
-      return seq.keys.every((key, index) => key === keySequence[index]);
-    });
-  }, [sequences]);
+  const findMatchingSequence = useCallback(
+    (keySequence: string[]) => {
+      return sequences.find(seq => {
+        if (seq.keys.length !== keySequence.length) return false;
+        return seq.keys.every((key, index) => key === keySequence[index]);
+      });
+    },
+    [sequences]
+  );
 
-  const findPartialMatches = useCallback((keySequence: string[]) => {
-    return sequences.filter(seq => {
-      if (seq.keys.length <= keySequence.length) return false;
-      return keySequence.every((key, index) => seq.keys[index] === key);
-    });
-  }, [sequences]);
+  const findPartialMatches = useCallback(
+    (keySequence: string[]) => {
+      return sequences.filter(seq => {
+        if (seq.keys.length <= keySequence.length) return false;
+        return keySequence.every((key, index) => seq.keys[index] === key);
+      });
+    },
+    [sequences]
+  );
 
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    // Ignore keys when focused on input elements
-    const target = event.target as HTMLElement;
-    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true') {
-      return;
-    }
-
-    const normalizedKey = normalizeKey(event);
-
-    // Add current key to sequence
-    currentSequence.current.push(normalizedKey);
-
-    // Clear existing timeout
-    if (sequenceTimeout.current) {
-      clearTimeout(sequenceTimeout.current);
-    }
-
-    // Check for exact match
-    const exactMatch = findMatchingSequence(currentSequence.current);
-    if (exactMatch) {
-      event.preventDefault();
-      resetSequence();
-
-      // Execute the action
-      try {
-        const result = exactMatch.action();
-        if (result instanceof Promise) {
-          result.catch(console.error);
-        }
-      } catch (error) {
-        console.error('Error executing hotkey sequence action:', error);
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      // Ignore keys when focused on input elements
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true') {
+        return;
       }
-      return;
-    }
 
-    // Check for partial matches
-    const partialMatches = findPartialMatches(currentSequence.current);
-    if (partialMatches.length > 0) {
-      event.preventDefault();
-      isWaitingForSequence.current = true;
+      const normalizedKey = normalizeKey(event);
 
-      // Set timeout to reset sequence
-      sequenceTimeout.current = setTimeout(resetSequence, timeout);
-    } else {
-      // No matches, reset sequence
-      resetSequence();
-    }
-  }, [normalizeKey, findMatchingSequence, findPartialMatches, resetSequence, timeout]);
+      // Add current key to sequence
+      currentSequence.current.push(normalizedKey);
+
+      // Clear existing timeout
+      if (sequenceTimeout.current) {
+        clearTimeout(sequenceTimeout.current);
+      }
+
+      // Check for exact match
+      const exactMatch = findMatchingSequence(currentSequence.current);
+      if (exactMatch) {
+        event.preventDefault();
+        resetSequence();
+
+        // Execute the action
+        try {
+          const result = exactMatch.action();
+          if (result instanceof Promise) {
+            result.catch(console.error);
+          }
+        } catch (error) {
+          console.error('Error executing hotkey sequence action:', error);
+        }
+        return;
+      }
+
+      // Check for partial matches
+      const partialMatches = findPartialMatches(currentSequence.current);
+      if (partialMatches.length > 0) {
+        event.preventDefault();
+        isWaitingForSequence.current = true;
+
+        // Set timeout to reset sequence
+        sequenceTimeout.current = setTimeout(resetSequence, timeout);
+      } else {
+        // No matches, reset sequence
+        resetSequence();
+      }
+    },
+    [normalizeKey, findMatchingSequence, findPartialMatches, resetSequence, timeout]
+  );
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
@@ -118,7 +127,7 @@ export const useHotkeySequences = ({ sequences, timeout = 2000 }: UseHotkeySeque
   return {
     isWaitingForSequence: isWaitingForSequence.current,
     currentSequence: currentSequence.current,
-    resetSequence
+    resetSequence,
   };
 };
 
@@ -136,7 +145,7 @@ export const createAppConfigSequences = () => {
     {
       keys: ['Mod-k', 'r'],
       action: openAppConfigFolder,
-      description: 'Open App Config folder in file manager'
-    }
+      description: 'Open App Config folder in file manager',
+    },
   ];
 };

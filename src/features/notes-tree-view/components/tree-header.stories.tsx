@@ -10,7 +10,8 @@ const meta = {
     layout: 'padded',
     docs: {
       description: {
-        component: 'Header component for the notes tree view with action buttons for managing notes and folders. Includes expand/collapse, sorting, hoist mode, CRUD operations, and dynamic button states based on selection.',
+        component:
+          'Header component for the notes tree view with action buttons for managing notes and folders. Includes expand/collapse, sorting, hoist mode, CRUD operations, and dynamic button states based on selection.',
       },
     },
   },
@@ -137,19 +138,19 @@ export const InteractiveHeader: Story = {
     const [sortAlphabetically, setSortAlphabetically] = useState(false);
 
     return (
-      <div className="w-full max-w-2xl">
-        <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <h4 className="text-sm font-semibold mb-3">Controls</h4>
-          <div className="grid grid-cols-2 gap-4">
+      <div className='w-full max-w-2xl'>
+        <div className='mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg'>
+          <h4 className='text-sm font-semibold mb-3'>Controls</h4>
+          <div className='grid grid-cols-2 gap-4'>
             <div>
-              <h5 className="text-xs font-medium mb-2">Selection</h5>
-              <div className="space-y-1">
+              <h5 className='text-xs font-medium mb-2'>Selection</h5>
+              <div className='space-y-1'>
                 <button
                   onClick={() => {
                     setSelectedItemId('note-1');
                     setSelectedItemType('note');
                   }}
-                  className="block w-full px-2 py-1 text-xs bg-blue-500 text-white rounded"
+                  className='block w-full px-2 py-1 text-xs bg-blue-500 text-white rounded'
                 >
                   Select Note
                 </button>
@@ -158,7 +159,7 @@ export const InteractiveHeader: Story = {
                     setSelectedItemId('cat-1');
                     setSelectedItemType('category');
                   }}
-                  className="block w-full px-2 py-1 text-xs bg-purple-500 text-white rounded"
+                  className='block w-full px-2 py-1 text-xs bg-purple-500 text-white rounded'
                 >
                   Select Category
                 </button>
@@ -167,7 +168,7 @@ export const InteractiveHeader: Story = {
                     setSelectedItemId(null);
                     setSelectedItemType(null);
                   }}
-                  className="block w-full px-2 py-1 text-xs bg-gray-500 text-white rounded"
+                  className='block w-full px-2 py-1 text-xs bg-gray-500 text-white rounded'
                 >
                   Clear Selection
                 </button>
@@ -175,23 +176,23 @@ export const InteractiveHeader: Story = {
             </div>
 
             <div>
-              <h5 className="text-xs font-medium mb-2">States</h5>
-              <div className="space-y-1">
+              <h5 className='text-xs font-medium mb-2'>States</h5>
+              <div className='space-y-1'>
                 <button
                   onClick={() => setHoistedFolder(hoistedFolder ? null : mockHoistedFolder)}
-                  className="block w-full px-2 py-1 text-xs bg-orange-500 text-white rounded"
+                  className='block w-full px-2 py-1 text-xs bg-orange-500 text-white rounded'
                 >
                   {hoistedFolder ? 'Exit Hoist' : 'Enter Hoist'}
                 </button>
                 <button
                   onClick={() => setAllExpanded(!allExpanded)}
-                  className="block w-full px-2 py-1 text-xs bg-green-500 text-white rounded"
+                  className='block w-full px-2 py-1 text-xs bg-green-500 text-white rounded'
                 >
                   Toggle Expand
                 </button>
                 <button
                   onClick={() => setSortAlphabetically(!sortAlphabetically)}
-                  className="block w-full px-2 py-1 text-xs bg-indigo-500 text-white rounded"
+                  className='block w-full px-2 py-1 text-xs bg-indigo-500 text-white rounded'
                 >
                   Toggle Sort
                 </button>
@@ -199,7 +200,7 @@ export const InteractiveHeader: Story = {
             </div>
           </div>
 
-          <div className="mt-3 text-xs">
+          <div className='mt-3 text-xs'>
             <div>Selected: {selectedItemId ? `${selectedItemType} (${selectedItemId})` : 'None'}</div>
             <div>Hoist: {hoistedFolder ? hoistedFolder.name : 'None'}</div>
             <div>Expanded: {allExpanded ? 'All' : 'Some'}</div>
@@ -235,7 +236,8 @@ export const InteractiveHeader: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Interactive header demonstrating all possible states and transitions. Use the controls to change selection, hoist mode, expansion, and sorting states.',
+        story:
+          'Interactive header demonstrating all possible states and transitions. Use the controls to change selection, hoist mode, expansion, and sorting states.',
       },
     },
   },
@@ -245,71 +247,71 @@ export const InteractiveHeader: Story = {
 export const AllButtonStates: Story = {
   args: defaultProps,
   render: () => (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       <div>
-        <h4 className="text-sm font-semibold mb-3">Expansion States</h4>
-        <div className="space-y-2">
+        <h4 className='text-sm font-semibold mb-3'>Expansion States</h4>
+        <div className='space-y-2'>
           <div>
-            <div className="text-xs text-gray-600 mb-1">Not Expanded</div>
+            <div className='text-xs text-gray-600 mb-1'>Not Expanded</div>
             <TreeHeader {...defaultProps} allExpanded={false} />
           </div>
           <div>
-            <div className="text-xs text-gray-600 mb-1">All Expanded</div>
+            <div className='text-xs text-gray-600 mb-1'>All Expanded</div>
             <TreeHeader {...defaultProps} allExpanded={true} />
           </div>
         </div>
       </div>
 
       <div>
-        <h4 className="text-sm font-semibold mb-3">Sorting States</h4>
-        <div className="space-y-2">
+        <h4 className='text-sm font-semibold mb-3'>Sorting States</h4>
+        <div className='space-y-2'>
           <div>
-            <div className="text-xs text-gray-600 mb-1">Default Sort</div>
+            <div className='text-xs text-gray-600 mb-1'>Default Sort</div>
             <TreeHeader {...defaultProps} sortAlphabetically={false} />
           </div>
           <div>
-            <div className="text-xs text-gray-600 mb-1">Alphabetical Sort</div>
+            <div className='text-xs text-gray-600 mb-1'>Alphabetical Sort</div>
             <TreeHeader {...defaultProps} sortAlphabetically={true} />
           </div>
         </div>
       </div>
 
       <div>
-        <h4 className="text-sm font-semibold mb-3">Selection States</h4>
-        <div className="space-y-2">
+        <h4 className='text-sm font-semibold mb-3'>Selection States</h4>
+        <div className='space-y-2'>
           <div>
-            <div className="text-xs text-gray-600 mb-1">No Selection</div>
+            <div className='text-xs text-gray-600 mb-1'>No Selection</div>
             <TreeHeader {...defaultProps} />
           </div>
           <div>
-            <div className="text-xs text-gray-600 mb-1">Note Selected</div>
-            <TreeHeader {...defaultProps} selectedItemId="note-1" selectedItemType="note" />
+            <div className='text-xs text-gray-600 mb-1'>Note Selected</div>
+            <TreeHeader {...defaultProps} selectedItemId='note-1' selectedItemType='note' />
           </div>
           <div>
-            <div className="text-xs text-gray-600 mb-1">Category Selected (shows hoist button)</div>
-            <TreeHeader {...defaultProps} selectedItemId="cat-1" selectedItemType="category" />
+            <div className='text-xs text-gray-600 mb-1'>Category Selected (shows hoist button)</div>
+            <TreeHeader {...defaultProps} selectedItemId='cat-1' selectedItemType='category' />
           </div>
         </div>
       </div>
 
       <div>
-        <h4 className="text-sm font-semibold mb-3">Hoist Mode</h4>
-        <div className="space-y-2">
+        <h4 className='text-sm font-semibold mb-3'>Hoist Mode</h4>
+        <div className='space-y-2'>
           <div>
-            <div className="text-xs text-gray-600 mb-1">Normal Mode</div>
+            <div className='text-xs text-gray-600 mb-1'>Normal Mode</div>
             <TreeHeader {...defaultProps} />
           </div>
           <div>
-            <div className="text-xs text-gray-600 mb-1">Hoist Mode</div>
+            <div className='text-xs text-gray-600 mb-1'>Hoist Mode</div>
             <TreeHeader {...defaultProps} hoistedFolder={mockHoistedFolder} />
           </div>
           <div>
-            <div className="text-xs text-gray-600 mb-1">Hoist Mode with Selection</div>
+            <div className='text-xs text-gray-600 mb-1'>Hoist Mode with Selection</div>
             <TreeHeader
               {...defaultProps}
               hoistedFolder={mockHoistedFolder}
-              selectedItemId="cat-2"
-              selectedItemType="category"
+              selectedItemId='cat-2'
+              selectedItemType='category'
             />
           </div>
         </div>
@@ -336,30 +338,30 @@ export const ActionLogger: Story = {
     };
 
     return (
-      <div className="w-full max-w-lg">
+      <div className='w-full max-w-lg'>
         <TreeHeader
           hoistedFolder={null}
           handleExitHoist={() => addLog('Exit hoist')}
-          selectedItemType="category"
+          selectedItemType='category'
           handleHoistFolder={() => addLog('Hoist folder')}
           allExpanded={false}
           handleToggleExpandAll={() => addLog('Toggle expand all')}
           sortAlphabetically={false}
           handleToggleSort={() => addLog('Toggle sort')}
           handleDeleteSelected={() => addLog('Delete selected')}
-          selectedItemId="cat-1"
+          selectedItemId='cat-1'
           onCreateNote={() => addLog('Create note')}
           onCreateFolder={() => addLog('Create folder')}
         />
 
-        <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <h4 className="text-sm font-semibold mb-2">Action Log</h4>
-          <div className="space-y-1 text-xs font-mono">
+        <div className='mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg'>
+          <h4 className='text-sm font-semibold mb-2'>Action Log</h4>
+          <div className='space-y-1 text-xs font-mono'>
             {logs.length === 0 ? (
-              <div className="text-gray-500">Click buttons to see actions...</div>
+              <div className='text-gray-500'>Click buttons to see actions...</div>
             ) : (
               logs.map((log, index) => (
-                <div key={index} className="text-gray-700 dark:text-gray-300">
+                <div key={index} className='text-gray-700 dark:text-gray-300'>
                   {log}
                 </div>
               ))
@@ -382,38 +384,43 @@ export const ActionLogger: Story = {
 export const EdgeCases: Story = {
   args: defaultProps,
   render: () => (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       <div>
-        <h4 className="text-sm font-semibold mb-3">Edge Cases</h4>
-        <div className="space-y-4">
+        <h4 className='text-sm font-semibold mb-3'>Edge Cases</h4>
+        <div className='space-y-4'>
           <div>
-            <div className="text-xs text-gray-600 mb-1">Empty Hoist Folder Name</div>
+            <div className='text-xs text-gray-600 mb-1'>Empty Hoist Folder Name</div>
             <TreeHeader
               {...defaultProps}
-              hoistedFolder={{ id: 'empty', name: '', type: 'category', children: [] }}
+              hoistedFolder={{
+                id: 'empty',
+                name: '',
+                type: 'category',
+                children: [],
+              }}
             />
           </div>
 
           <div>
-            <div className="text-xs text-gray-600 mb-1">Very Long Hoist Folder Name</div>
+            <div className='text-xs text-gray-600 mb-1'>Very Long Hoist Folder Name</div>
             <TreeHeader
               {...defaultProps}
               hoistedFolder={{
                 id: 'long',
                 name: 'This is a very long folder name that might cause layout issues',
                 type: 'category',
-                children: []
+                children: [],
               }}
             />
           </div>
 
           <div>
-            <div className="text-xs text-gray-600 mb-1">All Features Active</div>
+            <div className='text-xs text-gray-600 mb-1'>All Features Active</div>
             <TreeHeader
               {...defaultProps}
               hoistedFolder={mockHoistedFolder}
-              selectedItemId="cat-1"
-              selectedItemType="category"
+              selectedItemId='cat-1'
+              selectedItemType='category'
               allExpanded={true}
               sortAlphabetically={true}
             />

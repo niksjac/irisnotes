@@ -10,7 +10,10 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
       // Initialize the storage adapter
       const initResult = await adapter.init();
       if (!initResult.success) {
-        return { success: false, error: `Failed to initialize storage ${name}: ${initResult.error}` };
+        return {
+          success: false,
+          error: `Failed to initialize storage ${name}: ${initResult.error}`,
+        };
       }
 
       this.storages.set(name, adapter);
@@ -22,7 +25,10 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
 
       return { success: true, data: undefined };
     } catch (error) {
-      return { success: false, error: `Failed to add storage ${name}: ${error}` };
+      return {
+        success: false,
+        error: `Failed to add storage ${name}: ${error}`,
+      };
     }
   }
 
@@ -74,7 +80,7 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
             // Add storage source to note metadata
             const notesWithSource = result.data.map(note => ({
               ...note,
-              storage_source: name
+              storage_source: name,
             }));
             allNotes.push(...notesWithSource);
           } else {
@@ -89,7 +95,10 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
       allNotes.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
       if (errors.length > 0) {
-        return { success: false, error: `Some storages failed: ${errors.join(', ')}` };
+        return {
+          success: false,
+          error: `Some storages failed: ${errors.join(', ')}`,
+        };
       }
 
       return { success: true, data: allNotes };
@@ -109,7 +118,7 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
           if (result.success && result.data) {
             const notesWithSource = result.data.map(note => ({
               ...note,
-              storage_source: name
+              storage_source: name,
             }));
             allResults.push(...notesWithSource);
           } else {
@@ -121,12 +130,15 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
       }
 
       // Remove duplicates by ID and sort by relevance/updated_at
-      const uniqueResults = Array.from(
-        new Map(allResults.map(note => [note.id, note])).values()
-      ).sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+      const uniqueResults = Array.from(new Map(allResults.map(note => [note.id, note])).values()).sort(
+        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      );
 
       if (errors.length > 0) {
-        return { success: false, error: `Some storages failed: ${errors.join(', ')}` };
+        return {
+          success: false,
+          error: `Some storages failed: ${errors.join(', ')}`,
+        };
       }
 
       return { success: true, data: uniqueResults };
@@ -141,13 +153,19 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
       const toAdapter = this.storages.get(toStorage);
 
       if (!fromAdapter || !toAdapter) {
-        return { success: false, error: 'Source or destination storage not found' };
+        return {
+          success: false,
+          error: 'Source or destination storage not found',
+        };
       }
 
       // Get the note from source storage
       const noteResult = await fromAdapter.getNote(noteId);
       if (!noteResult.success || !noteResult.data) {
-        return { success: false, error: `Failed to get note from ${fromStorage}: ${!noteResult.success ? noteResult.error : 'Note not found'}` };
+        return {
+          success: false,
+          error: `Failed to get note from ${fromStorage}: ${!noteResult.success ? noteResult.error : 'Note not found'}`,
+        };
       }
 
       const note = noteResult.data;
@@ -156,7 +174,7 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
       const createParams: CreateNoteParams = {
         title: note.title,
         content: note.content,
-        content_type: note.content_type
+        content_type: note.content_type,
       };
 
       if (note.content_raw) {
@@ -166,7 +184,10 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
       const createResult = await toAdapter.createNote(createParams);
 
       if (!createResult.success) {
-        return { success: false, error: `Failed to create note in ${toStorage}: ${createResult.error}` };
+        return {
+          success: false,
+          error: `Failed to create note in ${toStorage}: ${createResult.error}`,
+        };
       }
 
       // Delete note from source storage
@@ -174,7 +195,10 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
       if (!deleteResult.success) {
         // Try to rollback by deleting the created note
         await toAdapter.deleteNote(createResult.data!.id);
-        return { success: false, error: `Failed to delete note from ${fromStorage}: ${deleteResult.error}` };
+        return {
+          success: false,
+          error: `Failed to delete note from ${fromStorage}: ${deleteResult.error}`,
+        };
       }
 
       return { success: true, data: undefined };
@@ -201,7 +225,10 @@ export class MultiStorageManagerImpl implements MultiStorageManager {
       }
 
       if (errors.length > 0) {
-        return { success: false, error: `Some storages failed to sync: ${errors.join(', ')}` };
+        return {
+          success: false,
+          error: `Some storages failed to sync: ${errors.join(', ')}`,
+        };
       }
 
       return { success: true, data: undefined };

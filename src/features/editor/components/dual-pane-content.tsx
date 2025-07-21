@@ -13,24 +13,26 @@ interface DualPaneContentProps {
   toolbarVisible: boolean;
 }
 
-export const DualPaneContent = React.memo(({
-  leftNote,
-  rightNote,
-  activePaneId,
-  onNoteContentChange,
-  onNoteTitleChange,
-  onPaneClick,
-  toolbarVisible
-}: DualPaneContentProps) => (
-  <DualPaneEditor
-    leftNote={leftNote}
-    rightNote={rightNote}
-    activePaneId={activePaneId}
-    onNoteContentChange={onNoteContentChange}
-    onNoteTitleChange={onNoteTitleChange}
-    onPaneClick={onPaneClick}
-    toolbarVisible={toolbarVisible}
-  />
-));
+export const DualPaneContent = React.memo(
+  ({
+    leftNote,
+    rightNote,
+    activePaneId,
+    onNoteContentChange,
+    onNoteTitleChange,
+    onPaneClick,
+    toolbarVisible,
+  }: DualPaneContentProps) => (
+    <DualPaneEditor
+      leftNote={leftNote}
+      rightNote={rightNote}
+      activePaneId={activePaneId}
+      onNoteContentChange={onNoteContentChange}
+      onNoteTitleChange={onNoteTitleChange}
+      onPaneClick={onPaneClick}
+      toolbarVisible={toolbarVisible}
+    />
+  )
+);
 
 DualPaneContent.displayName = 'DualPaneContent';

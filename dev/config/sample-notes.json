@@ -12,7 +12,7 @@
     {
       "id": "sample-2",
       "title": "Development Notes",
-              "content": "# Development Configuration\n\nThis note demonstrates the local development setup.\n\n## Local Config\n\n- Database: `./dev/config/notes.db`\n- Notes Directory: `./dev/config/notes/`\n- Sample data included\n\n## Testing\n\n- [ ] Create new notes\n- [ ] Edit existing notes\n- [ ] Test storage backends\n- [ ] Verify configuration changes\n\n*This is sample data for development purposes.*",
+      "content": "# Development Configuration\n\nThis note demonstrates the local development setup.\n\n## Local Config\n\n- Database: `./dev/config/notes.db`\n- Notes Directory: `./dev/config/notes/`\n- Sample data included\n\n## Testing\n\n- [ ] Create new notes\n- [ ] Edit existing notes\n- [ ] Test storage backends\n- [ ] Verify configuration changes\n\n*This is sample data for development purposes.*",
       "category": "Development",
       "tags": ["dev", "config", "testing"],
       "created_at": "2024-01-01T01:00:00Z",

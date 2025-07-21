@@ -5,7 +5,7 @@ import { Modal } from './modal';
 const defaultProps = {
   isOpen: true,
   onClose: vi.fn(),
-  children: <div>Modal content</div>
+  children: <div>Modal content</div>,
 };
 
 describe('Modal', () => {
@@ -27,7 +27,7 @@ describe('Modal', () => {
     });
 
     it('renders with title', () => {
-      render(<Modal {...defaultProps} title="Test Modal" />);
+      render(<Modal {...defaultProps} title='Test Modal' />);
 
       expect(screen.getByText('Test Modal')).toBeInTheDocument();
       expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Test Modal');
@@ -40,14 +40,14 @@ describe('Modal', () => {
     });
 
     it('renders close button by default', () => {
-      render(<Modal {...defaultProps} title="Test Modal" />);
+      render(<Modal {...defaultProps} title='Test Modal' />);
 
       const closeButton = screen.getByRole('button');
       expect(closeButton).toBeInTheDocument();
     });
 
     it('hides close button when showCloseButton is false', () => {
-      render(<Modal {...defaultProps} title="Test Modal" showCloseButton={false} />);
+      render(<Modal {...defaultProps} title='Test Modal' showCloseButton={false} />);
 
       expect(screen.queryByRole('button')).not.toBeInTheDocument();
     });
@@ -62,28 +62,28 @@ describe('Modal', () => {
 
   describe('sizes', () => {
     it('applies small size class', () => {
-      render(<Modal {...defaultProps} size="sm" />);
+      render(<Modal {...defaultProps} size='sm' />);
 
       const modal = screen.getByText('Modal content').closest('.max-w-md');
       expect(modal).toBeInTheDocument();
     });
 
     it('applies medium size class (default)', () => {
-      render(<Modal {...defaultProps} size="md" />);
+      render(<Modal {...defaultProps} size='md' />);
 
       const modal = screen.getByText('Modal content').closest('.max-w-lg');
       expect(modal).toBeInTheDocument();
     });
 
     it('applies large size class', () => {
-      render(<Modal {...defaultProps} size="lg" />);
+      render(<Modal {...defaultProps} size='lg' />);
 
       const modal = screen.getByText('Modal content').closest('.max-w-2xl');
       expect(modal).toBeInTheDocument();
     });
 
     it('applies extra large size class', () => {
-      render(<Modal {...defaultProps} size="xl" />);
+      render(<Modal {...defaultProps} size='xl' />);
 
       const modal = screen.getByText('Modal content').closest('.max-w-4xl');
       expect(modal).toBeInTheDocument();
@@ -100,7 +100,7 @@ describe('Modal', () => {
   describe('interactions', () => {
     it('calls onClose when close button is clicked', () => {
       const onClose = vi.fn();
-      render(<Modal {...defaultProps} onClose={onClose} title="Test Modal" />);
+      render(<Modal {...defaultProps} onClose={onClose} title='Test Modal' />);
 
       const closeButton = screen.getByRole('button');
       fireEvent.click(closeButton);
@@ -165,7 +165,7 @@ describe('Modal', () => {
 
   describe('focus management', () => {
     it('focuses close button when modal opens', async () => {
-      render(<Modal {...defaultProps} title="Test Modal" />);
+      render(<Modal {...defaultProps} title='Test Modal' />);
 
       await waitFor(() => {
         const closeButton = screen.getByRole('button');
@@ -175,7 +175,7 @@ describe('Modal', () => {
 
     it('contains focusable elements for accessibility', async () => {
       render(
-        <Modal {...defaultProps} title="Test Modal">
+        <Modal {...defaultProps} title='Test Modal'>
           <div>
             <button>First button</button>
             <button>Second button</button>
@@ -203,7 +203,7 @@ describe('Modal', () => {
 
   describe('accessibility', () => {
     it('has proper ARIA attributes', () => {
-      render(<Modal {...defaultProps} title="Accessible Modal" />);
+      render(<Modal {...defaultProps} title='Accessible Modal' />);
 
       const modal = screen.getByRole('dialog');
       expect(modal).toBeInTheDocument();
@@ -211,7 +211,7 @@ describe('Modal', () => {
     });
 
     it('associates title with modal via aria-labelledby', () => {
-      render(<Modal {...defaultProps} title="Modal Title" />);
+      render(<Modal {...defaultProps} title='Modal Title' />);
 
       const modal = screen.getByRole('dialog');
       const title = screen.getByText('Modal Title');
@@ -227,7 +227,7 @@ describe('Modal', () => {
     });
 
     it('close button has accessible label', () => {
-      render(<Modal {...defaultProps} title="Test Modal" />);
+      render(<Modal {...defaultProps} title='Test Modal' />);
 
       const closeButton = screen.getByRole('button', { name: /close/i });
       expect(closeButton).toBeInTheDocument();
@@ -254,7 +254,7 @@ describe('Modal', () => {
     it('renders children in content area', () => {
       render(
         <Modal {...defaultProps}>
-          <div data-testid="modal-content">
+          <div data-testid='modal-content'>
             <h3>Custom Content</h3>
             <p>This is custom modal content</p>
           </div>
@@ -268,11 +268,11 @@ describe('Modal', () => {
 
     it('renders complex content structures', () => {
       render(
-        <Modal {...defaultProps} title="Complex Modal">
+        <Modal {...defaultProps} title='Complex Modal'>
           <form>
-            <input type="text" placeholder="Name" />
-            <textarea placeholder="Description"></textarea>
-            <button type="submit">Submit</button>
+            <input type='text' placeholder='Name' />
+            <textarea placeholder='Description'></textarea>
+            <button type='submit'>Submit</button>
           </form>
         </Modal>
       );

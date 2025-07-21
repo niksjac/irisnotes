@@ -14,7 +14,7 @@ export const currentLineHighlightPlugin = new Plugin<LineHighlightState>({
       return {
         decorations: DecorationSet.empty,
         lastBlockStart: -1,
-        lastBlockEnd: -1
+        lastBlockEnd: -1,
       };
     },
     apply(tr, value) {
@@ -49,7 +49,7 @@ export const currentLineHighlightPlugin = new Plugin<LineHighlightState>({
           return {
             decorations: mappedDecorations,
             lastBlockStart: blockStart,
-            lastBlockEnd: blockEnd
+            lastBlockEnd: blockEnd,
           };
         }
       }
@@ -57,13 +57,13 @@ export const currentLineHighlightPlugin = new Plugin<LineHighlightState>({
       // Selection moved to a different block or mapping failed - create new decoration
       try {
         const decoration = Decoration.node(blockStart, blockEnd, {
-          class: 'editor-current-line-highlight'
+          class: 'editor-current-line-highlight',
         });
 
         return {
           decorations: DecorationSet.create(tr.doc, [decoration]),
           lastBlockStart: blockStart,
-          lastBlockEnd: blockEnd
+          lastBlockEnd: blockEnd,
         };
       } catch (error) {
         // Fallback to empty decorations if decoration creation fails
@@ -71,14 +71,14 @@ export const currentLineHighlightPlugin = new Plugin<LineHighlightState>({
         return {
           decorations: DecorationSet.empty,
           lastBlockStart: blockStart,
-          lastBlockEnd: blockEnd
+          lastBlockEnd: blockEnd,
         };
       }
-    }
+    },
   },
   props: {
     decorations(state) {
       return this.getState(state)?.decorations;
-    }
-  }
+    },
+  },
 });

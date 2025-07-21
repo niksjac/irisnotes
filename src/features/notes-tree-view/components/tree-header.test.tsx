@@ -190,13 +190,13 @@ describe('TreeHeader', () => {
 
   describe('Hoist Actions', () => {
     it('should show hoist button when category is selected', () => {
-      render(<TreeHeader {...mockProps} selectedItemType="category" selectedItemId="cat-1" />);
+      render(<TreeHeader {...mockProps} selectedItemType='category' selectedItemId='cat-1' />);
 
       expect(screen.getByTitle('Hoist Folder')).toBeInTheDocument();
     });
 
     it('should not show hoist button when note is selected', () => {
-      render(<TreeHeader {...mockProps} selectedItemType="note" selectedItemId="note-1" />);
+      render(<TreeHeader {...mockProps} selectedItemType='note' selectedItemId='note-1' />);
 
       expect(screen.queryByTitle('Hoist Folder')).not.toBeInTheDocument();
     });
@@ -209,7 +209,7 @@ describe('TreeHeader', () => {
 
     it('should call handleHoistFolder when hoist button is clicked', async () => {
       const user = userEvent.setup();
-      render(<TreeHeader {...mockProps} selectedItemType="category" selectedItemId="cat-1" />);
+      render(<TreeHeader {...mockProps} selectedItemType='category' selectedItemId='cat-1' />);
 
       const hoistButton = screen.getByTitle('Hoist Folder');
       await user.click(hoistButton);
@@ -230,7 +230,7 @@ describe('TreeHeader', () => {
 
   describe('Delete Actions', () => {
     it('should show delete button when item is selected', () => {
-      render(<TreeHeader {...mockProps} selectedItemId="item-1" selectedItemType="note" />);
+      render(<TreeHeader {...mockProps} selectedItemId='item-1' selectedItemType='note' />);
 
       expect(screen.getByTitle('Delete Selected')).toBeInTheDocument();
     });
@@ -243,7 +243,7 @@ describe('TreeHeader', () => {
 
     it('should call handleDeleteSelected when delete button is clicked', async () => {
       const user = userEvent.setup();
-      render(<TreeHeader {...mockProps} selectedItemId="item-1" selectedItemType="note" />);
+      render(<TreeHeader {...mockProps} selectedItemId='item-1' selectedItemType='note' />);
 
       const deleteButton = screen.getByTitle('Delete Selected');
       await user.click(deleteButton);
@@ -252,7 +252,7 @@ describe('TreeHeader', () => {
     });
 
     it('should show delete button for categories', () => {
-      render(<TreeHeader {...mockProps} selectedItemId="cat-1" selectedItemType="category" />);
+      render(<TreeHeader {...mockProps} selectedItemId='cat-1' selectedItemType='category' />);
 
       const deleteButton = screen.getByTitle('Delete Selected');
       expect(deleteButton).toBeInTheDocument();
@@ -260,7 +260,7 @@ describe('TreeHeader', () => {
     });
 
     it('should show delete button for notes', () => {
-      render(<TreeHeader {...mockProps} selectedItemId="note-1" selectedItemType="note" />);
+      render(<TreeHeader {...mockProps} selectedItemId='note-1' selectedItemType='note' />);
 
       const deleteButton = screen.getByTitle('Delete Selected');
       expect(deleteButton).toBeInTheDocument();
@@ -284,7 +284,7 @@ describe('TreeHeader', () => {
     });
 
     it('should have consistent button sizing', () => {
-      render(<TreeHeader {...mockProps} selectedItemId="item-1" selectedItemType="note" />);
+      render(<TreeHeader {...mockProps} selectedItemId='item-1' selectedItemType='note' />);
 
       const buttons = screen.getAllByRole('button');
       buttons.forEach(button => {
@@ -304,7 +304,7 @@ describe('TreeHeader', () => {
 
   describe('Accessibility', () => {
     it('should have proper ARIA labels for all buttons', () => {
-      render(<TreeHeader {...mockProps} selectedItemId="item-1" selectedItemType="category" />);
+      render(<TreeHeader {...mockProps} selectedItemId='item-1' selectedItemType='category' />);
 
       expect(screen.getByTitle('Expand All')).toHaveAttribute('aria-label');
       expect(screen.getByTitle('Sort Alphabetically')).toHaveAttribute('aria-label');
@@ -345,7 +345,7 @@ describe('TreeHeader', () => {
 
   describe('Complex Scenarios', () => {
     it('should show all relevant buttons when category is selected', () => {
-      render(<TreeHeader {...mockProps} selectedItemId="cat-1" selectedItemType="category" />);
+      render(<TreeHeader {...mockProps} selectedItemId='cat-1' selectedItemType='category' />);
 
       expect(screen.getByTitle('Expand All')).toBeInTheDocument();
       expect(screen.getByTitle('Sort Alphabetically')).toBeInTheDocument();
@@ -356,7 +356,7 @@ describe('TreeHeader', () => {
     });
 
     it('should show correct buttons when note is selected', () => {
-      render(<TreeHeader {...mockProps} selectedItemId="note-1" selectedItemType="note" />);
+      render(<TreeHeader {...mockProps} selectedItemId='note-1' selectedItemType='note' />);
 
       expect(screen.getByTitle('Expand All')).toBeInTheDocument();
       expect(screen.getByTitle('Sort Alphabetically')).toBeInTheDocument();
@@ -367,14 +367,16 @@ describe('TreeHeader', () => {
     });
 
     it('should handle hoist mode with all other features', () => {
-      render(<TreeHeader
-        {...mockProps}
-        hoistedFolder={mockHoistedFolder}
-        selectedItemId="cat-1"
-        selectedItemType="category"
-        allExpanded={true}
-        sortAlphabetically={true}
-      />);
+      render(
+        <TreeHeader
+          {...mockProps}
+          hoistedFolder={mockHoistedFolder}
+          selectedItemId='cat-1'
+          selectedItemType='category'
+          allExpanded={true}
+          sortAlphabetically={true}
+        />
+      );
 
       expect(screen.getByText('Hoisted Folder')).toBeInTheDocument();
       expect(screen.getByTitle('Exit Hoist')).toBeInTheDocument();
@@ -407,14 +409,14 @@ describe('TreeHeader', () => {
     });
 
     it('should handle missing selectedItemType', () => {
-      render(<TreeHeader {...mockProps} selectedItemId="item-1" selectedItemType={null} />);
+      render(<TreeHeader {...mockProps} selectedItemId='item-1' selectedItemType={null} />);
 
       expect(screen.queryByTitle('Hoist Folder')).not.toBeInTheDocument();
       expect(screen.getByTitle('Delete Selected')).toBeInTheDocument();
     });
 
     it('should handle missing selectedItemId', () => {
-      render(<TreeHeader {...mockProps} selectedItemId={null} selectedItemType="category" />);
+      render(<TreeHeader {...mockProps} selectedItemId={null} selectedItemType='category' />);
 
       expect(screen.queryByTitle('Hoist Folder')).not.toBeInTheDocument();
       expect(screen.queryByTitle('Delete Selected')).not.toBeInTheDocument();
@@ -456,7 +458,7 @@ describe('TreeHeader', () => {
 
   describe('Visual Consistency', () => {
     it('should maintain consistent icon sizes', () => {
-      render(<TreeHeader {...mockProps} selectedItemId="cat-1" selectedItemType="category" />);
+      render(<TreeHeader {...mockProps} selectedItemId='cat-1' selectedItemType='category' />);
 
       const icons = document.querySelectorAll('svg');
       icons.forEach(icon => {
@@ -467,7 +469,7 @@ describe('TreeHeader', () => {
     });
 
     it('should use consistent button styling', () => {
-      render(<TreeHeader {...mockProps} selectedItemId="item-1" selectedItemType="note" />);
+      render(<TreeHeader {...mockProps} selectedItemId='item-1' selectedItemType='note' />);
 
       const buttons = screen.getAllByRole('button');
       buttons.forEach(button => {

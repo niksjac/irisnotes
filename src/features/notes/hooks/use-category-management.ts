@@ -8,11 +8,7 @@ interface UseCategoryManagementProps {
   notesLength: number;
 }
 
-export function useCategoryManagement({
-  storageManager,
-  isLoading,
-  notesLength
-}: UseCategoryManagementProps) {
+export function useCategoryManagement({ storageManager, isLoading, notesLength }: UseCategoryManagementProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [noteCategories, setNoteCategories] = useState<{ noteId: string; categoryId: string }[]>([]);
 
@@ -24,7 +20,6 @@ export function useCategoryManagement({
       // Check if storage is actually ready by trying to get active storage
       const activeStorage = storageManager.getActiveStorage();
       if (!activeStorage) {
-
         return;
       }
 
@@ -53,24 +48,23 @@ export function useCategoryManagement({
     try {
       const storage = storageManager.getActiveStorage();
       if (!storage) {
-
         return [];
       }
 
       const relationships: { noteId: string; categoryId: string }[] = [];
 
-              // Load note categories for each category
-        for (const category of categories) {
-          const result = await storage.getCategoryNotes(category.id);
-          if (result.success) {
-            result.data.forEach((note: Note) => {
-              relationships.push({
-                noteId: note.id,
-                categoryId: category.id
-              });
+      // Load note categories for each category
+      for (const category of categories) {
+        const result = await storage.getCategoryNotes(category.id);
+        if (result.success) {
+          result.data.forEach((note: Note) => {
+            relationships.push({
+              noteId: note.id,
+              categoryId: category.id,
             });
-          }
+          });
         }
+      }
 
       setNoteCategories(relationships);
       return relationships;
@@ -88,96 +82,105 @@ export function useCategoryManagement({
   }, [categories, loadNoteCategories]);
 
   // Category handlers
-  const handleCreateFolder = useCallback(async (parentCategoryId?: string) => {
-    if (!storageManager) return;
+  const handleCreateFolder = useCallback(
+    async (parentCategoryId?: string) => {
+      if (!storageManager) return;
 
-    try {
-      const createParams = {
-        name: 'New Folder',
-        description: '',
-        ...(parentCategoryId && { parent_id: parentCategoryId })
-      };
-      const result = await storageManager.createCategory(createParams);
+      try {
+        const createParams = {
+          name: 'New Folder',
+          description: '',
+          ...(parentCategoryId && { parent_id: parentCategoryId }),
+        };
+        const result = await storageManager.createCategory(createParams);
 
-      if (result.success) {
-        setCategories(prev => [...prev, result.data]);
-        // Reload categories to ensure consistency
-        const categoriesResult = await storageManager.getCategories();
-        if (categoriesResult.success) {
-          setCategories(categoriesResult.data);
+        if (result.success) {
+          setCategories(prev => [...prev, result.data]);
+          // Reload categories to ensure consistency
+          const categoriesResult = await storageManager.getCategories();
+          if (categoriesResult.success) {
+            setCategories(categoriesResult.data);
+          }
+        } else {
+          console.error('Failed to create category:', result.error);
         }
-      } else {
-        console.error('Failed to create category:', result.error);
+      } catch (error) {
+        console.error('Failed to create category:', error);
       }
-    } catch (error) {
-      console.error('Failed to create category:', error);
-    }
-  }, [storageManager]);
+    },
+    [storageManager]
+  );
 
-  const handleMoveNote = useCallback(async (noteId: string, newCategoryId: string | null) => {
-    if (!storageManager) return;
+  const handleMoveNote = useCallback(
+    async (noteId: string, newCategoryId: string | null) => {
+      if (!storageManager) return;
 
-    try {
-      const storage = storageManager.getActiveStorage();
-      if (!storage) {
+      try {
+        const storage = storageManager.getActiveStorage();
+        if (!storage) {
+          return;
+        }
 
-        return;
+        // Remove from all categories first
+        for (const category of categories) {
+          await storage.removeNoteFromCategory(noteId, category.id);
+        }
+
+        // Add to new category if specified
+        if (newCategoryId) {
+          await storage.addNoteToCategory(noteId, newCategoryId);
+        }
+
+        // Reload note categories to update the tree
+        await loadNoteCategories();
+      } catch (error) {
+        console.error('Failed to move note:', error);
       }
+    },
+    [storageManager, categories, loadNoteCategories]
+  );
 
-      // Remove from all categories first
-      for (const category of categories) {
-        await storage.removeNoteFromCategory(noteId, category.id);
+  const handleDeleteCategory = useCallback(
+    async (categoryId: string) => {
+      if (!storageManager) return;
+
+      try {
+        const storage = storageManager.getActiveStorage();
+        if (!storage) {
+          return;
+        }
+
+        await storage.deleteCategory(categoryId);
+        setCategories(prev => prev.filter(cat => cat.id !== categoryId));
+      } catch (error) {
+        console.error('Failed to delete category:', error);
       }
+    },
+    [storageManager]
+  );
 
-      // Add to new category if specified
-      if (newCategoryId) {
-        await storage.addNoteToCategory(noteId, newCategoryId);
+  const handleRenameCategory = useCallback(
+    async (categoryId: string, newName: string) => {
+      if (!storageManager) return;
+
+      try {
+        const storage = storageManager.getActiveStorage();
+        if (!storage) {
+          return;
+        }
+
+        const result = await storage.updateCategory(categoryId, {
+          name: newName,
+        });
+        if (result.success) {
+          setCategories(prev => prev.map(cat => (cat.id === categoryId ? { ...cat, name: newName } : cat)));
+        }
+      } catch (error) {
+        console.error('Failed to rename category:', error);
       }
-
-      // Reload note categories to update the tree
-      await loadNoteCategories();
-    } catch (error) {
-      console.error('Failed to move note:', error);
-    }
-  }, [storageManager, categories, loadNoteCategories]);
-
-  const handleDeleteCategory = useCallback(async (categoryId: string) => {
-    if (!storageManager) return;
-
-    try {
-      const storage = storageManager.getActiveStorage();
-      if (!storage) {
-
-        return;
-      }
-
-      await storage.deleteCategory(categoryId);
-      setCategories(prev => prev.filter(cat => cat.id !== categoryId));
-    } catch (error) {
-      console.error('Failed to delete category:', error);
-    }
-  }, [storageManager]);
-
-  const handleRenameCategory = useCallback(async (categoryId: string, newName: string) => {
-    if (!storageManager) return;
-
-    try {
-      const storage = storageManager.getActiveStorage();
-      if (!storage) {
-
-        return;
-      }
-
-      const result = await storage.updateCategory(categoryId, { name: newName });
-      if (result.success) {
-        setCategories(prev => prev.map(cat =>
-          cat.id === categoryId ? { ...cat, name: newName } : cat
-        ));
-      }
-    } catch (error) {
-      console.error('Failed to rename category:', error);
-    }
-  }, [storageManager]);
+    },
+    [storageManager]
+  );
 
   return {
     categories,
@@ -186,6 +189,6 @@ export function useCategoryManagement({
     handleMoveNote,
     handleDeleteCategory,
     handleRenameCategory,
-    loadNoteCategories
+    loadNoteCategories,
   };
 }

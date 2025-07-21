@@ -89,9 +89,7 @@ describe('useTreeData', () => {
 
   describe('Tree Structure Generation', () => {
     it('should create a hierarchical tree structure from categories', () => {
-      const { result } = renderHook(() =>
-        useTreeData([], mockCategories, [])
-      );
+      const { result } = renderHook(() => useTreeData([], mockCategories, []));
 
       const treeData = result.current;
 
@@ -117,9 +115,7 @@ describe('useTreeData', () => {
     });
 
     it('should place notes in their assigned categories', () => {
-      const { result } = renderHook(() =>
-        useTreeData(mockNotes, mockCategories, mockNoteCategories)
-      );
+      const { result } = renderHook(() => useTreeData(mockNotes, mockCategories, mockNoteCategories));
 
       const treeData = result.current;
 
@@ -137,9 +133,7 @@ describe('useTreeData', () => {
     });
 
     it('should place orphaned notes at root level', () => {
-      const { result } = renderHook(() =>
-        useTreeData(mockNotes, mockCategories, mockNoteCategories)
-      );
+      const { result } = renderHook(() => useTreeData(mockNotes, mockCategories, mockNoteCategories));
 
       const treeData = result.current;
 
@@ -156,9 +150,7 @@ describe('useTreeData', () => {
         { noteId: 'note-1', categoryId: 'cat-3' },
       ];
 
-      const { result } = renderHook(() =>
-        useTreeData(mockNotes.slice(0, 1), mockCategories, multiCategoryNotes)
-      );
+      const { result } = renderHook(() => useTreeData(mockNotes.slice(0, 1), mockCategories, multiCategoryNotes));
 
       const treeData = result.current;
 
@@ -176,9 +168,7 @@ describe('useTreeData', () => {
 
   describe('Edge Cases', () => {
     it('should handle empty data gracefully', () => {
-      const { result } = renderHook(() =>
-        useTreeData([], [], [])
-      );
+      const { result } = renderHook(() => useTreeData([], [], []));
 
       expect(result.current).toHaveLength(0);
     });
@@ -196,9 +186,7 @@ describe('useTreeData', () => {
         },
       ];
 
-      const { result } = renderHook(() =>
-        useTreeData([], orphanedCategories, [])
-      );
+      const { result } = renderHook(() => useTreeData([], orphanedCategories, []));
 
       const treeData = result.current;
 
@@ -208,13 +196,9 @@ describe('useTreeData', () => {
     });
 
     it('should handle notes assigned to non-existent categories', () => {
-      const invalidNoteCategories = [
-        { noteId: 'note-1', categoryId: 'non-existent-category' },
-      ];
+      const invalidNoteCategories = [{ noteId: 'note-1', categoryId: 'non-existent-category' }];
 
-      const { result } = renderHook(() =>
-        useTreeData(mockNotes.slice(0, 1), mockCategories, invalidNoteCategories)
-      );
+      const { result } = renderHook(() => useTreeData(mockNotes.slice(0, 1), mockCategories, invalidNoteCategories));
 
       const treeData = result.current;
 
@@ -225,9 +209,7 @@ describe('useTreeData', () => {
     });
 
     it('should preserve node data references', () => {
-      const { result } = renderHook(() =>
-        useTreeData(mockNotes.slice(0, 1), mockCategories.slice(0, 1), [])
-      );
+      const { result } = renderHook(() => useTreeData(mockNotes.slice(0, 1), mockCategories.slice(0, 1), []));
 
       const treeData = result.current;
 
@@ -243,13 +225,13 @@ describe('useTreeData', () => {
 
   describe('Data Updates', () => {
     it('should recompute tree when notes change', () => {
-      const { result, rerender } = renderHook(
-        ({ notes }) => useTreeData(notes, mockCategories, mockNoteCategories),
-        { initialProps: { notes: mockNotes.slice(0, 1) } }
-      );
+      const { result, rerender } = renderHook(({ notes }) => useTreeData(notes, mockCategories, mockNoteCategories), {
+        initialProps: { notes: mockNotes.slice(0, 1) },
+      });
 
-      expect(result.current.filter(node => node.type === 'note' ||
-        node.children?.some(child => child.type === 'note'))).toHaveLength(1);
+      expect(
+        result.current.filter(node => node.type === 'note' || node.children?.some(child => child.type === 'note'))
+      ).toHaveLength(1);
 
       // Add more notes
       rerender({ notes: mockNotes });
@@ -257,8 +239,11 @@ describe('useTreeData', () => {
       const totalNotesInTree = result.current.reduce((count, node) => {
         const noteCount = node.type === 'note' ? 1 : 0;
         const childNoteCount = node.children?.filter(child => child.type === 'note').length || 0;
-        const grandChildNoteCount = node.children?.reduce((acc, child) =>
-          acc + (child.children?.filter(grandChild => grandChild.type === 'note').length || 0), 0) || 0;
+        const grandChildNoteCount =
+          node.children?.reduce(
+            (acc, child) => acc + (child.children?.filter(grandChild => grandChild.type === 'note').length || 0),
+            0
+          ) || 0;
         return count + noteCount + childNoteCount + grandChildNoteCount;
       }, 0);
 
@@ -283,7 +268,11 @@ describe('useTreeData', () => {
       const { result, rerender } = renderHook(
         ({ noteCategories }: { noteCategories: { noteId: string; categoryId: string }[] }) =>
           useTreeData(mockNotes, mockCategories, noteCategories),
-        { initialProps: { noteCategories: [] as { noteId: string; categoryId: string }[] } }
+        {
+          initialProps: {
+            noteCategories: [] as { noteId: string; categoryId: string }[],
+          },
+        }
       );
 
       // Initially all notes should be orphaned

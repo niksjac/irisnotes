@@ -53,15 +53,17 @@ export function useTreeTransformations(
     // Sort nodes alphabetically if enabled
     if (sortAlphabetically) {
       const sortNodes = (nodes: TreeNode[]): TreeNode[] => {
-        return [...nodes].sort((a, b) => {
-          if (a.type !== b.type) {
-            return a.type === 'category' ? -1 : 1;
-          }
-          return a.name.localeCompare(b.name);
-        }).map(node => ({
-          ...node,
-          children: node.children ? sortNodes(node.children) : []
-        }));
+        return [...nodes]
+          .sort((a, b) => {
+            if (a.type !== b.type) {
+              return a.type === 'category' ? -1 : 1;
+            }
+            return a.name.localeCompare(b.name);
+          })
+          .map(node => ({
+            ...node,
+            children: node.children ? sortNodes(node.children) : [],
+          }));
       };
       finalNodes = sortNodes(finalNodes);
     }

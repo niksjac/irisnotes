@@ -9,13 +9,9 @@ import {
   useNotesInitialization,
   useCategoryManagement,
   useAppHandlers,
-  useNotesStorage
+  useNotesStorage,
 } from '../../notes/hooks';
-import {
-  useViewState,
-  usePaneState,
-  usePaneActions
-} from '../hooks';
+import { useViewState, usePaneState, usePaneActions } from '../hooks';
 import { useEditorLayout } from '../hooks';
 
 // Simple wrapper components for views that don't need props
@@ -31,17 +27,8 @@ export const AppMainContent: React.FC = () => {
 
   // Notes data and navigation - focused hooks
   const { notes } = useNotesData();
-  const {
-    createNewNote,
-    updateNoteTitle,
-    updateNoteContent
-  } = useNotesActions();
-  const {
-    getSelectedNote,
-    getNotesForPane,
-    openNoteInPane,
-    setSelectedNoteId
-  } = useNotesNavigation();
+  const { createNewNote, updateNoteTitle, updateNoteContent } = useNotesActions();
+  const { getSelectedNote, getNotesForPane, openNoteInPane, setSelectedNoteId } = useNotesNavigation();
   const { storageManager, isInitialized } = useNotesStorage();
 
   // Initialize notes when storage is ready
@@ -55,7 +42,7 @@ export const AppMainContent: React.FC = () => {
   const { categories, noteCategories, handleCreateFolder } = useCategoryManagement({
     storageManager,
     isLoading: !isInitialized,
-    notesLength: notes.length
+    notesLength: notes.length,
   });
 
   // Current selection state for folders
@@ -64,7 +51,7 @@ export const AppMainContent: React.FC = () => {
     type: 'note' | 'category' | null;
   }>({
     id: null,
-    type: null
+    type: null,
   });
 
   // Get selected folder if any
@@ -76,10 +63,7 @@ export const AppMainContent: React.FC = () => {
   }, [selectedItem.type, selectedItem.id, categories]);
 
   // App handlers for integrated actions
-  const {
-    handleNoteClick,
-    handleCreateNote,
-  } = useAppHandlers({
+  const { handleNoteClick, handleCreateNote } = useAppHandlers({
     storageManager,
     isDualPaneMode,
     activePaneId,
@@ -90,7 +74,7 @@ export const AppMainContent: React.FC = () => {
     createNewNote,
     loadAllNotes: () => Promise.resolve(),
     loadNoteCategories: () => Promise.resolve([]),
-    focusElement: () => {} // No-op since focus management is handled at main layout level
+    focusElement: () => {}, // No-op since focus management is handled at main layout level
   });
 
   // Helper functions

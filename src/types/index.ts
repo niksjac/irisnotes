@@ -15,7 +15,7 @@ export type {
   CreateTagParams,
   AppSettings,
   DatabaseInfo,
-  BackupData
+  BackupData,
 } from './database';
 
 // Storage configuration types
@@ -52,3 +52,4 @@ export interface AppConfig {
     customNotesPath?: string;
   };
 }
+// Test comment for prettier hook

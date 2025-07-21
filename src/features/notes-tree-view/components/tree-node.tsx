@@ -12,7 +12,7 @@ interface TreeNodeProps {
   expandedNodes: Set<string>;
   editingItemId: string | null;
   setEditingItemId: (id: string | null) => void;
-  nodeRefsMap: React.MutableRefObject<Map<string, { startEditing: () => void; }>>;
+  nodeRefsMap: React.MutableRefObject<Map<string, { startEditing: () => void }>>;
   onItemSelect: (id: string, type: 'note' | 'category') => void;
   onNoteSelect: (id: string) => void;
   toggleNodeExpansion: (id: string) => void;
@@ -126,61 +126,78 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
     >
-      <div className="flex items-center gap-1 flex-1 min-w-0">
+      <div className='flex items-center gap-1 flex-1 min-w-0'>
         {nodeData.type === 'category' && (
           <div
-            className="flex items-center justify-center w-4 h-4 text-gray-600 dark:text-gray-400 flex-shrink-0 transition-colors duration-200 hover:text-gray-900 dark:hover:text-gray-100"
+            className='flex items-center justify-center w-4 h-4 text-gray-600 dark:text-gray-400 flex-shrink-0 transition-colors duration-200 hover:text-gray-900 dark:hover:text-gray-100'
             onClick={handleToggle}
             style={{
               opacity: hasChildren ? 1 : 0.3,
               cursor: hasChildren ? 'pointer' : 'default',
             }}
           >
-            {hasChildren ? (isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />) : <ChevronRight size={14} />}
+            {hasChildren ? (
+              isExpanded ? (
+                <ChevronDown size={14} />
+              ) : (
+                <ChevronRight size={14} />
+              )
+            ) : (
+              <ChevronRight size={14} />
+            )}
           </div>
         )}
         {nodeData.type === 'note' && (
-          <div className="flex items-center justify-center w-4 h-4 text-gray-600 dark:text-gray-400 flex-shrink-0" style={{ opacity: 0 }}>
+          <div
+            className='flex items-center justify-center w-4 h-4 text-gray-600 dark:text-gray-400 flex-shrink-0'
+            style={{ opacity: 0 }}
+          >
             <ChevronRight size={14} />
           </div>
         )}
-        <div className={`flex items-center justify-center w-5 h-5 flex-shrink-0 ${nodeData.type === 'category' ? 'text-blue-500' : 'text-gray-600 dark:text-gray-400'} ${selectedItemId === nodeData.id ? 'text-blue-500' : ''} ${isOpen && nodeData.type === 'note' ? 'text-green-500' : ''}`}>
+        <div
+          className={`flex items-center justify-center w-5 h-5 flex-shrink-0 ${nodeData.type === 'category' ? 'text-blue-500' : 'text-gray-600 dark:text-gray-400'} ${selectedItemId === nodeData.id ? 'text-blue-500' : ''} ${isOpen && nodeData.type === 'note' ? 'text-green-500' : ''}`}
+        >
           {nodeData.type === 'category' ? <Folder size={16} /> : <FileText size={16} />}
         </div>
         {isEditing ? (
           <input
-            type="text"
+            type='text'
             value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
+            onChange={e => setEditValue(e.target.value)}
             onBlur={handleEditSubmit}
             onKeyDown={handleKeyDown}
             autoFocus
-            className="flex-1 px-1 py-0.5 border border-blue-500 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs font-mono outline-none"
+            className='flex-1 px-1 py-0.5 border border-blue-500 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-xs font-mono outline-none'
           />
         ) : (
-          <span className={`text-xs font-mono whitespace-nowrap overflow-hidden text-ellipsis min-w-0 ${isOpen && nodeData.type === 'note' ? 'text-green-500 font-bold' : 'text-gray-900 dark:text-gray-100'}`}>{nodeData.name}</span>
+          <span
+            className={`text-xs font-mono whitespace-nowrap overflow-hidden text-ellipsis min-w-0 ${isOpen && nodeData.type === 'note' ? 'text-green-500 font-bold' : 'text-gray-900 dark:text-gray-100'}`}
+          >
+            {nodeData.name}
+          </span>
         )}
       </div>
-      <div className="flex gap-0.5 opacity-100 transition-opacity duration-200 items-center">
+      <div className='flex gap-0.5 opacity-100 transition-opacity duration-200 items-center'>
         {nodeData.type === 'category' && (
           <>
             <button
-              className="flex items-center justify-center w-5 h-5 border-none rounded-sm bg-transparent text-gray-600 dark:text-gray-400 cursor-pointer transition-all duration-200 hover:bg-gray-300 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
-              onClick={(e) => {
+              className='flex items-center justify-center w-5 h-5 border-none rounded-sm bg-transparent text-gray-600 dark:text-gray-400 cursor-pointer transition-all duration-200 hover:bg-gray-300 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100'
+              onClick={e => {
                 e.stopPropagation();
                 onCreateNote(nodeData.id);
               }}
-              title="Add note"
+              title='Add note'
             >
               <Plus size={12} />
             </button>
             <button
-              className="flex items-center justify-center w-5 h-5 border-none rounded-sm bg-transparent text-gray-600 dark:text-gray-400 cursor-pointer transition-all duration-200 hover:bg-gray-300 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
-              onClick={(e) => {
+              className='flex items-center justify-center w-5 h-5 border-none rounded-sm bg-transparent text-gray-600 dark:text-gray-400 cursor-pointer transition-all duration-200 hover:bg-gray-300 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100'
+              onClick={e => {
                 e.stopPropagation();
                 onCreateFolder(nodeData.id);
               }}
-              title="Add folder"
+              title='Add folder'
             >
               <Folder size={12} />
             </button>

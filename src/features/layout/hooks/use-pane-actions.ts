@@ -9,9 +9,12 @@ export const usePaneActions = () => {
     setIsDualPaneMode(!isDualPaneMode);
   }, [isDualPaneMode, setIsDualPaneMode]);
 
-  const setActivePane = useCallback((paneId: PaneId) => {
-    setActivePaneId(paneId);
-  }, [setActivePaneId]);
+  const setActivePane = useCallback(
+    (paneId: PaneId) => {
+      setActivePaneId(paneId);
+    },
+    [setActivePaneId]
+  );
 
   return {
     toggleDualPaneMode,

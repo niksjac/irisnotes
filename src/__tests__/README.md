@@ -109,47 +109,47 @@ test('should test hook with atom', () => {
 ### Quick Setup for All Tauri APIs
 
 ```typescript
-import { setupTauriMocks } from '../__tests__/mocks/tauri'
+import { setupTauriMocks } from '../__tests__/mocks/tauri';
 
 beforeEach(() => {
-  setupTauriMocks()
-})
+  setupTauriMocks();
+});
 ```
 
 ### Custom Tauri Mock Overrides
 
 ```typescript
-import { setupTauriMocks } from '../__tests__/mocks/tauri'
+import { setupTauriMocks } from '../__tests__/mocks/tauri';
 
 beforeEach(() => {
   setupTauriMocks({
     fs: {
       readTextFile: vi.fn().mockResolvedValue('custom content'),
-      exists: vi.fn().mockResolvedValue(false)
+      exists: vi.fn().mockResolvedValue(false),
     },
     path: {
-      appDataDir: vi.fn().mockResolvedValue('/custom/path')
-    }
-  })
-})
+      appDataDir: vi.fn().mockResolvedValue('/custom/path'),
+    },
+  });
+});
 ```
 
 ### Individual Mock Factories
 
 ```typescript
-import { createFileSystemMock, createPathMock } from '../__tests__/mocks/tauri'
+import { createFileSystemMock, createPathMock } from '../__tests__/mocks/tauri';
 
 test('should mock specific APIs', () => {
   const fsMock = createFileSystemMock({
-    readTextFile: vi.fn().mockResolvedValue('test content')
-  })
+    readTextFile: vi.fn().mockResolvedValue('test content'),
+  });
 
   const pathMock = createPathMock({
-    appDataDir: vi.fn().mockResolvedValue('/test/path')
-  })
+    appDataDir: vi.fn().mockResolvedValue('/test/path'),
+  });
 
   // Use mocks in your test
-})
+});
 ```
 
 ## Mock Data Factories
@@ -157,45 +157,45 @@ test('should mock specific APIs', () => {
 ### Creating Test Data
 
 ```typescript
-import { createMockNote, createMockCategory } from '../__tests__/test-utils'
+import { createMockNote, createMockCategory } from '../__tests__/test-utils';
 
 test('should work with mock data', () => {
   // Default mock note
-  const note = createMockNote()
-  expect(note.title).toBe('Test Note')
+  const note = createMockNote();
+  expect(note.title).toBe('Test Note');
 
   // Custom mock note
   const customNote = createMockNote({
     title: 'My Custom Note',
     is_pinned: true,
-    category_id: 'work-category'
-  })
+    category_id: 'work-category',
+  });
 
   // Mock category
   const category = createMockCategory({
     name: 'Work',
-    color: '#ff0000'
-  })
-})
+    color: '#ff0000',
+  });
+});
 ```
 
 ### Storage Adapter Mocking
 
 ```typescript
-import { createMockStorageAdapter } from '../__tests__/test-utils'
+import { createMockStorageAdapter } from '../__tests__/test-utils';
 
 test('should test storage operations', async () => {
-  const mockAdapter = createMockStorageAdapter()
+  const mockAdapter = createMockStorageAdapter();
 
   // Override specific methods
   mockAdapter.getAllNotes.mockResolvedValue({
     data: [createMockNote()],
-    error: null
-  })
+    error: null,
+  });
 
-  const result = await mockAdapter.getAllNotes()
-  expect(result.data).toHaveLength(1)
-})
+  const result = await mockAdapter.getAllNotes();
+  expect(result.data).toHaveLength(1);
+});
 ```
 
 ## Testing Patterns
@@ -329,26 +329,31 @@ describe('Note Creation Workflow', () => {
 ## Best Practices
 
 ### 1. Test Isolation
+
 - Use `createTestStore()` for Jotai state isolation
 - Reset mocks between tests with `resetTauriMocks()`
 - Clear all mocks with `vi.clearAllMocks()`
 
 ### 2. Realistic Test Data
+
 - Use mock factories for consistent test data
 - Override specific properties for test scenarios
 - Create hierarchical test data when needed
 
 ### 3. User-Centric Testing
+
 - Test user interactions, not implementation details
 - Use `screen.getByRole()` over `getByTestId()` when possible
 - Test accessibility features
 
 ### 4. Async Operations
+
 - Always await async operations
 - Use `waitFor()` for conditions that change over time
 - Test loading and error states
 
 ### 5. Performance Awareness
+
 - Keep tests fast with minimal setup
 - Mock external dependencies
 - Use in-memory databases for storage tests

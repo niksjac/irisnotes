@@ -6,7 +6,7 @@ export type {
   VoidStorageResult,
   StorageAdapter,
   SingleStorageManager,
-  MultiStorageManager
+  MultiStorageManager,
 } from './types';
 
 // Storage adapters
@@ -22,8 +22,8 @@ export function createSQLiteStorageAdapter(databasePath: string): SQLiteStorageA
   return new SQLiteStorageAdapter({
     backend: 'sqlite',
     sqlite: {
-      database_path: databasePath
-    }
+      database_path: databasePath,
+    },
   });
 }
 

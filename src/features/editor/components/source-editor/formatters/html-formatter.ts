@@ -9,6 +9,6 @@ export const formatHtml = (html: string): string => {
     max_preserve_newlines: 1,
     preserve_newlines: true,
     wrap_line_length: 120,
-    end_with_newline: false
+    end_with_newline: false,
   });
 };

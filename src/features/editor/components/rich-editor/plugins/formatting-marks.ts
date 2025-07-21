@@ -3,35 +3,31 @@ import { MarkSpec } from 'prosemirror-model';
 // Superscript mark
 export const superscriptMark: MarkSpec = {
   parseDOM: [{ tag: 'sup' }],
-  toDOM: () => ['sup', 0]
+  toDOM: () => ['sup', 0],
 };
 
 // Subscript mark
 export const subscriptMark: MarkSpec = {
   parseDOM: [{ tag: 'sub' }],
-  toDOM: () => ['sub', 0]
+  toDOM: () => ['sub', 0],
 };
 
 // Underline mark
 export const underlineMark: MarkSpec = {
   parseDOM: [{ tag: 'u' }],
-  toDOM: () => ['u', 0]
+  toDOM: () => ['u', 0],
 };
 
 // Strikethrough mark (additional to basic schema)
 export const strikethroughMark: MarkSpec = {
-  parseDOM: [
-    { tag: 'del' },
-    { tag: 's' },
-    { tag: 'strike' }
-  ],
-  toDOM: () => ['del', 0]
+  parseDOM: [{ tag: 'del' }, { tag: 's' }, { tag: 'strike' }],
+  toDOM: () => ['del', 0],
 };
 
 // Font family mark
 export const fontFamilyMark: MarkSpec = {
   attrs: {
-    fontFamily: { default: null }
+    fontFamily: { default: null },
   },
   parseDOM: [
     {
@@ -45,20 +41,16 @@ export const fontFamilyMark: MarkSpec = {
           return { fontFamily };
         }
         return false;
-      }
-    }
+      },
+    },
   ],
-  toDOM: (mark) => [
-    'span',
-    { style: `font-family: '${mark.attrs.fontFamily}', sans-serif` },
-    0
-  ]
+  toDOM: mark => ['span', { style: `font-family: '${mark.attrs.fontFamily}', sans-serif` }, 0],
 };
 
 // Font size mark
 export const fontSizeMark: MarkSpec = {
   attrs: {
-    fontSize: { default: null }
+    fontSize: { default: null },
   },
   parseDOM: [
     {
@@ -67,20 +59,16 @@ export const fontSizeMark: MarkSpec = {
         const style = node.getAttribute('style');
         const match = style.match(/font-size:\s*([^;]+)/);
         return match ? { fontSize: match[1].trim() } : false;
-      }
-    }
+      },
+    },
   ],
-  toDOM: (mark) => [
-    'span',
-    { style: `font-size: ${mark.attrs.fontSize}` },
-    0
-  ]
+  toDOM: mark => ['span', { style: `font-size: ${mark.attrs.fontSize}` }, 0],
 };
 
 // Background color mark
 export const backgroundColorMark: MarkSpec = {
   attrs: {
-    backgroundColor: { default: null }
+    backgroundColor: { default: null },
   },
   parseDOM: [
     {
@@ -89,16 +77,16 @@ export const backgroundColorMark: MarkSpec = {
         const style = node.getAttribute('style');
         const match = style.match(/background-color:\s*([^;]+)/);
         return match ? { backgroundColor: match[1].trim() } : false;
-      }
-    }
+      },
+    },
   ],
-  toDOM: (mark) => [
+  toDOM: mark => [
     'span',
     {
-      style: `background-color: ${mark.attrs.backgroundColor}; padding: 2px 4px; border-radius: 3px`
+      style: `background-color: ${mark.attrs.backgroundColor}; padding: 2px 4px; border-radius: 3px`,
     },
-    0
-  ]
+    0,
+  ],
 };
 
 // Helper functions for toggling marks
@@ -106,7 +94,12 @@ export const toggleFontFamily = (fontFamily: string, schema: any) => (state: any
   const { from, to } = state.selection;
   if (dispatch) {
     const hasFontFamily = state.doc.rangeHasMark(from, to, schema.marks.fontFamily);
-    const existingMark = hasFontFamily && state.doc.resolve(from).marks().find((m: any) => m.type === schema.marks.fontFamily);
+    const existingMark =
+      hasFontFamily &&
+      state.doc
+        .resolve(from)
+        .marks()
+        .find((m: any) => m.type === schema.marks.fontFamily);
 
     if (existingMark && existingMark.attrs.fontFamily === fontFamily) {
       dispatch(state.tr.removeMark(from, to, schema.marks.fontFamily));
@@ -123,7 +116,12 @@ export const toggleFontSize = (fontSize: string, schema: any) => (state: any, di
   const { from, to } = state.selection;
   if (dispatch) {
     const hasFontSize = state.doc.rangeHasMark(from, to, schema.marks.fontSize);
-    const existingMark = hasFontSize && state.doc.resolve(from).marks().find((m: any) => m.type === schema.marks.fontSize);
+    const existingMark =
+      hasFontSize &&
+      state.doc
+        .resolve(from)
+        .marks()
+        .find((m: any) => m.type === schema.marks.fontSize);
 
     if (existingMark && existingMark.attrs.fontSize === fontSize) {
       dispatch(state.tr.removeMark(from, to, schema.marks.fontSize));
@@ -140,7 +138,12 @@ export const toggleBackgroundColor = (backgroundColor: string, schema: any) => (
   const { from, to } = state.selection;
   if (dispatch) {
     const hasBgColor = state.doc.rangeHasMark(from, to, schema.marks.backgroundColor);
-    const existingMark = hasBgColor && state.doc.resolve(from).marks().find((m: any) => m.type === schema.marks.backgroundColor);
+    const existingMark =
+      hasBgColor &&
+      state.doc
+        .resolve(from)
+        .marks()
+        .find((m: any) => m.type === schema.marks.backgroundColor);
 
     if (existingMark && existingMark.attrs.backgroundColor === backgroundColor) {
       dispatch(state.tr.removeMark(from, to, schema.marks.backgroundColor));

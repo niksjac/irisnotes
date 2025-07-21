@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef, useEffect } from "react";
-import clsx from "clsx";
+import { useState, useCallback, useRef, useEffect } from 'react';
+import clsx from 'clsx';
 
 interface ResizableSidebarProps {
   isCollapsed: boolean;
@@ -36,15 +36,18 @@ export function ResizableSidebar({
     wasCollapsedRef.current = isCollapsed;
   }, [isCollapsed, defaultWidth]);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-    startXRef.current = e.clientX;
-    startWidthRef.current = width;
-    currentWidthRef.current = width;
-  }, [width]);
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      setIsResizing(true);
+      startXRef.current = e.clientX;
+      startWidthRef.current = width;
+      currentWidthRef.current = width;
+    },
+    [width]
+  );
 
-          const handleMouseMove = useCallback(
+  const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       if (!isResizing || !sidebarRef.current) return;
 
@@ -62,7 +65,7 @@ export function ResizableSidebar({
     [isResizing, maxWidth]
   );
 
-    const handleMouseUp = useCallback(() => {
+  const handleMouseUp = useCallback(() => {
     setIsResizing(false);
     const finalWidth = currentWidthRef.current;
 
@@ -82,16 +85,16 @@ export function ResizableSidebar({
 
   useEffect(() => {
     if (isResizing) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      document.body.style.cursor = "col-resize";
-      document.body.style.userSelect = "none";
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
 
       return () => {
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
-        document.body.style.cursor = "";
-        document.body.style.userSelect = "";
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
       };
     }
     // Return undefined when not resizing
@@ -101,19 +104,20 @@ export function ResizableSidebar({
   return (
     <div
       ref={sidebarRef}
-      className={clsx("bg-gray-100 dark:bg-gray-800 border-r border-gray-300 dark:border-gray-600 flex-shrink-0 relative overflow-hidden", {
-        "!w-0 !min-w-0 !border-r-0": isCollapsed,
-        "transition-none": isResizing && !isCollapsed
-      })}
+      className={clsx(
+        'bg-gray-100 dark:bg-gray-800 border-r border-gray-300 dark:border-gray-600 flex-shrink-0 relative overflow-hidden',
+        {
+          '!w-0 !min-w-0 !border-r-0': isCollapsed,
+          'transition-none': isResizing && !isCollapsed,
+        }
+      )}
       style={{
         width: isCollapsed ? 0 : width,
         minWidth: isCollapsed ? 0 : minWidth,
         maxWidth: isCollapsed ? 0 : maxWidth,
       }}
     >
-      <div className="h-full overflow-hidden flex flex-col">
-        {children}
-      </div>
+      <div className='h-full overflow-hidden flex flex-col'>{children}</div>
 
       {!isCollapsed && (
         <div
@@ -121,7 +125,7 @@ export function ResizableSidebar({
           className="absolute top-0 right-0 w-1 h-full cursor-col-resize bg-transparent transition-colors duration-100 hover:bg-blue-500 before:content-[''] before:absolute before:top-0 before:-left-0.5 before:-right-0.5 before:bottom-0"
           onMouseDown={handleMouseDown}
           style={{
-            backgroundColor: isResizing ? '#2563eb' : 'transparent'
+            backgroundColor: isResizing ? '#2563eb' : 'transparent',
           }}
         />
       )}

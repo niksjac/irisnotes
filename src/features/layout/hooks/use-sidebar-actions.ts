@@ -8,9 +8,12 @@ export const useSidebarActions = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   }, [sidebarCollapsed, setSidebarCollapsed]);
 
-  const handleSidebarCollapsedChange = useCallback((collapsed: boolean) => {
-    setSidebarCollapsed(collapsed);
-  }, [setSidebarCollapsed]);
+  const handleSidebarCollapsedChange = useCallback(
+    (collapsed: boolean) => {
+      setSidebarCollapsed(collapsed);
+    },
+    [setSidebarCollapsed]
+  );
 
   return {
     toggleSidebar,

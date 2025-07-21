@@ -50,49 +50,55 @@ export function useTreeState() {
     setSortAlphabetically(prev => !prev);
   }, []);
 
-  const toggleExpandAll = useCallback((treeData: TreeNode[], treeRef: React.RefObject<any>) => {
-    if (treeRef.current) {
-      if (allExpanded) {
-        treeRef.current.closeAll();
-        setExpandedNodes(new Set());
-      } else {
-        treeRef.current.openAll();
-        const allCategoryIds = new Set<string>();
-        const collectCategories = (nodes: TreeNode[]) => {
+  const toggleExpandAll = useCallback(
+    (treeData: TreeNode[], treeRef: React.RefObject<any>) => {
+      if (treeRef.current) {
+        if (allExpanded) {
+          treeRef.current.closeAll();
+          setExpandedNodes(new Set());
+        } else {
+          treeRef.current.openAll();
+          const allCategoryIds = new Set<string>();
+          const collectCategories = (nodes: TreeNode[]) => {
+            nodes.forEach(node => {
+              if (node.type === 'category') {
+                allCategoryIds.add(node.id);
+                if (node.children) {
+                  collectCategories(node.children);
+                }
+              }
+            });
+          };
+          collectCategories(treeData);
+          setExpandedNodes(allCategoryIds);
+        }
+        setAllExpanded(!allExpanded);
+      }
+    },
+    [allExpanded]
+  );
+
+  const initializeExpandedState = useCallback(
+    (baseTreeData: TreeNode[]) => {
+      if (baseTreeData.length > 0 && expandedNodes.size === 0) {
+        const initialExpanded = new Set<string>();
+        const addExpandedCategories = (nodes: TreeNode[]) => {
           nodes.forEach(node => {
             if (node.type === 'category') {
-              allCategoryIds.add(node.id);
+              initialExpanded.add(node.id);
               if (node.children) {
-                collectCategories(node.children);
+                addExpandedCategories(node.children);
               }
             }
           });
         };
-        collectCategories(treeData);
-        setExpandedNodes(allCategoryIds);
+        addExpandedCategories(baseTreeData);
+        setExpandedNodes(initialExpanded);
+        setAllExpanded(true);
       }
-      setAllExpanded(!allExpanded);
-    }
-  }, [allExpanded]);
-
-  const initializeExpandedState = useCallback((baseTreeData: TreeNode[]) => {
-    if (baseTreeData.length > 0 && expandedNodes.size === 0) {
-      const initialExpanded = new Set<string>();
-      const addExpandedCategories = (nodes: TreeNode[]) => {
-        nodes.forEach(node => {
-          if (node.type === 'category') {
-            initialExpanded.add(node.id);
-            if (node.children) {
-              addExpandedCategories(node.children);
-            }
-          }
-        });
-      };
-      addExpandedCategories(baseTreeData);
-      setExpandedNodes(initialExpanded);
-      setAllExpanded(true);
-    }
-  }, [expandedNodes.size]);
+    },
+    [expandedNodes.size]
+  );
 
   const state: TreeState = {
     sortAlphabetically,

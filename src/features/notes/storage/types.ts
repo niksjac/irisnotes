@@ -1,4 +1,17 @@
-import type { Note, CreateNoteParams, UpdateNoteParams, NoteFilters, Category, Tag, NoteRelationship, Attachment, NoteVersion, Setting, CreateCategoryParams, CreateTagParams } from '../../../types/database';
+import type {
+  Note,
+  CreateNoteParams,
+  UpdateNoteParams,
+  NoteFilters,
+  Category,
+  Tag,
+  NoteRelationship,
+  Attachment,
+  NoteVersion,
+  Setting,
+  CreateCategoryParams,
+  CreateTagParams,
+} from '../../../types/database';
 
 // Storage backend types
 export type StorageBackend = 'sqlite' | 'file-system' | 'cloud';
@@ -19,14 +32,10 @@ export interface StorageConfig {
 }
 
 // Storage operation results - discriminated union for type safety
-export type StorageResult<T> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+export type StorageResult<T> = { success: true; data: T } | { success: false; error: string };
 
 // Specific type for void operations
-export type VoidStorageResult =
-  | { success: true }
-  | { success: false; error: string };
+export type VoidStorageResult = { success: true } | { success: false; error: string };
 
 // Base storage interface
 export interface StorageAdapter {
@@ -63,12 +72,24 @@ export interface StorageAdapter {
 
   // Note relationships
   getNoteRelationships(noteId: string): Promise<StorageResult<NoteRelationship[]>>;
-  createNoteRelationship(sourceId: string, targetId: string, type: 'reference' | 'child' | 'related', description?: string): Promise<StorageResult<NoteRelationship>>;
+  createNoteRelationship(
+    sourceId: string,
+    targetId: string,
+    type: 'reference' | 'child' | 'related',
+    description?: string
+  ): Promise<StorageResult<NoteRelationship>>;
   deleteNoteRelationship(id: string): Promise<VoidStorageResult>;
 
   // Attachments
   getNoteAttachments(noteId: string): Promise<StorageResult<Attachment[]>>;
-  createAttachment(noteId: string, filename: string, originalFilename: string, filePath: string, mimeType: string, fileSize: number): Promise<StorageResult<Attachment>>;
+  createAttachment(
+    noteId: string,
+    filename: string,
+    originalFilename: string,
+    filePath: string,
+    mimeType: string,
+    fileSize: number
+  ): Promise<StorageResult<Attachment>>;
   deleteAttachment(id: string): Promise<VoidStorageResult>;
 
   // Note versions
@@ -89,15 +110,17 @@ export interface StorageAdapter {
   sync?(): Promise<VoidStorageResult>;
 
   // Utility
-  getStorageInfo(): Promise<StorageResult<{
-    backend: StorageBackend;
-    note_count: number;
-    category_count: number;
-    tag_count: number;
-    attachment_count: number;
-    last_sync?: string;
-    storage_size?: number;
-  }>>;
+  getStorageInfo(): Promise<
+    StorageResult<{
+      backend: StorageBackend;
+      note_count: number;
+      category_count: number;
+      tag_count: number;
+      attachment_count: number;
+      last_sync?: string;
+      storage_size?: number;
+    }>
+  >;
 }
 
 // Single storage manager - manages one active storage at a time
@@ -129,15 +152,17 @@ export interface SingleStorageManager {
 
   // Utility
   sync(): Promise<VoidStorageResult>;
-  getStorageInfo(): Promise<StorageResult<{
-    backend: StorageBackend;
-    note_count: number;
-    category_count: number;
-    tag_count: number;
-    attachment_count: number;
-    last_sync?: string;
-    storage_size?: number;
-  }>>;
+  getStorageInfo(): Promise<
+    StorageResult<{
+      backend: StorageBackend;
+      note_count: number;
+      category_count: number;
+      tag_count: number;
+      attachment_count: number;
+      last_sync?: string;
+      storage_size?: number;
+    }>
+  >;
 }
 
 // Multi-storage manager (legacy - for future use)

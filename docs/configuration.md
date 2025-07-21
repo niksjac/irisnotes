@@ -188,9 +188,9 @@ await updateConfig({
   storage: {
     backend: 'sqlite',
     sqlite: {
-      database_path: '/custom/path/notes.db'
-    }
-  }
+      database_path: '/custom/path/notes.db',
+    },
+  },
 });
 ```
 
@@ -201,7 +201,7 @@ await updateConfig({
   production: {
     customConfigPath: '/custom/config/path/',
     customDatabasePath: '/custom/database/path/notes.db',
-    customNotesPath: '/custom/notes/path/'
-  }
+    customNotesPath: '/custom/notes/path/',
+  },
 });
 ```

@@ -12,8 +12,8 @@ export const useEditorLayout = () => {
     updateConfig({
       editor: {
         ...config.editor,
-        toolbarVisible: newVisibility
-      }
+        toolbarVisible: newVisibility,
+      },
     });
     setToolbarVisible(newVisibility);
   }, [config.editor, updateConfig, setToolbarVisible]);

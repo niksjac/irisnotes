@@ -31,19 +31,23 @@ The IrisNotes database uses SQLite with the following main tables:
 ## Features
 
 ### Full-Text Search
+
 - SQLite FTS5 virtual table for fast text search
 - Automatic index updates via triggers
 - Search both titles and content
 
 ### Soft Delete
+
 - Notes can be soft-deleted (deleted_at timestamp)
 - Allows for recovery and trash functionality
 
 ### Versioning
+
 - Automatic version tracking for notes
 - Enables undo/redo and history features
 
 ### Performance
+
 - Comprehensive indexing for common queries
 - Optimized for read-heavy workloads
 - Efficient relationship queries
@@ -61,6 +65,7 @@ The database will be automatically created when the app first runs. The migratio
 The schema includes default categories and settings:
 
 ### Categories
+
 - General (default)
 - Quick Notes
 - Projects
@@ -68,6 +73,7 @@ The schema includes default categories and settings:
 - Work
 
 ### Settings
+
 - Theme preference
 - Editor mode
 - Line wrapping

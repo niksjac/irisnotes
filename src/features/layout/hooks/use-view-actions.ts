@@ -10,7 +10,7 @@ export const useViewActions = () => {
     databaseStatusVisible,
     setDatabaseStatusVisible,
     activityBarVisible,
-    setActivityBarVisible
+    setActivityBarVisible,
   } = useViewState();
 
   const toggleConfigView = useCallback(() => {

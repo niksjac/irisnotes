@@ -10,7 +10,8 @@ const meta = {
     layout: 'padded',
     docs: {
       description: {
-        component: 'Complete notes tree view component with hierarchical display of notes and categories. Supports navigation, editing, CRUD operations, keyboard shortcuts, search, sorting, hoisting, and advanced features for power users.',
+        component:
+          'Complete notes tree view component with hierarchical display of notes and categories. Supports navigation, editing, CRUD operations, keyboard shortcuts, search, sorting, hoisting, and advanced features for power users.',
       },
     },
   },
@@ -223,17 +224,17 @@ export const InteractiveTreeView: Story = {
     const [searchQuery, setSearchQuery] = useState('');
 
     return (
-      <div className="h-96 w-80 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-        <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-          <div className="space-y-2">
+      <div className='h-96 w-80 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden'>
+        <div className='p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'>
+          <div className='space-y-2'>
             <input
-              type="text"
-              placeholder="Search notes and folders..."
+              type='text'
+              placeholder='Search notes and folders...'
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+              onChange={e => setSearchQuery(e.target.value)}
+              className='w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100'
             />
-            <div className="text-xs text-gray-600 dark:text-gray-400">
+            <div className='text-xs text-gray-600 dark:text-gray-400'>
               Selected: {selectedItemId ? `${selectedItemType} (${selectedItemId})` : 'None'}
             </div>
           </div>
@@ -244,7 +245,7 @@ export const InteractiveTreeView: Story = {
           selectedItemId={selectedItemId}
           selectedItemType={selectedItemType}
           searchQuery={searchQuery}
-          onNoteSelect={(id) => {
+          onNoteSelect={id => {
             setSelectedNoteId(id);
             setSelectedItemId(id);
             setSelectedItemType('note');
@@ -265,7 +266,8 @@ export const InteractiveTreeView: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Interactive tree view with search and selection. Try searching for terms like "project", "work", or "note".',
+        story:
+          'Interactive tree view with search and selection. Try searching for terms like "project", "work", or "note".',
       },
     },
   },
@@ -306,7 +308,7 @@ export const LargeDataset: Story = {
     }));
 
     return (
-      <div className="h-96 w-80 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+      <div className='h-96 w-80 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden'>
         <NotesTreeView
           {...defaultProps}
           notes={largeNotes}
@@ -343,15 +345,15 @@ export const CompleteWorkflow: Story = {
     };
 
     return (
-      <div className="flex gap-4">
-        <div className="w-80 h-96 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-          <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+      <div className='flex gap-4'>
+        <div className='w-80 h-96 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden'>
+          <div className='p-2 border-b border-gray-200 dark:border-gray-700'>
             <input
-              type="text"
-              placeholder="Search..."
+              type='text'
+              placeholder='Search...'
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              onChange={e => setSearchQuery(e.target.value)}
+              className='w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
             />
           </div>
           <NotesTreeView
@@ -362,7 +364,7 @@ export const CompleteWorkflow: Story = {
             selectedItemId={selectedItemId}
             selectedItemType={selectedItemType}
             searchQuery={searchQuery}
-            onNoteSelect={(id) => {
+            onNoteSelect={id => {
               setSelectedNoteId(id);
               setSelectedItemId(id);
               setSelectedItemType('note');
@@ -372,12 +374,11 @@ export const CompleteWorkflow: Story = {
               setSelectedItemId(id);
               setSelectedItemType(type);
               if (type === 'note') setSelectedNoteId(id);
-              const item = type === 'note'
-                ? notes.find(n => n.id === id)?.title
-                : categories.find(c => c.id === id)?.name;
+              const item =
+                type === 'note' ? notes.find(n => n.id === id)?.title : categories.find(c => c.id === id)?.name;
               addLog(`Selected ${type}: ${item}`);
             }}
-            onCreateNote={(parentId) => {
+            onCreateNote={parentId => {
               const newNote: Note = {
                 id: `note-${Date.now()}`,
                 title: 'New Note',
@@ -397,7 +398,7 @@ export const CompleteWorkflow: Story = {
               }
               addLog(`Created note: ${newNote.title}`);
             }}
-            onCreateFolder={(parentId) => {
+            onCreateFolder={parentId => {
               const newCategory: Category = {
                 id: `cat-${Date.now()}`,
                 name: 'New Folder',
@@ -410,43 +411,43 @@ export const CompleteWorkflow: Story = {
               setCategories(prev => [...prev, newCategory]);
               addLog(`Created folder: ${newCategory.name}`);
             }}
-            onDeleteNote={(id) => {
+            onDeleteNote={id => {
               setNotes(prev => prev.filter(n => n.id !== id));
               setNoteCategories(prev => prev.filter(nc => nc.noteId !== id));
               addLog(`Deleted note`);
             }}
-            onDeleteCategory={(id) => {
+            onDeleteCategory={id => {
               setCategories(prev => prev.filter(c => c.id !== id));
               setNoteCategories(prev => prev.filter(nc => nc.categoryId !== id));
               addLog(`Deleted category`);
             }}
             onRenameNote={(id, name) => {
-              setNotes(prev => prev.map(n => n.id === id ? { ...n, title: name } : n));
+              setNotes(prev => prev.map(n => (n.id === id ? { ...n, title: name } : n)));
               addLog(`Renamed note to: ${name}`);
             }}
             onRenameCategory={(id, name) => {
-              setCategories(prev => prev.map(c => c.id === id ? { ...c, name } : c));
+              setCategories(prev => prev.map(c => (c.id === id ? { ...c, name } : c)));
               addLog(`Renamed category to: ${name}`);
             }}
             onMoveNote={(noteId, categoryId) => {
               setNoteCategories(prev => [
                 ...prev.filter(nc => nc.noteId !== noteId),
-                ...(categoryId ? [{ noteId, categoryId }] : [])
+                ...(categoryId ? [{ noteId, categoryId }] : []),
               ]);
               addLog(`Moved note to ${categoryId ? 'category' : 'root'}`);
             }}
           />
         </div>
 
-        <div className="flex-1 max-w-sm">
-          <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <h4 className="text-sm font-semibold mb-3">Activity Log</h4>
-            <div className="space-y-1 text-xs font-mono max-h-80 overflow-y-auto">
+        <div className='flex-1 max-w-sm'>
+          <div className='p-4 bg-gray-50 dark:bg-gray-800 rounded-lg'>
+            <h4 className='text-sm font-semibold mb-3'>Activity Log</h4>
+            <div className='space-y-1 text-xs font-mono max-h-80 overflow-y-auto'>
               {actionLog.length === 0 ? (
-                <div className="text-gray-500">Try interacting with the tree...</div>
+                <div className='text-gray-500'>Try interacting with the tree...</div>
               ) : (
                 actionLog.map((log, index) => (
-                  <div key={index} className="text-gray-700 dark:text-gray-300">
+                  <div key={index} className='text-gray-700 dark:text-gray-300'>
                     {log}
                   </div>
                 ))
@@ -454,9 +455,9 @@ export const CompleteWorkflow: Story = {
             </div>
           </div>
 
-          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
-            <h4 className="text-sm font-semibold mb-2">Try These Features:</h4>
-            <ul className="text-xs space-y-1">
+          <div className='mt-4 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg'>
+            <h4 className='text-sm font-semibold mb-2'>Try These Features:</h4>
+            <ul className='text-xs space-y-1'>
               <li>• Click to select items</li>
               <li>• Double-click to rename</li>
               <li>• Use create buttons</li>
@@ -482,67 +483,46 @@ export const CompleteWorkflow: Story = {
 export const AllStates: Story = {
   args: defaultProps,
   render: () => (
-    <div className="grid grid-cols-2 gap-4">
+    <div className='grid grid-cols-2 gap-4'>
       <div>
-        <h4 className="text-sm font-medium mb-2">Default State</h4>
-        <div className="h-64 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <h4 className='text-sm font-medium mb-2'>Default State</h4>
+        <div className='h-64 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden'>
           <NotesTreeView {...defaultProps} />
         </div>
       </div>
 
       <div>
-        <h4 className="text-sm font-medium mb-2">With Selection</h4>
-        <div className="h-64 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-          <NotesTreeView
-            {...defaultProps}
-            selectedNoteId="note-1"
-            selectedItemId="note-1"
-            selectedItemType="note"
-          />
+        <h4 className='text-sm font-medium mb-2'>With Selection</h4>
+        <div className='h-64 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden'>
+          <NotesTreeView {...defaultProps} selectedNoteId='note-1' selectedItemId='note-1' selectedItemType='note' />
         </div>
       </div>
 
       <div>
-        <h4 className="text-sm font-medium mb-2">With Search</h4>
-        <div className="h-64 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-          <NotesTreeView
-            {...defaultProps}
-            searchQuery="project"
-          />
+        <h4 className='text-sm font-medium mb-2'>With Search</h4>
+        <div className='h-64 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden'>
+          <NotesTreeView {...defaultProps} searchQuery='project' />
         </div>
       </div>
 
       <div>
-        <h4 className="text-sm font-medium mb-2">Empty State</h4>
-        <div className="h-64 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-          <NotesTreeView
-            {...defaultProps}
-            notes={[]}
-            categories={[]}
-            noteCategories={[]}
-          />
+        <h4 className='text-sm font-medium mb-2'>Empty State</h4>
+        <div className='h-64 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden'>
+          <NotesTreeView {...defaultProps} notes={[]} categories={[]} noteCategories={[]} />
         </div>
       </div>
 
       <div>
-        <h4 className="text-sm font-medium mb-2">Notes Only</h4>
-        <div className="h-64 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-          <NotesTreeView
-            {...defaultProps}
-            categories={[]}
-            noteCategories={[]}
-          />
+        <h4 className='text-sm font-medium mb-2'>Notes Only</h4>
+        <div className='h-64 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden'>
+          <NotesTreeView {...defaultProps} categories={[]} noteCategories={[]} />
         </div>
       </div>
 
       <div>
-        <h4 className="text-sm font-medium mb-2">Categories Only</h4>
-        <div className="h-64 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-          <NotesTreeView
-            {...defaultProps}
-            notes={[]}
-            noteCategories={[]}
-          />
+        <h4 className='text-sm font-medium mb-2'>Categories Only</h4>
+        <div className='h-64 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden'>
+          <NotesTreeView {...defaultProps} notes={[]} noteCategories={[]} />
         </div>
       </div>
     </div>
@@ -564,16 +544,16 @@ export const FocusManagement: Story = {
     const [focusState, setFocusState] = useState('unfocused');
 
     return (
-      <div className="space-y-4">
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <h4 className="text-sm font-semibold mb-2">Focus Management</h4>
-          <div className="flex gap-2">
+      <div className='space-y-4'>
+        <div className='p-4 bg-gray-50 dark:bg-gray-800 rounded-lg'>
+          <h4 className='text-sm font-semibold mb-2'>Focus Management</h4>
+          <div className='flex gap-2'>
             <button
               onClick={() => {
                 setFocusClasses({ 'ring-2': true, 'ring-blue-500': true });
                 setFocusState('focused');
               }}
-              className="px-3 py-1 text-sm bg-blue-500 text-white rounded"
+              className='px-3 py-1 text-sm bg-blue-500 text-white rounded'
             >
               Focus Tree
             </button>
@@ -582,19 +562,19 @@ export const FocusManagement: Story = {
                 setFocusClasses({});
                 setFocusState('unfocused');
               }}
-              className="px-3 py-1 text-sm bg-gray-500 text-white rounded"
+              className='px-3 py-1 text-sm bg-gray-500 text-white rounded'
             >
               Unfocus
             </button>
           </div>
-          <div className="mt-2 text-xs">State: {focusState}</div>
+          <div className='mt-2 text-xs'>State: {focusState}</div>
         </div>
 
-        <div className="h-64 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <div className='h-64 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden'>
           <NotesTreeView
             {...defaultProps}
             focusClasses={focusClasses}
-            onRegisterElement={(_element) => {
+            onRegisterElement={_element => {
               console.log('Tree element registered for focus management');
             }}
             onSetFocusFromClick={() => {

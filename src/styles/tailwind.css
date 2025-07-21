@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Streamlined Tailwind CSS v4 Configuration for IrisNotes */
 @theme {
@@ -42,21 +42,51 @@
   }
 
   /* Debug border utilities for development */
-  .__1 { border: 5px solid #ef4444 !important; } /* red */
-  .__2 { border: 5px solid #3b82f6 !important; } /* blue */
-  .__3 { border: 5px solid #22c55e !important; } /* green */
-  .__4 { border: 5px solid #f59e0b !important; } /* amber */
-  .__5 { border: 5px solid #8b5cf6 !important; } /* violet */
-  .__6 { border: 5px solid #ec4899 !important; } /* pink */
-  .__7 { border: 5px solid #06b6d4 !important; } /* cyan */
-  .__8 { border: 5px solid #84cc16 !important; } /* lime */
-  .__9 { border: 5px solid #f97316 !important; } /* orange */
-  .__10 { border: 5px solid #6366f1 !important; } /* indigo */
-  .__11 { border: 5px solid #14b8a6 !important; } /* teal */
-  .__12 { border: 5px solid #eab308 !important; } /* yellow */
-  .__13 { border: 5px solid #dc2626 !important; } /* red-600 */
-  .__14 { border: 5px solid #7c3aed !important; } /* violet-600 */
-  .__15 { border: 5px solid #059669 !important; } /* emerald-600 */
+  .__1 {
+    border: 5px solid #ef4444 !important;
+  } /* red */
+  .__2 {
+    border: 5px solid #3b82f6 !important;
+  } /* blue */
+  .__3 {
+    border: 5px solid #22c55e !important;
+  } /* green */
+  .__4 {
+    border: 5px solid #f59e0b !important;
+  } /* amber */
+  .__5 {
+    border: 5px solid #8b5cf6 !important;
+  } /* violet */
+  .__6 {
+    border: 5px solid #ec4899 !important;
+  } /* pink */
+  .__7 {
+    border: 5px solid #06b6d4 !important;
+  } /* cyan */
+  .__8 {
+    border: 5px solid #84cc16 !important;
+  } /* lime */
+  .__9 {
+    border: 5px solid #f97316 !important;
+  } /* orange */
+  .__10 {
+    border: 5px solid #6366f1 !important;
+  } /* indigo */
+  .__11 {
+    border: 5px solid #14b8a6 !important;
+  } /* teal */
+  .__12 {
+    border: 5px solid #eab308 !important;
+  } /* yellow */
+  .__13 {
+    border: 5px solid #dc2626 !important;
+  } /* red-600 */
+  .__14 {
+    border: 5px solid #7c3aed !important;
+  } /* violet-600 */
+  .__15 {
+    border: 5px solid #059669 !important;
+  } /* emerald-600 */
 
   /* Editor utilities */
   .editor-container {
@@ -104,7 +134,6 @@
   .debug-bg {
     @apply bg-red-500 text-white;
   }
-
 }
 
 /*

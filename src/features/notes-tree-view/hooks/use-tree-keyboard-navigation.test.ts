@@ -281,7 +281,11 @@ describe('useTreeKeyboardNavigation', () => {
     });
 
     it('should navigate to parent with ArrowLeft when category is collapsed', () => {
-      const parentFolderMock = { id: 'parent-cat', name: 'Parent', type: 'category' as const };
+      const parentFolderMock = {
+        id: 'parent-cat',
+        name: 'Parent',
+        type: 'category' as const,
+      };
       mockFindParentFolder.mockReturnValue(parentFolderMock);
 
       const collapsedNodes = new Set<string>(); // cat-1 is collapsed
@@ -773,7 +777,9 @@ describe('useTreeKeyboardNavigation', () => {
       // Create event with preventDefault spy
       const preventDefaultSpy = vi.fn();
       const event = new KeyboardEvent('keydown', { key: 'ArrowDown' });
-      Object.defineProperty(event, 'preventDefault', { value: preventDefaultSpy });
+      Object.defineProperty(event, 'preventDefault', {
+        value: preventDefaultSpy,
+      });
 
       // Simulate key press
       act(() => {
@@ -805,7 +811,9 @@ describe('useTreeKeyboardNavigation', () => {
       // Create event with preventDefault spy
       const preventDefaultSpy = vi.fn();
       const event = new KeyboardEvent('keydown', { key: 'Tab' });
-      Object.defineProperty(event, 'preventDefault', { value: preventDefaultSpy });
+      Object.defineProperty(event, 'preventDefault', {
+        value: preventDefaultSpy,
+      });
 
       // Simulate unhandled key press
       act(() => {

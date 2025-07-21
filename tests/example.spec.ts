@@ -24,7 +24,7 @@ test('sidebar functionality', async ({ page }) => {
   const sidebar = page.locator('[data-testid="sidebar"]').or(page.locator('.sidebar')).or(page.locator('aside'));
 
   // Check if sidebar exists (might not be visible initially)
-  const sidebarExists = await sidebar.count() > 0;
+  const sidebarExists = (await sidebar.count()) > 0;
 
   if (sidebarExists) {
     console.log('Sidebar found in app');
@@ -38,12 +38,13 @@ test('note creation workflow', async ({ page }) => {
   await page.waitForTimeout(1000);
 
   // Look for new note button or similar functionality
-  const newNoteButton = page.locator('[data-testid="new-note"]')
+  const newNoteButton = page
+    .locator('[data-testid="new-note"]')
     .or(page.getByRole('button', { name: /new note/i }))
     .or(page.getByRole('button', { name: /add note/i }))
     .or(page.getByRole('button', { name: /create/i }));
 
-  const buttonExists = await newNoteButton.count() > 0;
+  const buttonExists = (await newNoteButton.count()) > 0;
 
   if (buttonExists) {
     await newNoteButton.first().click();

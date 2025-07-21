@@ -12,7 +12,7 @@ export const useSidebarFocus = () => {
       // Activity bar toggle if needed
     },
     sidebarCollapsed: false, // Sidebar manages this state via hooks
-    activityBarVisible: true
+    activityBarVisible: true,
   });
 
   return {

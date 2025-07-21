@@ -14,14 +14,14 @@ const DEFAULT_CONFIG: AppConfig = {
   storage: {
     backend: 'sqlite',
     sqlite: {
-      database_path: 'notes.db'
-    }
+      database_path: 'notes.db',
+    },
   },
   development: {
     useLocalConfig: false,
-    configPath: './dev/config/'
+    configPath: './dev/config/',
   },
-  production: {}
+  production: {},
 };
 
 export const useConfig = () => {
@@ -37,7 +37,9 @@ export const useConfig = () => {
       if (isDevelopment) {
         // Try to use local config first in dev mode
         try {
-          const localConfigString = await invoke<string>('read_config', { filename: './dev/config/app-config.json' });
+          const localConfigString = await invoke<string>('read_config', {
+            filename: './dev/config/app-config.json',
+          });
           const parsedConfig = JSON.parse(localConfigString) as AppConfig;
 
           // Merge with defaults to ensure all required fields exist
@@ -47,19 +49,26 @@ export const useConfig = () => {
             editor: { ...DEFAULT_CONFIG.editor, ...parsedConfig.editor },
             debug: { ...DEFAULT_CONFIG.debug, ...parsedConfig.debug },
             storage: { ...DEFAULT_CONFIG.storage, ...parsedConfig.storage },
-            development: { ...DEFAULT_CONFIG.development, ...parsedConfig.development },
-            production: { ...DEFAULT_CONFIG.production, ...parsedConfig.production }
+            development: {
+              ...DEFAULT_CONFIG.development,
+              ...parsedConfig.development,
+            },
+            production: {
+              ...DEFAULT_CONFIG.production,
+              ...parsedConfig.production,
+            },
           };
 
           setConfig(mergedConfig);
           return;
         } catch {
           // Fall back to system config in dev mode
-
         }
       }
 
-      const configString = await invoke<string>('read_config', { filename: configPath });
+      const configString = await invoke<string>('read_config', {
+        filename: configPath,
+      });
       const parsedConfig = JSON.parse(configString) as AppConfig;
 
       // Merge with defaults to ensure all required fields exist
@@ -69,21 +78,29 @@ export const useConfig = () => {
         editor: { ...DEFAULT_CONFIG.editor, ...parsedConfig.editor },
         debug: { ...DEFAULT_CONFIG.debug, ...parsedConfig.debug },
         storage: { ...DEFAULT_CONFIG.storage, ...parsedConfig.storage },
-        development: { ...DEFAULT_CONFIG.development, ...parsedConfig.development },
-        production: { ...DEFAULT_CONFIG.production, ...parsedConfig.production }
+        development: {
+          ...DEFAULT_CONFIG.development,
+          ...parsedConfig.development,
+        },
+        production: {
+          ...DEFAULT_CONFIG.production,
+          ...parsedConfig.production,
+        },
       };
 
       setConfig(mergedConfig);
     } catch {
       // Failed to load config - use defaults
       const isDevelopment = import.meta.env.DEV;
-      const defaultConfig: AppConfig = isDevelopment ? {
-        ...DEFAULT_CONFIG,
-        development: {
-          useLocalConfig: true,
-          configPath: './dev/config/'
-        }
-      } : DEFAULT_CONFIG;
+      const defaultConfig: AppConfig = isDevelopment
+        ? {
+            ...DEFAULT_CONFIG,
+            development: {
+              useLocalConfig: true,
+              configPath: './dev/config/',
+            },
+          }
+        : DEFAULT_CONFIG;
 
       setConfig(defaultConfig);
     } finally {
@@ -95,7 +112,7 @@ export const useConfig = () => {
     try {
       await invoke('write_config', {
         filename: 'app-config.json',
-        content: JSON.stringify(newConfig, null, 2)
+        content: JSON.stringify(newConfig, null, 2),
       });
       setConfig(newConfig);
     } catch (error) {
@@ -103,20 +120,23 @@ export const useConfig = () => {
     }
   }, []);
 
-  const updateConfig = useCallback(async (updates: Partial<AppConfig>) => {
-    const newConfig = {
-      ...config,
-      ...updates,
-      editor: { ...config.editor, ...updates.editor },
-      debug: { ...config.debug, ...updates.debug },
-      storage: { ...config.storage, ...updates.storage },
-      development: { ...config.development, ...updates.development },
-      production: { ...config.production, ...updates.production }
-    };
-    await saveConfig(newConfig);
-  }, [config, saveConfig]);
+  const updateConfig = useCallback(
+    async (updates: Partial<AppConfig>) => {
+      const newConfig = {
+        ...config,
+        ...updates,
+        editor: { ...config.editor, ...updates.editor },
+        debug: { ...config.debug, ...updates.debug },
+        storage: { ...config.storage, ...updates.storage },
+        development: { ...config.development, ...updates.development },
+        production: { ...config.production, ...updates.production },
+      };
+      await saveConfig(newConfig);
+    },
+    [config, saveConfig]
+  );
 
-    useEffect(() => {
+  useEffect(() => {
     loadConfig();
 
     // Set up file watcher
@@ -127,7 +147,6 @@ export const useConfig = () => {
 
         // Listen for config file changes
         const unlisten = await listen('config-file-changed', () => {
-
           loadConfig();
         });
 
@@ -139,7 +158,7 @@ export const useConfig = () => {
     };
 
     let unlisten: (() => void) | null = null;
-    setupWatcher().then((unlistenFn) => {
+    setupWatcher().then(unlistenFn => {
       unlisten = unlistenFn;
     });
 

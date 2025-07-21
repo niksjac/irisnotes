@@ -7,7 +7,7 @@ import {
   useNotesNavigation,
   useNotesInitialization,
   useCategoryManagement,
-  useAppHandlers
+  useAppHandlers,
 } from '../../notes/hooks';
 import { usePaneState } from '../hooks';
 import { useNotesStorage } from '../../notes/hooks';
@@ -29,24 +29,15 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({}) => {
 
   // Get notes navigation and actions
   const { openNoteInPane, setSelectedNoteId } = useNotesNavigation();
-  const {
-    createNewNote,
-    updateNoteTitle: renameNote
-  } = useNotesActions();
+  const { createNewNote, updateNoteTitle: renameNote } = useNotesActions();
 
   // Category management - get storage manager from notes
-  const {
-    categories,
-    noteCategories,
-    handleCreateFolder,
-    handleMoveNote,
-    handleDeleteCategory,
-    handleRenameCategory
-  } = useCategoryManagement({
-    storageManager,
-    isLoading: !isInitialized,
-    notesLength: notes.length
-  });
+  const { categories, noteCategories, handleCreateFolder, handleMoveNote, handleDeleteCategory, handleRenameCategory } =
+    useCategoryManagement({
+      storageManager,
+      isLoading: !isInitialized,
+      notesLength: notes.length,
+    });
 
   // Get current selection state for folders
   const [selectedItem, setSelectedItem] = React.useState<{
@@ -54,20 +45,14 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({}) => {
     type: 'note' | 'category' | null;
   }>({
     id: null,
-    type: null
+    type: null,
   });
 
   // Focus management via dedicated hook
   const { registerElement, getFocusClasses, focusElement, setFocusFromClick } = useSidebarFocus();
 
   // App handlers for integrated actions
-  const {
-    handleNoteClick,
-    handleItemSelect,
-    handleCreateNote,
-    handleDeleteNote,
-    handleRenameNote
-  } = useAppHandlers({
+  const { handleNoteClick, handleItemSelect, handleCreateNote, handleDeleteNote, handleRenameNote } = useAppHandlers({
     storageManager,
     isDualPaneMode,
     activePaneId,
@@ -78,7 +63,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({}) => {
     createNewNote,
     loadAllNotes: () => Promise.resolve(), // Handled by initialization
     loadNoteCategories: () => Promise.resolve([]),
-    focusElement // Pass the focus management function from our hook
+    focusElement, // Pass the focus management function from our hook
   });
 
   return (

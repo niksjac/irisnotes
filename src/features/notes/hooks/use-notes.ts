@@ -77,7 +77,7 @@ export const useNotes = () => {
     right: string | null;
   }>({
     left: null,
-    right: null
+    right: null,
   });
 
   // Initialize selected note after config loads
@@ -85,7 +85,7 @@ export const useNotes = () => {
     if (!loading && config.debug?.enableExampleNote) {
       setSelectedNoteIds(prev => ({
         ...prev,
-        left: prev.left || "example-debug-note"
+        left: prev.left || 'example-debug-note',
       }));
     }
   }, [loading, config.debug?.enableExampleNote]);
@@ -113,8 +113,8 @@ export const useNotes = () => {
       const parsedContent = parseTextWithColors(EXAMPLE_NOTE_CONTENT);
 
       const exampleNote: Note = {
-        id: "example-debug-note",
-        title: "Example Note (Debug)",
+        id: 'example-debug-note',
+        title: 'Example Note (Debug)',
         content: parsedContent,
         content_type: 'html',
         is_pinned: false,
@@ -123,13 +123,13 @@ export const useNotes = () => {
         character_count: parsedContent.length,
         content_plaintext: parsedContent.replace(/<[^>]*>/g, ''),
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       setNotes([exampleNote]);
-      setSelectedNoteId("example-debug-note");
+      setSelectedNoteId('example-debug-note');
     } catch (error) {
-      console.error("Failed to load example note:", error);
+      console.error('Failed to load example note:', error);
     }
   };
 
@@ -140,8 +140,8 @@ export const useNotes = () => {
 
     try {
       const updatedExampleNote: Note = {
-        id: "example-debug-note",
-        title: "Example Note (Debug)",
+        id: 'example-debug-note',
+        title: 'Example Note (Debug)',
         content: parseTextWithColors(EXAMPLE_NOTE_CONTENT),
         content_type: 'html',
         is_pinned: false,
@@ -150,37 +150,37 @@ export const useNotes = () => {
         character_count: EXAMPLE_NOTE_CONTENT.length,
         content_plaintext: EXAMPLE_NOTE_CONTENT.replace(/<[^>]*>/g, ''),
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       // Update the existing example note or add it if it doesn't exist
       setNotes(prev => {
-        const otherNotes = prev.filter(note => note.id !== "example-debug-note");
+        const otherNotes = prev.filter(note => note.id !== 'example-debug-note');
         return [updatedExampleNote, ...otherNotes];
       });
 
       // Make sure the example note is selected to see the changes
-      setSelectedNoteId("example-debug-note");
+      setSelectedNoteId('example-debug-note');
 
-      console.log("Example note reloaded successfully");
+      console.log('Example note reloaded successfully');
     } catch (error) {
-      console.error("Failed to reload example note:", error);
+      console.error('Failed to reload example note:', error);
     }
   };
 
   const createNewNote = (targetPane?: PaneId) => {
     const newNote: Note = {
       id: Date.now().toString(),
-      title: "Untitled Note",
-      content: "",
+      title: 'Untitled Note',
+      content: '',
       content_type: 'html',
       is_pinned: false,
       is_archived: false,
       word_count: 0,
       character_count: 0,
-      content_plaintext: "",
+      content_plaintext: '',
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
     setNotes(prev => [newNote, ...prev]);
 
@@ -192,19 +192,15 @@ export const useNotes = () => {
   };
 
   const updateNoteTitle = (noteId: string, title: string) => {
-    setNotes(prev => prev.map(note =>
-      note.id === noteId
-        ? { ...note, title, updated_at: new Date().toISOString() }
-        : note
-    ));
+    setNotes(prev =>
+      prev.map(note => (note.id === noteId ? { ...note, title, updated_at: new Date().toISOString() } : note))
+    );
   };
 
   const updateNoteContent = (noteId: string, content: string) => {
-    setNotes(prev => prev.map(note =>
-      note.id === noteId
-        ? { ...note, content, updated_at: new Date().toISOString() }
-        : note
-    ));
+    setNotes(prev =>
+      prev.map(note => (note.id === noteId ? { ...note, content, updated_at: new Date().toISOString() } : note))
+    );
   };
 
   const getSelectedNoteForPane = (paneId: PaneId) => {
@@ -228,6 +224,6 @@ export const useNotes = () => {
     reloadExampleNote,
     createNewNote,
     updateNoteTitle,
-    updateNoteContent
+    updateNoteContent,
   };
 };

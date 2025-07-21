@@ -23,7 +23,6 @@ export function useTreeActions({
   onMoveNote,
   onItemSelect,
 }: TreeActionsProps) {
-
   const handleDeleteSelected = useCallback(() => {
     if (!selectedItemId) return;
 
@@ -58,49 +57,58 @@ export function useTreeActions({
     treeStateActions.setHoistedFolderId(null);
   }, [treeStateActions]);
 
-  const handleMove = useCallback((args: any) => {
-    const { dragIds, parentId } = args;
-    const dragId = dragIds[0];
+  const handleMove = useCallback(
+    (args: any) => {
+      const { dragIds, parentId } = args;
+      const dragId = dragIds[0];
 
-    const findNode = (nodes: TreeNode[]): TreeNode | null => {
-      for (const node of nodes) {
-        if (node.id === dragId) return node;
-        if (node.children) {
-          const found = findNode(node.children);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-
-    const dragNode = findNode(treeData);
-    if (dragNode && dragNode.type === 'note') {
-      onMoveNote(dragId, parentId);
-    }
-  }, [onMoveNote, treeData]);
-
-  const findParentFolder = useCallback((noteId: string): TreeNode | null => {
-    const findParent = (nodes: TreeNode[]): TreeNode | null => {
-      for (const node of nodes) {
-        if (node.type === 'category' && node.children) {
-          const containsNote = node.children.some(child => child.id === noteId && child.type === 'note');
-          if (containsNote) {
-            return node;
+      const findNode = (nodes: TreeNode[]): TreeNode | null => {
+        for (const node of nodes) {
+          if (node.id === dragId) return node;
+          if (node.children) {
+            const found = findNode(node.children);
+            if (found) return found;
           }
-          const found = findParent(node.children);
-          if (found) return found;
         }
+        return null;
+      };
+
+      const dragNode = findNode(treeData);
+      if (dragNode && dragNode.type === 'note') {
+        onMoveNote(dragId, parentId);
       }
-      return null;
-    };
+    },
+    [onMoveNote, treeData]
+  );
 
-    return findParent(treeData);
-  }, [treeData]);
+  const findParentFolder = useCallback(
+    (noteId: string): TreeNode | null => {
+      const findParent = (nodes: TreeNode[]): TreeNode | null => {
+        for (const node of nodes) {
+          if (node.type === 'category' && node.children) {
+            const containsNote = node.children.some(child => child.id === noteId && child.type === 'note');
+            if (containsNote) {
+              return node;
+            }
+            const found = findParent(node.children);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
 
-  const handleItemSelect = useCallback((id: string, type: 'note' | 'category') => {
-    treeStateActions.setNavigatedItemId(id);
-    onItemSelect?.(id, type);
-  }, [treeStateActions, onItemSelect]);
+      return findParent(treeData);
+    },
+    [treeData]
+  );
+
+  const handleItemSelect = useCallback(
+    (id: string, type: 'note' | 'category') => {
+      treeStateActions.setNavigatedItemId(id);
+      onItemSelect?.(id, type);
+    },
+    [treeStateActions, onItemSelect]
+  );
 
   return {
     handleDeleteSelected,

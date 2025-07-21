@@ -37,14 +37,14 @@ export const createAppConfigSequences = () => {
     {
       keys: ['Mod-k', 'r'],
       action: openAppConfigFolder,
-      description: 'Open App Config folder in file manager'
+      description: 'Open App Config folder in file manager',
     },
     // Add your new sequences here
     {
       keys: ['Mod-k', 'o'],
       action: yourCustomAction,
-      description: 'Your custom action description'
-    }
+      description: 'Your custom action description',
+    },
   ];
 };
 ```
