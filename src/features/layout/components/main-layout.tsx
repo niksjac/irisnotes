@@ -1,13 +1,12 @@
 import React from 'react';
 import { ActivityBar } from '../../activity-bar';
-import { ResizableSidebar } from '../../sidebar';
+import { ResizableSidebar, AppSidebar } from '../../sidebar';
 import { DatabaseStatusView } from '../../editor/components/database-status-view';
 import { useSidebarState, useSidebarActions, useViewState, useViewActions, usePaneActions } from '../hooks';
 import { useEditorActions } from '../../editor';
 import { useLineWrapping } from '../../editor';
 import { useShortcuts } from '../../shortcuts';
 import { useAppPersistence } from '../../../hooks/use-app-persistence';
-import { AppSidebar } from './app-sidebar';
 import { AppMainContent } from './app-main-content';
 
 export const MainLayout: React.FC = () => {

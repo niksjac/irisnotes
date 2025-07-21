@@ -1,1 +1,1 @@
-export { useSidebarFocus } from './use-sidebar-focus';
+// Simplified sidebar - no complex hooks needed

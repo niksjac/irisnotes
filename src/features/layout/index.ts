@@ -14,7 +14,6 @@ export { useEditorLayout } from './hooks/use-editor-layout';
 // Layout components
 export { MainLayout } from './components/main-layout';
 export { AppMainContent } from './components/app-main-content';
-export { AppSidebar } from './components/app-sidebar';
 
 // Types
 export type { PaneId } from './hooks/use-pane-state';

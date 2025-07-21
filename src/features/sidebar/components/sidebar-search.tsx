@@ -1,68 +1,20 @@
-import { useRef, useEffect } from 'react';
-import clsx from 'clsx';
-
 interface SidebarSearchProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   placeholder?: string;
-  // Focus management props
-  focusClasses?: Record<string, boolean>;
-  onRegisterElement?: (ref: HTMLElement | null) => void;
-  onSetFocusFromClick?: () => void;
 }
 
-export function SidebarSearch({
-  searchQuery,
-  onSearchChange,
-  placeholder = 'Search notes...',
-  focusClasses = {},
-  onRegisterElement,
-  onSetFocusFromClick,
-}: SidebarSearchProps) {
-  const searchRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // Register with focus management
-  useEffect(() => {
-    if (onRegisterElement && searchRef.current) {
-      onRegisterElement(searchRef.current);
-    }
-  }, [onRegisterElement]);
-
-  // Focus the input when this component is focused via focus management
-  useEffect(() => {
-    if (focusClasses['focus-current'] && inputRef.current) {
-      // Use a minimal delay to ensure smooth transitions
-      requestAnimationFrame(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
-        }
-      });
-    }
-  }, [focusClasses]);
-
-  const handleClick = () => {
-    if (onSetFocusFromClick) {
-      onSetFocusFromClick();
-    }
-    // Focus management will handle the input focus
-  };
-
+export function SidebarSearch({ searchQuery, onSearchChange, placeholder = 'Search notes...' }: SidebarSearchProps) {
   return (
-    <div
-      ref={searchRef}
-      className={clsx('sidebar-search', 'tree-search', focusClasses)}
-      tabIndex={0}
-      onClick={handleClick}
-    >
+    <div className='w-full'>
       <input
-        ref={inputRef}
         type='text'
         placeholder={placeholder}
         value={searchQuery}
         onChange={e => onSearchChange(e.target.value)}
-        onClick={e => e.stopPropagation()}
-        className='tree-search-input'
+        className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md
+                   bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
       />
     </div>
   );
