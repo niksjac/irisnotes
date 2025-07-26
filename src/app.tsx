@@ -1,5 +1,5 @@
 import { Provider } from 'jotai';
-import { MainLayout } from './features/layout';
+import { Layout } from '@/layout';
 
 // Import Tailwind first as base
 import './styles/tailwind.css';
@@ -9,11 +9,11 @@ import './styles/theme.css';
 
 // Main App component with Jotai Provider
 function App() {
-  return (
-    <Provider>
-      <MainLayout />
-    </Provider>
-  );
+	return (
+		<Provider>
+			<Layout />
+		</Provider>
+	);
 }
 
 export default App;
