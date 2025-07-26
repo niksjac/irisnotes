@@ -1,61 +1,68 @@
 import React, { useState } from 'react';
 import {
-  useNotesData,
-  useNotesSelection,
-  useNotesActions,
-  useNotesNavigation,
+  // useNotesData,
+  // useNotesSelection,
+  // useNotesActions,
+  // useNotesNavigation,
   useNotesInitialization,
-  useCategoryManagement,
+  // useCategoryManagement,
   useNotesStorage,
+  // useNotesTreeView,
 } from '../../notes/hooks';
-import { SimpleNotesTree } from '../../notes-tree-view/components/simple-notes-tree';
+// import { ArboristNotesTree } from '../../notes-tree-view/components/arborist-notes-tree';
 import { SidebarSearch } from './sidebar-search';
 
-export const AppSidebar: React.FC = () => {
+export const Sidebar: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Basic notes data and actions
-  const { notes } = useNotesData();
-  const { selectedNoteId } = useNotesSelection();
-  const { storageManager, isInitialized } = useNotesStorage();
-  const { openNoteInPane, setSelectedNoteId } = useNotesNavigation();
-  const { createNewNote, updateNoteTitle } = useNotesActions();
+  // const { notes } = useNotesData();
+  // const { selectedNoteId } = useNotesSelection();
+  // const { storageManager, isInitialized } = useNotesStorage();
+  const { isInitialized } = useNotesStorage();
+  // const { openNoteInPane, setSelectedNoteId } = useNotesNavigation();
+  // const { createNewNote, updateNoteTitle } = useNotesActions();
 
   // Initialize notes
   useNotesInitialization();
 
   // Category management
-  const { categories, handleCreateFolder, handleDeleteCategory, handleRenameCategory } = useCategoryManagement({
-    storageManager,
-    isLoading: !isInitialized,
-    notesLength: notes.length,
-  });
+  // const { categories, handleCreateFolder, handleDeleteCategory, handleRenameCategory } = useCategoryManagement({
+  //   storageManager,
+  //   isLoading: !isInitialized,
+  //   notesLength: notes.length,
+  // });
 
-  // Basic handlers
-  const handleNoteSelect = (noteId: string) => {
-    setSelectedNoteId(noteId);
-    openNoteInPane(noteId, 'left');
-  };
+  // // Basic handlers
+  // const handleNoteSelect = (noteId: string) => {
+  //   setSelectedNoteId(noteId);
+  //   openNoteInPane(noteId, 'left');
+  // };
 
-  const handleCreateNote = () => {
-    createNewNote();
-  };
+  // const handleCreateNote = () => {
+  //   createNewNote();
+  // };
 
-  const handleDeleteNote = (noteId: string) => {
-    if (window.confirm('Are you sure you want to delete this note?')) {
-      // Simple implementation - we'd need to add this to notes actions
-      console.log('Delete note:', noteId);
-    }
-  };
+  // const handleDeleteNote = (noteId: string) => {
+  //   if (window.confirm('Are you sure you want to delete this note?')) {
+  //     // Simple implementation - we'd need to add this to notes actions
+  //     console.log('Delete note:', noteId);
+  //   }
+  // };
 
-  const handleRenameNote = (noteId: string, newTitle: string) => {
-    updateNoteTitle(noteId, newTitle);
-  };
+  // const handleRenameNote = (noteId: string, newTitle: string) => {
+  //   updateNoteTitle(noteId, newTitle);
+  // };
+
+  // const handleMoveNote = (noteId: string, newCategoryId: string | null) => {
+  //   // Handle moving notes between categories
+  //   console.log('Move note:', noteId, 'to category:', newCategoryId);
+  // };
 
   // Filter notes based on search
-  const filteredNotes = searchQuery
-    ? notes.filter(note => note.title.toLowerCase().includes(searchQuery.toLowerCase()))
-    : notes;
+  // const filteredNotes = searchQuery
+  //   ? notes.filter(note => note.title.toLowerCase().includes(searchQuery.toLowerCase()))
+  //   : notes;
 
   if (!isInitialized) {
     return (
@@ -69,15 +76,15 @@ export const AppSidebar: React.FC = () => {
   }
 
   return (
-    <div className='flex flex-col h-full bg-white dark:bg-gray-900'>
+    <div className='flex flex-col h-full bg-white dark:bg-gray-900 __1'>
       {/* Search */}
-      <div className='p-4 border-b border-gray-200 dark:border-gray-700'>
+      <div className='p-4 border-b border-gray-200 dark:border-gray-700 __2'>
         <SidebarSearch searchQuery={searchQuery} onSearchChange={setSearchQuery} placeholder='Search notes...' />
       </div>
 
-      {/* Simplified Tree */}
-      <div className='flex-1 overflow-hidden'>
-        <SimpleNotesTree
+      {/* Responsive Tree Container - flex-grow for responsive height */}
+      <div className='flex-1 min-h-0 select-none __3'>
+        {/* <ArboristNotesTree
           notes={filteredNotes}
           categories={categories}
           selectedNoteId={selectedNoteId}
@@ -88,8 +95,9 @@ export const AppSidebar: React.FC = () => {
           onDeleteCategory={handleDeleteCategory}
           onRenameNote={handleRenameNote}
           onRenameCategory={handleRenameCategory}
+          onMoveNote={handleMoveNote}
           searchQuery={searchQuery}
-        />
+        /> */}
       </div>
     </div>
   );

@@ -1,11 +1,11 @@
 import React from 'react';
 import { ActivityBar } from '../../activity-bar';
-import { ResizableSidebar, AppSidebar } from '../../sidebar';
+import { ResizableSidebar, Sidebar } from '../../sidebar';
 import { DatabaseStatusView } from '../../editor/components/database-status-view';
 import { useSidebarState, useSidebarActions, useViewState, useViewActions, usePaneActions } from '../hooks';
 import { useEditorActions } from '../../editor';
 import { useLineWrapping } from '../../editor';
-import { useShortcuts } from '../../shortcuts';
+import { useUnifiedShortcuts } from '../../hotkeys/hooks/use-unified-shortcuts';
 import { useAppPersistence } from '../../../hooks/use-app-persistence';
 import { AppMainContent } from './app-main-content';
 
@@ -21,8 +21,8 @@ export const MainLayout: React.FC = () => {
   // Handle app persistence on shutdown
   useAppPersistence();
 
-  // Wire up global shortcuts
-  useShortcuts({
+  // Wire up global shortcuts using the new unified system
+  useUnifiedShortcuts({
     onToggleSidebar: toggleSidebar,
     onToggleActivityBar: toggleActivityBar,
     onToggleDualPane: toggleDualPaneMode,
@@ -42,11 +42,12 @@ export const MainLayout: React.FC = () => {
           <ResizableSidebar
             isCollapsed={sidebarCollapsed}
             onCollapsedChange={handleSidebarCollapsedChange}
-            // minWidth={200}
-            // maxWidth={600}
-            // defaultWidth={300}
+            minWidth={200}
+            maxWidth={600}
+            defaultWidth={300}
+            autoCollapseOnResize={false}
           >
-            <AppSidebar />
+            <Sidebar />
           </ResizableSidebar>
 
           {/* Main Content Area */}
