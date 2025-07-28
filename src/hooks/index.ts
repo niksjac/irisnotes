@@ -10,9 +10,8 @@ export { useSidebarActions } from './use-sidebar-actions';
 export { usePaneActions } from './use-pane-actions';
 export { useViewActions } from './use-view-actions';
 export { useEditorLayout } from './use-editor-layout';
-export { useAppRouting } from './use-app-routing';
+export { useContentState } from './use-content-state';
 
 // Types
 export type { PaneId } from './use-pane-state';
 export type { FocusableElement } from './use-focus-management';
-export type { AppRoute } from './use-app-routing';

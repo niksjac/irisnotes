@@ -1,115 +1,27 @@
 import React from 'react';
-import { Router } from './router';
+import { ConfigView } from './features/editor/components/config-view';
+import { HotkeysView } from './features/editor/components/hotkeys-view';
 import {
-	useNotesData,
-	useNotesActions,
-	useNotesNavigation,
-	useNotesInitialization,
-	useCategoryManagement,
-	useAppHandlers,
-	useNotesStorage,
-} from './features/notes/hooks';
-import { usePaneState, usePaneActions } from './hooks';
-import { useEditorLayout } from './hooks';
-
-const noop = () => {};
-const emptyObj = {};
+	FolderContent,
+	DualPaneContent,
+	SinglePaneContent,
+} from './features/editor';
+import { useContentState } from './hooks';
 
 export const Content: React.FC = () => {
-	const { isDualPaneMode, activePaneId } = usePaneState();
-	const { setActivePane } = usePaneActions();
-	const { toolbarVisible } = useEditorLayout();
-
-	const { notes } = useNotesData();
-	const { createNewNote, updateNoteTitle, updateNoteContent } =
-		useNotesActions();
 	const {
-		getSelectedNote,
-		getNotesForPane,
-		openNoteInPane,
-		setSelectedNoteId,
-	} = useNotesNavigation();
-	const { storageManager, isInitialized } = useNotesStorage();
-
-	useNotesInitialization();
-
-	const selectedNote = getSelectedNote();
-	const notesForPane = getNotesForPane();
-
-	const { categories, noteCategories, handleCreateFolder } =
-		useCategoryManagement({
-			storageManager,
-			isLoading: !isInitialized,
-			notesLength: notes.length,
-		});
-
-	const [selectedFolderId, setSelectedFolderId] = React.useState<string | null>(
-		null
-	);
-
-	const selectedFolder = React.useMemo(() => {
-		return selectedFolderId
-			? categories.find((cat: any) => cat.id === selectedFolderId) || null
-			: null;
-	}, [selectedFolderId, categories]);
-
-	const { handleNoteClick, handleCreateNote } = useAppHandlers({
-		storageManager,
+		configViewActive,
+		hotkeysViewActive,
+		selectedFolder,
 		isDualPaneMode,
-		activePaneId,
-		openNoteInPane,
-		setSelectedNoteId,
-		updateNoteTitle,
-		updateNoteContent,
-		createNewNote,
-		loadAllNotes: () => Promise.resolve(),
-		loadNoteCategories: () => Promise.resolve([]),
-		focusElement: noop,
-	});
+		folderProps,
+		dualPaneProps,
+		singlePaneProps,
+	} = useContentState();
 
-	const handleFolderSelect = (folderId: string) => {
-		setSelectedFolderId(folderId);
-		setSelectedNoteId(null);
-	};
-
-	return (
-		<Router
-			selectedFolderId={selectedFolderId}
-			dualPaneProps={{
-				leftNote: notesForPane.left,
-				rightNote: notesForPane.right,
-				activePaneId,
-				onNoteContentChange: updateNoteContent,
-				onNoteTitleChange: updateNoteTitle,
-				onPaneClick: setActivePane,
-				toolbarVisible,
-			}}
-			singlePaneProps={{
-				selectedNote,
-				onTitleChange: updateNoteTitle,
-				onContentChange: updateNoteContent,
-				onCreateNote: handleCreateNote,
-				onCreateFolder: () => handleCreateFolder(),
-				onFocusSearch: noop,
-				toolbarVisible,
-				focusClasses: emptyObj,
-				onRegisterElement: noop,
-				onSetFocusFromClick: noop,
-			}}
-			folderProps={
-				selectedFolder
-					? {
-							selectedFolder,
-							notes,
-							categories,
-							noteCategories,
-							onNoteSelect: handleNoteClick,
-							onFolderSelect: handleFolderSelect,
-							onCreateNote: handleCreateNote,
-							onCreateFolder: () => handleCreateFolder(),
-						}
-					: undefined
-			}
-		/>
-	);
+	if (configViewActive) return <ConfigView />;
+	if (hotkeysViewActive) return <HotkeysView />;
+	if (selectedFolder) return <FolderContent {...folderProps} />;
+	if (isDualPaneMode) return <DualPaneContent {...dualPaneProps} />;
+	return <SinglePaneContent {...singlePaneProps} />;
 };
