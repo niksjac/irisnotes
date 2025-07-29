@@ -1,3 +1,7 @@
+// Components
+export { Folder } from './components/folder';
+
+// Hooks
 export { useNotes } from './hooks/use-notes';
 export { useSingleStorageNotes } from './hooks/use-single-storage-notes';
 export { useMultiStorageNotes } from './hooks/use-multi-storage-notes';

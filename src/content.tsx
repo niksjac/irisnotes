@@ -1,7 +1,8 @@
 import React from 'react';
 import { ConfigView } from './features/editor/components/config-view';
 import { HotkeysView } from './features/editor/components/hotkeys-view';
-import { Folder, DualPaneContent, SinglePaneContent } from './features/editor';
+import { Folder } from './features/notes';
+import { DualPaneContent, SinglePaneContent } from './features/editor';
 import { useContentState } from './hooks';
 import type { ViewType } from '@/atoms';
 
