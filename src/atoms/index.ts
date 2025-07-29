@@ -1,7 +1,15 @@
 import { atom } from 'jotai';
 
 // Types
-export type ViewType = 'config-view' | 'hotkeys-view' | 'folder-view' | 'dual-pane-view' | 'single-pane-view';
+export type ViewType =
+	| 'config-view'
+	| 'hotkeys-view'
+	| 'folder-view'
+	| 'editor-rich-view'
+	| 'editor-source-view'
+	| 'welcome-view';
+
+export type PaneId = 'left' | 'right';
 
 // Selection state atoms
 export const selectedItemAtom = atom<{
@@ -26,8 +34,12 @@ export const configViewActiveAtom = atom<boolean>(false);
 export const hotkeysViewActiveAtom = atom<boolean>(false);
 export const databaseStatusVisibleAtom = atom<boolean>(false);
 export const isDualPaneModeAtom = atom<boolean>(false);
-export const activePaneIdAtom = atom<any>(null);
+export const activePaneIdAtom = atom<PaneId | null>(null);
 export const toolbarVisibleAtom = atom<boolean>(true);
+
+// Pane-specific view atoms
+export const leftPaneViewAtom = atom<ViewType | null>(null);
+export const rightPaneViewAtom = atom<ViewType | null>(null);
 
 // Editor atoms
 export const isWrappingAtom = atom<boolean>(false);
@@ -58,16 +70,41 @@ export const notesForPaneAtom = atom<{
 	right: null,
 });
 
-// Current view state derived atom
-export const currentViewAtom = atom<ViewType>(get => {
+// Helper function to determine view based on current state
+const getDefaultView = (get: any): ViewType => {
 	const configViewActive = get(configViewActiveAtom);
 	const hotkeysViewActive = get(hotkeysViewActiveAtom);
 	const selectedFolder = get(selectedFolderAtom);
-	const isDualPaneMode = get(isDualPaneModeAtom);
+	const selectedNote = get(selectedNoteAtom);
+	const notes = get(notesAtom);
+	const categories = get(categoriesAtom);
 
 	if (configViewActive) return 'config-view';
 	if (hotkeysViewActive) return 'hotkeys-view';
 	if (selectedFolder) return 'folder-view';
-	if (isDualPaneMode) return 'dual-pane-view';
-	return 'single-pane-view';
+	if (selectedNote) {
+		// Default to rich editor view when a note is selected
+		// TODO: Add logic to determine between rich/source based on user preference
+		return 'editor-rich-view';
+	}
+
+	// Show welcome view if no notes or categories exist
+	if (notes.length === 0 && categories.length === 0) return 'welcome-view';
+
+	// Default fallback
+	return 'welcome-view';
+};
+
+// Current view state derived atom (for single-pane mode or when no pane specified)
+export const currentViewAtom = atom<ViewType>(get => getDefaultView(get));
+
+// Pane-specific view atoms with fallback to default logic
+export const leftPaneCurrentViewAtom = atom<ViewType>(get => {
+	const leftPaneView = get(leftPaneViewAtom);
+	return leftPaneView || getDefaultView(get);
+});
+
+export const rightPaneCurrentViewAtom = atom<ViewType>(get => {
+	const rightPaneView = get(rightPaneViewAtom);
+	return rightPaneView || getDefaultView(get);
 });

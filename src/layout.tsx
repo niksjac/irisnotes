@@ -5,6 +5,7 @@ import { ResizableSidebar, Sidebar } from '@/features/sidebar';
 import {
 	useSidebarState,
 	useSidebarActions,
+	usePaneState,
 	// useViewState,
 	// useViewActions,
 	// usePaneActions,
@@ -12,12 +13,13 @@ import {
 // import { useEditorActions } from '../../editor';
 // import { useLineWrapping } from '../../editor';
 // import { useUnifiedShortcuts } from '../../hotkeys/hooks/use-unified-shortcuts';
-import { useAppPersistence } from '@//hooks/use-app-persistence';
+import { useAppPersistence } from '@/hooks/use-app-persistence';
 import { Content } from './content';
 
 export const Layout: React.FC = () => {
 	const { sidebarCollapsed } = useSidebarState();
 	const { handleSidebarCollapsedChange, toggleSidebar } = useSidebarActions();
+	const { isDualPaneMode } = usePaneState();
 	// const { databaseStatusVisible } = useViewState();
 	// const { toggleActivityBar } = useViewActions();
 	// const { toggleDualPaneMode } = usePaneActions();
@@ -55,7 +57,22 @@ export const Layout: React.FC = () => {
 
 					{/* Main Content Area */}
 					<div className='flex-1 flex flex-col overflow-hidden __4'>
-						<Content />
+						{isDualPaneMode ? (
+							/* Dual Pane Mode */
+							<div className='flex h-full'>
+								{/* Left Pane */}
+								<div className='flex-1 border-r border-gray-300 dark:border-gray-600'>
+									<Content paneId='left' />
+								</div>
+								{/* Right Pane */}
+								<div className='flex-1'>
+									<Content paneId='right' />
+								</div>
+							</div>
+						) : (
+							/* Single Pane Mode */
+							<Content />
+						)}
 					</div>
 				</div>
 			</div>

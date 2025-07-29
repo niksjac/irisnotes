@@ -1,20 +1,29 @@
 import React from 'react';
-import { ConfigView } from './features/editor/components/config-view';
-import { HotkeysView } from './features/editor/components/hotkeys-view';
-import { Folder } from './features/notes';
-import { DualPaneContent, SinglePaneContent } from './features/editor';
+import { ConfigView, HotkeysView, FolderView, EditorRichView, EditorSourceView, WelcomeView } from './views';
 import { useContentState } from './hooks';
-import type { ViewType } from '@/atoms';
+import { useAtomValue } from 'jotai';
+import { currentViewAtom, leftPaneCurrentViewAtom, rightPaneCurrentViewAtom } from '@/atoms';
+import type { ViewType, PaneId } from '@/atoms';
 
-export const Content: React.FC = () => {
-	const { currentView, folderProps, dualPaneProps, singlePaneProps } = useContentState();
+interface ContentProps {
+	paneId?: PaneId;
+}
+
+export const Content: React.FC<ContentProps> = ({ paneId }) => {
+	// Select the appropriate view atom based on pane
+	const viewAtom =
+		paneId === 'left' ? leftPaneCurrentViewAtom : paneId === 'right' ? rightPaneCurrentViewAtom : currentViewAtom;
+
+	const currentView = useAtomValue(viewAtom);
+	const { folderProps, editorProps, welcomeProps } = useContentState(paneId);
 
 	const viewMapping: Record<ViewType, React.ReactElement> = {
 		'config-view': <ConfigView />,
 		'hotkeys-view': <HotkeysView />,
-		'folder-view': <Folder {...folderProps} />,
-		'dual-pane-view': <DualPaneContent {...dualPaneProps} />,
-		'single-pane-view': <SinglePaneContent {...singlePaneProps} />,
+		'folder-view': <FolderView {...folderProps} />,
+		'editor-rich-view': <EditorRichView {...editorProps} />,
+		'editor-source-view': <EditorSourceView {...editorProps} />,
+		'welcome-view': <WelcomeView {...welcomeProps} />,
 	};
 
 	return viewMapping[currentView];

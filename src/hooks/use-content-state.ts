@@ -8,26 +8,22 @@ import {
 	useAppHandlers,
 	useNotesStorage,
 } from '../features/notes/hooks';
-import { usePaneState, usePaneActions, useViewState } from './index';
 import { useEditorLayout } from './use-editor-layout';
 import { useAtomValue } from 'jotai';
-import { currentViewAtom } from '@/atoms';
+import { selectedNoteAtom, notesForPaneAtom } from '@/atoms';
+import type { PaneId } from '@/atoms';
 
-export function useContentState() {
-	const { isDualPaneMode, activePaneId } = usePaneState();
-	const { setActivePane } = usePaneActions();
-	const { configViewActive, hotkeysViewActive } = useViewState();
+export function useContentState(paneId?: PaneId) {
 	const { toolbarVisible } = useEditorLayout();
-	const currentView = useAtomValue(currentViewAtom);
+	const selectedNote = useAtomValue(selectedNoteAtom);
+	const notesForPane = useAtomValue(notesForPaneAtom);
 
 	const { notes } = useNotesData();
 	const { createNewNote, updateNoteTitle, updateNoteContent } = useNotesActions();
-	const { getNotesForPane, openNoteInPane, setSelectedNoteId } = useNotesNavigation();
+	const { setSelectedNoteId } = useNotesNavigation();
 	const { storageManager, isInitialized } = useNotesStorage();
 
 	useNotesInitialization();
-
-	const notesForPane = getNotesForPane();
 
 	const { categories, noteCategories, handleCreateFolder } = useCategoryManagement({
 		storageManager,
@@ -41,9 +37,9 @@ export function useContentState() {
 
 	const { handleNoteClick, handleCreateNote } = useAppHandlers({
 		storageManager,
-		isDualPaneMode,
-		activePaneId,
-		openNoteInPane,
+		isDualPaneMode: !!paneId, // If paneId is provided, we're in dual pane mode
+		activePaneId: paneId || 'left',
+		openNoteInPane: () => {}, // Simplified
 		setSelectedNoteId,
 		updateNoteTitle,
 		updateNoteContent,
@@ -57,14 +53,10 @@ export function useContentState() {
 		setSelectedNoteId(null);
 	};
 
-	return {
-		// View state
-		currentView,
-		configViewActive,
-		hotkeysViewActive,
-		isDualPaneMode,
-		selectedFolder,
+	// Get the appropriate note based on pane
+	const currentNote = paneId ? (paneId === 'left' ? notesForPane.left : notesForPane.right) : selectedNote;
 
+	return {
 		// Props for components
 		folderProps: {
 			selectedFolder: selectedFolder!,
@@ -76,27 +68,15 @@ export function useContentState() {
 			onCreateNote: handleCreateNote,
 			onCreateFolder: () => handleCreateFolder(),
 		},
-		dualPaneProps: {
-			leftNote: notesForPane.left,
-			rightNote: notesForPane.right,
-			activePaneId,
+		editorProps: {
+			note: currentNote,
 			onNoteContentChange: updateNoteContent,
 			onNoteTitleChange: updateNoteTitle,
-			onPaneClick: setActivePane,
 			toolbarVisible,
 		},
-		singlePaneProps: {
-			treeProps: {
-				tree: [],
-				selectedNodeId: null,
-				onNodeSelect: () => {},
-				onNoteSelect: handleNoteClick,
-				onFolderSelect: handleFolderSelect,
-				onTitleChange: updateNoteTitle,
-				onCreateNote: handleCreateNote,
-				onDeleteNote: () => {},
-				onRenameNote: () => {},
-			},
+		welcomeProps: {
+			onCreateNote: () => handleCreateNote(),
+			onCreateFolder: () => handleCreateFolder(),
 		},
 	};
 }

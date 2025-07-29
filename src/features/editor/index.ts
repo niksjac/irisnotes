@@ -5,11 +5,6 @@ export { DualPaneEditor } from './components/dual-pane-editor';
 
 export { EditorWrapper } from './components/editor-wrapper';
 export { WelcomeScreen } from './components/welcome-screen';
-export { HotkeysView } from './components/hotkeys-view';
-
-// Layout components
-export { DualPaneContent } from './components/dual-pane-content';
-export { SinglePaneContent } from './components/single-pane-content';
 
 // Hooks
 export { useFontSize } from './hooks/use-font-size';
