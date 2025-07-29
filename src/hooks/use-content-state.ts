@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState } from 'react';
 import {
 	useNotesData,
 	useNotesActions,
@@ -10,48 +10,34 @@ import {
 } from '../features/notes/hooks';
 import { usePaneState, usePaneActions, useViewState } from './index';
 import { useEditorLayout } from './use-editor-layout';
-
-const noop = () => {};
-const emptyObj = {};
+import { useAtomValue } from 'jotai';
+import { currentViewAtom } from '@/atoms';
 
 export function useContentState() {
 	const { isDualPaneMode, activePaneId } = usePaneState();
 	const { setActivePane } = usePaneActions();
 	const { configViewActive, hotkeysViewActive } = useViewState();
 	const { toolbarVisible } = useEditorLayout();
+	const currentView = useAtomValue(currentViewAtom);
 
 	const { notes } = useNotesData();
-	const { createNewNote, updateNoteTitle, updateNoteContent } =
-		useNotesActions();
-	const {
-		getSelectedNote,
-		getNotesForPane,
-		openNoteInPane,
-		setSelectedNoteId,
-	} = useNotesNavigation();
+	const { createNewNote, updateNoteTitle, updateNoteContent } = useNotesActions();
+	const { getNotesForPane, openNoteInPane, setSelectedNoteId } = useNotesNavigation();
 	const { storageManager, isInitialized } = useNotesStorage();
 
 	useNotesInitialization();
 
-	const selectedNote = getSelectedNote();
 	const notesForPane = getNotesForPane();
 
-	const { categories, noteCategories, handleCreateFolder } =
-		useCategoryManagement({
-			storageManager,
-			isLoading: !isInitialized,
-			notesLength: notes.length,
-		});
+	const { categories, noteCategories, handleCreateFolder } = useCategoryManagement({
+		storageManager,
+		isLoading: !isInitialized,
+		notesLength: notes.length,
+	});
 
-	const [selectedFolderId, setSelectedFolderId] = React.useState<string | null>(
-		null
-	);
+	const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
 
-	const selectedFolder = React.useMemo(() => {
-		return selectedFolderId
-			? categories.find((cat: any) => cat.id === selectedFolderId) || null
-			: null;
-	}, [selectedFolderId, categories]);
+	const selectedFolder = selectedFolderId ? categories.find((cat: any) => cat.id === selectedFolderId) || null : null;
 
 	const { handleNoteClick, handleCreateNote } = useAppHandlers({
 		storageManager,
@@ -64,7 +50,6 @@ export function useContentState() {
 		createNewNote,
 		loadAllNotes: () => Promise.resolve(),
 		loadNoteCategories: () => Promise.resolve([]),
-		focusElement: noop,
 	});
 
 	const handleFolderSelect = (folderId: string) => {
@@ -74,6 +59,7 @@ export function useContentState() {
 
 	return {
 		// View state
+		currentView,
 		configViewActive,
 		hotkeysViewActive,
 		isDualPaneMode,
@@ -100,16 +86,17 @@ export function useContentState() {
 			toolbarVisible,
 		},
 		singlePaneProps: {
-			selectedNote,
-			onTitleChange: updateNoteTitle,
-			onContentChange: updateNoteContent,
-			onCreateNote: handleCreateNote,
-			onCreateFolder: () => handleCreateFolder(),
-			onFocusSearch: noop,
-			toolbarVisible,
-			focusClasses: emptyObj,
-			onRegisterElement: noop,
-			onSetFocusFromClick: noop,
+			treeProps: {
+				tree: [],
+				selectedNodeId: null,
+				onNodeSelect: () => {},
+				onNoteSelect: handleNoteClick,
+				onFolderSelect: handleFolderSelect,
+				onTitleChange: updateNoteTitle,
+				onCreateNote: handleCreateNote,
+				onDeleteNote: () => {},
+				onRenameNote: () => {},
+			},
 		},
 	};
 }

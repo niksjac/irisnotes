@@ -1,3 +1,5 @@
-export * from './components/notes-tree-view';
-export { SimpleNotesTree } from './components/simple-notes-tree';
-export { ArboristNotesTree } from './components/arborist-notes-tree';
+export { NotesTreeView } from './components/notes-tree-view';
+export { TreeHeader } from './components/tree-header';
+export { TreeContainer } from './components/tree-container';
+
+export type { NotesTreeViewProps, TreeNode } from './types';

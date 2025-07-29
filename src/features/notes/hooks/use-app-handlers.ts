@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import type { SingleStorageManager } from '../storage/types';
 import type { PaneId } from './use-single-storage-notes';
-import type { FocusableElement } from '@/hooks/use-focus-management';
 
 interface UseAppHandlersProps {
 	storageManager: SingleStorageManager | null;
@@ -14,11 +13,6 @@ interface UseAppHandlersProps {
 	createNewNote: () => Promise<{ success: boolean; data?: any }>;
 	loadAllNotes: () => Promise<void>;
 	loadNoteCategories: () => Promise<any[]>;
-	focusElement: (
-		element: FocusableElement,
-		byTab?: boolean,
-		autoShow?: boolean
-	) => void;
 }
 
 export function useAppHandlers({
@@ -32,7 +26,6 @@ export function useAppHandlers({
 	createNewNote,
 	loadAllNotes,
 	loadNoteCategories,
-	focusElement,
 }: UseAppHandlersProps) {
 	const handleNoteClick = useCallback(
 		(noteId: string) => {
@@ -41,17 +34,8 @@ export function useAppHandlers({
 			} else {
 				setSelectedNoteId(noteId);
 			}
-
-			// Focus the editor after note selection for keyboard interaction
-			focusElement('editor');
 		},
-		[
-			isDualPaneMode,
-			openNoteInPane,
-			activePaneId,
-			setSelectedNoteId,
-			focusElement,
-		]
+		[isDualPaneMode, openNoteInPane, activePaneId, setSelectedNoteId]
 	);
 
 	const handleItemSelect = useCallback(

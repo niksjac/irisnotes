@@ -1,1 +1,1 @@
-export { useActivityBarFocus } from './use-activity-bar-focus';
+// Activity bar hooks will be added here as needed

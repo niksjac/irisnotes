@@ -1,12 +1,15 @@
 import { atom } from 'jotai';
 
+// Types
+export type ViewType = 'config-view' | 'hotkeys-view' | 'folder-view' | 'dual-pane-view' | 'single-pane-view';
+
 // Selection state atoms
 export const selectedItemAtom = atom<{
-  id: string | null;
-  type: 'note' | 'category' | null;
+	id: string | null;
+	type: 'note' | 'category' | null;
 }>({
-  id: null,
-  type: null,
+	id: null,
+	type: null,
 });
 
 export const selectedNoteIdAtom = atom<string | null>(null);
@@ -30,44 +33,41 @@ export const toolbarVisibleAtom = atom<boolean>(true);
 export const isWrappingAtom = atom<boolean>(false);
 export const fontSizeAtom = atom<number>(14);
 
-// Focus management atom with default methods
-export const focusManagementAtom = atom<any>({
-  currentFocus: 'editor',
-  isTabNavigating: false,
-  registerElement: () => {},
-  focusElement: () => {},
-  setFocusFromClick: () => {},
-  navigateTab: () => {},
-  isFocused: () => false,
-  getFocusClasses: () => ({
-    'focus-managed': true,
-    'focus-current': false,
-    'focus-tab-navigating': false,
-  }),
-  isElementVisible: () => true,
-});
-
 // Derived atoms
 export const selectedNoteAtom = atom(get => {
-  const notes = get(notesAtom);
-  const selectedNoteId = get(selectedNoteIdAtom);
-  return notes.find(note => note.id === selectedNoteId) || null;
+	const notes = get(notesAtom);
+	const selectedNoteId = get(selectedNoteIdAtom);
+	return notes.find(note => note.id === selectedNoteId) || null;
 });
 
 export const selectedFolderAtom = atom(get => {
-  const selectedItem = get(selectedItemAtom);
-  const categories = get(categoriesAtom);
+	const selectedItem = get(selectedItemAtom);
+	const categories = get(categoriesAtom);
 
-  if (selectedItem.type === 'category' && selectedItem.id) {
-    return categories.find(cat => cat.id === selectedItem.id) || null;
-  }
-  return null;
+	if (selectedItem.type === 'category' && selectedItem.id) {
+		return categories.find(cat => cat.id === selectedItem.id) || null;
+	}
+	return null;
 });
 
 export const notesForPaneAtom = atom<{
-  left: any;
-  right: any;
+	left: any;
+	right: any;
 }>({
-  left: null,
-  right: null,
+	left: null,
+	right: null,
+});
+
+// Current view state derived atom
+export const currentViewAtom = atom<ViewType>(get => {
+	const configViewActive = get(configViewActiveAtom);
+	const hotkeysViewActive = get(hotkeysViewActiveAtom);
+	const selectedFolder = get(selectedFolderAtom);
+	const isDualPaneMode = get(isDualPaneModeAtom);
+
+	if (configViewActive) return 'config-view';
+	if (hotkeysViewActive) return 'hotkeys-view';
+	if (selectedFolder) return 'folder-view';
+	if (isDualPaneMode) return 'dual-pane-view';
+	return 'single-pane-view';
 });
