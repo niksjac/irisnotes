@@ -1,11 +1,33 @@
 import { FileText, FolderPlus, BookOpen } from 'lucide-react';
+import { useNotesActions, useNotesStorage, useCategoryManagement } from '@/features/notes/hooks';
+import { useNotesData } from '@/features/notes/hooks';
+import type { PaneId } from '@/atoms';
 
 interface WelcomeViewProps {
-	onCreateNote: () => void;
-	onCreateFolder: () => void;
+	paneId?: PaneId | undefined;
 }
 
-export function WelcomeView({ onCreateNote, onCreateFolder }: WelcomeViewProps) {
+export function WelcomeView({ paneId }: WelcomeViewProps) {
+	// Note: paneId parameter reserved for future dual-pane functionality
+	void paneId;
+
+	const { createNewNote } = useNotesActions();
+	const { storageManager, isInitialized } = useNotesStorage();
+	const { notes } = useNotesData();
+	const { handleCreateFolder } = useCategoryManagement({
+		storageManager,
+		isLoading: !isInitialized,
+		notesLength: notes.length,
+	});
+
+	const handleCreateNote = () => {
+		createNewNote();
+	};
+
+	const handleCreateNewFolder = () => {
+		handleCreateFolder();
+	};
+
 	return (
 		<div className='welcome-view flex flex-col items-center justify-center h-full p-8 bg-gray-50 dark:bg-gray-900'>
 			<div className='text-center max-w-md'>
@@ -22,7 +44,7 @@ export function WelcomeView({ onCreateNote, onCreateFolder }: WelcomeViewProps) 
 
 				<div className='space-y-4'>
 					<button
-						onClick={onCreateNote}
+						onClick={handleCreateNote}
 						className='w-full flex items-center justify-center gap-3 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium'
 					>
 						<FileText size={20} />
@@ -30,7 +52,7 @@ export function WelcomeView({ onCreateNote, onCreateFolder }: WelcomeViewProps) 
 					</button>
 
 					<button
-						onClick={onCreateFolder}
+						onClick={handleCreateNewFolder}
 						className='w-full flex items-center justify-center gap-3 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors font-medium'
 					>
 						<FolderPlus size={20} />

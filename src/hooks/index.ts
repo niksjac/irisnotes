@@ -10,9 +10,6 @@ export { useViewState } from './use-view-state';
 export { useViewActions } from './use-view-actions';
 export { useEditorLayout } from './use-editor-layout';
 
-// Content management
-export { useContentState } from './use-content-state';
-
 // Configuration
 export { useConfig } from './use-config';
 

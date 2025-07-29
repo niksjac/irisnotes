@@ -1,13 +1,29 @@
+import { useAtomValue } from 'jotai';
+import { selectedNoteAtom, notesForPaneAtom } from '@/atoms';
+import { useNotesActions } from '@/features/notes/hooks';
 import { EditorContainer } from '@/features/editor/components/editor-container';
-import type { Note } from '@/types/database';
+import type { PaneId } from '@/atoms';
 
 interface EditorSourceViewProps {
-	note: Note | null;
-	onNoteContentChange: (noteId: string, content: string) => void;
-	onNoteTitleChange: (noteId: string, title: string) => void;
+	paneId?: PaneId | undefined;
 }
 
-export function EditorSourceView({ note, onNoteContentChange, onNoteTitleChange }: EditorSourceViewProps) {
+export function EditorSourceView({ paneId }: EditorSourceViewProps) {
+	const selectedNote = useAtomValue(selectedNoteAtom);
+	const notesForPane = useAtomValue(notesForPaneAtom);
+	const { updateNoteContent, updateNoteTitle } = useNotesActions();
+
+	// Get the appropriate note based on pane
+	const note = paneId ? (paneId === 'left' ? notesForPane.left : notesForPane.right) : selectedNote;
+
+	const handleNoteContentChange = (noteId: string, content: string) => {
+		updateNoteContent(noteId, content);
+	};
+
+	const handleNoteTitleChange = (noteId: string, title: string) => {
+		updateNoteTitle(noteId, title);
+	};
+
 	if (!note) {
 		return (
 			<div className='flex items-center justify-center h-full text-gray-500 dark:text-gray-400 italic'>
@@ -24,7 +40,7 @@ export function EditorSourceView({ note, onNoteContentChange, onNoteTitleChange 
 					className='w-full bg-transparent border-none text-lg font-semibold text-gray-900 dark:text-gray-100 py-2 focus:outline-none focus:border-b-2 focus:border-blue-500'
 					type='text'
 					value={note.title}
-					onChange={e => onNoteTitleChange(note.id, e.target.value)}
+					onChange={e => handleNoteTitleChange(note.id, e.target.value)}
 					placeholder='Untitled Note'
 				/>
 			</div>
@@ -33,7 +49,7 @@ export function EditorSourceView({ note, onNoteContentChange, onNoteTitleChange 
 			<div className='flex-1 overflow-hidden relative'>
 				<EditorContainer
 					content={note.content}
-					onChange={content => onNoteContentChange(note.id, content)}
+					onChange={content => handleNoteContentChange(note.id, content)}
 					placeholder='Start writing your note...'
 					defaultView='source'
 					toolbarVisible={false} // Source view typically doesn't need toolbar
