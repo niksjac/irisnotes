@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { NotesTreeView } from './notes-tree-view';
 import type { NotesTreeViewProps } from '../types';
+import { NotesTreeView } from './notes-tree-view';
 
 const meta: Meta<typeof NotesTreeView> = {
 	title: 'Components/NotesTreeView',

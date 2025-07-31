@@ -11,7 +11,7 @@ let idCounter = 0;
  * @returns A deterministic ID string
  */
 export const generateId = (prefix: string = 'id'): string => {
-  return `${prefix}-${++idCounter}`;
+	return `${prefix}-${++idCounter}`;
 };
 
 /**
@@ -20,23 +20,23 @@ export const generateId = (prefix: string = 'id'): string => {
  * @returns A secure or deterministic ID string
  */
 export const generateSecureId = (): string => {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  // Fallback for older browsers
-  return generateId('secure');
+	if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+		return crypto.randomUUID();
+	}
+	// Fallback for older browsers
+	return generateId('secure');
 };
 
 /**
  * Resets the internal counter (useful for testing)
  */
 export const resetIdCounter = (): void => {
-  idCounter = 0;
+	idCounter = 0;
 };
 
 /**
  * Gets the current counter value (useful for debugging)
  */
 export const getCurrentCounter = (): number => {
-  return idCounter;
+	return idCounter;
 };

@@ -1,5 +1,5 @@
-import { useCallback } from 'react';
 import { useSetAtom } from 'jotai';
+import { useCallback } from 'react';
 import { toolbarVisibleAtom } from '@/atoms';
 import { useConfig } from '@/hooks/use-config';
 

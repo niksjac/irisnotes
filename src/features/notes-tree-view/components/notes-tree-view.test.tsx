@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { NotesTreeView } from './notes-tree-view';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NotesTreeViewProps } from '../types';
+import { NotesTreeView } from './notes-tree-view';
 
 const mockProps: NotesTreeViewProps = {
 	tree: [],

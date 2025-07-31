@@ -1,14 +1,14 @@
+import { FileText, Folder as FolderIcon, FolderOpen, Plus } from 'lucide-react';
 import React, { useState } from 'react';
-import { FileText, Folder as FolderIcon, Plus, FolderOpen } from 'lucide-react';
+import type { PaneId } from '@/atoms';
 import {
-	useNotesData,
+	useAppHandlers,
+	useCategoryManagement,
 	useNotesActions,
+	useNotesData,
 	useNotesNavigation,
 	useNotesStorage,
-	useCategoryManagement,
-	useAppHandlers,
 } from '@/features/notes/hooks';
-import type { PaneId } from '@/atoms';
 
 interface FolderViewProps {
 	paneId?: PaneId | undefined;

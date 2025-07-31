@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { Provider, createStore } from 'jotai';
-import { useSidebarState } from './use-sidebar-state';
+import { act, renderHook } from '@testing-library/react';
+import { createStore, Provider } from 'jotai';
+import { describe, expect, it } from 'vitest';
 import { sidebarCollapsedAtom } from '../atoms';
+import { useSidebarState } from './use-sidebar-state';
 
 describe('useSidebarState', () => {
 	it('provides sidebar collapsed state from atom', () => {

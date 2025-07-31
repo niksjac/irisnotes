@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { Tree } from 'react-arborist';
+import type { TreeState } from '../hooks/use-tree-state';
 import type { TreeNode } from '../types';
 import { TreeNode as TreeNodeComponent } from './tree-node';
-import type { TreeState } from '../hooks/use-tree-state';
 
 interface TreeContainerProps {
 	treeData: TreeNode[];

@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { Provider, createStore } from 'jotai';
-import { useSidebarActions } from './use-sidebar-actions';
+import { act, renderHook } from '@testing-library/react';
+import { createStore, Provider } from 'jotai';
+import { describe, expect, it } from 'vitest';
 import { sidebarCollapsedAtom } from '../atoms';
+import { useSidebarActions } from './use-sidebar-actions';
 
 describe('useSidebarActions', () => {
 	describe('toggleSidebar', () => {
@@ -11,9 +11,7 @@ describe('useSidebarActions', () => {
 			store.set(sidebarCollapsedAtom, true);
 
 			const { result } = renderHook(() => useSidebarActions(), {
-				wrapper: ({ children }) => (
-					<Provider store={store}>{children}</Provider>
-				),
+				wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
 			});
 
 			act(() => {
@@ -30,9 +28,7 @@ describe('useSidebarActions', () => {
 			store.set(sidebarCollapsedAtom, false);
 
 			const { result } = renderHook(() => useSidebarActions(), {
-				wrapper: ({ children }) => (
-					<Provider store={store}>{children}</Provider>
-				),
+				wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
 			});
 
 			act(() => {
@@ -60,18 +56,14 @@ describe('useSidebarActions', () => {
 			store.set(sidebarCollapsedAtom, false);
 
 			const { result } = renderHook(() => useSidebarActions(), {
-				wrapper: ({ children }) => (
-					<Provider store={store}>{children}</Provider>
-				),
+				wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
 			});
 
 			act(() => {
 				result.current.handleSidebarCollapsedChange(true);
 			});
 
-			expect(typeof result.current.handleSidebarCollapsedChange).toBe(
-				'function'
-			);
+			expect(typeof result.current.handleSidebarCollapsedChange).toBe('function');
 		});
 
 		it('sets sidebar collapsed state to false', () => {
@@ -79,18 +71,14 @@ describe('useSidebarActions', () => {
 			store.set(sidebarCollapsedAtom, true);
 
 			const { result } = renderHook(() => useSidebarActions(), {
-				wrapper: ({ children }) => (
-					<Provider store={store}>{children}</Provider>
-				),
+				wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
 			});
 
 			act(() => {
 				result.current.handleSidebarCollapsedChange(false);
 			});
 
-			expect(typeof result.current.handleSidebarCollapsedChange).toBe(
-				'function'
-			);
+			expect(typeof result.current.handleSidebarCollapsedChange).toBe('function');
 		});
 
 		it('provides consistent handler function reference', () => {
@@ -109,9 +97,7 @@ describe('useSidebarActions', () => {
 			const { result } = renderHook(() => useSidebarActions());
 
 			expect(typeof result.current.toggleSidebar).toBe('function');
-			expect(typeof result.current.handleSidebarCollapsedChange).toBe(
-				'function'
-			);
+			expect(typeof result.current.handleSidebarCollapsedChange).toBe('function');
 		});
 	});
 });

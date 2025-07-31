@@ -1,8 +1,8 @@
 import { useAtomValue } from 'jotai';
-import { selectedNoteAtom, notesForPaneAtom } from '@/atoms';
-import { useNotesActions } from '@/features/notes/hooks';
-import { EditorContainer } from '@/features/editor/components/editor-container';
 import type { PaneId } from '@/atoms';
+import { notesForPaneAtom, selectedNoteAtom } from '@/atoms';
+import { EditorContainer } from '@/features/editor/components/editor-container';
+import { useNotesActions } from '@/features/notes/hooks';
 
 interface EditorSourceViewProps {
 	paneId?: PaneId | undefined;

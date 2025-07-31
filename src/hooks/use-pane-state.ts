@@ -1,5 +1,5 @@
 import { useAtom } from 'jotai';
-import { isDualPaneModeAtom, activePaneIdAtom } from '@/atoms';
+import { activePaneIdAtom, isDualPaneModeAtom } from '@/atoms';
 
 export type PaneId = 'left' | 'right';
 

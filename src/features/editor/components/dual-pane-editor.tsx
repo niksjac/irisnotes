@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
-import { EditorContainer } from './editor-container';
-import { Note } from '../../../types';
+import { useCallback, useState } from 'react';
 import type { PaneId } from '@/hooks';
+import type { Note } from '../../../types';
+import { EditorContainer } from './editor-container';
 
 interface DualPaneEditorProps {
 	leftNote: Note | null;
@@ -32,8 +32,7 @@ export function DualPaneEditor({
 			if (!container) return;
 
 			const containerRect = container.getBoundingClientRect();
-			const newWidth =
-				((e.clientX - containerRect.left) / containerRect.width) * 100;
+			const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
 			const clampedWidth = Math.max(20, Math.min(80, newWidth));
 			setLeftPaneWidth(clampedWidth);
 		};

@@ -1,19 +1,17 @@
 // God hooks - for backward compatibility
-export { useNotes } from './use-notes';
-export { useSingleStorageNotes } from './use-single-storage-notes';
-export { useMultiStorageNotes } from './use-multi-storage-notes';
 
-// Focused hooks - new implementation
-export { useNotesData } from './use-notes-data';
-export { useNotesSelection } from './use-notes-selection';
-export { useNotesActions } from './use-notes-actions';
-export { useNotesStorage } from './use-notes-storage';
-export { useNotesNavigation } from './use-notes-navigation';
-export { useNotesInitialization } from './use-notes-initialization';
-
+export { useAppHandlers } from './use-app-handlers';
 // Category management hooks
 export { useCategoryManagement } from './use-category-management';
-export { useAppHandlers } from './use-app-handlers';
-
+export { useMultiStorageNotes } from './use-multi-storage-notes';
+export { useNotes } from './use-notes';
+export { useNotesActions } from './use-notes-actions';
+// Focused hooks - new implementation
+export { useNotesData } from './use-notes-data';
+export { useNotesInitialization } from './use-notes-initialization';
+export { useNotesNavigation } from './use-notes-navigation';
 // Types
 export type { PaneId } from './use-notes-selection';
+export { useNotesSelection } from './use-notes-selection';
+export { useNotesStorage } from './use-notes-storage';
+export { useSingleStorageNotes } from './use-single-storage-notes';

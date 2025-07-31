@@ -1,9 +1,9 @@
 import { useAtomValue } from 'jotai';
-import { selectedNoteAtom, notesForPaneAtom } from '@/atoms';
+import type { PaneId } from '@/atoms';
+import { notesForPaneAtom, selectedNoteAtom } from '@/atoms';
+import { EditorContainer } from '@/features/editor/components/editor-container';
 import { useNotesActions } from '@/features/notes/hooks';
 import { useEditorLayout } from '@/hooks/use-editor-layout';
-import { EditorContainer } from '@/features/editor/components/editor-container';
-import type { PaneId } from '@/atoms';
 
 interface EditorRichViewProps {
 	paneId?: PaneId | undefined;

@@ -1,8 +1,8 @@
-import React from 'react';
-import { ConfigView, HotkeysView, FolderView, EditorRichView, EditorSourceView, WelcomeView } from './views';
 import { useAtomValue } from 'jotai';
+import type React from 'react';
+import type { PaneId, ViewType } from '@/atoms';
 import { currentViewAtom, leftPaneCurrentViewAtom, rightPaneCurrentViewAtom } from '@/atoms';
-import type { ViewType, PaneId } from '@/atoms';
+import { ConfigView, EditorRichView, EditorSourceView, FolderView, HotkeysView, WelcomeView } from './views';
 
 interface ContentProps {
 	paneId?: PaneId;
@@ -10,10 +10,18 @@ interface ContentProps {
 
 export const Content: React.FC<ContentProps> = ({ paneId }) => {
 	// Select the appropriate view atom based on pane
-	const viewAtom =
-		paneId === 'left' ? leftPaneCurrentViewAtom : paneId === 'right' ? rightPaneCurrentViewAtom : currentViewAtom;
+	const getViewAtom = () => {
+		switch (paneId) {
+			case 'left':
+				return leftPaneCurrentViewAtom;
+			case 'right':
+				return rightPaneCurrentViewAtom;
+			default:
+				return currentViewAtom;
+		}
+	};
 
-	const currentView = useAtomValue(viewAtom);
+	const currentView = useAtomValue(getViewAtom());
 
 	const viewMapping: Record<ViewType, React.ReactElement> = {
 		'config-view': <ConfigView />,

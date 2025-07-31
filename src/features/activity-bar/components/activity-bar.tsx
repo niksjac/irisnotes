@@ -1,10 +1,15 @@
 import clsx from 'clsx';
 import * as Icons from 'lucide-react';
-import { useSidebarState, useSidebarActions } from '@/hooks';
-import { useViewState, useViewActions } from '@/hooks';
-import { usePaneState, usePaneActions } from '@/hooks';
+import {
+	useEditorLayout,
+	usePaneActions,
+	usePaneState,
+	useSidebarActions,
+	useSidebarState,
+	useViewActions,
+	useViewState,
+} from '@/hooks';
 import { useEditorState, useLineWrapping } from '../../editor';
-import { useEditorLayout } from '@/hooks';
 import { ActivityBarButton } from './activity-bar-button';
 
 export function ActivityBar() {
@@ -17,16 +22,10 @@ export function ActivityBar() {
 
 	// Direct hook access - no prop drilling
 	const { sidebarCollapsed } = useSidebarState();
-	const {
-		activityBarVisible,
-		configViewActive,
-		hotkeysViewActive,
-		databaseStatusVisible,
-	} = useViewState();
+	const { activityBarVisible, configViewActive, hotkeysViewActive, databaseStatusVisible } = useViewState();
 	const { isDualPaneMode } = usePaneState();
 	const { toggleSidebar } = useSidebarActions();
-	const { toggleConfigView, toggleHotkeysView, toggleDatabaseStatus } =
-		useViewActions();
+	const { toggleConfigView, toggleHotkeysView, toggleDatabaseStatus } = useViewActions();
 	const { toggleDualPaneMode } = usePaneActions();
 	const { toolbarVisible, toggleToolbar } = useEditorLayout();
 	const { fontSize } = useEditorState();

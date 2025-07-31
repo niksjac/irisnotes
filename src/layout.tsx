@@ -1,14 +1,14 @@
-import React from 'react';
+import type React from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 // import { ActivityBar } from '../../activity-bar';
 import { ResizableSidebar, Sidebar } from '@/features/sidebar';
 import {
-	useSidebarState,
-	useSidebarActions,
-	usePaneState,
 	// useViewState,
 	// useViewActions,
-	// usePaneActions,
+	usePaneActions,
+	usePaneState,
+	useSidebarActions,
+	useSidebarState,
 } from '@/hooks';
 // import { useEditorActions } from '../../editor';
 // import { useLineWrapping } from '../../editor';
@@ -22,7 +22,7 @@ export const Layout: React.FC = () => {
 	const { isDualPaneMode } = usePaneState();
 	// const { databaseStatusVisible } = useViewState();
 	// const { toggleActivityBar } = useViewActions();
-	// const { toggleDualPaneMode } = usePaneActions();
+	const { toggleDualPaneMode } = usePaneActions();
 	// const { increaseFontSize, decreaseFontSize } = useEditorActions();
 	// const { toggleLineWrapping } = useLineWrapping();
 
@@ -31,6 +31,13 @@ export const Layout: React.FC = () => {
 
 	// DEBUG: Simple hotkey for toggle sidebar only (Ctrl+B)
 	useHotkeys('ctrl+b', toggleSidebar, {
+		preventDefault: true,
+		enableOnContentEditable: false,
+		enableOnFormTags: false,
+	});
+
+	// Hotkey to toggle dual pane mode (Ctrl+D)
+	useHotkeys('ctrl+d', toggleDualPaneMode, {
 		preventDefault: true,
 		enableOnContentEditable: false,
 		enableOnFormTags: false,

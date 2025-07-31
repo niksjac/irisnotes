@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+coverage/
+src-tauri/target/
+playwright-report/
+test-results/
+.storybook/public/
+storybook-static/
+*.min.js
+*.bundle.js
+.next/
+.nuxt/
+.output/
+.vite/
+.vercel/
+.netlify/

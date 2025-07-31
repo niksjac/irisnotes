@@ -1,5 +1,5 @@
 export { NotesTreeView } from './components/notes-tree-view';
-export { TreeHeader } from './components/tree-header';
 export { TreeContainer } from './components/tree-container';
+export { TreeHeader } from './components/tree-header';
 
 export type { NotesTreeViewProps, TreeNode } from './types';

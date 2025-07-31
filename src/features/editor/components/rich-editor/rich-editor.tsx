@@ -1,40 +1,48 @@
-import { forwardRef, useImperativeHandle } from 'react';
 import clsx from 'clsx';
-import { RichEditorProps } from './types';
-import { editorSchema } from './schema';
-import { useEditorView } from './hooks/use-editor-view';
+import { forwardRef, useImperativeHandle } from 'react';
 import { useLineWrapping } from '../../hooks/use-line-wrapping';
+import { useEditorView } from './hooks/use-editor-view';
 import { RichEditorToolbar } from './rich-editor-toolbar';
+import { editorSchema } from './schema';
+import type { RichEditorProps } from './types';
 import './prosemirror.css';
 
 export interface RichEditorRef {
-  focusAndPositionAtEnd: () => void;
+	focusAndPositionAtEnd: () => void;
 }
 
 export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(
-  ({ content, onChange, readOnly = false, onToggleView, toolbarVisible = true }, ref) => {
-    const { isWrapping } = useLineWrapping();
-    const { editorRef, editorView, focusAndPositionAtEnd } = useEditorView({
-      content,
-      onChange,
-      readOnly: readOnly || false,
-      onToggleView: onToggleView || (() => {}),
-      schema: editorSchema,
-    });
+	({ content, onChange, readOnly = false, onToggleView, toolbarVisible = true }, ref) => {
+		const { isWrapping } = useLineWrapping();
+		const { editorRef, editorView, focusAndPositionAtEnd } = useEditorView({
+			content,
+			onChange,
+			readOnly: readOnly || false,
+			onToggleView: onToggleView || (() => {}),
+			schema: editorSchema,
+		});
 
-    useImperativeHandle(
-      ref,
-      () => ({
-        focusAndPositionAtEnd,
-      }),
-      [focusAndPositionAtEnd]
-    );
+		useImperativeHandle(
+			ref,
+			() => ({
+				focusAndPositionAtEnd,
+			}),
+			[focusAndPositionAtEnd]
+		);
 
-    return (
-      <div className='h-full flex flex-col overflow-hidden __1'>
-        {toolbarVisible && <RichEditorToolbar editorView={editorView} schema={editorSchema} />}
-        <div ref={editorRef} className={clsx('pt-2.5 pl-2.5 __2', isWrapping ? 'prose-wrap' : 'prose-nowrap')} />
-      </div>
-    );
-  }
+		return (
+			<div className='h-full flex flex-col overflow-hidden __1'>
+				{toolbarVisible && (
+					<RichEditorToolbar
+						editorView={editorView}
+						schema={editorSchema}
+					/>
+				)}
+				<div
+					ref={editorRef}
+					className={clsx('pt-2.5 pl-2.5 __2', isWrapping ? 'prose-wrap' : 'prose-nowrap')}
+				/>
+			</div>
+		);
+	}
 );

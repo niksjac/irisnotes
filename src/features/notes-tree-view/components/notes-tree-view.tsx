@@ -1,8 +1,8 @@
 import { useRef } from 'react';
-import { TreeContainer } from './tree-container';
-import { TreeHeader } from './tree-header';
 import { cn } from '@/shared/utils/cn';
 import type { NotesTreeViewProps } from '../types';
+import { TreeContainer } from './tree-container';
+import { TreeHeader } from './tree-header';
 
 export function NotesTreeView({ tree, selectedNodeId, onNodeSelect, onNoteSelect }: NotesTreeViewProps) {
 	const containerRef = useRef<HTMLDivElement>(null);

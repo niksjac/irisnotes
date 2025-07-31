@@ -1,12 +1,12 @@
 export * from './components';
 export { cn } from './utils/cn';
-export { generateId, generateSecureId, resetIdCounter, getCurrentCounter } from './utils/id-generation';
+export { generateId, generateSecureId, getCurrentCounter, resetIdCounter } from './utils/id-generation';
 export {
-  parseTextWithColors,
-  serializeToCustomFormat,
-  extractPlainText,
-  parseCustomFormatMetadata,
-  validateCustomFormat,
-  normalizeColor,
-  getAvailableFormattingOptions,
+	extractPlainText,
+	getAvailableFormattingOptions,
+	normalizeColor,
+	parseCustomFormatMetadata,
+	parseTextWithColors,
+	serializeToCustomFormat,
+	validateCustomFormat,
 } from './utils/text-parser';

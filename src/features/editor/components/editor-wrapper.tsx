@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { cn } from '@/shared/utils/cn';
 
 interface EditorWrapperProps {

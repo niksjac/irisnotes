@@ -1,6 +1,6 @@
+import { FileText, Folder as FolderIcon, FolderOpen, Plus } from 'lucide-react';
 import React from 'react';
-import { FileText, Folder as FolderIcon, Plus, FolderOpen } from 'lucide-react';
-import type { Note, Category } from '@/types/database';
+import type { Category, Note } from '@/types/database';
 
 interface FolderProps {
 	selectedFolder: Category;

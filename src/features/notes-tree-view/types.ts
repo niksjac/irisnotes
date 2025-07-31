@@ -1,4 +1,4 @@
-import type { Note, Category } from '../../types/database';
+import type { Category, Note } from '../../types/database';
 
 export interface TreeNode {
 	id: string;
