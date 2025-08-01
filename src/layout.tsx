@@ -1,32 +1,17 @@
 import type React from 'react';
-import { useHotkeys } from 'react-hotkeys-hook';
 import { ActivityBar } from '@/features/activity-bar';
 import { ResizableSidebar, Sidebar } from '@/features/sidebar';
-import { useLayout } from '@/hooks';
+import { useLayout, useAppHotkeys } from '@/hooks';
 import { Content } from './content';
 
 export const Layout: React.FC = () => {
 	const { sidebar, panes, views } = useLayout();
 
-	// DEBUG: Simple hotkey for toggle sidebar only (Ctrl+B)
-	useHotkeys('ctrl+b', sidebar.toggle, {
-		preventDefault: true,
-		enableOnContentEditable: false,
-		enableOnFormTags: false,
-	});
-
-	// Hotkey to toggle dual pane mode (Ctrl+D)
-	useHotkeys('ctrl+d', panes.toggleDualMode, {
-		preventDefault: true,
-		enableOnContentEditable: false,
-		enableOnFormTags: false,
-	});
-
-	// Hotkey to toggle activity bar (Ctrl+A)
-	useHotkeys('ctrl+j', views.toggleActivityBar, {
-		preventDefault: true,
-		enableOnContentEditable: false,
-		enableOnFormTags: false,
+	// Centralized app hotkeys
+	useAppHotkeys({
+		onToggleSidebar: sidebar.toggle,
+		onToggleDualPane: panes.toggleDualMode,
+		onToggleActivityBar: views.toggleActivityBar,
 	});
 
 	return (

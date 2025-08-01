@@ -17,3 +17,5 @@ export { useViewActions } from './use-view-actions';
 export { useViewState } from './use-view-state';
 // Consolidated layout hook
 export { useLayout } from './use-layout';
+// App-wide hotkeys
+export { useAppHotkeys } from './use-app-hotkeys';
