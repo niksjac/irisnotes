@@ -52,4 +52,20 @@ export interface AppConfig {
 		customNotesPath?: string;
 	};
 }
+
+// UI and Layout types
+export type PaneId = 'left' | 'right';
+
+export type ViewType =
+	| 'config-view'
+	| 'hotkeys-view'
+	| 'folder-view'
+	| 'editor-rich-view'
+	| 'editor-source-view'
+	| 'welcome-view';
+
+export interface ContentProps {
+	paneId?: PaneId | undefined;
+}
+
 // Test comment for prettier hook

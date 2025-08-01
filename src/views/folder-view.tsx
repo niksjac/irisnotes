@@ -1,6 +1,6 @@
 import { FileText, Folder as FolderIcon, FolderOpen, Plus } from 'lucide-react';
 import React, { useState } from 'react';
-import type { PaneId } from '@/atoms';
+import type { PaneId } from '@/types';
 import {
 	useAppHandlers,
 	useCategoryManagement,

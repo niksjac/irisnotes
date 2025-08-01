@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai';
-import type { PaneId } from '@/atoms';
+import type { PaneId } from '@/types';
 import { notesForPaneAtom, selectedNoteAtom } from '@/atoms';
 import { EditorContainer } from '@/features/editor/components/editor-container';
 import { useNotesActions } from '@/features/notes/hooks';

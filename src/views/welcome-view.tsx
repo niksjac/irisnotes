@@ -1,5 +1,5 @@
 import { BookOpen, FileText, FolderPlus } from 'lucide-react';
-import type { PaneId } from '@/atoms';
+import type { PaneId } from '@/types';
 import { useCategoryManagement, useNotesActions, useNotesData, useNotesStorage } from '@/features/notes/hooks';
 
 interface WelcomeViewProps {
