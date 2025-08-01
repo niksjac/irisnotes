@@ -1,25 +1,20 @@
 import { useAtom } from 'jotai';
-import {
-	activityBarVisibleAtom,
-	configViewActiveAtom,
-	databaseStatusVisibleAtom,
-	hotkeysViewActiveAtom,
-} from '@/atoms';
+import { activityBarVisible, configViewActive, databaseStatusVisible, hotkeysViewActive } from '@/atoms';
 
 export const useViewState = () => {
-	const [configViewActive, setConfigViewActive] = useAtom(configViewActiveAtom);
-	const [hotkeysViewActive, setHotkeysViewActive] = useAtom(hotkeysViewActiveAtom);
-	const [databaseStatusVisible, setDatabaseStatusVisible] = useAtom(databaseStatusVisibleAtom);
-	const [activityBarVisible, setActivityBarVisible] = useAtom(activityBarVisibleAtom);
+	const [configViewActiveValue, setConfigViewActive] = useAtom(configViewActive);
+	const [hotkeysViewActiveValue, setHotkeysViewActive] = useAtom(hotkeysViewActive);
+	const [databaseStatusVisibleValue, setDatabaseStatusVisible] = useAtom(databaseStatusVisible);
+	const [activityBarVisibleValue, setActivityBarVisible] = useAtom(activityBarVisible);
 
 	return {
-		configViewActive,
+		configViewActive: configViewActiveValue,
 		setConfigViewActive,
-		hotkeysViewActive,
+		hotkeysViewActive: hotkeysViewActiveValue,
 		setHotkeysViewActive,
-		databaseStatusVisible,
+		databaseStatusVisible: databaseStatusVisibleValue,
 		setDatabaseStatusVisible,
-		activityBarVisible,
+		activityBarVisible: activityBarVisibleValue,
 		setActivityBarVisible,
 	};
 };

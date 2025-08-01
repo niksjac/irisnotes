@@ -15,3 +15,5 @@ export { useSidebarActions } from './use-sidebar-actions';
 export { useSidebarState } from './use-sidebar-state';
 export { useViewActions } from './use-view-actions';
 export { useViewState } from './use-view-state';
+// Consolidated layout hook
+export { useLayout } from './use-layout';

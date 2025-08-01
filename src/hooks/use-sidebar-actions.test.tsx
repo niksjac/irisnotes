@@ -1,14 +1,14 @@
 import { act, renderHook } from '@testing-library/react';
 import { createStore, Provider } from 'jotai';
 import { describe, expect, it } from 'vitest';
-import { sidebarCollapsedAtom } from '../atoms';
+import { sidebarCollapsed } from '../atoms';
 import { useSidebarActions } from './use-sidebar-actions';
 
 describe('useSidebarActions', () => {
 	describe('toggleSidebar', () => {
 		it('toggles sidebar from collapsed to expanded', () => {
 			const store = createStore();
-			store.set(sidebarCollapsedAtom, true);
+			store.set(sidebarCollapsed, true);
 
 			const { result } = renderHook(() => useSidebarActions(), {
 				wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
@@ -25,7 +25,7 @@ describe('useSidebarActions', () => {
 
 		it('toggles sidebar from expanded to collapsed', () => {
 			const store = createStore();
-			store.set(sidebarCollapsedAtom, false);
+			store.set(sidebarCollapsed, false);
 
 			const { result } = renderHook(() => useSidebarActions(), {
 				wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
@@ -53,7 +53,7 @@ describe('useSidebarActions', () => {
 	describe('handleSidebarCollapsedChange', () => {
 		it('sets sidebar collapsed state to true', () => {
 			const store = createStore();
-			store.set(sidebarCollapsedAtom, false);
+			store.set(sidebarCollapsed, false);
 
 			const { result } = renderHook(() => useSidebarActions(), {
 				wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
@@ -68,7 +68,7 @@ describe('useSidebarActions', () => {
 
 		it('sets sidebar collapsed state to false', () => {
 			const store = createStore();
-			store.set(sidebarCollapsedAtom, true);
+			store.set(sidebarCollapsed, true);
 
 			const { result } = renderHook(() => useSidebarActions(), {
 				wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,

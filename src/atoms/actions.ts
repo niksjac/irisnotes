@@ -1,17 +1,17 @@
 import { atom } from 'jotai';
 import {
 	activePaneIdAtom,
-	activityBarVisibleAtom,
+	activityBarVisible,
 	categoriesAtom,
-	configViewActiveAtom,
-	databaseStatusVisibleAtom,
+	configViewActive,
+	databaseStatusVisible,
 	fontSizeAtom,
-	hotkeysViewActiveAtom,
+	hotkeysViewActive,
 	isDualPaneModeAtom,
 	notesAtom,
 	selectedItemAtom,
 	selectedNoteIdAtom,
-	sidebarCollapsedAtom,
+	sidebarCollapsed,
 	toolbarVisibleAtom,
 } from './index';
 
@@ -29,34 +29,34 @@ export const selectNoteAtom = atom(null, (_, set, noteId: string) => {
 
 // Layout actions
 export const toggleSidebarAtom = atom(null, (get, set) => {
-	const current = get(sidebarCollapsedAtom);
-	set(sidebarCollapsedAtom, !current);
+	const current = get(sidebarCollapsed);
+	set(sidebarCollapsed, !current);
 });
 
 export const toggleActivityBarAtom = atom(null, (get, set) => {
-	const current = get(activityBarVisibleAtom);
-	set(activityBarVisibleAtom, !current);
+	const current = get(activityBarVisible);
+	set(activityBarVisible, !current);
 });
 
 export const toggleConfigViewAtom = atom(null, (get, set) => {
-	const current = get(configViewActiveAtom);
-	set(configViewActiveAtom, !current);
+	const current = get(configViewActive);
+	set(configViewActive, !current);
 	if (!current) {
-		set(hotkeysViewActiveAtom, false);
+		set(hotkeysViewActive, false);
 	}
 });
 
 export const toggleHotkeysViewAtom = atom(null, (get, set) => {
-	const current = get(hotkeysViewActiveAtom);
-	set(hotkeysViewActiveAtom, !current);
+	const current = get(hotkeysViewActive);
+	set(hotkeysViewActive, !current);
 	if (!current) {
-		set(configViewActiveAtom, false);
+		set(configViewActive, false);
 	}
 });
 
 export const toggleDatabaseStatusAtom = atom(null, (get, set) => {
-	const current = get(databaseStatusVisibleAtom);
-	set(databaseStatusVisibleAtom, !current);
+	const current = get(databaseStatusVisible);
+	set(databaseStatusVisible, !current);
 });
 
 export const toggleDualPaneModeAtom = atom(null, (get, set) => {
@@ -148,5 +148,5 @@ export const handleRenameCategoryAtom = atom(
 );
 
 export const handleSidebarCollapsedChangeAtom = atom(null, (_, set, collapsed: boolean) => {
-	set(sidebarCollapsedAtom, collapsed);
+	set(sidebarCollapsed, collapsed);
 });

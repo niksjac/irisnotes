@@ -1,13 +1,13 @@
 import { act, renderHook } from '@testing-library/react';
 import { createStore, Provider } from 'jotai';
 import { describe, expect, it } from 'vitest';
-import { sidebarCollapsedAtom } from '../atoms';
+import { sidebarCollapsed } from '../atoms';
 import { useSidebarState } from './use-sidebar-state';
 
 describe('useSidebarState', () => {
 	it('provides sidebar collapsed state from atom', () => {
 		const store = createStore();
-		store.set(sidebarCollapsedAtom, false);
+		store.set(sidebarCollapsed, false);
 
 		const { result } = renderHook(() => useSidebarState(), {
 			wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
@@ -18,7 +18,7 @@ describe('useSidebarState', () => {
 
 	it('can update sidebar collapsed state', () => {
 		const store = createStore();
-		store.set(sidebarCollapsedAtom, false);
+		store.set(sidebarCollapsed, false);
 
 		const { result } = renderHook(() => useSidebarState(), {
 			wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,

@@ -1,11 +1,5 @@
 import { getDefaultStore } from 'jotai';
-import {
-	activityBarVisibleAtom,
-	fontSizeAtom,
-	isDualPaneModeAtom,
-	isWrappingAtom,
-	sidebarCollapsedAtom,
-} from '../../../atoms';
+import { activityBarVisible, fontSizeAtom, isDualPaneModeAtom, isWrappingAtom, sidebarCollapsed } from '../../../atoms';
 
 const store = getDefaultStore();
 
@@ -13,16 +7,16 @@ const store = getDefaultStore();
  * Toggle sidebar visibility
  */
 export async function toggleSidebar(): Promise<void> {
-	const currentValue = store.get(sidebarCollapsedAtom);
-	store.set(sidebarCollapsedAtom, !currentValue);
+	const currentValue = store.get(sidebarCollapsed);
+	store.set(sidebarCollapsed, !currentValue);
 }
 
 /**
  * Toggle activity bar visibility
  */
 export async function toggleActivityBar(): Promise<void> {
-	const currentValue = store.get(activityBarVisibleAtom);
-	store.set(activityBarVisibleAtom, !currentValue);
+	const currentValue = store.get(activityBarVisible);
+	store.set(activityBarVisible, !currentValue);
 }
 
 /**

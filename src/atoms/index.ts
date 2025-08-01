@@ -18,11 +18,11 @@ export const categoriesAtom = atom<any[]>([]);
 export const noteCategoriesAtom = atom<any[]>([]);
 
 // Layout atoms
-export const sidebarCollapsedAtom = atom<boolean>(false);
-export const activityBarVisibleAtom = atom<boolean>(true);
-export const configViewActiveAtom = atom<boolean>(false);
-export const hotkeysViewActiveAtom = atom<boolean>(false);
-export const databaseStatusVisibleAtom = atom<boolean>(false);
+export const sidebarCollapsed = atom<boolean>(false);
+export const activityBarVisible = atom<boolean>(true);
+export const configViewActive = atom<boolean>(false);
+export const hotkeysViewActive = atom<boolean>(false);
+export const databaseStatusVisible = atom<boolean>(false);
 export const isDualPaneModeAtom = atom<boolean>(false);
 export const activePaneIdAtom = atom<PaneId | null>(null);
 export const toolbarVisibleAtom = atom<boolean>(true);
@@ -62,15 +62,15 @@ export const notesForPaneAtom = atom<{
 
 // Helper function to determine view based on current state
 const getDefaultView = (get: any): ViewType => {
-	const configViewActive = get(configViewActiveAtom);
-	const hotkeysViewActive = get(hotkeysViewActiveAtom);
+	const configViewActiveValue = get(configViewActive);
+	const hotkeysViewActiveValue = get(hotkeysViewActive);
 	const selectedFolder = get(selectedFolderAtom);
 	const selectedNote = get(selectedNoteAtom);
 	const notes = get(notesAtom);
 	const categories = get(categoriesAtom);
 
-	if (configViewActive) return 'config-view';
-	if (hotkeysViewActive) return 'hotkeys-view';
+	if (configViewActiveValue) return 'config-view';
+	if (hotkeysViewActiveValue) return 'hotkeys-view';
 	if (selectedFolder) return 'folder-view';
 	if (selectedNote) {
 		// Default to rich editor view when a note is selected
@@ -89,12 +89,12 @@ const getDefaultView = (get: any): ViewType => {
 export const currentViewAtom = atom<ViewType>(get => getDefaultView(get));
 
 // Pane-specific view atoms with fallback to default logic
-export const leftPaneCurrentViewAtom = atom<ViewType>(get => {
+export const leftPaneCurrentView = atom<ViewType>(get => {
 	const leftPaneView = get(leftPaneViewAtom);
 	return leftPaneView || getDefaultView(get);
 });
 
-export const rightPaneCurrentViewAtom = atom<ViewType>(get => {
+export const rightPaneCurrentView = atom<ViewType>(get => {
 	const rightPaneView = get(rightPaneViewAtom);
 	return rightPaneView || getDefaultView(get);
 });

@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import type { ViewType, ContentProps } from '@/types';
 import { useAtomValue } from 'jotai';
-import { currentViewAtom, leftPaneCurrentViewAtom, rightPaneCurrentViewAtom } from '@/atoms';
+import { currentViewAtom, leftPaneCurrentView, rightPaneCurrentView } from '@/atoms';
 import { ConfigView, HotkeysView, FolderView, EditorRichView, EditorSourceView, WelcomeView } from './views';
 
 export const Content: FC<ContentProps> = ({ paneId }) => {
@@ -9,9 +9,9 @@ export const Content: FC<ContentProps> = ({ paneId }) => {
 	const getViewAtom = () => {
 		switch (paneId) {
 			case 'left':
-				return leftPaneCurrentViewAtom;
+				return leftPaneCurrentView;
 			case 'right':
-				return rightPaneCurrentViewAtom;
+				return rightPaneCurrentView;
 			default:
 				return currentViewAtom;
 		}

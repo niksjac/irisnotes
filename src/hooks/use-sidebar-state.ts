@@ -1,11 +1,11 @@
 import { useAtom } from 'jotai';
-import { sidebarCollapsedAtom } from '@/atoms';
+import { sidebarCollapsed } from '@/atoms';
 
 export const useSidebarState = () => {
-	const [sidebarCollapsed, setSidebarCollapsed] = useAtom(sidebarCollapsedAtom);
+	const [sidebarCollapsedValue, setSidebarCollapsed] = useAtom(sidebarCollapsed);
 
 	return {
-		sidebarCollapsed,
+		sidebarCollapsed: sidebarCollapsedValue,
 		setSidebarCollapsed,
 	};
 };

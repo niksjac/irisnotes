@@ -2,38 +2,28 @@ import type React from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { ActivityBar } from '@/features/activity-bar';
 import { ResizableSidebar, Sidebar } from '@/features/sidebar';
-import { useViewActions, usePaneActions, usePaneState, useSidebarActions, useSidebarState } from '@/hooks';
-import { useAppPersistence } from '@/hooks/use-app-persistence';
+import { useLayout } from '@/hooks';
 import { Content } from './content';
 
 export const Layout: React.FC = () => {
-	const { sidebarCollapsed } = useSidebarState();
-	const { handleSidebarCollapsedChange, toggleSidebar } = useSidebarActions();
-	const { isDualPaneMode } = usePaneState();
-	const { toggleActivityBar } = useViewActions();
-	const { toggleDualPaneMode } = usePaneActions();
-	// const { increaseFontSize, decreaseFontSize } = useEditorActions();
-	// const { toggleLineWrapping } = useLineWrapping();
-
-	// Handle app persistence on shutdown
-	useAppPersistence();
+	const { sidebar, panes, views } = useLayout();
 
 	// DEBUG: Simple hotkey for toggle sidebar only (Ctrl+B)
-	useHotkeys('ctrl+b', toggleSidebar, {
+	useHotkeys('ctrl+b', sidebar.toggle, {
 		preventDefault: true,
 		enableOnContentEditable: false,
 		enableOnFormTags: false,
 	});
 
 	// Hotkey to toggle dual pane mode (Ctrl+D)
-	useHotkeys('ctrl+d', toggleDualPaneMode, {
+	useHotkeys('ctrl+d', panes.toggleDualMode, {
 		preventDefault: true,
 		enableOnContentEditable: false,
 		enableOnFormTags: false,
 	});
 
 	// Hotkey to toggle activity bar (Ctrl+A)
-	useHotkeys('ctrl+j', toggleActivityBar, {
+	useHotkeys('ctrl+j', views.toggleActivityBar, {
 		preventDefault: true,
 		enableOnContentEditable: false,
 		enableOnFormTags: false,
@@ -48,8 +38,8 @@ export const Layout: React.FC = () => {
 
 					{/* Resizable Sidebar */}
 					<ResizableSidebar
-						isCollapsed={sidebarCollapsed}
-						onCollapsedChange={handleSidebarCollapsedChange}
+						isCollapsed={sidebar.collapsed}
+						onCollapsedChange={sidebar.setCollapsed}
 						minWidth={200}
 						maxWidth={600}
 						defaultWidth={300}
@@ -60,7 +50,7 @@ export const Layout: React.FC = () => {
 
 					{/* Main Content Area */}
 					<div className='flex-1 flex flex-col overflow-hidden __4'>
-						{isDualPaneMode ? (
+						{panes.isDualMode ? (
 							/* Dual Pane Mode */
 							<div className='flex h-full'>
 								{/* Left Pane */}
@@ -79,9 +69,6 @@ export const Layout: React.FC = () => {
 					</div>
 				</div>
 			</div>
-
-			{/* Database Status View - Positioned overlay */}
-			{/* {databaseStatusVisible && <DatabaseStatusView />} */}
 		</div>
 	);
 };
