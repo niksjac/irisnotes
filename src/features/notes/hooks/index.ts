@@ -10,8 +10,7 @@ export { useNotesActions } from './use-notes-actions';
 export { useNotesData } from './use-notes-data';
 export { useNotesInitialization } from './use-notes-initialization';
 export { useNotesNavigation } from './use-notes-navigation';
-// Types
-export type { PaneId } from './use-notes-selection';
+
 export { useNotesSelection } from './use-notes-selection';
 export { useNotesStorage } from './use-notes-storage';
 export { useSingleStorageNotes } from './use-single-storage-notes';

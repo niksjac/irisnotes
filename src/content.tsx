@@ -1,14 +1,10 @@
+import type { FC } from 'react';
+import type { ViewType, ContentProps } from '@/types';
 import { useAtomValue } from 'jotai';
-import type React from 'react';
-import type { PaneId, ViewType } from '@/atoms';
 import { currentViewAtom, leftPaneCurrentViewAtom, rightPaneCurrentViewAtom } from '@/atoms';
-import { ConfigView, EditorRichView, EditorSourceView, FolderView, HotkeysView, WelcomeView } from './views';
+import { ConfigView, HotkeysView, FolderView, EditorRichView, EditorSourceView, WelcomeView } from './views';
 
-interface ContentProps {
-	paneId?: PaneId;
-}
-
-export const Content: React.FC<ContentProps> = ({ paneId }) => {
+export const Content: FC<ContentProps> = ({ paneId }) => {
 	// Select the appropriate view atom based on pane
 	const getViewAtom = () => {
 		switch (paneId) {

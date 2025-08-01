@@ -1,5 +1,5 @@
 import React from 'react';
-import type { PaneId } from '@/hooks';
+import type { PaneId } from '@/types';
 import type { Note } from '../../../types/database';
 import { DualPaneEditor } from '../index';
 

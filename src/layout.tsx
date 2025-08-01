@@ -1,18 +1,8 @@
 import type React from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-// import { ActivityBar } from '../../activity-bar';
+import { ActivityBar } from '@/features/activity-bar';
 import { ResizableSidebar, Sidebar } from '@/features/sidebar';
-import {
-	// useViewState,
-	// useViewActions,
-	usePaneActions,
-	usePaneState,
-	useSidebarActions,
-	useSidebarState,
-} from '@/hooks';
-// import { useEditorActions } from '../../editor';
-// import { useLineWrapping } from '../../editor';
-// import { useUnifiedShortcuts } from '../../hotkeys/hooks/use-unified-shortcuts';
+import { useViewActions, usePaneActions, usePaneState, useSidebarActions, useSidebarState } from '@/hooks';
 import { useAppPersistence } from '@/hooks/use-app-persistence';
 import { Content } from './content';
 
@@ -20,8 +10,7 @@ export const Layout: React.FC = () => {
 	const { sidebarCollapsed } = useSidebarState();
 	const { handleSidebarCollapsedChange, toggleSidebar } = useSidebarActions();
 	const { isDualPaneMode } = usePaneState();
-	// const { databaseStatusVisible } = useViewState();
-	// const { toggleActivityBar } = useViewActions();
+	const { toggleActivityBar } = useViewActions();
 	const { toggleDualPaneMode } = usePaneActions();
 	// const { increaseFontSize, decreaseFontSize } = useEditorActions();
 	// const { toggleLineWrapping } = useLineWrapping();
@@ -43,12 +32,19 @@ export const Layout: React.FC = () => {
 		enableOnFormTags: false,
 	});
 
+	// Hotkey to toggle activity bar (Ctrl+A)
+	useHotkeys('ctrl+j', toggleActivityBar, {
+		preventDefault: true,
+		enableOnContentEditable: false,
+		enableOnFormTags: false,
+	});
+
 	return (
 		<div className='flex flex-col h-screen w-screen'>
 			<div className='flex-1 overflow-hidden'>
 				<div className='overflow-hidden h-full flex md:flex-row flex-col __3'>
 					{/* Activity Bar */}
-					{/* <ActivityBar /> */}
+					<ActivityBar />
 
 					{/* Resizable Sidebar */}
 					<ResizableSidebar

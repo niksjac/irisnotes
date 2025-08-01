@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import type { PaneId } from '@/hooks';
+import type { PaneId } from '@/types';
 import type { Note } from '../../../types';
 import { EditorContainer } from './editor-container';
 

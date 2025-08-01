@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useNotesData } from './use-notes-data';
-import type { PaneId } from './use-notes-selection';
+import type { PaneId } from '@/types';
 import { useNotesSelection } from './use-notes-selection';
 
 export const useNotesNavigation = () => {

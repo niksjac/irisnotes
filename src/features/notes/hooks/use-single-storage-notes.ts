@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useConfig } from '../../../hooks/use-config';
-import type { CreateNoteParams, Note, NoteFilters, UpdateNoteParams } from '../../../types/database';
+import type { CreateNoteParams, Note, NoteFilters, UpdateNoteParams, PaneId } from '../../../types';
 import { createSingleStorageManager } from '../storage';
 import type { SingleStorageManager } from '../storage/types';
-
-export type PaneId = 'left' | 'right';
 
 export const useSingleStorageNotes = () => {
 	const { config, loading: configLoading } = useConfig();

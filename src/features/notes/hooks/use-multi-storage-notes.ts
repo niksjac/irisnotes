@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { CreateNoteParams, Note, NoteFilters, UpdateNoteParams } from '../../../types/database';
+import type { CreateNoteParams, Note, NoteFilters, UpdateNoteParams, PaneId } from '../../../types';
 import { createMultiStorageManager, createSQLiteStorageAdapter, type MultiStorageManager } from '../storage';
-
-export type PaneId = 'left' | 'right';
 
 export const useMultiStorageNotes = () => {
 	const [storageManager] = useState<MultiStorageManager>(() => createMultiStorageManager());

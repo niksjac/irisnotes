@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import type { SingleStorageManager } from '../storage/types';
-import type { PaneId } from './use-single-storage-notes';
+import type { PaneId } from '@/types';
 
 interface UseAppHandlersProps {
 	storageManager: SingleStorageManager | null;

@@ -1,15 +1,5 @@
 import { atom } from 'jotai';
-
-// Types
-export type ViewType =
-	| 'config-view'
-	| 'hotkeys-view'
-	| 'folder-view'
-	| 'editor-rich-view'
-	| 'editor-source-view'
-	| 'welcome-view';
-
-export type PaneId = 'left' | 'right';
+import type { ViewType, PaneId } from '@/types';
 
 // Selection state atoms
 export const selectedItemAtom = atom<{

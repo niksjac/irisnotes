@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import type { CreateNoteParams, NoteFilters, UpdateNoteParams } from '../../../types/database';
 import { useNotesData } from './use-notes-data';
-import type { PaneId } from './use-notes-selection';
+import type { PaneId } from '@/types';
 import { useNotesSelection } from './use-notes-selection';
 import { useNotesStorage } from './use-notes-storage';
 

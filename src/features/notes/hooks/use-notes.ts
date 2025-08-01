@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useConfig } from '../../../hooks/use-config';
 import { parseTextWithColors } from '../../../shared';
-import type { Note } from '../../../types';
-
-export type PaneId = 'left' | 'right';
+import type { Note, PaneId } from '../../../types';
 
 // Hardcoded example note content for debugging
 const EXAMPLE_NOTE_CONTENT = `{size:xxl}{color:blue}{bold}Welcome to IrisNotes Custom Formatting!{/bold}{/color}{/size}

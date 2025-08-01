@@ -1,9 +1,7 @@
 import { useAtom } from 'jotai';
 import { useCallback, useState } from 'react';
 import { selectedNoteIdAtom } from '../../../atoms';
-import type { Note } from '../../../types/database';
-
-export type PaneId = 'left' | 'right';
+import type { Note, PaneId } from '../../../types';
 
 export const useNotesSelection = () => {
 	const [selectedNoteId, setSelectedNoteId] = useAtom(selectedNoteIdAtom);
