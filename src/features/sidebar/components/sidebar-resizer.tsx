@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 // ==================== COMPONENT INTERFACE ====================
 
-interface ResizableSidebarProps {
+interface SidebarResizerProps {
 	isCollapsed: boolean;
 	onCollapsedChange?: (collapsed: boolean) => void;
 	children: React.ReactNode;
@@ -13,7 +13,7 @@ interface ResizableSidebarProps {
 	autoCollapseOnResize?: boolean;
 }
 
-export function ResizableSidebar({
+export function SidebarResizer({
 	isCollapsed,
 	onCollapsedChange,
 	children,
@@ -21,7 +21,7 @@ export function ResizableSidebar({
 	maxWidth = 600,
 	defaultWidth = 300,
 	autoCollapseOnResize = true,
-}: ResizableSidebarProps) {
+}: SidebarResizerProps) {
 	// ==================== STATE MANAGEMENT ====================
 
 	const [width, setWidth] = useState(defaultWidth);
@@ -123,11 +123,14 @@ export function ResizableSidebar({
 
 			{/* Draggable resize handle - only show when not collapsed */}
 			{!isCollapsed && (
-				<div
+				<button
+					type='button'
+					aria-label='Resize sidebar'
 					className={clsx(
-						'absolute top-0 right-0 w-1 h-full cursor-col-resize',
+						'absolute top-0 right-0 w-1 h-full cursor-col-resize border-0 bg-transparent',
 						'hover:bg-blue-500 hover:bg-opacity-50 transition-colors',
-						isDragging && 'bg-blue-500 bg-opacity-50'
+						isDragging && 'bg-blue-500 bg-opacity-50',
+						'focus:outline-none focus:bg-blue-500 focus:bg-opacity-50'
 					)}
 					onMouseDown={handleMouseDown}
 				/>

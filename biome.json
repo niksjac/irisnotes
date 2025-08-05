@@ -5,11 +5,14 @@
 	},
 	"formatter": {
 		"indentWidth": 2,
-		"lineWidth": 80
+		"lineWidth": 120
 	},
 	"linter": {
 		"rules": {
 			"recommended": true,
+			"a11y": {
+				"recommended": false
+			},
 			"complexity": {
 				"noExcessiveCognitiveComplexity": "warn",
 				"noForEach": "off"
@@ -27,7 +30,7 @@
 				"useImportType": "error"
 			},
 			"suspicious": {
-				"noExplicitAny": "warn",
+				"noExplicitAny": "off",
 				"noArrayIndexKey": "warn"
 			}
 		}

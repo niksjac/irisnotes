@@ -1,6 +1,6 @@
 import type React from 'react';
 import { ActivityBar } from '@/features/activity-bar';
-import { ResizableSidebar, Sidebar } from '@/features/sidebar';
+import { SidebarResizer, Sidebar } from '@/features/sidebar';
 import { useLayout, useAppHotkeys } from '@/hooks';
 import { Content } from './content';
 
@@ -22,7 +22,7 @@ export const Layout: React.FC = () => {
 					<ActivityBar />
 
 					{/* Resizable Sidebar */}
-					<ResizableSidebar
+					<SidebarResizer
 						isCollapsed={sidebar.collapsed}
 						onCollapsedChange={sidebar.setCollapsed}
 						minWidth={200}
@@ -31,7 +31,7 @@ export const Layout: React.FC = () => {
 						autoCollapseOnResize={false}
 					>
 						<Sidebar />
-					</ResizableSidebar>
+					</SidebarResizer>
 
 					{/* Main Content Area */}
 					<div className='flex-1 flex flex-col overflow-hidden __4'>

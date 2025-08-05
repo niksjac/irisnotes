@@ -1,3 +1,2 @@
-export { ResizableSidebar } from './components/resizable-sidebar';
+export { SidebarResizer } from './components/sidebar-resizer';
 export { Sidebar } from './components/sidebar';
-export { SidebarSearch } from './components/sidebar-search';
