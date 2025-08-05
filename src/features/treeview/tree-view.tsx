@@ -1,47 +1,16 @@
 import { useState } from 'react';
 import { Tree } from 'react-arborist';
-import { ChevronRight, FileText, Folder } from 'lucide-react';
 import useResizeObserver from 'use-resize-observer';
+import { TreeNode } from './tree-node';
 
-interface TreeNode {
+interface TreeData {
 	id: string;
 	name: string;
-	children?: TreeNode[];
-}
-
-// Clean node component matching app design
-function Node({ node, style, dragHandle }: any) {
-	const isFolder = node.isInternal;
-	const isExpanded = node.isOpen;
-
-	return (
-		<div
-			ref={dragHandle}
-			style={style}
-			className='flex items-center gap-2 py-1 px-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors'
-			onClick={() => node.toggle()}
-		>
-			{isFolder && (
-				<ChevronRight
-					className={`h-4 w-4 text-gray-500 dark:text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-				/>
-			)}
-
-			{!isFolder && <div className='w-4' />}
-
-			{isFolder ? (
-				<Folder className='h-4 w-4 text-blue-500 dark:text-blue-400' />
-			) : (
-				<FileText className='h-4 w-4 text-gray-500 dark:text-gray-400' />
-			)}
-
-			<span className='flex-1 truncate text-sm text-gray-900 dark:text-gray-100'>{node.data.name}</span>
-		</div>
-	);
+	children?: TreeData[];
 }
 
 // Mock data for initial testing
-const sampleData: TreeNode[] = [
+const sampleData: TreeData[] = [
 	{
 		id: '1',
 		name: 'Documents',
@@ -69,7 +38,7 @@ const sampleData: TreeNode[] = [
 ];
 
 export function TreeView() {
-	const [data] = useState<TreeNode[]>(sampleData);
+	const [data] = useState<TreeData[]>(sampleData);
 	const { ref, width, height } = useResizeObserver();
 
 	return (
@@ -86,7 +55,7 @@ export function TreeView() {
 						height={height}
 						indent={16}
 					>
-						{Node}
+						{TreeNode}
 					</Tree>
 				)}
 			</div>
