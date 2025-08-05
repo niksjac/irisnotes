@@ -1,14 +1,6 @@
 import clsx from 'clsx';
 import * as Icons from 'lucide-react';
-import {
-	useEditorLayout,
-	usePaneActions,
-	usePaneState,
-	useSidebarActions,
-	useSidebarState,
-	useViewActions,
-	useViewState,
-} from '@/hooks';
+import { useEditorLayout, usePane, useSidebar, useView } from '@/hooks';
 import { useEditorState, useLineWrapping } from '../../editor';
 import { ActivityBarButton } from './activity-bar-button';
 
@@ -21,12 +13,17 @@ export function ActivityBar() {
 	};
 
 	// Direct hook access - no prop drilling
-	const { sidebarCollapsed } = useSidebarState();
-	const { activityBarVisible, configViewActive, hotkeysViewActive, databaseStatusVisible } = useViewState();
-	const { isDualPaneMode } = usePaneState();
-	const { toggleSidebar } = useSidebarActions();
-	const { toggleConfigView, toggleHotkeysView, toggleDatabaseStatus } = useViewActions();
-	const { toggleDualPaneMode } = usePaneActions();
+	const { sidebarCollapsed, toggleSidebar } = useSidebar();
+	const {
+		activityBarVisible,
+		configViewActive,
+		hotkeysViewActive,
+		databaseStatusVisible,
+		toggleConfigView,
+		toggleHotkeysView,
+		toggleDatabaseStatus,
+	} = useView();
+	const { isDualPaneMode, toggleDualPaneMode } = usePane();
 	const { toolbarVisible, toggleToolbar } = useEditorLayout();
 	const { fontSize } = useEditorState();
 	const { isWrapping, toggleLineWrapping } = useLineWrapping();
