@@ -1,5 +1,2 @@
-// God hook - for backward compatibility
+// Consolidated hook with state and actions
 export { useTheme } from './hooks/use-theme';
-export { useThemeActions } from './hooks/use-theme-actions';
-// Focused hooks - new implementation
-export { useThemeState } from './hooks/use-theme-state';

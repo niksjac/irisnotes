@@ -1,11 +1,11 @@
 import { appConfigDir } from '@tauri-apps/api/path';
 import { exists, readTextFile } from '@tauri-apps/plugin-fs';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 export const useTheme = () => {
 	const [darkMode, setDarkMode] = useState(false);
 
-	const loadUserTheme = async () => {
+	const loadUserTheme = useCallback(async () => {
 		try {
 			const configDir = await appConfigDir();
 			const themePath = `${configDir}/theme.css`;
@@ -28,18 +28,21 @@ export const useTheme = () => {
 		} catch (error) {
 			console.error('Failed to load user theme:', error);
 		}
-	};
+	}, []);
 
-	const toggleDarkMode = () => {
+	const toggleDarkMode = useCallback(() => {
 		setDarkMode(prev => {
 			const newMode = !prev;
 			document.documentElement.setAttribute('data-theme', newMode ? 'dark' : 'light');
 			return newMode;
 		});
-	};
+	}, []);
 
 	return {
+		// State
 		darkMode,
+		setDarkMode,
+		// Actions
 		loadUserTheme,
 		toggleDarkMode,
 	};
