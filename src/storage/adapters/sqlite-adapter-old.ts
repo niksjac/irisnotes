@@ -12,8 +12,8 @@ import type {
 	Setting,
 	Tag,
 	UpdateNoteParams,
-} from '../../../../types/database';
-import type { StorageAdapter, StorageConfig, StorageResult } from '../types';
+} from '../../types/database';
+import type { StorageAdapter, StorageConfig, StorageResult, VoidStorageResult } from '../types';
 
 // Complete SQLite storage adapter implementation
 export class SQLiteStorageAdapter implements StorageAdapter {
@@ -24,7 +24,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		this.config = config;
 	}
 
-	async init(): Promise<StorageResult<void>> {
+	async init(): Promise<VoidStorageResult> {
 		try {
 			// Initialize SQLite database connection
 			const dbPath = this.config.sqlite?.database_path || 'notes.db';
@@ -34,7 +34,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 			// Create tables if they don't exist
 			await this.createTables();
 
-			return { success: true, data: undefined };
+			return { success: true };
 		} catch (error) {
 			console.error('❌ Failed to initialize SQLite database:', error);
 			return {
@@ -400,7 +400,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async deleteNote(id: string): Promise<StorageResult<void>> {
+	async deleteNote(id: string): Promise<VoidStorageResult> {
 		if (!this.db) {
 			return { success: false, error: 'Database not initialized' };
 		}
@@ -408,7 +408,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		try {
 			const now = new Date().toISOString();
 			await this.db.execute('UPDATE notes SET deleted_at = ? WHERE id = ?', [now, id]);
-			return { success: true, data: undefined };
+			return { success: true };
 		} catch (error) {
 			return { success: false, error: `Failed to delete note: ${error}` };
 		}
@@ -540,7 +540,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async deleteCategory(id: string): Promise<StorageResult<void>> {
+	async deleteCategory(id: string): Promise<VoidStorageResult> {
 		if (!this.db) {
 			return { success: false, error: 'Database not initialized' };
 		}
@@ -550,7 +550,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 			await this.db.execute('DELETE FROM note_categories WHERE category_id = ?', [id]);
 			// Delete the category
 			await this.db.execute('DELETE FROM categories WHERE id = ?', [id]);
-			return { success: true, data: undefined };
+			return { success: true };
 		} catch (error) {
 			return { success: false, error: `Failed to delete category: ${error}` };
 		}
@@ -578,7 +578,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async addNoteToCategory(noteId: string, categoryId: string): Promise<StorageResult<void>> {
+	async addNoteToCategory(noteId: string, categoryId: string): Promise<VoidStorageResult> {
 		if (!this.db) {
 			return { success: false, error: 'Database not initialized' };
 		}
@@ -589,7 +589,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 				'INSERT OR IGNORE INTO note_categories (note_id, category_id, created_at) VALUES (?, ?, ?)',
 				[noteId, categoryId, now]
 			);
-			return { success: true, data: undefined };
+			return { success: true };
 		} catch (error) {
 			return {
 				success: false,
@@ -598,14 +598,14 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async removeNoteFromCategory(noteId: string, categoryId: string): Promise<StorageResult<void>> {
+	async removeNoteFromCategory(noteId: string, categoryId: string): Promise<VoidStorageResult> {
 		if (!this.db) {
 			return { success: false, error: 'Database not initialized' };
 		}
 
 		try {
 			await this.db.execute('DELETE FROM note_categories WHERE note_id = ? AND category_id = ?', [noteId, categoryId]);
-			return { success: true, data: undefined };
+			return { success: true };
 		} catch (error) {
 			return {
 				success: false,
@@ -714,7 +714,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async deleteTag(id: string): Promise<StorageResult<void>> {
+	async deleteTag(id: string): Promise<VoidStorageResult> {
 		if (!this.db) {
 			return { success: false, error: 'Database not initialized' };
 		}
@@ -724,7 +724,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 			await this.db.execute('DELETE FROM note_tags WHERE tag_id = ?', [id]);
 			// Delete the tag
 			await this.db.execute('DELETE FROM tags WHERE id = ?', [id]);
-			return { success: true, data: undefined };
+			return { success: true };
 		} catch (error) {
 			return { success: false, error: `Failed to delete tag: ${error}` };
 		}
@@ -749,7 +749,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async addNoteTag(noteId: string, tagId: string): Promise<StorageResult<void>> {
+	async addNoteTag(noteId: string, tagId: string): Promise<VoidStorageResult> {
 		if (!this.db) {
 			return { success: false, error: 'Database not initialized' };
 		}
@@ -761,20 +761,20 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 				tagId,
 				now,
 			]);
-			return { success: true, data: undefined };
+			return { success: true };
 		} catch (error) {
 			return { success: false, error: `Failed to add note tag: ${error}` };
 		}
 	}
 
-	async removeNoteTag(noteId: string, tagId: string): Promise<StorageResult<void>> {
+	async removeNoteTag(noteId: string, tagId: string): Promise<VoidStorageResult> {
 		if (!this.db) {
 			return { success: false, error: 'Database not initialized' };
 		}
 
 		try {
 			await this.db.execute('DELETE FROM note_tags WHERE note_id = ? AND tag_id = ?', [noteId, tagId]);
-			return { success: true, data: undefined };
+			return { success: true };
 		} catch (error) {
 			return { success: false, error: `Failed to remove note tag: ${error}` };
 		}
@@ -839,14 +839,14 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async deleteNoteRelationship(id: string): Promise<StorageResult<void>> {
+	async deleteNoteRelationship(id: string): Promise<VoidStorageResult> {
 		if (!this.db) {
 			return { success: false, error: 'Database not initialized' };
 		}
 
 		try {
 			await this.db.execute('DELETE FROM note_relationships WHERE id = ?', [id]);
-			return { success: true, data: undefined };
+			return { success: true };
 		} catch (error) {
 			return {
 				success: false,
@@ -915,14 +915,14 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async deleteAttachment(id: string): Promise<StorageResult<void>> {
+	async deleteAttachment(id: string): Promise<VoidStorageResult> {
 		if (!this.db) {
 			return { success: false, error: 'Database not initialized' };
 		}
 
 		try {
 			await this.db.execute('DELETE FROM attachments WHERE id = ?', [id]);
-			return { success: true, data: undefined };
+			return { success: true };
 		} catch (error) {
 			return { success: false, error: `Failed to delete attachment: ${error}` };
 		}
@@ -986,18 +986,70 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async deleteNoteVersion(id: string): Promise<StorageResult<void>> {
+	async deleteNoteVersion(id: string): Promise<VoidStorageResult> {
 		if (!this.db) {
 			return { success: false, error: 'Database not initialized' };
 		}
 
 		try {
 			await this.db.execute('DELETE FROM note_versions WHERE id = ?', [id]);
-			return { success: true, data: undefined };
+			return { success: true };
 		} catch (error) {
 			return {
 				success: false,
 				error: `Failed to delete note version: ${error}`,
+			};
+		}
+	}
+
+	async restoreNoteVersion(noteId: string, versionId: string): Promise<StorageResult<Note>> {
+		if (!this.db) {
+			return { success: false, error: 'Database not initialized' };
+		}
+
+		try {
+			// Get the version to restore
+			const versionResult = await this.db.select<NoteVersion[]>(
+				'SELECT * FROM note_versions WHERE id = ? AND note_id = ?',
+				[versionId, noteId]
+			);
+
+			if (versionResult.length === 0) {
+				return { success: false, error: 'Note version not found' };
+			}
+
+			const version = versionResult[0];
+			if (!version) {
+				return { success: false, error: 'Note version not found' };
+			}
+
+			const now = new Date().toISOString();
+
+			// Update the note with the version's content
+			await this.db.execute('UPDATE notes SET title = ?, content = ?, updated_at = ? WHERE id = ?', [
+				version.title,
+				version.content,
+				now,
+				noteId,
+			]);
+
+			// Get the updated note
+			const noteResult = await this.db.select<Note[]>('SELECT * FROM notes WHERE id = ?', [noteId]);
+
+			if (noteResult.length === 0) {
+				return { success: false, error: 'Note not found after restoration' };
+			}
+
+			const note = noteResult[0];
+			if (!note) {
+				return { success: false, error: 'Note not found after restoration' };
+			}
+
+			return { success: true, data: note };
+		} catch (error) {
+			return {
+				success: false,
+				error: `Failed to restore note version: ${error}`,
 			};
 		}
 	}
@@ -1017,7 +1069,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async setSetting(key: string, value: string): Promise<StorageResult<void>> {
+	async setSetting(key: string, value: string): Promise<StorageResult<Setting>> {
 		if (!this.db) {
 			return { success: false, error: 'Database not initialized' };
 		}
@@ -1028,13 +1080,21 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 				'INSERT OR REPLACE INTO settings (key, value, created_at, updated_at) VALUES (?, ?, ?, ?)',
 				[key, value, now, now]
 			);
-			return { success: true, data: undefined };
+
+			// Return the created/updated setting
+			const setting: Setting = {
+				key,
+				value,
+				created_at: now,
+				updated_at: now,
+			};
+			return { success: true, data: setting };
 		} catch (error) {
 			return { success: false, error: `Failed to set setting: ${error}` };
 		}
 	}
 
-	async getAllSettings(): Promise<StorageResult<Setting[]>> {
+	async getSettings(): Promise<StorageResult<Setting[]>> {
 		if (!this.db) {
 			return { success: false, error: 'Database not initialized' };
 		}
@@ -1047,14 +1107,14 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async deleteSetting(key: string): Promise<StorageResult<void>> {
+	async deleteSetting(key: string): Promise<VoidStorageResult> {
 		if (!this.db) {
 			return { success: false, error: 'Database not initialized' };
 		}
 
 		try {
 			await this.db.execute('DELETE FROM settings WHERE key = ?', [key]);
-			return { success: true, data: undefined };
+			return { success: true };
 		} catch (error) {
 			return { success: false, error: `Failed to delete setting: ${error}` };
 		}
@@ -1133,9 +1193,9 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async sync(): Promise<StorageResult<void>> {
+	async sync(): Promise<VoidStorageResult> {
 		// For SQLite, sync is essentially a no-op since it's already persistent
-		return { success: true, data: undefined };
+		return { success: true };
 	}
 
 	async getStorageInfo(): Promise<

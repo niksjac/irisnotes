@@ -11,7 +11,7 @@ import type {
 	Setting,
 	Tag,
 	UpdateNoteParams,
-} from '../../../types/database';
+} from '../types/database';
 
 // Storage backend types
 export type StorageBackend = 'sqlite' | 'file-system' | 'cloud';
@@ -37,7 +37,7 @@ export type StorageResult<T> = { success: true; data: T } | { success: false; er
 // Specific type for void operations
 export type VoidStorageResult = { success: true } | { success: false; error: string };
 
-// Base storage interface
+// Core storage interface - clean and focused
 export interface StorageAdapter {
 	// Configuration
 	init(): Promise<VoidStorageResult>;
@@ -49,6 +49,7 @@ export interface StorageAdapter {
 	createNote(params: CreateNoteParams): Promise<StorageResult<Note>>;
 	updateNote(params: UpdateNoteParams): Promise<StorageResult<Note>>;
 	deleteNote(id: string): Promise<VoidStorageResult>;
+	searchNotes(query: string, filters?: NoteFilters): Promise<StorageResult<Note[]>>;
 
 	// Categories operations
 	getCategories(): Promise<StorageResult<Category[]>>;
@@ -88,28 +89,28 @@ export interface StorageAdapter {
 		originalFilename: string,
 		filePath: string,
 		mimeType: string,
-		fileSize: number
+		size: number
 	): Promise<StorageResult<Attachment>>;
 	deleteAttachment(id: string): Promise<VoidStorageResult>;
 
-	// Note versions
+	// Versioning
 	getNoteVersions(noteId: string): Promise<StorageResult<NoteVersion[]>>;
-	createNoteVersion(noteId: string, title: string, content: string): Promise<StorageResult<NoteVersion>>;
-	deleteNoteVersion(id: string): Promise<VoidStorageResult>;
+	createNoteVersion(
+		noteId: string,
+		content: string,
+		contentRaw?: string,
+		comment?: string
+	): Promise<StorageResult<NoteVersion>>;
+	restoreNoteVersion(noteId: string, versionId: string): Promise<StorageResult<Note>>;
 
 	// Settings
+	getSettings(): Promise<StorageResult<Setting[]>>;
 	getSetting(key: string): Promise<StorageResult<Setting | null>>;
-	setSetting(key: string, value: string): Promise<VoidStorageResult>;
-	getAllSettings(): Promise<StorageResult<Setting[]>>;
+	setSetting(key: string, value: string): Promise<StorageResult<Setting>>;
 	deleteSetting(key: string): Promise<VoidStorageResult>;
 
-	// Search
-	searchNotes(query: string, filters?: NoteFilters): Promise<StorageResult<Note[]>>;
-
-	// Synchronization
-	sync?(): Promise<VoidStorageResult>;
-
-	// Utility
+	// Utility operations
+	sync?(): Promise<VoidStorageResult>; // Optional - for cloud storage
 	getStorageInfo(): Promise<
 		StorageResult<{
 			backend: StorageBackend;
@@ -121,65 +122,4 @@ export interface StorageAdapter {
 			storage_size?: number;
 		}>
 	>;
-}
-
-// Single storage manager - manages one active storage at a time
-export interface SingleStorageManager {
-	// Storage management
-	setActiveStorage(config: StorageConfig): Promise<VoidStorageResult>;
-	getActiveStorage(): StorageAdapter | null;
-	getActiveStorageConfig(): StorageConfig | null;
-
-	// Delegate all operations to active storage
-	getNotes(filters?: NoteFilters): Promise<StorageResult<Note[]>>;
-	getNote(id: string): Promise<StorageResult<Note | null>>;
-	createNote(params: CreateNoteParams): Promise<StorageResult<Note>>;
-	updateNote(params: UpdateNoteParams): Promise<StorageResult<Note>>;
-	deleteNote(id: string): Promise<VoidStorageResult>;
-	searchNotes(query: string, filters?: NoteFilters): Promise<StorageResult<Note[]>>;
-
-	// Category operations
-	getCategories(): Promise<StorageResult<Category[]>>;
-	createCategory(params: CreateCategoryParams): Promise<StorageResult<Category>>;
-	updateCategory(id: string, params: Partial<CreateCategoryParams>): Promise<StorageResult<Category>>;
-	deleteCategory(id: string): Promise<VoidStorageResult>;
-
-	// Tag operations
-	getTags(): Promise<StorageResult<Tag[]>>;
-	createTag(params: CreateTagParams): Promise<StorageResult<Tag>>;
-	updateTag(id: string, params: Partial<CreateTagParams>): Promise<StorageResult<Tag>>;
-	deleteTag(id: string): Promise<VoidStorageResult>;
-
-	// Utility
-	sync(): Promise<VoidStorageResult>;
-	getStorageInfo(): Promise<
-		StorageResult<{
-			backend: StorageBackend;
-			note_count: number;
-			category_count: number;
-			tag_count: number;
-			attachment_count: number;
-			last_sync?: string;
-			storage_size?: number;
-		}>
-	>;
-}
-
-// Multi-storage manager (legacy - for future use)
-export interface MultiStorageManager {
-	// Storage management
-	addStorage(name: string, adapter: StorageAdapter): Promise<VoidStorageResult>;
-	removeStorage(name: string): Promise<VoidStorageResult>;
-	getStorages(): string[];
-	getStorage(name: string): StorageAdapter | null;
-	setDefaultStorage(name: string): void;
-	getDefaultStorage(): StorageAdapter | null;
-
-	// Unified operations across all storages
-	getAllNotes(filters?: NoteFilters): Promise<StorageResult<Note[]>>;
-	searchAllNotes(query: string, filters?: NoteFilters): Promise<StorageResult<Note[]>>;
-
-	// Cross-storage operations
-	moveNote(noteId: string, fromStorage: string, toStorage: string): Promise<VoidStorageResult>;
-	syncAllStorages(): Promise<VoidStorageResult>;
 }

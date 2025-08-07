@@ -1,30 +1,24 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Category, Note } from '../../../types/database';
-import type { SingleStorageManager } from '../storage/types';
+import type { StorageAdapter } from '../../../storage';
 
-interface UseCategoryManagementProps {
-	storageManager: SingleStorageManager | null;
+interface UseNotesCategoriesProps {
+	storageAdapter: StorageAdapter | null;
 	isLoading: boolean;
 	notesLength: number;
 }
 
-export function useCategoryManagement({ storageManager, isLoading, notesLength }: UseCategoryManagementProps) {
+export function useNotesCategories({ storageAdapter, isLoading, notesLength }: UseNotesCategoriesProps) {
 	const [categories, setCategories] = useState<Category[]>([]);
 	const [noteCategories, setNoteCategories] = useState<{ noteId: string; categoryId: string }[]>([]);
 
 	// Load categories when notes are loaded (indicating storage is ready)
 	useEffect(() => {
 		const loadCategories = async () => {
-			if (!storageManager || isLoading) return;
-
-			// Check if storage is actually ready by trying to get active storage
-			const activeStorage = storageManager.getActiveStorage();
-			if (!activeStorage) {
-				return;
-			}
+			if (!storageAdapter || isLoading) return;
 
 			try {
-				const result = await storageManager.getCategories();
+				const result = await storageAdapter.getCategories();
 				if (result.success) {
 					setCategories(result.data);
 				} else {
@@ -39,23 +33,18 @@ export function useCategoryManagement({ storageManager, isLoading, notesLength }
 		if (!isLoading && notesLength >= 0) {
 			loadCategories();
 		}
-	}, [storageManager, isLoading, notesLength]);
+	}, [storageAdapter, isLoading, notesLength]);
 
 	// Load note-category relationships
 	const loadNoteCategories = useCallback(async () => {
-		if (!storageManager) return [];
+		if (!storageAdapter) return [];
 
 		try {
-			const storage = storageManager.getActiveStorage();
-			if (!storage) {
-				return [];
-			}
-
 			const relationships: { noteId: string; categoryId: string }[] = [];
 
 			// Load note categories for each category
 			for (const category of categories) {
-				const result = await storage.getCategoryNotes(category.id);
+				const result = await storageAdapter.getCategoryNotes(category.id);
 				if (result.success) {
 					result.data.forEach((note: Note) => {
 						relationships.push({
@@ -72,7 +61,7 @@ export function useCategoryManagement({ storageManager, isLoading, notesLength }
 			console.error('Failed to load note categories:', error);
 			return [];
 		}
-	}, [storageManager, categories]);
+	}, [storageAdapter, categories]);
 
 	// Load note categories when categories change
 	useEffect(() => {
@@ -84,7 +73,7 @@ export function useCategoryManagement({ storageManager, isLoading, notesLength }
 	// Category handlers
 	const handleCreateFolder = useCallback(
 		async (parentCategoryId?: string) => {
-			if (!storageManager) return;
+			if (!storageAdapter) return;
 
 			try {
 				const createParams = {
@@ -92,12 +81,12 @@ export function useCategoryManagement({ storageManager, isLoading, notesLength }
 					description: '',
 					...(parentCategoryId && { parent_id: parentCategoryId }),
 				};
-				const result = await storageManager.createCategory(createParams);
+				const result = await storageAdapter.createCategory(createParams);
 
 				if (result.success) {
 					setCategories(prev => [...prev, result.data]);
 					// Reload categories to ensure consistency
-					const categoriesResult = await storageManager.getCategories();
+					const categoriesResult = await storageAdapter.getCategories();
 					if (categoriesResult.success) {
 						setCategories(categoriesResult.data);
 					}
@@ -108,27 +97,22 @@ export function useCategoryManagement({ storageManager, isLoading, notesLength }
 				console.error('Failed to create category:', error);
 			}
 		},
-		[storageManager]
+		[storageAdapter]
 	);
 
 	const handleMoveNote = useCallback(
 		async (noteId: string, newCategoryId: string | null) => {
-			if (!storageManager) return;
+			if (!storageAdapter) return;
 
 			try {
-				const storage = storageManager.getActiveStorage();
-				if (!storage) {
-					return;
-				}
-
 				// Remove from all categories first
 				for (const category of categories) {
-					await storage.removeNoteFromCategory(noteId, category.id);
+					await storageAdapter.removeNoteFromCategory(noteId, category.id);
 				}
 
 				// Add to new category if specified
 				if (newCategoryId) {
-					await storage.addNoteToCategory(noteId, newCategoryId);
+					await storageAdapter.addNoteToCategory(noteId, newCategoryId);
 				}
 
 				// Reload note categories to update the tree
@@ -137,39 +121,29 @@ export function useCategoryManagement({ storageManager, isLoading, notesLength }
 				console.error('Failed to move note:', error);
 			}
 		},
-		[storageManager, categories, loadNoteCategories]
+		[storageAdapter, categories, loadNoteCategories]
 	);
 
 	const handleDeleteCategory = useCallback(
 		async (categoryId: string) => {
-			if (!storageManager) return;
+			if (!storageAdapter) return;
 
 			try {
-				const storage = storageManager.getActiveStorage();
-				if (!storage) {
-					return;
-				}
-
-				await storage.deleteCategory(categoryId);
+				await storageAdapter.deleteCategory(categoryId);
 				setCategories(prev => prev.filter(cat => cat.id !== categoryId));
 			} catch (error) {
 				console.error('Failed to delete category:', error);
 			}
 		},
-		[storageManager]
+		[storageAdapter]
 	);
 
 	const handleRenameCategory = useCallback(
 		async (categoryId: string, newName: string) => {
-			if (!storageManager) return;
+			if (!storageAdapter) return;
 
 			try {
-				const storage = storageManager.getActiveStorage();
-				if (!storage) {
-					return;
-				}
-
-				const result = await storage.updateCategory(categoryId, {
+				const result = await storageAdapter.updateCategory(categoryId, {
 					name: newName,
 				});
 				if (result.success) {
@@ -179,7 +153,7 @@ export function useCategoryManagement({ storageManager, isLoading, notesLength }
 				console.error('Failed to rename category:', error);
 			}
 		},
-		[storageManager]
+		[storageAdapter]
 	);
 
 	return {

@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
-import type { SingleStorageManager } from '../storage/types';
+import type { StorageAdapter } from '../../../storage';
 import type { PaneId } from '@/types';
 
-interface UseAppHandlersProps {
-	storageManager: SingleStorageManager | null;
+interface UseNotesHandlersProps {
+	storageAdapter: StorageAdapter | null;
 	isDualPaneMode: boolean;
 	activePaneId: PaneId;
 	openNoteInPane: (noteId: string, paneId: PaneId) => void;
@@ -15,8 +15,8 @@ interface UseAppHandlersProps {
 	loadNoteCategories: () => Promise<any[]>;
 }
 
-export function useAppHandlers({
-	storageManager,
+export function useNotesHandlers({
+	storageAdapter,
 	isDualPaneMode,
 	activePaneId,
 	openNoteInPane,
@@ -26,7 +26,7 @@ export function useAppHandlers({
 	createNewNote,
 	loadAllNotes,
 	loadNoteCategories,
-}: UseAppHandlersProps) {
+}: UseNotesHandlersProps) {
 	const handleNoteClick = useCallback(
 		(noteId: string) => {
 			if (isDualPaneMode) {
@@ -76,18 +76,13 @@ export function useAppHandlers({
 
 	const handleCreateNote = useCallback(
 		async (parentCategoryId?: string) => {
-			if (!storageManager) return;
+			if (!storageAdapter) return;
 
 			try {
 				const result = await createNewNote();
 				if (result.success && result.data && parentCategoryId) {
 					// Add the note to the category
-					const storage = storageManager.getActiveStorage();
-					if (!storage) {
-						return;
-					}
-
-					await storage.addNoteToCategory(result.data.id, parentCategoryId);
+					await storageAdapter.addNoteToCategory(result.data.id, parentCategoryId);
 					// Reload note categories to update the tree
 					await loadNoteCategories();
 				}
@@ -95,27 +90,22 @@ export function useAppHandlers({
 				console.error('Failed to create note:', error);
 			}
 		},
-		[storageManager, createNewNote, loadNoteCategories]
+		[storageAdapter, createNewNote, loadNoteCategories]
 	);
 
 	const handleDeleteNote = useCallback(
 		async (noteId: string) => {
-			if (!storageManager) return;
+			if (!storageAdapter) return;
 
 			try {
-				const storage = storageManager.getActiveStorage();
-				if (!storage) {
-					return;
-				}
-
-				await storage.deleteNote(noteId);
+				await storageAdapter.deleteNote(noteId);
 				// Reload notes to update the UI
 				await loadAllNotes();
 			} catch (error) {
 				console.error('Failed to delete note:', error);
 			}
 		},
-		[storageManager, loadAllNotes]
+		[storageAdapter, loadAllNotes]
 	);
 
 	const handleRenameNote = useCallback(

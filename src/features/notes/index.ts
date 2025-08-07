@@ -1,11 +1,9 @@
 // Hooks
 export {
-	useAppHandlers,
-	useCategoryManagement,
+	useNotesHandlers,
+	useNotesCategories,
 	useNotesActions,
 	useNotesData,
 	useNotesSelection,
 	useNotesStorage,
 } from './hooks';
-
-export * from './storage';

@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useConfig } from '../../../hooks/use-config';
-import { createSingleStorageManager } from '../storage';
-import type { SingleStorageManager } from '../storage/types';
+import { createSQLiteAdapter } from '../../../storage';
+import type { StorageAdapter } from '../../../storage';
 
 export const useNotesStorage = () => {
 	const { config, loading: configLoading } = useConfig();
-	const [storageManager] = useState<SingleStorageManager>(() => createSingleStorageManager());
+	const [storageAdapter, setStorageAdapter] = useState<StorageAdapter | null>(null);
 	const [isInitialized, setIsInitialized] = useState(false);
 
 	// Initialize storage when config loads or changes
@@ -16,15 +16,19 @@ export const useNotesStorage = () => {
 			}
 
 			try {
-				// Configure storage based on config
+				// Create storage adapter directly based on config
 				const storageConfig = config.storage;
-				const result = await storageManager.setActiveStorage(storageConfig);
+				const adapter = createSQLiteAdapter(storageConfig);
+
+				// Initialize the adapter
+				const result = await adapter.init();
 
 				if (!result.success) {
-					console.error('❌ Failed to set active storage:', result.error);
+					console.error('❌ Failed to initialize storage:', result.error);
 					throw new Error(result.error);
 				}
 
+				setStorageAdapter(adapter);
 				setIsInitialized(true);
 			} catch (err) {
 				console.error('❌ Failed to initialize storage:', err);
@@ -33,39 +37,46 @@ export const useNotesStorage = () => {
 		};
 
 		initializeStorage();
-	}, [configLoading, config.storage, storageManager]);
+	}, [configLoading, config.storage]);
 
 	const syncStorage = useCallback(async () => {
+		if (!storageAdapter?.sync) {
+			return { success: true }; // No-op if sync not supported
+		}
+
 		try {
-			const result = await storageManager.sync();
-			if (result.success) {
-				return { success: true };
-			} else {
-				return result;
-			}
+			const result = await storageAdapter.sync();
+			return result;
 		} catch (err) {
 			const errorMsg = `Failed to sync storage: ${err}`;
 			return { success: false, error: errorMsg };
 		}
-	}, [storageManager]);
+	}, [storageAdapter]);
 
 	const getStorageInfo = useCallback(async () => {
+		if (!storageAdapter) {
+			return { success: false, error: 'No storage adapter available' };
+		}
+
 		try {
-			return await storageManager.getStorageInfo();
+			return await storageAdapter.getStorageInfo();
 		} catch (err) {
 			return { success: false, error: `Failed to get storage info: ${err}` };
 		}
-	}, [storageManager]);
+	}, [storageAdapter]);
 
 	const getActiveStorageConfig = useCallback(() => {
-		return storageManager.getActiveStorageConfig();
-	}, [storageManager]);
+		return storageAdapter?.getConfig() || null;
+	}, [storageAdapter]);
 
 	return {
-		storageManager,
+		storageAdapter,
 		isInitialized,
 		syncStorage,
 		getStorageInfo,
 		getActiveStorageConfig,
+
+		// Legacy compatibility - expose adapter as storageManager for now
+		storageManager: storageAdapter,
 	};
 };

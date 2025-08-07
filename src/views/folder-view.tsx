@@ -2,8 +2,8 @@ import { FileText, Folder as FolderIcon, FolderOpen, Plus } from 'lucide-react';
 import React, { useState } from 'react';
 import type { PaneId } from '@/types';
 import {
-	useAppHandlers,
-	useCategoryManagement,
+	useNotesHandlers,
+	useNotesCategories,
 	useNotesActions,
 	useNotesData,
 	useNotesSelection,
@@ -18,10 +18,10 @@ export const FolderView = React.memo(({ paneId }: FolderViewProps) => {
 	const { notes } = useNotesData();
 	const { createNewNote, updateNoteTitle, updateNoteContent } = useNotesActions();
 	const { setSelectedNoteId } = useNotesSelection();
-	const { storageManager, isInitialized } = useNotesStorage();
+	const { storageAdapter, isInitialized } = useNotesStorage();
 
-	const { categories, noteCategories, handleCreateFolder } = useCategoryManagement({
-		storageManager,
+	const { categories, noteCategories, handleCreateFolder } = useNotesCategories({
+		storageAdapter,
 		isLoading: !isInitialized,
 		notesLength: notes.length,
 	});
@@ -30,8 +30,8 @@ export const FolderView = React.memo(({ paneId }: FolderViewProps) => {
 
 	const selectedFolder = selectedFolderId ? categories.find((cat: any) => cat.id === selectedFolderId) || null : null;
 
-	const { handleNoteClick, handleCreateNote } = useAppHandlers({
-		storageManager,
+	const { handleNoteClick, handleCreateNote } = useNotesHandlers({
+		storageAdapter,
 		isDualPaneMode: !!paneId,
 		activePaneId: paneId || 'left',
 		openNoteInPane: () => {}, // Simplified

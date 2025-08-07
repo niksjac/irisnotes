@@ -9,6 +9,7 @@ interface TreeNodeProps {
 		isDragging: boolean;
 		data: {
 			name: string;
+			type?: 'category' | 'note';
 		};
 		toggle: () => void;
 	};
@@ -19,6 +20,8 @@ interface TreeNodeProps {
 export function TreeNode({ node, style, dragHandle }: TreeNodeProps) {
 	const isFolder = node.isInternal;
 	const isExpanded = node.isOpen;
+	const nodeType = node.data.type;
+	const isCategory = nodeType === 'category';
 
 	// Create dynamic className based on node state
 	const getNodeClassName = () => {
@@ -54,10 +57,10 @@ export function TreeNode({ node, style, dragHandle }: TreeNodeProps) {
 
 			{!isFolder && <div className='w-4' />}
 
-			{isFolder ? (
+			{isCategory || isFolder ? (
 				<Folder className='h-4 w-4 text-blue-500 dark:text-blue-400' />
 			) : (
-				<FileText className='h-4 w-4 text-gray-500 dark:text-gray-400' />
+				<FileText className='h-4 w-4 text-gray-600 dark:text-gray-300' />
 			)}
 
 			<span className='flex-1 truncate text-sm text-gray-900 dark:text-gray-100'>{node.data.name}</span>

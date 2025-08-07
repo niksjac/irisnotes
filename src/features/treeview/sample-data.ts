@@ -1,8 +1,4 @@
-export interface TreeData {
-	id: string;
-	name: string;
-	children?: TreeData[];
-}
+import type { TreeData } from './types';
 
 // Mock data for initial testing
 export const sampleData: TreeData[] = [

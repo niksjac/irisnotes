@@ -1,7 +1,7 @@
 // Clean, focused hooks implementation
 
-export { useAppHandlers } from './use-app-handlers';
-export { useCategoryManagement } from './use-category-management';
+export { useNotesHandlers } from './use-notes-handlers';
+export { useNotesCategories } from './use-notes-categories';
 export { useNotesActions } from './use-notes-actions';
 export { useNotesData } from './use-notes-data';
 export { useNotesSelection } from './use-notes-selection';

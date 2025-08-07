@@ -18,7 +18,7 @@ export const useNotesActions = () => {
 
 	const { setSelectedNoteIdForPane, clearSelectionForPane } = useNotesSelection();
 
-	const { storageManager, isInitialized } = useNotesStorage();
+	const { storageAdapter, isInitialized } = useNotesStorage();
 
 	const loadAllNotes = useCallback(
 		async (filters?: NoteFilters) => {
@@ -26,7 +26,11 @@ export const useNotesActions = () => {
 			setError(null);
 
 			try {
-				const result = await storageManager.getNotes(filters);
+				if (!storageAdapter) {
+					setError('Storage not initialized');
+					return;
+				}
+				const result = await storageAdapter.getNotes(filters);
 				if (result.success) {
 					updateNotes(result.data);
 				} else {
@@ -39,7 +43,7 @@ export const useNotesActions = () => {
 				setIsLoading(false);
 			}
 		},
-		[storageManager, setIsLoading, setError, updateNotes]
+		[storageAdapter, setIsLoading, setError, updateNotes]
 	);
 
 	// Auto-load notes when storage is initialized
@@ -54,7 +58,11 @@ export const useNotesActions = () => {
 			setError(null);
 
 			try {
-				const result = await storageManager.createNote(params);
+				if (!storageAdapter) {
+					setError('Storage not initialized');
+					return { success: false, error: 'Storage not initialized' };
+				}
+				const result = await storageAdapter.createNote(params);
 				if (result.success) {
 					const newNote = result.data;
 					addNote(newNote);
@@ -77,7 +85,7 @@ export const useNotesActions = () => {
 				return { success: false, error: errorMsg };
 			}
 		},
-		[storageManager, setError, addNote, setSelectedNoteIdForPane]
+		[storageAdapter, setError, addNote, setSelectedNoteIdForPane]
 	);
 
 	const updateNote = useCallback(
@@ -85,7 +93,11 @@ export const useNotesActions = () => {
 			setError(null);
 
 			try {
-				const result = await storageManager.updateNote(params);
+				if (!storageAdapter) {
+					setError('Storage not initialized');
+					return;
+				}
+				const result = await storageAdapter.updateNote(params);
 				if (result.success) {
 					const updatedNote = result.data;
 					updateNoteInState(updatedNote);
@@ -100,7 +112,7 @@ export const useNotesActions = () => {
 				return { success: false, error: errorMsg };
 			}
 		},
-		[storageManager, setError, updateNoteInState]
+		[storageAdapter, setError, updateNoteInState]
 	);
 
 	const deleteNote = useCallback(
@@ -108,7 +120,11 @@ export const useNotesActions = () => {
 			setError(null);
 
 			try {
-				const result = await storageManager.deleteNote(noteId);
+				if (!storageAdapter) {
+					setError('Storage not initialized');
+					return;
+				}
+				const result = await storageAdapter.deleteNote(noteId);
 				if (result.success) {
 					removeNote(noteId);
 
@@ -127,7 +143,7 @@ export const useNotesActions = () => {
 				return { success: false, error: errorMsg };
 			}
 		},
-		[storageManager, setError, removeNote, clearSelectionForPane]
+		[storageAdapter, setError, removeNote, clearSelectionForPane]
 	);
 
 	const searchNotes = useCallback(
@@ -135,7 +151,11 @@ export const useNotesActions = () => {
 			setError(null);
 
 			try {
-				const result = await storageManager.searchNotes(query, filters);
+				if (!storageAdapter) {
+					setError('Storage not initialized');
+					return { success: false, error: 'Storage not initialized' };
+				}
+				const result = await storageAdapter.searchNotes(query, filters);
 				if (result.success) {
 					return { success: true, data: result.data };
 				} else {
@@ -148,7 +168,7 @@ export const useNotesActions = () => {
 				return { success: false, error: errorMsg };
 			}
 		},
-		[storageManager, setError]
+		[storageAdapter, setError]
 	);
 
 	const createNewNote = useCallback(

@@ -10,28 +10,25 @@ interface DatabaseInfo {
 
 export function DatabaseStatusView() {
 	const { notes, isLoading, error } = useNotesData();
-	const { storageManager } = useNotesStorage();
+	const { storageAdapter } = useNotesStorage();
 	const [databaseInfo, setDatabaseInfo] = useState<DatabaseInfo | null>(null);
 	const [refreshing, setRefreshing] = useState(false);
 
 	const loadDatabaseInfo = useCallback(async () => {
-		if (!storageManager) return;
+		if (!storageAdapter) return;
 
 		setRefreshing(true);
 		try {
-			const defaultStorage = storageManager.getDefaultStorage();
-			if (defaultStorage) {
-				const result = await defaultStorage.getStorageInfo();
-				if (result.success && result.data) {
-					setDatabaseInfo(result.data);
-				}
+			const result = await storageAdapter.getStorageInfo();
+			if (result.success && result.data) {
+				setDatabaseInfo(result.data);
 			}
 		} catch (err) {
 			console.error('Failed to load database info:', err);
 		} finally {
 			setRefreshing(false);
 		}
-	}, [storageManager]);
+	}, [storageAdapter]);
 
 	useEffect(() => {
 		loadDatabaseInfo();
@@ -62,7 +59,7 @@ export function DatabaseStatusView() {
 	};
 
 	const getConnectionStatusColor = () => {
-		return storageManager ? 'bg-green-500' : 'bg-red-500';
+		return storageAdapter ? 'bg-green-500' : 'bg-red-500';
 	};
 
 	return (
@@ -124,9 +121,7 @@ export function DatabaseStatusView() {
 					{/* Available Storages */}
 					<div>
 						<div className='text-xs font-medium text-gray-600 dark:text-gray-400 mb-0.5'>Available Storages</div>
-						<div className='text-sm text-gray-900 dark:text-gray-100'>
-							{storageManager?.getStorages().join(', ') || 'None'}
-						</div>
+						<div className='text-sm text-gray-900 dark:text-gray-100'>{storageAdapter ? 'SQLite' : 'None'}</div>
 					</div>
 
 					{/* Connection Status */}
@@ -135,7 +130,7 @@ export function DatabaseStatusView() {
 						<div className='flex items-center gap-1'>
 							<div className={`w-2 h-2 rounded-full ${getConnectionStatusColor()}`} />
 							<span className='text-sm text-gray-900 dark:text-gray-100'>
-								{storageManager ? 'Connected' : 'Disconnected'}
+								{storageAdapter ? 'Connected' : 'Disconnected'}
 							</span>
 						</div>
 					</div>
@@ -152,9 +147,9 @@ export function DatabaseStatusView() {
 							Refresh Status
 						</button>
 
-						{storageManager?.syncAllStorages && (
+						{storageAdapter?.sync && (
 							<button
-								onClick={() => storageManager.syncAllStorages()}
+								onClick={() => storageAdapter.sync?.()}
 								disabled={refreshing}
 								className='p-2 text-xs border border-blue-500 dark:border-blue-400 rounded bg-blue-500 dark:bg-blue-600 text-white cursor-pointer disabled:cursor-not-allowed disabled:opacity-60'
 							>
