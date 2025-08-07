@@ -4,6 +4,9 @@ interface TreeNodeProps {
 	node: {
 		isInternal: boolean;
 		isOpen: boolean;
+		isFocused: boolean;
+		isSelected: boolean;
+		isDragging: boolean;
 		data: {
 			name: string;
 		};
@@ -17,11 +20,30 @@ export function TreeNode({ node, style, dragHandle }: TreeNodeProps) {
 	const isFolder = node.isInternal;
 	const isExpanded = node.isOpen;
 
+	// Create dynamic className based on node state
+	const getNodeClassName = () => {
+		const baseClasses = 'flex items-center gap-2 h-9 px-2 cursor-pointer transition-colors';
+
+		if (node.isSelected) {
+			return `${baseClasses} bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100`;
+		}
+
+		if (node.isFocused) {
+			return `${baseClasses} bg-gray-200 dark:bg-gray-700 ring-2 ring-blue-500 ring-inset`;
+		}
+
+		if (node.isDragging) {
+			return `${baseClasses} opacity-50 bg-gray-100 dark:bg-gray-800`;
+		}
+
+		return `${baseClasses} hover:bg-gray-100 dark:hover:bg-gray-800`;
+	};
+
 	return (
 		<div
 			ref={dragHandle}
 			style={style}
-			className='flex items-center gap-2 py-1 px-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors'
+			className={getNodeClassName()}
 			onClick={() => node.toggle()}
 		>
 			{isFolder && (

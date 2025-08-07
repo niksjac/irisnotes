@@ -6,7 +6,7 @@ import {
 	useCategoryManagement,
 	useNotesActions,
 	useNotesData,
-	useNotesNavigation,
+	useNotesSelection,
 	useNotesStorage,
 } from '@/features/notes/hooks';
 
@@ -17,7 +17,7 @@ interface FolderViewProps {
 export const FolderView = React.memo(({ paneId }: FolderViewProps) => {
 	const { notes } = useNotesData();
 	const { createNewNote, updateNoteTitle, updateNoteContent } = useNotesActions();
-	const { setSelectedNoteId } = useNotesNavigation();
+	const { setSelectedNoteId } = useNotesSelection();
 	const { storageManager, isInitialized } = useNotesStorage();
 
 	const { categories, noteCategories, handleCreateFolder } = useCategoryManagement({

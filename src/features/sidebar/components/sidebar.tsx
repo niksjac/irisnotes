@@ -1,14 +1,14 @@
 import type React from 'react';
-import { useNotesInitialization, useNotesStorage } from '../../notes/hooks';
+import { useNotesData, useNotesStorage } from '../../notes/hooks';
 import { TreeView } from '../../treeview/tree-view';
 
 export const Sidebar: React.FC = () => {
 	const { isInitialized } = useNotesStorage();
+	const { isLoading } = useNotesData();
 
-	// Initialize notes
-	useNotesInitialization();
+	// Auto-initialization is now handled in useNotesActions
 
-	if (!isInitialized) {
+	if (!isInitialized || isLoading) {
 		return (
 			<div className='flex items-center justify-center h-full'>
 				<div className='text-center'>

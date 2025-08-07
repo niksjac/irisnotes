@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import type { CreateNoteParams, NoteFilters, UpdateNoteParams } from '../../../types/database';
 import { useNotesData } from './use-notes-data';
 import type { PaneId } from '@/types';
@@ -18,7 +18,7 @@ export const useNotesActions = () => {
 
 	const { setSelectedNoteIdForPane, clearSelectionForPane } = useNotesSelection();
 
-	const { storageManager } = useNotesStorage();
+	const { storageManager, isInitialized } = useNotesStorage();
 
 	const loadAllNotes = useCallback(
 		async (filters?: NoteFilters) => {
@@ -41,6 +41,13 @@ export const useNotesActions = () => {
 		},
 		[storageManager, setIsLoading, setError, updateNotes]
 	);
+
+	// Auto-load notes when storage is initialized
+	useEffect(() => {
+		if (isInitialized) {
+			loadAllNotes();
+		}
+	}, [isInitialized, loadAllNotes]);
 
 	const createNote = useCallback(
 		async (params: CreateNoteParams, targetPane?: PaneId) => {

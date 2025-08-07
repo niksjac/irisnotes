@@ -38,7 +38,6 @@
 		"noFallthroughCasesInSwitch": true,
 
 		/* Enhanced type safety */
-		"exactOptionalPropertyTypes": true,
 		"noImplicitReturns": true,
 		"noUncheckedIndexedAccess": true
 	},

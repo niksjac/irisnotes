@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useMultiStorageNotes } from '../../notes';
+import { useNotesData, useNotesStorage } from '../../notes';
 
 interface DatabaseInfo {
 	backend: string;
@@ -9,7 +9,8 @@ interface DatabaseInfo {
 }
 
 export function DatabaseStatusView() {
-	const { storageManager, notes, isLoading, error } = useMultiStorageNotes();
+	const { notes, isLoading, error } = useNotesData();
+	const { storageManager } = useNotesStorage();
 	const [databaseInfo, setDatabaseInfo] = useState<DatabaseInfo | null>(null);
 	const [refreshing, setRefreshing] = useState(false);
 
