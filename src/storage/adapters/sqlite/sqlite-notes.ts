@@ -1,6 +1,6 @@
 import type { CreateNoteParams, Note, NoteFilters, UpdateNoteParams } from '../../../types/database';
 import type { StorageResult, VoidStorageResult } from '../../types';
-import { BaseRepository } from './base-repository';
+import { BaseRepository } from './sqlite-base';
 
 /**
  * Repository for notes-related database operations

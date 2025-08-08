@@ -1,4 +1,4 @@
-export { BaseRepository } from './base-repository';
-export { SqliteNotesRepository } from './notes-repository';
-export { SqliteCategoriesRepository } from './categories-repository';
-export { SqliteSchemaManager } from './schema-manager';
+export { BaseRepository } from './sqlite-base';
+export { SqliteNotesRepository } from './sqlite-notes';
+export { SqliteCategoriesRepository } from './sqlite-categories';
+export { SqliteSchemaManager } from './sqlite-schema';

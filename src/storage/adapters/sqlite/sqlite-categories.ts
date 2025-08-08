@@ -1,6 +1,6 @@
 import type { Category, CreateCategoryParams, Note } from '../../../types/database';
 import type { StorageResult, VoidStorageResult } from '../../types';
-import { BaseRepository } from './base-repository';
+import { BaseRepository } from './sqlite-base';
 
 /**
  * Repository for categories-related database operations
