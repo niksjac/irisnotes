@@ -16,11 +16,11 @@ export type {
 	Tag,
 	TagWithNotes,
 	UpdateNoteParams,
-} from './database';
+} from "./database";
 
 // Storage configuration types
 export interface StorageSettings {
-	backend: 'sqlite' | 'file-system' | 'cloud'; // Available storage backends
+	backend: "sqlite" | "file-system" | "cloud"; // Available storage backends
 	sqlite?: {
 		database_path: string;
 	};
@@ -28,7 +28,7 @@ export interface StorageSettings {
 		notes_directory: string;
 	};
 	cloud?: {
-		provider: 'google-drive' | 'dropbox' | 'onedrive';
+		provider: "google-drive" | "dropbox" | "onedrive";
 		credentials?: any; // Provider-specific credentials
 	};
 }
@@ -54,18 +54,31 @@ export interface AppConfig {
 }
 
 // UI and Layout types
-export type PaneId = 'left' | 'right';
+export type PaneId = "left" | "right";
 
 export type ViewType =
-	| 'config-view'
-	| 'hotkeys-view'
-	| 'folder-view'
-	| 'editor-rich-view'
-	| 'editor-source-view'
-	| 'welcome-view';
+	| "config-view"
+	| "hotkeys-view"
+	| "folder-view"
+	| "editor-rich-view"
+	| "editor-source-view"
+	| "welcome-view";
 
 export interface ContentProps {
 	paneId?: PaneId | undefined;
+}
+
+// Tree view types
+export interface TreeData {
+	id: string;
+	name: string;
+	type?: "note" | "category";
+	children?: TreeData[];
+	data?: {
+		id: string;
+		name: string;
+		type?: "note" | "category";
+	};
 }
 
 // Test comment for prettier hook

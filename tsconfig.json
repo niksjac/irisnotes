@@ -18,12 +18,13 @@
 		"baseUrl": ".",
 		"paths": {
 			"@/*": ["src/*"],
-			"@/features/*": ["src/features/*"],
-			"@/hooks/*": ["src/hooks/*"],
-			"@/shared/*": ["src/shared/*"],
-			"@/types/*": ["src/types/*"],
-			"@/atoms/*": ["src/atoms/*"],
-			"@/styles/*": ["src/styles/*"]
+			"@/components": ["src/components"],
+			"@/views": ["src/views"],
+			"@/hooks": ["src/hooks"],
+			"@/atoms": ["src/atoms"],
+			"@/types": ["src/types"],
+			"@/storage": ["src/storage"],
+			"@/styles": ["src/styles"]
 		},
 
 		/* Development experience */

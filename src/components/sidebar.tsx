@@ -1,0 +1,28 @@
+import type React from "react";
+import { useNotesData, useNotesStorage, useLayout } from "@/hooks";
+import { TreeView } from "./tree-view";
+
+export const Sidebar: React.FC = () => {
+	const { isInitialized } = useNotesStorage();
+	const { isLoading } = useNotesData();
+	const { panes } = useLayout();
+
+	// Auto-initialization is now handled in useNotesActions
+
+	if (!isInitialized || isLoading) {
+		return (
+			<div className="flex items-center justify-center h-full">
+				<div className="text-center">
+					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+					<p className="text-sm text-gray-500">Loading notes...</p>
+				</div>
+			</div>
+		);
+	}
+
+	return (
+		<div className="flex flex-col h-full bg-white dark:bg-gray-900 __1">
+			<TreeView isDualPaneMode={panes.isDualMode} activePaneId={panes.activePane} />
+		</div>
+	);
+};
