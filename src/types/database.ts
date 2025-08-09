@@ -5,7 +5,7 @@ export interface Note {
 	id: string;
 	title: string;
 	content: string;
-	content_type: 'html' | 'markdown' | 'plain' | 'custom';
+	content_type: "html" | "markdown" | "plain" | "custom";
 	content_raw?: string | null; // original custom format when content_type is 'custom'
 	created_at: string;
 	updated_at: string;
@@ -54,7 +54,7 @@ export interface NoteRelationship {
 	id: string;
 	source_note_id: string;
 	target_note_id: string;
-	relationship_type: 'reference' | 'child' | 'related';
+	relationship_type: "reference" | "child" | "related";
 	description: string;
 	created_at: string;
 }
@@ -129,15 +129,15 @@ export interface NoteFilters {
 }
 
 export interface NoteSortOptions {
-	field: 'created_at' | 'updated_at' | 'title' | 'word_count';
-	direction: 'asc' | 'desc';
+	field: "created_at" | "updated_at" | "title" | "word_count";
+	direction: "asc" | "desc";
 }
 
 // Database operation types
 export interface CreateNoteParams {
 	title?: string;
 	content?: string;
-	content_type?: 'html' | 'markdown' | 'plain' | 'custom';
+	content_type?: "html" | "markdown" | "plain" | "custom";
 	content_raw?: string; // original custom format when content_type is 'custom'
 	category_ids?: string[];
 	tag_ids?: string[];
@@ -147,7 +147,7 @@ export interface UpdateNoteParams {
 	id: string;
 	title?: string;
 	content?: string;
-	content_type?: 'html' | 'markdown' | 'plain' | 'custom';
+	content_type?: "html" | "markdown" | "plain" | "custom";
 	content_raw?: string; // original custom format when content_type is 'custom'
 	is_pinned?: boolean;
 	is_archived?: boolean;
@@ -171,7 +171,7 @@ export interface CreateTagParams {
 // App configuration types
 export interface AppSettings {
 	theme: string;
-	editor_mode: 'rich' | 'source' | 'split';
+	editor_mode: "rich" | "source" | "split";
 	line_wrapping: boolean;
 	auto_save: boolean;
 	auto_save_interval: number;

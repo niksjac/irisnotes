@@ -1,5 +1,5 @@
-import type React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import type React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface PerformanceMetrics {
 	memory?: number;
@@ -24,7 +24,7 @@ export const usePerformance = (componentName: string) => {
 	// Memory monitoring (development only)
 	useEffect(() => {
 		// Check if we're in development mode (Vite sets this)
-		const isDevelopment = import.meta.env?.DEV || import.meta.env?.MODE === 'development';
+		const isDevelopment = import.meta.env?.DEV || import.meta.env?.MODE === "development";
 
 		if (isDevelopment) {
 			const logMetrics = () => {
@@ -34,7 +34,7 @@ export const usePerformance = (componentName: string) => {
 				};
 
 				// Add memory info if available
-				if ('memory' in performance) {
+				if ("memory" in performance) {
 					metrics.memory = (performance as any).memory?.usedJSHeapSize;
 				}
 
@@ -54,7 +54,7 @@ export const usePerformance = (componentName: string) => {
 	// Cleanup on unmount
 	useEffect(() => {
 		return () => {
-			cleanupFunctions.current.forEach(cleanup => {
+			cleanupFunctions.current.forEach((cleanup) => {
 				try {
 					cleanup();
 				} catch (error) {
@@ -72,7 +72,7 @@ export const usePerformance = (componentName: string) => {
 			() => ({
 				renderCount: renderCount.current,
 				lastRenderTime: lastRenderTime.current,
-				memory: 'memory' in performance ? (performance as any).memory?.usedJSHeapSize : undefined,
+				memory: "memory" in performance ? (performance as any).memory?.usedJSHeapSize : undefined,
 			}),
 			[]
 		),
@@ -102,7 +102,7 @@ export const useDebounce = <T extends (...args: any[]) => any>(
 				callbackRef.current(...args);
 			}, delay);
 		}) as T & { cancel: () => void },
-		[delay]
+		[]
 	);
 
 	// Add cancel method
@@ -143,17 +143,17 @@ export const useAsyncMemo = <T>(
 	useEffect(() => {
 		let cancelled = false;
 
-		setState(prev => ({ ...prev, loading: true, error: null }));
+		setState((prev) => ({ ...prev, loading: true, error: null }));
 
 		factory()
-			.then(value => {
+			.then((value) => {
 				if (!cancelled) {
 					setState({ value, loading: false, error: null });
 				}
 			})
-			.catch(error => {
+			.catch((error) => {
 				if (!cancelled) {
-					setState(prev => ({ ...prev, loading: false, error }));
+					setState((prev) => ({ ...prev, loading: false, error }));
 				}
 			});
 

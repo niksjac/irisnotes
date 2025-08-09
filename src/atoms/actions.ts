@@ -1,4 +1,4 @@
-import { atom } from 'jotai';
+import { atom } from "jotai";
 import {
 	activePaneIdAtom,
 	activityBarVisible,
@@ -13,12 +13,12 @@ import {
 	selectedNoteIdAtom,
 	sidebarCollapsed,
 	toolbarVisibleAtom,
-} from './index';
+} from "./index";
 
 // Selection actions
 export const selectItemAtom = atom(
 	null,
-	(_, set, { itemId, itemType }: { itemId: string; itemType: 'note' | 'category' }) => {
+	(_, set, { itemId, itemType }: { itemId: string; itemType: "note" | "category" }) => {
 		set(selectedItemAtom, { id: itemId, type: itemType });
 	}
 );
@@ -64,7 +64,7 @@ export const toggleDualPaneModeAtom = atom(null, (get, set) => {
 	set(isDualPaneModeAtom, !current);
 });
 
-export const setActivePaneAtom = atom(null, (_, set, paneId: 'left' | 'right') => {
+export const setActivePaneAtom = atom(null, (_, set, paneId: "left" | "right") => {
 	set(activePaneIdAtom, paneId);
 });
 
@@ -93,12 +93,12 @@ export const resetFontSizeAtom = atom(null, (_, set) => {
 // Note actions
 export const handleNoteClickAtom = atom(null, (_, set, noteId: string) => {
 	set(selectedNoteIdAtom, noteId);
-	set(selectedItemAtom, { id: noteId, type: 'note' });
+	set(selectedItemAtom, { id: noteId, type: "note" });
 });
 
 export const handleTitleChangeAtom = atom(null, (get, set, { noteId, title }: { noteId: string; title: string }) => {
 	const notes = get(notesAtom);
-	const updatedNotes = notes.map(note => (note.id === noteId ? { ...note, title } : note));
+	const updatedNotes = notes.map((note) => (note.id === noteId ? { ...note, title } : note));
 	set(notesAtom, updatedNotes);
 });
 
@@ -106,7 +106,7 @@ export const handleContentChangeAtom = atom(
 	null,
 	(get, set, { noteId, content }: { noteId: string; content: string }) => {
 		const notes = get(notesAtom);
-		const updatedNotes = notes.map(note => (note.id === noteId ? { ...note, content } : note));
+		const updatedNotes = notes.map((note) => (note.id === noteId ? { ...note, content } : note));
 		set(notesAtom, updatedNotes);
 	}
 );
@@ -118,7 +118,7 @@ export const addNoteAtom = atom(null, (get, set, note: any) => {
 
 export const removeNoteAtom = atom(null, (get, set, noteId: string) => {
 	const notes = get(notesAtom);
-	const updatedNotes = notes.filter(note => note.id !== noteId);
+	const updatedNotes = notes.filter((note) => note.id !== noteId);
 	set(notesAtom, updatedNotes);
 });
 
@@ -130,7 +130,7 @@ export const addCategoryAtom = atom(null, (get, set, category: any) => {
 
 export const removeCategoryAtom = atom(null, (get, set, categoryId: string) => {
 	const categories = get(categoriesAtom);
-	const updatedCategories = categories.filter(cat => cat.id !== categoryId);
+	const updatedCategories = categories.filter((cat) => cat.id !== categoryId);
 	set(categoriesAtom, updatedCategories);
 });
 
@@ -142,7 +142,7 @@ export const handleRenameCategoryAtom = atom(
 	null,
 	(get, set, { categoryId, newName }: { categoryId: string; newName: string }) => {
 		const categories = get(categoriesAtom);
-		const updatedCategories = categories.map(cat => (cat.id === categoryId ? { ...cat, name: newName } : cat));
+		const updatedCategories = categories.map((cat) => (cat.id === categoryId ? { ...cat, name: newName } : cat));
 		set(categoriesAtom, updatedCategories);
 	}
 );

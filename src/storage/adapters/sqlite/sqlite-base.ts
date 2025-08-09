@@ -1,5 +1,5 @@
-import type Database from '@tauri-apps/plugin-sql';
-import type { StorageResult, VoidStorageResult } from '../../types';
+import type Database from "@tauri-apps/plugin-sql";
+import type { StorageResult, VoidStorageResult } from "../../types";
 
 /**
  * Base repository class with common database patterns and error handling
@@ -25,7 +25,7 @@ export abstract class BaseRepository {
 	 */
 	protected checkDatabase(): { success: false; error: string } | null {
 		if (!this.db) {
-			return { success: false, error: 'Database not initialized' };
+			return { success: false, error: "Database not initialized" };
 		}
 		return null;
 	}

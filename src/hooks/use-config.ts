@@ -1,7 +1,7 @@
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
-import { useCallback, useEffect, useState } from 'react';
-import type { AppConfig } from '../types';
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { useCallback, useEffect, useState } from "react";
+import type { AppConfig } from "../types";
 
 const DEFAULT_CONFIG: AppConfig = {
 	editor: {
@@ -12,14 +12,14 @@ const DEFAULT_CONFIG: AppConfig = {
 		enableExampleNote: false,
 	},
 	storage: {
-		backend: 'sqlite',
+		backend: "sqlite",
 		sqlite: {
-			database_path: 'notes.db',
+			database_path: "notes.db",
 		},
 	},
 	development: {
 		useLocalConfig: false,
-		configPath: './dev/config/',
+		configPath: "./dev/config/",
 	},
 	production: {},
 };
@@ -32,13 +32,13 @@ export const useConfig = () => {
 		try {
 			// Check if we're in development mode by checking for local config
 			const isDevelopment = import.meta.env.DEV;
-			const configPath = 'app-config.json';
+			const configPath = "app-config.json";
 
 			if (isDevelopment) {
 				// Try to use local config first in dev mode
 				try {
-					const localConfigString = await invoke<string>('read_config', {
-						filename: './dev/config/app-config.json',
+					const localConfigString = await invoke<string>("read_config", {
+						filename: "./dev/config/app-config.json",
 					});
 					const parsedConfig = JSON.parse(localConfigString) as AppConfig;
 
@@ -66,7 +66,7 @@ export const useConfig = () => {
 				}
 			}
 
-			const configString = await invoke<string>('read_config', {
+			const configString = await invoke<string>("read_config", {
 				filename: configPath,
 			});
 			const parsedConfig = JSON.parse(configString) as AppConfig;
@@ -97,7 +97,7 @@ export const useConfig = () => {
 						...DEFAULT_CONFIG,
 						development: {
 							useLocalConfig: true,
-							configPath: './dev/config/',
+							configPath: "./dev/config/",
 						},
 					}
 				: DEFAULT_CONFIG;
@@ -110,13 +110,13 @@ export const useConfig = () => {
 
 	const saveConfig = useCallback(async (newConfig: AppConfig) => {
 		try {
-			await invoke('write_config', {
-				filename: 'app-config.json',
+			await invoke("write_config", {
+				filename: "app-config.json",
 				content: JSON.stringify(newConfig, null, 2),
 			});
 			setConfig(newConfig);
 		} catch (error) {
-			console.error('Failed to save config:', error);
+			console.error("Failed to save config:", error);
 		}
 	}, []);
 
@@ -143,22 +143,22 @@ export const useConfig = () => {
 		const setupWatcher = async () => {
 			try {
 				// Initialize the file watcher
-				await invoke('setup_config_watcher');
+				await invoke("setup_config_watcher");
 
 				// Listen for config file changes
-				const unlisten = await listen('config-file-changed', () => {
+				const unlisten = await listen("config-file-changed", () => {
 					loadConfig();
 				});
 
 				return unlisten;
 			} catch (error) {
-				console.error('Failed to setup config file watcher:', error);
+				console.error("Failed to setup config file watcher:", error);
 				return null;
 			}
 		};
 
 		let unlisten: (() => void) | null = null;
-		setupWatcher().then(unlistenFn => {
+		setupWatcher().then((unlistenFn) => {
 			unlisten = unlistenFn;
 		});
 

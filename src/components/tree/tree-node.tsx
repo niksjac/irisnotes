@@ -1,13 +1,16 @@
 import { ChevronRight, FileText, Folder } from "lucide-react";
+import type { TreeContextData } from "@/types/context-menu";
 
 interface TreeNodeProps {
 	node: {
+		id: string;
 		isInternal: boolean;
 		isOpen: boolean;
 		isFocused: boolean;
 		isSelected: boolean;
 		isDragging: boolean;
 		data: {
+			id: string;
 			name: string;
 			type?: "category" | "note";
 		};
@@ -15,9 +18,10 @@ interface TreeNodeProps {
 	};
 	style: React.CSSProperties;
 	dragHandle?: (el: HTMLDivElement | null) => void;
+	onContextMenu?: (event: React.MouseEvent, data: TreeContextData) => void;
 }
 
-export function TreeNode({ node, style, dragHandle }: TreeNodeProps) {
+export function TreeNode({ node, style, dragHandle, onContextMenu }: TreeNodeProps) {
 	const isFolder = node.isInternal;
 	const isExpanded = node.isOpen;
 	const nodeType = node.data.type;
@@ -42,8 +46,25 @@ export function TreeNode({ node, style, dragHandle }: TreeNodeProps) {
 		return `${baseClasses} hover:bg-gray-100 dark:hover:bg-gray-800`;
 	};
 
+	const handleContextMenu = (event: React.MouseEvent) => {
+		if (onContextMenu) {
+			const contextData: TreeContextData = {
+				nodeId: node.data.id,
+				nodeType: isCategory ? "category" : "note",
+				nodeName: node.data.name,
+			};
+			onContextMenu(event, contextData);
+		}
+	};
+
 	return (
-		<div ref={dragHandle} style={style} className={getNodeClassName()} onClick={() => node.toggle()}>
+		<div
+			ref={dragHandle}
+			style={style}
+			className={getNodeClassName()}
+			onClick={() => node.toggle()}
+			onContextMenu={handleContextMenu}
+		>
 			{isFolder && (
 				<ChevronRight
 					className={`h-4 w-4 text-gray-500 dark:text-gray-400 transition-transform ${isExpanded ? "rotate-90" : ""}`}

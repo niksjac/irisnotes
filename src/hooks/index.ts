@@ -34,3 +34,7 @@ export { useNotesStorage } from "./use-notes-storage";
 
 // Tree hooks
 export { useTreeData } from "./use-tree-data";
+
+// Context menu hooks
+export { useContextMenu } from "./use-context-menu";
+export { useContextMenuActions } from "./use-context-menu-actions";

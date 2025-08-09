@@ -1,4 +1,4 @@
-import { useHotkeys } from 'react-hotkeys-hook';
+import { useHotkeys } from "react-hotkeys-hook";
 
 interface AppHotkeysProps {
 	// Layout hotkeys
@@ -37,9 +37,9 @@ export function useAppHotkeys({
 	};
 
 	// Layout hotkeys
-	useHotkeys('ctrl+b', () => onToggleSidebar?.(), hotkeyOptions);
-	useHotkeys('ctrl+d', () => onToggleDualPane?.(), hotkeyOptions);
-	useHotkeys('ctrl+j', () => onToggleActivityBar?.(), hotkeyOptions);
+	useHotkeys("ctrl+b", () => onToggleSidebar?.(), hotkeyOptions);
+	useHotkeys("ctrl+d", () => onToggleDualPane?.(), hotkeyOptions);
+	useHotkeys("ctrl+j", () => onToggleActivityBar?.(), hotkeyOptions);
 
 	// Future hotkey categories can be added here:
 	// Editor hotkeys

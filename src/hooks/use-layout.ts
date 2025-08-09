@@ -1,5 +1,5 @@
-import { useCallback } from 'react';
-import { useAtom, useSetAtom } from 'jotai';
+import { useCallback } from "react";
+import { useAtom, useSetAtom } from "jotai";
 import {
 	sidebarCollapsed,
 	isDualPaneModeAtom,
@@ -8,10 +8,10 @@ import {
 	leftPaneNoteAtom,
 	rightPaneNoteAtom,
 	selectedNoteAtom,
-} from '@/atoms';
-import { useAppPersistence } from './use-app-persistence';
+} from "@/atoms";
+import { useAppPersistence } from "./use-app-persistence";
 
-export type PaneId = 'left' | 'right';
+export type PaneId = "left" | "right";
 
 export const useLayout = () => {
 	// Sidebar state
@@ -47,7 +47,7 @@ export const useLayout = () => {
 			setLeftPaneNote(selectedNote);
 			setRightPaneNote(null);
 			// Set left pane as active by default
-			setActivePaneId('left');
+			setActivePaneId("left");
 		} else {
 			// When disabling dual mode, clear pane notes
 			setLeftPaneNote(null);

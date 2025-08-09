@@ -18,6 +18,17 @@ export type {
 	UpdateNoteParams,
 } from "./database";
 
+// Re-export context menu types
+export type {
+	MenuItem,
+	MenuGroup,
+	ContextMenuPosition,
+	ContextMenuData,
+	TreeContextData,
+	EditorContextData,
+	ContextMenuType,
+} from "./context-menu";
+
 // Storage configuration types
 export interface StorageSettings {
 	backend: "sqlite" | "file-system" | "cloud"; // Available storage backends

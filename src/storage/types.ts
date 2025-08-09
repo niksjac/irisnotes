@@ -11,10 +11,10 @@ import type {
 	Setting,
 	Tag,
 	UpdateNoteParams,
-} from '../types/database';
+} from "../types/database";
 
 // Storage backend types
-export type StorageBackend = 'sqlite' | 'file-system' | 'cloud';
+export type StorageBackend = "sqlite" | "file-system" | "cloud";
 
 // Storage configuration
 export interface StorageConfig {
@@ -26,7 +26,7 @@ export interface StorageConfig {
 		notes_directory: string;
 	};
 	cloud?: {
-		provider: 'google-drive' | 'dropbox' | 'onedrive';
+		provider: "google-drive" | "dropbox" | "onedrive";
 		credentials?: any;
 	};
 }
@@ -76,7 +76,7 @@ export interface StorageAdapter {
 	createNoteRelationship(
 		sourceId: string,
 		targetId: string,
-		type: 'reference' | 'child' | 'related',
+		type: "reference" | "child" | "related",
 		description?: string
 	): Promise<StorageResult<NoteRelationship>>;
 	deleteNoteRelationship(id: string): Promise<VoidStorageResult>;

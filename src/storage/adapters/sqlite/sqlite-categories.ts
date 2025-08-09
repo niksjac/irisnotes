@@ -1,6 +1,6 @@
-import type { Category, CreateCategoryParams, Note } from '../../../types/database';
-import type { StorageResult, VoidStorageResult } from '../../types';
-import { BaseRepository } from './sqlite-base';
+import type { Category, CreateCategoryParams, Note } from "../../../types/database";
+import type { StorageResult, VoidStorageResult } from "../../types";
+import { BaseRepository } from "./sqlite-base";
 
 /**
  * Repository for categories-related database operations
@@ -11,10 +11,10 @@ export class SqliteCategoriesRepository extends BaseRepository {
 		if (dbCheck) return dbCheck;
 
 		try {
-			const results = await this.db.select<Category[]>('SELECT * FROM categories ORDER BY sort_order ASC, name ASC');
+			const results = await this.db.select<Category[]>("SELECT * FROM categories ORDER BY sort_order ASC, name ASC");
 			return this.success(results);
 		} catch (error) {
-			return this.handleError(error, 'Get categories');
+			return this.handleError(error, "Get categories");
 		}
 	}
 
@@ -23,11 +23,11 @@ export class SqliteCategoriesRepository extends BaseRepository {
 		if (dbCheck) return dbCheck;
 
 		try {
-			const results = await this.db.select<Category[]>('SELECT * FROM categories WHERE id = ?', [id]);
+			const results = await this.db.select<Category[]>("SELECT * FROM categories WHERE id = ?", [id]);
 			const category = results.length > 0 ? (results[0] as Category) : null;
 			return this.success(category);
 		} catch (error) {
-			return this.handleError(error, 'Get category');
+			return this.handleError(error, "Get category");
 		}
 	}
 
@@ -48,7 +48,7 @@ export class SqliteCategoriesRepository extends BaseRepository {
 			await this.db.execute(insertQuery, [
 				id,
 				params.name,
-				params.description || '',
+				params.description || "",
 				params.color || null,
 				params.icon || null,
 				params.parent_id || null,
@@ -60,7 +60,7 @@ export class SqliteCategoriesRepository extends BaseRepository {
 			const newCategory: Category = {
 				id,
 				name: params.name,
-				description: params.description || '',
+				description: params.description || "",
 				color: params.color || null,
 				icon: params.icon || null,
 				parent_id: params.parent_id || null,
@@ -71,7 +71,7 @@ export class SqliteCategoriesRepository extends BaseRepository {
 
 			return this.success(newCategory);
 		} catch (error) {
-			return this.handleError(error, 'Create category');
+			return this.handleError(error, "Create category");
 		}
 	}
 
@@ -85,45 +85,45 @@ export class SqliteCategoriesRepository extends BaseRepository {
 			const queryParams: any[] = [];
 
 			if (params.name !== undefined) {
-				setParts.push('name = ?');
+				setParts.push("name = ?");
 				queryParams.push(params.name);
 			}
 			if (params.description !== undefined) {
-				setParts.push('description = ?');
+				setParts.push("description = ?");
 				queryParams.push(params.description);
 			}
 			if (params.color !== undefined) {
-				setParts.push('color = ?');
+				setParts.push("color = ?");
 				queryParams.push(params.color);
 			}
 			if (params.icon !== undefined) {
-				setParts.push('icon = ?');
+				setParts.push("icon = ?");
 				queryParams.push(params.icon);
 			}
 			if (params.parent_id !== undefined) {
-				setParts.push('parent_id = ?');
+				setParts.push("parent_id = ?");
 				queryParams.push(params.parent_id);
 			}
 			if (params.sort_order !== undefined) {
-				setParts.push('sort_order = ?');
+				setParts.push("sort_order = ?");
 				queryParams.push(params.sort_order);
 			}
 
-			setParts.push('updated_at = ?');
+			setParts.push("updated_at = ?");
 			queryParams.push(now);
 			queryParams.push(id);
 
-			const updateQuery = `UPDATE categories SET ${setParts.join(', ')} WHERE id = ?`;
+			const updateQuery = `UPDATE categories SET ${setParts.join(", ")} WHERE id = ?`;
 			await this.db.execute(updateQuery, queryParams);
 
-			const results = await this.db.select<Category[]>('SELECT * FROM categories WHERE id = ?', [id]);
+			const results = await this.db.select<Category[]>("SELECT * FROM categories WHERE id = ?", [id]);
 			if (results.length === 0) {
-				return this.failure('Category not found');
+				return this.failure("Category not found");
 			}
 
 			return this.success(results[0] as Category);
 		} catch (error) {
-			return this.handleError(error, 'Update category');
+			return this.handleError(error, "Update category");
 		}
 	}
 
@@ -133,12 +133,12 @@ export class SqliteCategoriesRepository extends BaseRepository {
 
 		try {
 			// Remove all note associations first
-			await this.db.execute('DELETE FROM note_categories WHERE category_id = ?', [id]);
+			await this.db.execute("DELETE FROM note_categories WHERE category_id = ?", [id]);
 			// Delete the category
-			await this.db.execute('DELETE FROM categories WHERE id = ?', [id]);
+			await this.db.execute("DELETE FROM categories WHERE id = ?", [id]);
 			return this.voidSuccess();
 		} catch (error) {
-			return this.handleError(error, 'Delete category');
+			return this.handleError(error, "Delete category");
 		}
 	}
 
@@ -156,7 +156,7 @@ export class SqliteCategoriesRepository extends BaseRepository {
 			const results = await this.db.select<Note[]>(query, [categoryId]);
 			return this.success(results);
 		} catch (error) {
-			return this.handleError(error, 'Get category notes');
+			return this.handleError(error, "Get category notes");
 		}
 	}
 
@@ -167,12 +167,12 @@ export class SqliteCategoriesRepository extends BaseRepository {
 		try {
 			const now = this.now();
 			await this.db.execute(
-				'INSERT OR IGNORE INTO note_categories (note_id, category_id, created_at) VALUES (?, ?, ?)',
+				"INSERT OR IGNORE INTO note_categories (note_id, category_id, created_at) VALUES (?, ?, ?)",
 				[noteId, categoryId, now]
 			);
 			return this.voidSuccess();
 		} catch (error) {
-			return this.handleError(error, 'Add note to category');
+			return this.handleError(error, "Add note to category");
 		}
 	}
 
@@ -181,10 +181,10 @@ export class SqliteCategoriesRepository extends BaseRepository {
 		if (dbCheck) return dbCheck;
 
 		try {
-			await this.db.execute('DELETE FROM note_categories WHERE note_id = ? AND category_id = ?', [noteId, categoryId]);
+			await this.db.execute("DELETE FROM note_categories WHERE note_id = ? AND category_id = ?", [noteId, categoryId]);
 			return this.voidSuccess();
 		} catch (error) {
-			return this.handleError(error, 'Remove note from category');
+			return this.handleError(error, "Remove note from category");
 		}
 	}
 }

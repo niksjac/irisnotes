@@ -1,7 +1,7 @@
-import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
-import { defineConfig } from 'vite';
+import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import { resolve } from "node:path";
+import { defineConfig } from "vite";
 
 const host = process.env.TAURI_DEV_HOST;
 
@@ -21,14 +21,14 @@ export default defineConfig(() => ({
 		host: host || false,
 		hmr: host
 			? {
-					protocol: 'ws',
+					protocol: "ws",
 					host,
 					port: 1421,
 				}
 			: undefined,
 		watch: {
 			// 3. tell vite to ignore watching `src-tauri`
-			ignored: ['**/src-tauri/**'],
+			ignored: ["**/src-tauri/**"],
 		},
 	},
 
@@ -39,48 +39,48 @@ export default defineConfig(() => ({
 			output: {
 				manualChunks: {
 					// Separate vendor chunks
-					'vendor-react': ['react', 'react-dom'],
-					'vendor-prosemirror': [
-						'prosemirror-state',
-						'prosemirror-view',
-						'prosemirror-model',
-						'prosemirror-transform',
-						'prosemirror-keymap',
-						'prosemirror-commands',
-						'prosemirror-history',
-						'prosemirror-inputrules',
-						'prosemirror-schema-basic',
-						'prosemirror-schema-list',
-						'prosemirror-dropcursor',
-						'prosemirror-gapcursor',
+					"vendor-react": ["react", "react-dom"],
+					"vendor-prosemirror": [
+						"prosemirror-state",
+						"prosemirror-view",
+						"prosemirror-model",
+						"prosemirror-transform",
+						"prosemirror-keymap",
+						"prosemirror-commands",
+						"prosemirror-history",
+						"prosemirror-inputrules",
+						"prosemirror-schema-basic",
+						"prosemirror-schema-list",
+						"prosemirror-dropcursor",
+						"prosemirror-gapcursor",
 					],
-					'vendor-codemirror': [
-						'@codemirror/view',
-						'@codemirror/state',
-						'@codemirror/lang-html',
-						'@codemirror/theme-one-dark',
-						'@codemirror/commands',
-						'@codemirror/search',
-						'@codemirror/autocomplete',
-						'@codemirror/language',
+					"vendor-codemirror": [
+						"@codemirror/view",
+						"@codemirror/state",
+						"@codemirror/lang-html",
+						"@codemirror/theme-one-dark",
+						"@codemirror/commands",
+						"@codemirror/search",
+						"@codemirror/autocomplete",
+						"@codemirror/language",
 					],
-					'vendor-tauri': [
-						'@tauri-apps/api',
-						'@tauri-apps/plugin-fs',
-						'@tauri-apps/plugin-opener',
-						'@tauri-apps/plugin-clipboard-manager',
-						'@tauri-apps/plugin-dialog',
-						'@tauri-apps/plugin-notification',
-						'@tauri-apps/plugin-sql',
-						'@tauri-apps/plugin-window-state',
-						'@tauri-apps/plugin-global-shortcut',
+					"vendor-tauri": [
+						"@tauri-apps/api",
+						"@tauri-apps/plugin-fs",
+						"@tauri-apps/plugin-opener",
+						"@tauri-apps/plugin-clipboard-manager",
+						"@tauri-apps/plugin-dialog",
+						"@tauri-apps/plugin-notification",
+						"@tauri-apps/plugin-sql",
+						"@tauri-apps/plugin-window-state",
+						"@tauri-apps/plugin-global-shortcut",
 					],
 				},
 			},
 		},
 
 		// Optimize for production
-		minify: 'terser' as const,
+		minify: "terser" as const,
 		terserOptions: {
 			compress: {
 				drop_console: true,
@@ -98,16 +98,16 @@ export default defineConfig(() => ({
 	// Path resolution
 	resolve: {
 		alias: {
-			'@': resolve(__dirname, 'src'),
-			'@/features': resolve(__dirname, 'src/features'),
-			'@/components': resolve(__dirname, 'src/components'),
-			'@/utils': resolve(__dirname, 'src/utils'),
-			'@/types': resolve(__dirname, 'src/types'),
+			"@": resolve(__dirname, "src"),
+			"@/features": resolve(__dirname, "src/features"),
+			"@/components": resolve(__dirname, "src/components"),
+			"@/utils": resolve(__dirname, "src/utils"),
+			"@/types": resolve(__dirname, "src/types"),
 		},
 	},
 
 	// Optimize dependencies
 	optimizeDeps: {
-		include: ['react', 'react-dom', 'prosemirror-state', 'prosemirror-view', 'prosemirror-model'],
+		include: ["react", "react-dom", "prosemirror-state", "prosemirror-view", "prosemirror-model"],
 	},
 }));

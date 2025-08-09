@@ -1,7 +1,7 @@
-import { useSetAtom } from 'jotai';
-import { useCallback } from 'react';
-import { toolbarVisibleAtom } from '@/atoms';
-import { useConfig } from '@/hooks/use-config';
+import { useSetAtom } from "jotai";
+import { useCallback } from "react";
+import { toolbarVisibleAtom } from "@/atoms";
+import { useConfig } from "@/hooks/use-config";
 
 export const useEditorLayout = () => {
 	const { config, updateConfig } = useConfig();

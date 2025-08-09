@@ -1,19 +1,19 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AppConfig } from '../types';
-import { useConfig } from './use-config';
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { AppConfig } from "../types";
+import { useConfig } from "./use-config";
 
 // Mock Tauri APIs
-vi.mock('@tauri-apps/api/core', () => ({
+vi.mock("@tauri-apps/api/core", () => ({
 	invoke: vi.fn(),
 }));
 
-vi.mock('@tauri-apps/api/event', () => ({
+vi.mock("@tauri-apps/api/event", () => ({
 	listen: vi.fn(),
 }));
 
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 
 const DEFAULT_CONFIG: AppConfig = {
 	editor: {
@@ -24,34 +24,34 @@ const DEFAULT_CONFIG: AppConfig = {
 		enableExampleNote: false,
 	},
 	storage: {
-		backend: 'sqlite',
+		backend: "sqlite",
 		sqlite: {
-			database_path: 'notes.db',
+			database_path: "notes.db",
 		},
 	},
 	development: {
 		useLocalConfig: false,
-		configPath: './dev/config/',
+		configPath: "./dev/config/",
 	},
 	production: {},
 };
 
-describe('useConfig', () => {
+describe("useConfig", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
 		// Mock import.meta.env
-		Object.defineProperty(import.meta, 'env', {
+		Object.defineProperty(import.meta, "env", {
 			value: { DEV: false },
 			writable: true,
 		});
 	});
 
-	describe('initialization', () => {
-		it('should initialize with default config and loading state', async () => {
+	describe("initialization", () => {
+		it("should initialize with default config and loading state", async () => {
 			// Mock the async operations to prevent state updates
 			(invoke as any)
-				.mockRejectedValueOnce(new Error('Config not found')) // loadConfig fails
+				.mockRejectedValueOnce(new Error("Config not found")) // loadConfig fails
 				.mockResolvedValueOnce(undefined) // saveConfig succeeds
 				.mockResolvedValueOnce(undefined); // setup_config_watcher
 			(listen as any).mockResolvedValue(() => {}); // Mock unlisten function
@@ -68,7 +68,7 @@ describe('useConfig', () => {
 			});
 		});
 
-		it('should load config from system on mount', async () => {
+		it("should load config from system on mount", async () => {
 			const mockConfig = {
 				...DEFAULT_CONFIG,
 				editor: { lineWrapping: true, toolbarVisible: false },
@@ -85,8 +85,8 @@ describe('useConfig', () => {
 				expect(result.current.loading).toBe(false);
 			});
 
-			expect(invoke).toHaveBeenCalledWith('read_config', {
-				filename: './dev/config/app-config.json',
+			expect(invoke).toHaveBeenCalledWith("read_config", {
+				filename: "./dev/config/app-config.json",
 			});
 			expect(result.current.config.editor).toEqual({
 				lineWrapping: true,
@@ -94,16 +94,16 @@ describe('useConfig', () => {
 			});
 		});
 
-		it('should use development config in dev mode', async () => {
+		it("should use development config in dev mode", async () => {
 			// Set development mode
-			Object.defineProperty(import.meta, 'env', {
+			Object.defineProperty(import.meta, "env", {
 				value: { DEV: true },
 				writable: true,
 			});
 
 			const devConfig = {
 				...DEFAULT_CONFIG,
-				development: { useLocalConfig: true, configPath: './dev/config/' },
+				development: { useLocalConfig: true, configPath: "./dev/config/" },
 			};
 
 			(invoke as any).mockResolvedValueOnce(JSON.stringify(devConfig));
@@ -115,13 +115,13 @@ describe('useConfig', () => {
 				expect(result.current.loading).toBe(false);
 			});
 
-			expect(invoke).toHaveBeenCalledWith('read_config', {
-				filename: './dev/config/app-config.json',
+			expect(invoke).toHaveBeenCalledWith("read_config", {
+				filename: "./dev/config/app-config.json",
 			});
 		});
 
-		it('should handle config loading errors gracefully', async () => {
-			const mockError = new Error('Failed to read config');
+		it("should handle config loading errors gracefully", async () => {
+			const mockError = new Error("Failed to read config");
 			(invoke as any)
 				.mockRejectedValueOnce(mockError) // config load fails
 				.mockResolvedValueOnce(undefined) // saveConfig succeeds
@@ -139,15 +139,15 @@ describe('useConfig', () => {
 				...DEFAULT_CONFIG,
 				development: {
 					useLocalConfig: true,
-					configPath: './dev/config/',
+					configPath: "./dev/config/",
 				},
 			};
 			expect(result.current.config).toEqual(expectedConfig);
 		});
 	});
 
-	describe('updateConfig', () => {
-		it('should update config and call save', async () => {
+	describe("updateConfig", () => {
+		it("should update config and call save", async () => {
 			(invoke as any)
 				.mockResolvedValueOnce(JSON.stringify(DEFAULT_CONFIG)) // Initial load
 				.mockResolvedValueOnce(undefined); // Save call
@@ -167,8 +167,8 @@ describe('useConfig', () => {
 				await result.current.updateConfig(updates);
 			});
 
-			expect(invoke).toHaveBeenCalledWith('write_config', {
-				filename: 'app-config.json',
+			expect(invoke).toHaveBeenCalledWith("write_config", {
+				filename: "app-config.json",
 				content: JSON.stringify(
 					{
 						...DEFAULT_CONFIG,
@@ -182,7 +182,7 @@ describe('useConfig', () => {
 			expect(result.current.config.editor).toEqual(updates.editor);
 		});
 
-		it('should merge nested config properties correctly', async () => {
+		it("should merge nested config properties correctly", async () => {
 			(invoke as any).mockResolvedValueOnce(JSON.stringify(DEFAULT_CONFIG)).mockResolvedValueOnce(undefined);
 			(listen as any).mockResolvedValue(() => {});
 
@@ -194,7 +194,7 @@ describe('useConfig', () => {
 
 			const updates = {
 				editor: { lineWrapping: true, toolbarVisible: true }, // Include required property
-				storage: { backend: 'file-system' as const },
+				storage: { backend: "file-system" as const },
 			};
 
 			await act(async () => {
@@ -205,16 +205,16 @@ describe('useConfig', () => {
 				lineWrapping: true,
 				toolbarVisible: true, // Should preserve existing value
 			});
-			expect(result.current.config.storage.backend).toBe('file-system');
+			expect(result.current.config.storage.backend).toBe("file-system");
 		});
 
-		it('should handle save errors gracefully', async () => {
-			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+		it("should handle save errors gracefully", async () => {
+			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
 			(invoke as any)
 				.mockResolvedValueOnce(JSON.stringify(DEFAULT_CONFIG)) // initial load
 				.mockResolvedValueOnce(undefined) // setup_config_watcher
-				.mockRejectedValueOnce(new Error('Save failed')); // save error
+				.mockRejectedValueOnce(new Error("Save failed")); // save error
 			(listen as any).mockResolvedValue(() => {});
 
 			const { result } = renderHook(() => useConfig());
@@ -229,14 +229,14 @@ describe('useConfig', () => {
 				});
 			});
 
-			expect(consoleSpy).toHaveBeenCalledWith('Failed to save config:', expect.any(Error));
+			expect(consoleSpy).toHaveBeenCalledWith("Failed to save config:", expect.any(Error));
 
 			consoleSpy.mockRestore();
 		});
 	});
 
-	describe('loadConfig', () => {
-		it('should reload config when called manually', async () => {
+	describe("loadConfig", () => {
+		it("should reload config when called manually", async () => {
 			const initialConfig = DEFAULT_CONFIG;
 			const updatedConfig = {
 				...DEFAULT_CONFIG,
@@ -269,8 +269,8 @@ describe('useConfig', () => {
 		});
 	});
 
-	describe('file watching', () => {
-		it('should set up config file watcher on mount', async () => {
+	describe("file watching", () => {
+		it("should set up config file watcher on mount", async () => {
 			const mockUnlisten = vi.fn();
 			(invoke as any).mockResolvedValueOnce(JSON.stringify(DEFAULT_CONFIG)).mockResolvedValueOnce(undefined); // setup_config_watcher
 			(listen as any).mockResolvedValue(mockUnlisten);
@@ -278,22 +278,22 @@ describe('useConfig', () => {
 			const { unmount } = renderHook(() => useConfig());
 
 			await waitFor(() => {
-				expect(invoke).toHaveBeenCalledWith('setup_config_watcher');
+				expect(invoke).toHaveBeenCalledWith("setup_config_watcher");
 			});
 
-			expect(listen).toHaveBeenCalledWith('config-file-changed', expect.any(Function));
+			expect(listen).toHaveBeenCalledWith("config-file-changed", expect.any(Function));
 
 			// Test cleanup
 			unmount();
 			expect(mockUnlisten).toHaveBeenCalled();
 		});
 
-		it('should handle file watcher setup errors gracefully', async () => {
-			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+		it("should handle file watcher setup errors gracefully", async () => {
+			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
 			(invoke as any)
 				.mockResolvedValueOnce(JSON.stringify(DEFAULT_CONFIG)) // initial load
-				.mockRejectedValueOnce(new Error('Watcher setup failed')); // setup_config_watcher fails
+				.mockRejectedValueOnce(new Error("Watcher setup failed")); // setup_config_watcher fails
 			(listen as any).mockResolvedValue(() => {});
 
 			const { result } = renderHook(() => useConfig());
@@ -305,7 +305,7 @@ describe('useConfig', () => {
 			// Wait a bit more for the async file watcher setup to complete
 			await waitFor(
 				() => {
-					expect(consoleSpy).toHaveBeenCalledWith('Failed to setup config file watcher:', expect.any(Error));
+					expect(consoleSpy).toHaveBeenCalledWith("Failed to setup config file watcher:", expect.any(Error));
 				},
 				{ timeout: 2000 }
 			);
@@ -314,8 +314,8 @@ describe('useConfig', () => {
 		});
 	});
 
-	describe('config merging', () => {
-		it('should merge partial configs with defaults', async () => {
+	describe("config merging", () => {
+		it("should merge partial configs with defaults", async () => {
 			const partialConfig = {
 				editor: { lineWrapping: true },
 				// Missing other required fields

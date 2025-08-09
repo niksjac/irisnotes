@@ -1,4 +1,4 @@
-import type Database from '@tauri-apps/plugin-sql';
+import type Database from "@tauri-apps/plugin-sql";
 
 /**
  * Manages SQLite database schema creation and migrations
@@ -12,7 +12,7 @@ export class SqliteSchemaManager {
 
 	async createTables(): Promise<void> {
 		if (!this.db) {
-			throw new Error('Database not initialized');
+			throw new Error("Database not initialized");
 		}
 
 		// Create core tables
@@ -146,7 +146,7 @@ export class SqliteSchemaManager {
 	private async insertDefaultData(): Promise<void> {
 		// Insert default categories if they don't exist
 		const existingCategories = await this.db.select<Array<{ count: number }>>(
-			'SELECT COUNT(*) as count FROM categories'
+			"SELECT COUNT(*) as count FROM categories"
 		);
 		if (existingCategories.length === 0 || (existingCategories[0]?.count ?? 0) === 0) {
 			await this.db.execute(`

@@ -1,6 +1,6 @@
-import { useAtom } from 'jotai';
-import { useCallback } from 'react';
-import { activityBarVisible, configViewActive, databaseStatusVisible, hotkeysViewActive } from '@/atoms';
+import { useAtom } from "jotai";
+import { useCallback } from "react";
+import { activityBarVisible, configViewActive, databaseStatusVisible, hotkeysViewActive } from "@/atoms";
 
 export const useView = () => {
 	const [configViewActiveValue, setConfigViewActive] = useAtom(configViewActive);

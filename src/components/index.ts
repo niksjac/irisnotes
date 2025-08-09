@@ -1,11 +1,7 @@
 // UI Components - Barrel Exports
-export { ActivityBar } from "./activity-bar";
-export { ActivityBarButton } from "./activity-bar-button";
-export { Sidebar } from "./sidebar";
-export { SidebarResizer } from "./sidebar-resizer";
-export { TreeView } from "./tree-view";
-export { TreeNode } from "./tree-node";
-export { EditorContainer } from "./editor-container";
+export { ActivityBar, ActivityBarButton } from "./activity-bar";
+export { ContextMenu } from "./context-menu";
 export { DualPaneView } from "./dual-pane-view";
-
-// Note: Folder component was removed during restructuring
+export { EditorContainer } from "./editor";
+export { Sidebar, SidebarResizer } from "./sidebar";
+export { TreeView, TreeNode } from "./tree";

@@ -53,6 +53,7 @@ export function EditorSourceView({ paneId }: EditorSourceViewProps) {
 					placeholder="Start writing your note..."
 					defaultView="source"
 					toolbarVisible={false} // Source view typically doesn't need toolbar
+					noteId={note.id}
 				/>
 			</div>
 		</div>

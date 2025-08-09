@@ -1,6 +1,6 @@
-import { useAtom } from 'jotai';
-import { useCallback } from 'react';
-import { sidebarCollapsed } from '@/atoms';
+import { useAtom } from "jotai";
+import { useCallback } from "react";
+import { sidebarCollapsed } from "@/atoms";
 
 export const useSidebar = () => {
 	const [sidebarCollapsedValue, setSidebarCollapsed] = useAtom(sidebarCollapsed);
