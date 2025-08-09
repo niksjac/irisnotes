@@ -3,11 +3,19 @@ import { Tree } from 'react-arborist';
 import useResizeObserver from 'use-resize-observer';
 import { TreeNode } from './tree-node';
 import { useTreeData } from './hooks';
+import { useNotesSelection } from '../notes/hooks';
+import type { PaneId } from '@/types';
 
-export function TreeView() {
+interface TreeViewProps {
+	isDualPaneMode?: boolean;
+	activePaneId?: PaneId | null;
+}
+
+export function TreeView({ isDualPaneMode = false, activePaneId }: TreeViewProps) {
 	const { treeData, isLoading, error } = useTreeData();
 	const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
 	const { ref, width, height } = useResizeObserver();
+	const { setSelectedNoteId, openNoteInPane } = useNotesSelection();
 
 	// Loading state
 	if (isLoading) {
@@ -64,6 +72,14 @@ export function TreeView() {
 							setSelectedId(nodes[0]?.id);
 						}}
 						onActivate={node => {
+							// Handle note selection for the appropriate pane
+							if (node.data.type === 'note') {
+								if (isDualPaneMode && activePaneId) {
+									openNoteInPane(node.data.id, activePaneId);
+								} else {
+									setSelectedNoteId(node.data.id);
+								}
+							}
 							console.log('Activated node:', node.data.name, 'type:', node.data.type);
 						}}
 						onFocus={node => {

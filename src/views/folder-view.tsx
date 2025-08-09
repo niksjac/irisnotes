@@ -17,7 +17,7 @@ interface FolderViewProps {
 export const FolderView = React.memo(({ paneId }: FolderViewProps) => {
 	const { notes } = useNotesData();
 	const { createNewNote, updateNoteTitle, updateNoteContent } = useNotesActions();
-	const { setSelectedNoteId } = useNotesSelection();
+	const { setSelectedNoteId, openNoteInPane } = useNotesSelection();
 	const { storageAdapter, isInitialized } = useNotesStorage();
 
 	const { categories, noteCategories, handleCreateFolder } = useNotesCategories({
@@ -34,7 +34,7 @@ export const FolderView = React.memo(({ paneId }: FolderViewProps) => {
 		storageAdapter,
 		isDualPaneMode: !!paneId,
 		activePaneId: paneId || 'left',
-		openNoteInPane: () => {}, // Simplified
+		openNoteInPane,
 		setSelectedNoteId,
 		updateNoteTitle,
 		updateNoteContent,

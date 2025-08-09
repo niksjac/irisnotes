@@ -52,13 +52,17 @@ export const selectedFolderAtom = atom(get => {
 	return null;
 });
 
+// Separate note atoms for each pane
+export const leftPaneNoteAtom = atom<any>(null);
+export const rightPaneNoteAtom = atom<any>(null);
+
 export const notesForPaneAtom = atom<{
 	left: any;
 	right: any;
-}>({
-	left: null,
-	right: null,
-});
+}>(get => ({
+	left: get(leftPaneNoteAtom),
+	right: get(rightPaneNoteAtom),
+}));
 
 // Helper function to determine view based on current state
 const getDefaultView = (get: any): ViewType => {
@@ -88,13 +92,38 @@ const getDefaultView = (get: any): ViewType => {
 // Current view state derived atom (for single-pane mode or when no pane specified)
 export const currentViewAtom = atom<ViewType>(get => getDefaultView(get));
 
-// Pane-specific view atoms with fallback to default logic
+// Helper function to determine view based on pane-specific state
+const getPaneDefaultView = (get: any, paneNote: any): ViewType => {
+	const configViewActiveValue = get(configViewActive);
+	const hotkeysViewActiveValue = get(hotkeysViewActive);
+	const selectedFolder = get(selectedFolderAtom);
+	const notes = get(notesAtom);
+	const categories = get(categoriesAtom);
+
+	if (configViewActiveValue) return 'config-view';
+	if (hotkeysViewActiveValue) return 'hotkeys-view';
+	if (selectedFolder) return 'folder-view';
+	if (paneNote) {
+		// Use rich editor view when a note is selected in this pane
+		return 'editor-rich-view';
+	}
+
+	// Show welcome view if no notes or categories exist
+	if (notes.length === 0 && categories.length === 0) return 'welcome-view';
+
+	// Default fallback
+	return 'welcome-view';
+};
+
+// Pane-specific view atoms with fallback to pane-specific default logic
 export const leftPaneCurrentView = atom<ViewType>(get => {
 	const leftPaneView = get(leftPaneViewAtom);
-	return leftPaneView || getDefaultView(get);
+	const leftPaneNote = get(leftPaneNoteAtom);
+	return leftPaneView || getPaneDefaultView(get, leftPaneNote);
 });
 
 export const rightPaneCurrentView = atom<ViewType>(get => {
 	const rightPaneView = get(rightPaneViewAtom);
-	return rightPaneView || getDefaultView(get);
+	const rightPaneNote = get(rightPaneNoteAtom);
+	return rightPaneView || getPaneDefaultView(get, rightPaneNote);
 });

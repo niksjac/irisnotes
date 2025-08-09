@@ -29,7 +29,7 @@ export function useNotesHandlers({
 }: UseNotesHandlersProps) {
 	const handleNoteClick = useCallback(
 		(noteId: string) => {
-			if (isDualPaneMode) {
+			if (isDualPaneMode && activePaneId) {
 				openNoteInPane(noteId, activePaneId);
 			} else {
 				setSelectedNoteId(noteId);

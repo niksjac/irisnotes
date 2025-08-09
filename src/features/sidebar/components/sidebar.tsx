@@ -1,10 +1,12 @@
 import type React from 'react';
 import { useNotesData, useNotesStorage } from '../../notes/hooks';
+import { useLayout } from '@/hooks';
 import { TreeView } from '../../treeview/tree-view';
 
 export const Sidebar: React.FC = () => {
 	const { isInitialized } = useNotesStorage();
 	const { isLoading } = useNotesData();
+	const { panes } = useLayout();
 
 	// Auto-initialization is now handled in useNotesActions
 
@@ -21,7 +23,10 @@ export const Sidebar: React.FC = () => {
 
 	return (
 		<div className='flex flex-col h-full bg-white dark:bg-gray-900 __1'>
-			<TreeView />
+			<TreeView
+				isDualPaneMode={panes.isDualMode}
+				activePaneId={panes.activePane}
+			/>
 		</div>
 	);
 };
