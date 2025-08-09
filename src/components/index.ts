@@ -6,5 +6,6 @@ export { SidebarResizer } from "./sidebar-resizer";
 export { TreeView } from "./tree-view";
 export { TreeNode } from "./tree-node";
 export { EditorContainer } from "./editor-container";
+export { DualPaneView } from "./dual-pane-view";
 
 // Note: Folder component was removed during restructuring

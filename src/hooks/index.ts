@@ -1,12 +1,11 @@
 // App-wide state management
 
 // Re-export types
-export type { PaneId } from "./use-pane";
+export type { PaneId } from "./use-layout";
 export { useAppPersistence } from "./use-app-persistence";
 // Configuration
 export { useConfig } from "./use-config";
 export { useEditorLayout } from "./use-editor-layout";
-export { usePane } from "./use-pane";
 
 // Performance
 export { usePerformance } from "./use-performance";

@@ -6,18 +6,10 @@ import { ConfigView, HotkeysView, FolderView, EditorRichView, EditorSourceView, 
 
 export const Content: FC<ContentProps> = ({ paneId }) => {
 	// Select the appropriate view atom based on pane
-	const getViewAtom = () => {
-		switch (paneId) {
-			case "left":
-				return leftPaneCurrentView;
-			case "right":
-				return rightPaneCurrentView;
-			default:
-				return currentViewAtom;
-		}
-	};
+	const viewAtom =
+		paneId === "left" ? leftPaneCurrentView : paneId === "right" ? rightPaneCurrentView : currentViewAtom;
 
-	const currentView = useAtomValue(getViewAtom());
+	const currentView = useAtomValue(viewAtom);
 
 	const viewMapping: Record<ViewType, React.ReactElement> = {
 		"config-view": <ConfigView />,

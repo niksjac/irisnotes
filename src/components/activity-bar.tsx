@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import * as Icons from "lucide-react";
-import { useEditorLayout, usePane, useSidebar, useView } from "@/hooks";
+import { useEditorLayout, useLayout, useSidebar, useView } from "@/hooks";
 import { useEditorState, useLineWrapping } from "@/hooks";
 import { ActivityBarButton } from "./activity-bar-button";
 
@@ -23,7 +23,8 @@ export function ActivityBar() {
 		toggleHotkeysView,
 		toggleDatabaseStatus,
 	} = useView();
-	const { isDualPaneMode, toggleDualPaneMode } = usePane();
+	const { panes } = useLayout();
+	const { isDualMode: isDualPaneMode, toggleDualMode: toggleDualPaneMode } = panes;
 	const { toolbarVisible, toggleToolbar } = useEditorLayout();
 	const { fontSize } = useEditorState();
 	const { isWrapping, toggleLineWrapping } = useLineWrapping();
