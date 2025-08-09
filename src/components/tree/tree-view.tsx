@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Tree } from "react-arborist";
 import useResizeObserver from "use-resize-observer";
+import { useHotkeys } from "react-hotkeys-hook";
 import { TreeNode } from "./tree-node";
-import { useTreeData, useNotesSelection, useContextMenu, useContextMenuActions } from "@/hooks";
+import { useTreeData, useNotesSelection, useContextMenu, useContextMenuActions, useNotesActions } from "@/hooks";
 import type { PaneId, TreeContextData } from "@/types";
 import { ContextMenu } from "../context-menu";
 
@@ -12,12 +13,35 @@ interface TreeViewProps {
 }
 
 export function TreeView({ isDualPaneMode = false, activePaneId }: TreeViewProps) {
-	const { treeData, isLoading, error } = useTreeData();
+	const { treeData, isLoading, error, refreshData } = useTreeData();
 	const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
 	const { ref, width, height } = useResizeObserver();
 	const { setSelectedNoteId, openNoteInPane } = useNotesSelection();
 	const { contextMenu, handleContextMenu, hideContextMenu } = useContextMenu();
 	const { getTreeNodeMenuGroups } = useContextMenuActions();
+	const { updateNoteTitle } = useNotesActions();
+	const treeRef = useRef<any>(null);
+
+	// Handle F2 key for renaming
+	useHotkeys(
+		"f2",
+		() => {
+			const tree = treeRef.current;
+			if (tree && selectedId) {
+				// Find the selected node and trigger edit
+				const selectedNodes = tree.selectedNodes;
+				if (selectedNodes && selectedNodes.length === 1) {
+					const node = selectedNodes[0];
+					node.edit();
+				}
+			}
+		},
+		{
+			preventDefault: true,
+			enableOnContentEditable: false,
+			enableOnFormTags: false,
+		}
+	);
 
 	// Loading state
 	if (isLoading) {
@@ -47,6 +71,22 @@ export function TreeView({ isDualPaneMode = false, activePaneId }: TreeViewProps
 		);
 	}
 
+	// Handle rename operation
+	const handleRename = async ({ node, name }: { node: any; name: string }) => {
+		if (node.data.type === "note") {
+			try {
+				await updateNoteTitle(node.data.id, name);
+				// Refresh tree data to show updated name
+				await refreshData();
+			} catch (error) {
+				console.error("Failed to rename note:", error);
+			}
+		} else if (node.data.type === "category") {
+			// TODO: Add category renaming support when category management is implemented
+			console.log("Category renaming not yet implemented");
+		}
+	};
+
 	const handleTreeContextMenu = (event: React.MouseEvent, data: TreeContextData) => {
 		const menuGroups = getTreeNodeMenuGroups(data);
 		handleContextMenu(event, {
@@ -62,6 +102,7 @@ export function TreeView({ isDualPaneMode = false, activePaneId }: TreeViewProps
 				<div className="flex-1 overflow-hidden">
 					{width && height && (
 						<Tree
+							ref={treeRef}
 							data={treeData}
 							openByDefault={true}
 							width={width}
@@ -88,6 +129,7 @@ export function TreeView({ isDualPaneMode = false, activePaneId }: TreeViewProps
 							onFocus={(node) => {
 								console.log("Focused node:", node.data.name, "type:", node.data.type);
 							}}
+							onRename={handleRename}
 						>
 							{(props) => <TreeNode {...props} onContextMenu={handleTreeContextMenu} />}
 						</Tree>

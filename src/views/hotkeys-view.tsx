@@ -28,6 +28,7 @@ export function HotkeysView() {
 			category: "Application",
 		},
 		{ key: "F5", description: "Reload Note", category: "Application" },
+		{ key: "F2", description: "Rename Selected Tree Item", category: "Application" },
 		{
 			key: "Ctrl++",
 			description: "Increase Editor Font Size",
