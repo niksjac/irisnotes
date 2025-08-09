@@ -1,4 +1,4 @@
-import { useHotkeys } from 'react-hotkeys-hook';
+import { useHotkeys } from "react-hotkeys-hook";
 
 interface AppHotkeysProps {
 	// Layout hotkeys
@@ -30,24 +30,37 @@ export function useAppHotkeys({
 	onToggleDualPane,
 	onToggleActivityBar,
 }: AppHotkeysProps) {
-	const hotkeyOptions = {
+	// Global hotkeys that should work everywhere (including form fields)
+	const globalHotkeyOptions = {
 		preventDefault: true,
-		enableOnContentEditable: false,
-		enableOnFormTags: false,
+		enableOnContentEditable: true,
+		enableOnFormTags: true,
 	};
 
-	// Layout hotkeys
-	useHotkeys('ctrl+b', () => onToggleSidebar?.(), hotkeyOptions);
-	useHotkeys('ctrl+d', () => onToggleDualPane?.(), hotkeyOptions);
-	useHotkeys('ctrl+j', () => onToggleActivityBar?.(), hotkeyOptions);
+	// Restricted hotkeys that should NOT work in form fields to avoid conflicts
+	// const restrictedHotkeyOptions = {
+	// 	preventDefault: true,
+	// 	enableOnContentEditable: false,
+	// 	enableOnFormTags: false,
+	// };
+
+	// Layout hotkeys - These should be global since they don't interfere with text input
+	useHotkeys("ctrl+b", () => onToggleSidebar?.(), globalHotkeyOptions);
+	useHotkeys("ctrl+d", () => onToggleDualPane?.(), globalHotkeyOptions);
+	useHotkeys("ctrl+j", () => onToggleActivityBar?.(), globalHotkeyOptions);
 
 	// Future hotkey categories can be added here:
-	// Editor hotkeys
-	// useHotkeys('ctrl+s', () => onSave?.(), hotkeyOptions);
 
-	// Navigation hotkeys
-	// useHotkeys('ctrl+1', () => onFocusEditor?.(), hotkeyOptions);
+	// Editor hotkeys - Use restrictedHotkeyOptions to avoid conflicts with text editing
+	// useHotkeys('ctrl+s', () => onSave?.(), restrictedHotkeyOptions);
+	// useHotkeys('ctrl+z', () => onUndo?.(), restrictedHotkeyOptions);
+	// useHotkeys('ctrl+y', () => onRedo?.(), restrictedHotkeyOptions);
 
-	// Notes hotkeys
-	// useHotkeys('ctrl+n', () => onNewNote?.(), hotkeyOptions);
+	// Navigation hotkeys - Can be global since they're not text-editing related
+	// useHotkeys('ctrl+1', () => onFocusEditor?.(), globalHotkeyOptions);
+	// useHotkeys('ctrl+shift+e', () => onFocusSidebar?.(), globalHotkeyOptions);
+
+	// Notes hotkeys - Usually safe to be global
+	// useHotkeys('ctrl+n', () => onNewNote?.(), globalHotkeyOptions);
+	// useHotkeys('delete', () => onDeleteNote?.(), restrictedHotkeyOptions); // Avoid accidental deletions while typing
 }
