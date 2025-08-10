@@ -1,6 +1,6 @@
 import { BookOpen, FileText, FolderPlus } from "lucide-react";
 import type { PaneId } from "@/types";
-import { useNotesCategories, useNotesActions, useNotesData, useNotesStorage } from "@/hooks";
+import { useCategoriesActions, useNotesActions } from "@/hooks";
 
 interface WelcomeViewProps {
 	paneId?: PaneId | undefined;
@@ -11,20 +11,14 @@ export function WelcomeView({ paneId }: WelcomeViewProps) {
 	void paneId;
 
 	const { createNewNote } = useNotesActions();
-	const { storageAdapter, isInitialized } = useNotesStorage();
-	const { notes } = useNotesData();
-	const { handleCreateFolder } = useNotesCategories({
-		storageAdapter,
-		isLoading: !isInitialized,
-		notesLength: notes.length,
-	});
+	const { createFolder } = useCategoriesActions();
 
 	const handleCreateNote = () => {
 		createNewNote();
 	};
 
 	const handleCreateNewFolder = () => {
-		handleCreateFolder();
+		createFolder();
 	};
 
 	return (

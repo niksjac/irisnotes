@@ -27,13 +27,13 @@ export { useTheme } from "./use-theme";
 // Notes hooks (moved from nested structure)
 export { useNotesActions } from "./use-notes-actions";
 export { useNotesData } from "./use-notes-data";
-export { useNotesCategories } from "./use-notes-categories";
 export { useNotesHandlers } from "./use-notes-handlers";
 export { useNotesSelection } from "./use-notes-selection";
 export { useNotesStorage } from "./use-notes-storage";
 
-// Tree hooks
-export { useTreeData } from "./use-tree-data";
+// Categories infrastructure (new pattern)
+export { useCategoriesData } from "./use-categories-data";
+export { useCategoriesActions } from "./use-categories-actions";
 
 // Context menu hooks
 export { useContextMenu } from "./use-context-menu";

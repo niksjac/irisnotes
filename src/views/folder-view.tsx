@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import type { PaneId } from "@/types";
 import {
 	useNotesHandlers,
-	useNotesCategories,
+	useCategoriesData,
+	useCategoriesActions,
 	useNotesActions,
 	useNotesData,
 	useNotesSelection,
@@ -18,13 +19,10 @@ export const FolderView = React.memo(({ paneId }: FolderViewProps) => {
 	const { notes } = useNotesData();
 	const { createNewNote, updateNoteTitle, updateNoteContent } = useNotesActions();
 	const { setSelectedNoteId, openNoteInPane } = useNotesSelection();
-	const { storageAdapter, isInitialized } = useNotesStorage();
+	const { storageAdapter } = useNotesStorage();
 
-	const { categories, noteCategories, handleCreateFolder } = useNotesCategories({
-		storageAdapter,
-		isLoading: !isInitialized,
-		notesLength: notes.length,
-	});
+	const { categories, noteCategories } = useCategoriesData();
+	const { createFolder } = useCategoriesActions();
 
 	const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
 
@@ -87,7 +85,9 @@ export const FolderView = React.memo(({ paneId }: FolderViewProps) => {
 	};
 
 	const handleCreateSubFolder = () => {
-		handleCreateFolder(selectedFolder.id);
+		if (selectedFolder) {
+			createFolder(selectedFolder.id);
+		}
 	};
 
 	if (isEmpty) {

@@ -122,21 +122,8 @@ export const removeNoteAtom = atom(null, (get, set, noteId: string) => {
 	set(notesAtom, updatedNotes);
 });
 
-// Category actions
-export const addCategoryAtom = atom(null, (get, set, category: any) => {
-	const categories = get(categoriesAtom);
-	set(categoriesAtom, [...categories, category]);
-});
-
-export const removeCategoryAtom = atom(null, (get, set, categoryId: string) => {
-	const categories = get(categoriesAtom);
-	const updatedCategories = categories.filter((cat) => cat.id !== categoryId);
-	set(categoriesAtom, updatedCategories);
-});
-
-// Add missing atoms for backward compatibility
-export const handleDeleteNoteAtom = removeNoteAtom;
-export const handleDeleteCategoryAtom = removeCategoryAtom;
+// Note: Category operations now handled by useCategoriesActions hook
+// which provides proper CRUD operations with database synchronization
 
 export const handleRenameCategoryAtom = atom(
 	null,
