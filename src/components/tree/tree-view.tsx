@@ -19,13 +19,17 @@ export function TreeView() {
 	const treeRef = useRef<any>(null);
 
 	// Extract keyboard handling
-	useTreeKeyboard({
-		treeRef,
-		setSelectedNoteId,
-	});
+	useTreeKeyboard({ treeRef });
 
 	// Extract rename handling
 	const { handleRename } = useTreeRename();
+
+	const handleActivate = (node: any) => {
+		// Handle note selection
+		if (node.data.type === "note") {
+			setSelectedNoteId(node.data.id);
+		}
+	};
 
 	// Loading state
 	if (isLoading) {
@@ -80,19 +84,9 @@ export function TreeView() {
 							selection={selectedId}
 							selectionFollowsFocus={false}
 							className="[&_*]:!outline-none [&_*]:!outline-offset-0"
-							onSelect={(nodes) => {
-								setSelectedId(nodes[0]?.id);
-							}}
-							onActivate={(node) => {
-								// Handle note selection
-								if (node.data.type === "note") {
-									setSelectedNoteId(node.data.id);
-								}
-								console.log("Activated node:", node.data.name, "type:", node.data.type);
-							}}
-							onFocus={(node) => {
-								console.log("Focused node:", node.data.name, "type:", node.data.type);
-							}}
+							onSelect={(nodes) => setSelectedId(nodes[0]?.id)}
+							onActivate={handleActivate}
+							onFocus={(node) => console.log("Focused node:", node.data.name, "type:", node.data.type)}
 							onRename={handleRename}
 						>
 							{(props) => <TreeNode {...props} onContextMenu={handleTreeContextMenu} />}

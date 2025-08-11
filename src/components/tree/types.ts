@@ -91,7 +91,6 @@ export interface TreeNodeIconProps {
  */
 export interface UseTreeKeyboardProps {
 	treeRef: MutableRefObject<any>;
-	setSelectedNoteId: (noteId: string | null) => void;
 }
 
 /**

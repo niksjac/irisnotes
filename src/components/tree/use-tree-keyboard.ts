@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import type { UseTreeKeyboardProps } from "./types";
 
-export function useTreeKeyboard({ treeRef, setSelectedNoteId }: UseTreeKeyboardProps) {
+export function useTreeKeyboard({ treeRef }: UseTreeKeyboardProps) {
 	// Handle F2 key for renaming
 	useHotkeys(
 		"f2",
@@ -23,12 +23,12 @@ export function useTreeKeyboard({ treeRef, setSelectedNoteId }: UseTreeKeyboardP
 		}
 	);
 
-	// Prevent Enter key from triggering edit (simplified approach)
+	// Make Enter key behave like Space key
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.key === "Enter") {
 				const activeElement = document.activeElement;
-				// Only prevent if we're not in an input field
+				// Only handle if we're not in an input field
 				if (!activeElement || (activeElement.tagName !== "INPUT" && activeElement.tagName !== "TEXTAREA")) {
 					// Check if the tree has focus by looking for React Arborist elements
 					const isTreeFocused =
@@ -39,17 +39,26 @@ export function useTreeKeyboard({ treeRef, setSelectedNoteId }: UseTreeKeyboardP
 					if (isTreeFocused) {
 						e.preventDefault();
 						e.stopPropagation();
-						e.stopImmediatePropagation();
 
-						// Instead of edit, just trigger activate
+						// Get the focused node from the tree
 						const tree = treeRef.current;
 						if (tree?.focusedNode) {
 							const focusedNode = tree.focusedNode;
-							// Trigger activate instead of edit
-							if (focusedNode.data.type === "note") {
-								setSelectedNoteId(focusedNode.data.id);
-							} else {
+
+							// Mimic Space key behavior:
+							// 1. Always select the node (creates blue highlight)
+							// 2. For internal nodes: also toggle open/closed
+							// 3. For leaf nodes: also activate
+
+							// First, select the node to get the blue highlight
+							focusedNode.select();
+
+							if (focusedNode.isInternal) {
+								// Internal node - also toggle like Space does
 								focusedNode.toggle();
+							} else {
+								// Leaf node - also activate like Space does
+								focusedNode.activate();
 							}
 						}
 					}
@@ -57,10 +66,10 @@ export function useTreeKeyboard({ treeRef, setSelectedNoteId }: UseTreeKeyboardP
 			}
 		};
 
-		// Add capture: true to intercept before React Arborist
+		// Add capture: true to intercept before React Arborist processes the key
 		document.addEventListener("keydown", handleKeyDown, { capture: true });
 		return () => {
 			document.removeEventListener("keydown", handleKeyDown, { capture: true });
 		};
-	}, [setSelectedNoteId, treeRef]);
+	}, [treeRef]);
 }
