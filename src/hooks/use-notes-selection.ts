@@ -1,61 +1,23 @@
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom } from "jotai";
 import { useCallback } from "react";
-import { selectedNoteIdAtom, leftPaneNoteAtom, rightPaneNoteAtom, notesAtom } from "@/atoms";
-import type { PaneId } from "@/types";
+import { selectedNoteIdAtom } from "@/atoms";
 
 export const useNotesSelection = () => {
 	const [selectedNoteId, setSelectedNoteId] = useAtom(selectedNoteIdAtom);
-	const [notes] = useAtom(notesAtom);
-	const setLeftPaneNote = useSetAtom(leftPaneNoteAtom);
-	const setRightPaneNote = useSetAtom(rightPaneNoteAtom);
-
-	const setSelectedNoteIdForPane = useCallback(
-		(paneId: PaneId, noteId: string | null) => {
-			const note = noteId ? notes.find((n) => n.id === noteId) || null : null;
-			if (paneId === "left") {
-				setLeftPaneNote(note);
-			} else {
-				setRightPaneNote(note);
-			}
-		},
-		[notes, setLeftPaneNote, setRightPaneNote]
-	);
-
-	const openNoteInPane = useCallback(
-		(noteId: string, paneId: PaneId) => {
-			const note = notes.find((n) => n.id === noteId) || null;
-			if (paneId === "left") {
-				setLeftPaneNote(note);
-			} else {
-				setRightPaneNote(note);
-			}
-		},
-		[notes, setLeftPaneNote, setRightPaneNote]
-	);
 
 	const clearSelection = useCallback(() => {
 		setSelectedNoteId(null);
-		setLeftPaneNote(null);
-		setRightPaneNote(null);
-	}, [setSelectedNoteId, setLeftPaneNote, setRightPaneNote]);
+	}, [setSelectedNoteId]);
 
-	const clearSelectionForPane = useCallback(
-		(paneId: PaneId) => {
-			if (paneId === "left") {
-				setLeftPaneNote(null);
-			} else {
-				setRightPaneNote(null);
-			}
-		},
-		[setLeftPaneNote, setRightPaneNote]
-	);
+	// Keep openNoteInPane for backward compatibility but make it a no-op
+	const openNoteInPane = useCallback(() => {
+		// No-op for backward compatibility
+	}, []);
 
 	return {
 		selectedNoteId,
 		setSelectedNoteId,
-		setSelectedNoteIdForPane,
 		openNoteInPane,
 		clearSelection,
-		clearSelectionForPane,
 	};
 };

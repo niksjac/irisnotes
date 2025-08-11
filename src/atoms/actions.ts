@@ -1,13 +1,11 @@
 import { atom } from "jotai";
 import {
-	activePaneIdAtom,
 	activityBarVisible,
 	categoriesAtom,
 	configViewActive,
 	databaseStatusVisible,
 	fontSizeAtom,
 	hotkeysViewActive,
-	isDualPaneModeAtom,
 	notesAtom,
 	selectedItemAtom,
 	selectedNoteIdAtom,
@@ -57,15 +55,6 @@ export const toggleHotkeysViewAtom = atom(null, (get, set) => {
 export const toggleDatabaseStatusAtom = atom(null, (get, set) => {
 	const current = get(databaseStatusVisible);
 	set(databaseStatusVisible, !current);
-});
-
-export const toggleDualPaneModeAtom = atom(null, (get, set) => {
-	const current = get(isDualPaneModeAtom);
-	set(isDualPaneModeAtom, !current);
-});
-
-export const setActivePaneAtom = atom(null, (_, set, paneId: "left" | "right") => {
-	set(activePaneIdAtom, paneId);
 });
 
 export const toggleToolbarAtom = atom(null, (get, set) => {

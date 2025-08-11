@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from "react";
 import type { CreateNoteParams, NoteFilters, UpdateNoteParams } from "@/types/database";
 import { useNotesData } from "./use-notes-data";
-import type { PaneId } from "@/types";
+
 import { useNotesSelection } from "./use-notes-selection";
 import { useNotesStorage } from "./use-notes-storage";
 
@@ -16,7 +16,7 @@ export const useNotesActions = () => {
 		clearError,
 	} = useNotesData();
 
-	const { setSelectedNoteIdForPane, clearSelectionForPane } = useNotesSelection();
+	const { setSelectedNoteId, clearSelection } = useNotesSelection();
 
 	const { storageAdapter, isInitialized } = useNotesStorage();
 
@@ -54,7 +54,7 @@ export const useNotesActions = () => {
 	}, [isInitialized, loadAllNotes]);
 
 	const createNote = useCallback(
-		async (params: CreateNoteParams, targetPane?: PaneId) => {
+		async (params: CreateNoteParams) => {
 			setError(null);
 
 			try {
@@ -67,12 +67,8 @@ export const useNotesActions = () => {
 					const newNote = result.data;
 					addNote(newNote);
 
-					// Select the new note in the target pane
-					if (targetPane) {
-						setSelectedNoteIdForPane(targetPane, newNote.id);
-					} else {
-						setSelectedNoteIdForPane("left", newNote.id);
-					}
+					// Select the new note
+					setSelectedNoteId(newNote.id);
 
 					return { success: true, data: newNote };
 				} else {
@@ -85,7 +81,7 @@ export const useNotesActions = () => {
 				return { success: false, error: errorMsg };
 			}
 		},
-		[storageAdapter, setError, addNote, setSelectedNoteIdForPane]
+		[storageAdapter, setError, addNote, setSelectedNoteId]
 	);
 
 	const updateNote = useCallback(
@@ -129,8 +125,7 @@ export const useNotesActions = () => {
 					removeNote(noteId);
 
 					// Clear selection if the deleted note was selected
-					clearSelectionForPane("left");
-					clearSelectionForPane("right");
+					clearSelection();
 
 					return { success: true };
 				} else {
@@ -143,7 +138,7 @@ export const useNotesActions = () => {
 				return { success: false, error: errorMsg };
 			}
 		},
-		[storageAdapter, setError, removeNote, clearSelectionForPane]
+		[storageAdapter, setError, removeNote, clearSelection]
 	);
 
 	const searchNotes = useCallback(
@@ -171,19 +166,13 @@ export const useNotesActions = () => {
 		[storageAdapter, setError]
 	);
 
-	const createNewNote = useCallback(
-		(targetPane?: PaneId) => {
-			return createNote(
-				{
-					title: "Untitled Note",
-					content: "",
-					content_type: "custom",
-				},
-				targetPane
-			);
-		},
-		[createNote]
-	);
+	const createNewNote = useCallback(() => {
+		return createNote({
+			title: "Untitled Note",
+			content: "",
+			content_type: "custom",
+		});
+	}, [createNote]);
 
 	const updateNoteTitle = useCallback(
 		(noteId: string, title: string) => {

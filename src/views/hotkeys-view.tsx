@@ -17,11 +17,7 @@ export function HotkeysView() {
 			description: "Toggle Activity Bar",
 			category: "Application",
 		},
-		{
-			key: "Ctrl+D",
-			description: "Toggle Dual-pane Mode",
-			category: "Application",
-		},
+
 		{
 			key: "Alt+Z",
 			description: "Toggle Line Wrapping",

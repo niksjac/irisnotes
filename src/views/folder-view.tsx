@@ -1,6 +1,5 @@
 import { FileText, Folder as FolderIcon, FolderOpen, Plus } from "lucide-react";
 import React, { useState } from "react";
-import type { PaneId } from "@/types";
 import {
 	useNotesHandlers,
 	useCategoriesData,
@@ -11,14 +10,10 @@ import {
 	useNotesStorage,
 } from "@/hooks";
 
-interface FolderViewProps {
-	paneId?: PaneId | undefined;
-}
-
-export const FolderView = React.memo(({ paneId }: FolderViewProps) => {
+export const FolderView = React.memo(() => {
 	const { notes } = useNotesData();
 	const { createNewNote, updateNoteTitle, updateNoteContent } = useNotesActions();
-	const { setSelectedNoteId, openNoteInPane } = useNotesSelection();
+	const { setSelectedNoteId } = useNotesSelection();
 	const { storageAdapter } = useNotesStorage();
 
 	const { categories, noteCategories } = useCategoriesData();
@@ -30,9 +25,6 @@ export const FolderView = React.memo(({ paneId }: FolderViewProps) => {
 
 	const { handleNoteClick, handleCreateNote } = useNotesHandlers({
 		storageAdapter,
-		isDualPaneMode: !!paneId,
-		activePaneId: paneId || "left",
-		openNoteInPane,
 		setSelectedNoteId,
 		updateNoteTitle,
 		updateNoteContent,

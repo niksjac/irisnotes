@@ -1,5 +1,5 @@
 import type { MutableRefObject } from "react";
-import type { PaneId, TreeContextData } from "@/types";
+import type { TreeContextData } from "@/types";
 
 // ============================================================================
 // Tree Component Types
@@ -8,10 +8,7 @@ import type { PaneId, TreeContextData } from "@/types";
 /**
  * Props for the main TreeView component
  */
-export interface TreeViewProps {
-	isDualPaneMode?: boolean;
-	activePaneId?: PaneId | null;
-}
+export type TreeViewProps = Record<string, never>;
 
 /**
  * React Arborist node shape with tree-specific data
@@ -94,9 +91,6 @@ export interface TreeNodeIconProps {
  */
 export interface UseTreeKeyboardProps {
 	treeRef: MutableRefObject<any>;
-	isDualPaneMode: boolean;
-	activePaneId?: PaneId | null;
-	openNoteInPane: (noteId: string, paneId: PaneId) => void;
 	setSelectedNoteId: (noteId: string | null) => void;
 }
 

@@ -8,13 +8,12 @@ import { ContextMenu } from "../context-menu";
 import { useTreeData } from "./use-tree-data";
 import { useTreeKeyboard } from "./use-tree-keyboard";
 import { useTreeRename } from "./use-tree-rename";
-import type { TreeViewProps } from "./types";
 
-export function TreeView({ isDualPaneMode = false, activePaneId }: TreeViewProps) {
+export function TreeView() {
 	const { treeData, isLoading, error } = useTreeData();
 	const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
 	const { ref, width, height } = useResizeObserver();
-	const { setSelectedNoteId, openNoteInPane } = useNotesSelection();
+	const { setSelectedNoteId } = useNotesSelection();
 	const { contextMenu, handleContextMenu, hideContextMenu } = useContextMenu();
 	const { getTreeNodeMenuGroups } = useContextMenuActions();
 	const treeRef = useRef<any>(null);
@@ -22,9 +21,6 @@ export function TreeView({ isDualPaneMode = false, activePaneId }: TreeViewProps
 	// Extract keyboard handling
 	useTreeKeyboard({
 		treeRef,
-		isDualPaneMode,
-		activePaneId,
-		openNoteInPane,
 		setSelectedNoteId,
 	});
 
@@ -88,13 +84,9 @@ export function TreeView({ isDualPaneMode = false, activePaneId }: TreeViewProps
 								setSelectedId(nodes[0]?.id);
 							}}
 							onActivate={(node) => {
-								// Handle note selection for the appropriate pane
+								// Handle note selection
 								if (node.data.type === "note") {
-									if (isDualPaneMode && activePaneId) {
-										openNoteInPane(node.data.id, activePaneId);
-									} else {
-										setSelectedNoteId(node.data.id);
-									}
+									setSelectedNoteId(node.data.id);
 								}
 								console.log("Activated node:", node.data.name, "type:", node.data.type);
 							}}

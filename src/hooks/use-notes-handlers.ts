@@ -1,12 +1,8 @@
 import { useCallback } from "react";
 import type { StorageAdapter } from "@/storage";
-import type { PaneId } from "@/types";
 
 interface UseNotesHandlersProps {
 	storageAdapter: StorageAdapter | null;
-	isDualPaneMode: boolean;
-	activePaneId: PaneId;
-	openNoteInPane: (noteId: string, paneId: PaneId) => void;
 	setSelectedNoteId: (noteId: string | null) => void;
 	updateNoteTitle: (noteId: string, title: string) => void;
 	updateNoteContent: (noteId: string, content: string) => void;
@@ -17,9 +13,6 @@ interface UseNotesHandlersProps {
 
 export function useNotesHandlers({
 	storageAdapter,
-	isDualPaneMode,
-	activePaneId,
-	openNoteInPane,
 	setSelectedNoteId,
 	updateNoteTitle,
 	updateNoteContent,
@@ -29,13 +22,9 @@ export function useNotesHandlers({
 }: UseNotesHandlersProps) {
 	const handleNoteClick = useCallback(
 		(noteId: string) => {
-			if (isDualPaneMode && activePaneId) {
-				openNoteInPane(noteId, activePaneId);
-			} else {
-				setSelectedNoteId(noteId);
-			}
+			setSelectedNoteId(noteId);
 		},
-		[isDualPaneMode, openNoteInPane, activePaneId, setSelectedNoteId]
+		[setSelectedNoteId]
 	);
 
 	const handleItemSelect = useCallback(

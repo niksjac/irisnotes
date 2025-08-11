@@ -3,7 +3,6 @@ import { useHotkeys } from "react-hotkeys-hook";
 interface AppHotkeysProps {
 	// Layout hotkeys
 	onToggleSidebar?: () => void;
-	onToggleDualPane?: () => void;
 	onToggleActivityBar?: () => void;
 
 	// Editor hotkeys (future)
@@ -27,7 +26,6 @@ interface AppHotkeysProps {
 export function useAppHotkeys({
 	// Layout hotkeys
 	onToggleSidebar,
-	onToggleDualPane,
 	onToggleActivityBar,
 }: AppHotkeysProps) {
 	// Global hotkeys that should work everywhere (including form fields)
@@ -46,7 +44,6 @@ export function useAppHotkeys({
 
 	// Layout hotkeys - These should be global since they don't interfere with text input
 	useHotkeys("ctrl+b", () => onToggleSidebar?.(), globalHotkeyOptions);
-	useHotkeys("ctrl+d", () => onToggleDualPane?.(), globalHotkeyOptions);
 	useHotkeys("ctrl+j", () => onToggleActivityBar?.(), globalHotkeyOptions);
 
 	// Future hotkey categories can be added here:

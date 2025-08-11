@@ -1,15 +1,14 @@
 import type React from "react";
-import { ActivityBar, SidebarResizer, Sidebar, DualPaneView } from "@/components";
+import { ActivityBar, SidebarResizer, Sidebar } from "@/components";
 import { useLayout, useAppHotkeys } from "@/hooks";
 import { Content } from "./content";
 
 export const Layout: React.FC = () => {
-	const { sidebar, panes, views } = useLayout();
+	const { sidebar, views } = useLayout();
 
 	// Centralized app hotkeys
 	useAppHotkeys({
 		onToggleSidebar: sidebar.toggle,
-		onToggleDualPane: panes.toggleDualMode,
 		onToggleActivityBar: views.toggleActivityBar,
 	});
 
@@ -34,7 +33,7 @@ export const Layout: React.FC = () => {
 
 					{/* Main Content Area */}
 					<div className="flex-1 flex flex-col overflow-hidden __4">
-						{panes.isDualMode ? <DualPaneView panes={panes} /> : <Content />}
+						<Content />
 					</div>
 				</div>
 			</div>

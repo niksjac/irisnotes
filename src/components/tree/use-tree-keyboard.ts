@@ -2,13 +2,7 @@ import { useEffect } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import type { UseTreeKeyboardProps } from "./types";
 
-export function useTreeKeyboard({
-	treeRef,
-	isDualPaneMode,
-	activePaneId,
-	openNoteInPane,
-	setSelectedNoteId,
-}: UseTreeKeyboardProps) {
+export function useTreeKeyboard({ treeRef, setSelectedNoteId }: UseTreeKeyboardProps) {
 	// Handle F2 key for renaming
 	useHotkeys(
 		"f2",
@@ -53,11 +47,7 @@ export function useTreeKeyboard({
 							const focusedNode = tree.focusedNode;
 							// Trigger activate instead of edit
 							if (focusedNode.data.type === "note") {
-								if (isDualPaneMode && activePaneId) {
-									openNoteInPane(focusedNode.data.id, activePaneId);
-								} else {
-									setSelectedNoteId(focusedNode.data.id);
-								}
+								setSelectedNoteId(focusedNode.data.id);
 							} else {
 								focusedNode.toggle();
 							}
@@ -72,5 +62,5 @@ export function useTreeKeyboard({
 		return () => {
 			document.removeEventListener("keydown", handleKeyDown, { capture: true });
 		};
-	}, [isDualPaneMode, activePaneId, openNoteInPane, setSelectedNoteId, treeRef]);
+	}, [setSelectedNoteId, treeRef]);
 }

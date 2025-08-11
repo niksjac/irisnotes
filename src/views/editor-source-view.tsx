@@ -1,20 +1,14 @@
 import { useAtomValue } from "jotai";
-import type { PaneId } from "@/types";
-import { notesForPaneAtom, selectedNoteAtom } from "@/atoms";
+import { selectedNoteAtom } from "@/atoms";
 import { EditorContainer } from "@/components";
 import { useNotesActions } from "@/hooks";
 
-interface EditorSourceViewProps {
-	paneId?: PaneId | undefined;
-}
-
-export function EditorSourceView({ paneId }: EditorSourceViewProps) {
+export function EditorSourceView() {
 	const selectedNote = useAtomValue(selectedNoteAtom);
-	const notesForPane = useAtomValue(notesForPaneAtom);
 	const { updateNoteContent, updateNoteTitle } = useNotesActions();
 
-	// Get the appropriate note based on pane
-	const note = paneId ? (paneId === "left" ? notesForPane.left : notesForPane.right) : selectedNote;
+	// Get the selected note
+	const note = selectedNote;
 
 	const handleNoteContentChange = (noteId: string, content: string) => {
 		updateNoteContent(noteId, content);

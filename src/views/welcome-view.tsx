@@ -1,15 +1,7 @@
 import { BookOpen, FileText, FolderPlus } from "lucide-react";
-import type { PaneId } from "@/types";
 import { useCategoriesActions, useNotesActions } from "@/hooks";
 
-interface WelcomeViewProps {
-	paneId?: PaneId | undefined;
-}
-
-export function WelcomeView({ paneId }: WelcomeViewProps) {
-	// Note: paneId parameter reserved for future dual-pane functionality
-	void paneId;
-
+export function WelcomeView() {
 	const { createNewNote } = useNotesActions();
 	const { createFolder } = useCategoriesActions();
 

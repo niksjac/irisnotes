@@ -65,8 +65,6 @@ export interface AppConfig {
 }
 
 // UI and Layout types
-export type PaneId = "left" | "right";
-
 export type ViewType =
 	| "config-view"
 	| "hotkeys-view"
@@ -74,10 +72,6 @@ export type ViewType =
 	| "editor-rich-view"
 	| "editor-source-view"
 	| "welcome-view";
-
-export interface ContentProps {
-	paneId?: PaneId | undefined;
-}
 
 // Tree view types
 export interface TreeData {
