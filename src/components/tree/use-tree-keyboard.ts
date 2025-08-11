@@ -23,6 +23,86 @@ export function useTreeKeyboard({ treeRef }: UseTreeKeyboardProps) {
 		}
 	);
 
+	// Simple resize shortcuts - directly manipulate sidebar width when tree is focused
+	useHotkeys(
+		"ctrl+shift+left",
+		() => {
+			// Check if tree has focus
+			const activeElement = document.activeElement;
+			const isTreeFocused =
+				activeElement?.closest('[role="tree"]') ||
+				activeElement?.closest("[data-react-arborist]") ||
+				document.querySelector('[role="tree"]:focus-within');
+
+			if (isTreeFocused) {
+				// Find the sidebar resizer button and trigger resize
+				const resizeButton = document.querySelector('[aria-label="Resize sidebar"]') as HTMLButtonElement;
+				if (resizeButton) {
+					// Simulate arrow left key press on the resize button
+					const event = new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true });
+					resizeButton.dispatchEvent(event);
+				}
+			}
+		},
+		{
+			preventDefault: true,
+			enableOnContentEditable: false,
+			enableOnFormTags: false,
+		}
+	);
+
+	useHotkeys(
+		"ctrl+shift+right",
+		() => {
+			// Check if tree has focus
+			const activeElement = document.activeElement;
+			const isTreeFocused =
+				activeElement?.closest('[role="tree"]') ||
+				activeElement?.closest("[data-react-arborist]") ||
+				document.querySelector('[role="tree"]:focus-within');
+
+			if (isTreeFocused) {
+				// Find the sidebar resizer button and trigger resize
+				const resizeButton = document.querySelector('[aria-label="Resize sidebar"]') as HTMLButtonElement;
+				if (resizeButton) {
+					// Simulate arrow right key press on the resize button
+					const event = new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true });
+					resizeButton.dispatchEvent(event);
+				}
+			}
+		},
+		{
+			preventDefault: true,
+			enableOnContentEditable: false,
+			enableOnFormTags: false,
+		}
+	);
+
+	// Tab key to switch focus from tree to resizer
+	useHotkeys(
+		"tab",
+		(e) => {
+			const activeElement = document.activeElement;
+			const isTreeFocused =
+				activeElement?.closest('[role="tree"]') ||
+				activeElement?.closest("[data-react-arborist]") ||
+				document.querySelector('[role="tree"]:focus-within');
+
+			if (isTreeFocused) {
+				e.preventDefault();
+				const resizeHandle = document.querySelector('[aria-label="Resize sidebar"]') as HTMLElement;
+				if (resizeHandle) {
+					resizeHandle.focus();
+				}
+			}
+		},
+		{
+			preventDefault: false,
+			enableOnContentEditable: false,
+			enableOnFormTags: false,
+		}
+	);
+
 	// Make Enter key behave like Space key
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {

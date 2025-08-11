@@ -16,7 +16,8 @@ CREATE TABLE notes (
     word_count INTEGER NOT NULL DEFAULT 0,
     character_count INTEGER NOT NULL DEFAULT 0,
     -- Full-text search support
-    content_plaintext TEXT NOT NULL DEFAULT '' -- stripped HTML/markdown for search
+    content_plaintext TEXT NOT NULL DEFAULT '', -- stripped HTML/markdown for search
+    sort_order INTEGER NOT NULL DEFAULT 0 -- drag-and-drop ordering
 );
 
 -- Categories table - hierarchical organization
@@ -115,6 +116,7 @@ CREATE INDEX idx_notes_title ON notes(title);
 CREATE INDEX idx_notes_deleted_at ON notes(deleted_at);
 CREATE INDEX idx_notes_is_pinned ON notes(is_pinned);
 CREATE INDEX idx_notes_is_archived ON notes(is_archived);
+CREATE INDEX idx_notes_sort_order ON notes(sort_order);
 
 CREATE INDEX idx_categories_parent_id ON categories(parent_id);
 CREATE INDEX idx_categories_sort_order ON categories(sort_order);

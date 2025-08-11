@@ -2,7 +2,8 @@ import { useState, useRef } from "react";
 import { Tree } from "react-arborist";
 import useResizeObserver from "use-resize-observer";
 import { TreeNode } from "./tree-node";
-import { useNotesSelection, useContextMenu, useContextMenuActions } from "@/hooks";
+import { useNotesSelection, useContextMenu, useContextMenuActions, useNotesStorage } from "@/hooks";
+import { useCategoriesActions } from "@/hooks";
 import type { TreeContextData } from "@/types";
 import { ContextMenu } from "../context-menu";
 import { useTreeData } from "./use-tree-data";
@@ -16,6 +17,8 @@ export function TreeView() {
 	const { setSelectedNoteId } = useNotesSelection();
 	const { contextMenu, handleContextMenu, hideContextMenu } = useContextMenu();
 	const { getTreeNodeMenuGroups } = useContextMenuActions();
+	const { moveNote } = useCategoriesActions();
+	const { storageAdapter } = useNotesStorage();
 	const treeRef = useRef<any>(null);
 
 	// Extract keyboard handling
@@ -29,6 +32,17 @@ export function TreeView() {
 		if (node.data.type === "note") {
 			setSelectedNoteId(node.data.id);
 		}
+	};
+
+	// Simple drag and drop with timestamp-based ordering
+	const handleMove = async ({ dragIds, parentId }: { dragIds: string[]; parentId: string | null }) => {
+		if (dragIds.length !== 1) return;
+		const noteId = dragIds[0];
+		if (!noteId) return;
+
+		// Move to category and update sort order with current timestamp
+		await moveNote(noteId, parentId);
+		await storageAdapter?.updateNoteSortOrder(noteId, Date.now());
 	};
 
 	// Loading state
@@ -86,8 +100,8 @@ export function TreeView() {
 							className="[&_*]:!outline-none [&_*]:!outline-offset-0"
 							onSelect={(nodes) => setSelectedId(nodes[0]?.id)}
 							onActivate={handleActivate}
-							onFocus={(node) => console.log("Focused node:", node.data.name, "type:", node.data.type)}
 							onRename={handleRename}
+							onMove={handleMove}
 						>
 							{(props) => <TreeNode {...props} onContextMenu={handleTreeContextMenu} />}
 						</Tree>

@@ -15,6 +15,7 @@ export interface Note {
 	word_count: number;
 	character_count: number;
 	content_plaintext: string;
+	sort_order: number;
 }
 
 export interface Category {

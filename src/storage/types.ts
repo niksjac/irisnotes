@@ -60,6 +60,7 @@ export interface StorageAdapter {
 	getCategoryNotes(categoryId: string): Promise<StorageResult<Note[]>>;
 	addNoteToCategory(noteId: string, categoryId: string): Promise<VoidStorageResult>;
 	removeNoteFromCategory(noteId: string, categoryId: string): Promise<VoidStorageResult>;
+	updateNoteSortOrder(noteId: string, sortOrder: number): Promise<VoidStorageResult>;
 
 	// Tags operations
 	getTags(): Promise<StorageResult<Tag[]>>;

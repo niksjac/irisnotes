@@ -30,7 +30,8 @@ export class SqliteSchemaManager {
         is_archived BOOLEAN NOT NULL DEFAULT FALSE,
         word_count INTEGER NOT NULL DEFAULT 0,
         character_count INTEGER NOT NULL DEFAULT 0,
-        content_plaintext TEXT NOT NULL DEFAULT ''
+        content_plaintext TEXT NOT NULL DEFAULT '',
+        sort_order INTEGER NOT NULL DEFAULT 0
       )
     `);
 
@@ -131,6 +132,8 @@ export class SqliteSchemaManager {
       )
     `);
 
+		// Run migrations before creating indexes
+		await this.addSortOrderColumn();
 		await this.createIndexes();
 		await this.insertDefaultData();
 	}
@@ -139,8 +142,40 @@ export class SqliteSchemaManager {
 		await this.db.execute(`CREATE INDEX IF NOT EXISTS idx_notes_updated_at ON notes(updated_at DESC)`);
 		await this.db.execute(`CREATE INDEX IF NOT EXISTS idx_notes_title ON notes(title)`);
 		await this.db.execute(`CREATE INDEX IF NOT EXISTS idx_notes_deleted_at ON notes(deleted_at)`);
+		await this.db.execute(`CREATE INDEX IF NOT EXISTS idx_notes_sort_order ON notes(sort_order)`);
 		await this.db.execute(`CREATE INDEX IF NOT EXISTS idx_categories_sort_order ON categories(sort_order)`);
 		await this.db.execute(`CREATE INDEX IF NOT EXISTS idx_tags_name ON tags(name)`);
+	}
+
+	private async addSortOrderColumn(): Promise<void> {
+		try {
+			// First, check if table exists at all
+			const tables = await this.db.select<Array<{ name: string }>>(
+				"SELECT name FROM sqlite_master WHERE type='table' AND name='notes'"
+			);
+
+			if (tables.length === 0) {
+				console.log("Notes table doesn't exist yet, skipping migration");
+				return;
+			}
+
+			// Check if sort_order column exists in notes table
+			const tableInfo = await this.db.select<Array<{ name: string }>>("PRAGMA table_info(notes)");
+			const hasColumn = tableInfo.some((col) => col.name === "sort_order");
+
+			if (!hasColumn) {
+				console.log("🔄 Adding sort_order column to existing notes table...");
+				// Add the column to notes table
+				await this.db.execute(`ALTER TABLE notes ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0`);
+				console.log("✅ Added sort_order column successfully");
+			} else {
+				console.log("✅ sort_order column already exists");
+			}
+		} catch (error) {
+			console.error("❌ Failed to add sort_order column:", error);
+			// Don't throw - let the app continue without sort_order for now
+			console.warn("⚠️ App will continue without drag-and-drop ordering");
+		}
 	}
 
 	private async insertDefaultData(): Promise<void> {

@@ -151,10 +151,27 @@ export class SqliteCategoriesRepository extends BaseRepository {
         SELECT n.* FROM notes n
         JOIN note_categories nc ON n.id = nc.note_id
         WHERE nc.category_id = ? AND n.deleted_at IS NULL
-        ORDER BY n.updated_at DESC
+        		ORDER BY n.sort_order DESC, n.updated_at DESC
       `;
-			const results = await this.db.select<Note[]>(query, [categoryId]);
-			return this.success(results);
+
+			// Try with sort_order, fallback if column doesn't exist
+			try {
+				const results = await this.db.select<Note[]>(query, [categoryId]);
+				return this.success(results);
+			} catch (error: any) {
+				if (error?.message?.includes("no such column: sort_order")) {
+					// Fallback query without sort_order
+					const fallbackQuery = `
+		        SELECT n.* FROM notes n
+		        JOIN note_categories nc ON n.id = nc.note_id
+		        WHERE nc.category_id = ? AND n.deleted_at IS NULL
+		        ORDER BY n.updated_at DESC
+		      `;
+					const results = await this.db.select<Note[]>(fallbackQuery, [categoryId]);
+					return this.success(results);
+				}
+				throw error;
+			}
 		} catch (error) {
 			return this.handleError(error, "Get category notes");
 		}

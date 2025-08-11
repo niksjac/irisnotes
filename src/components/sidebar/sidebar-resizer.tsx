@@ -28,6 +28,8 @@ export function SidebarResizer({
 	const [isDragging, setIsDragging] = useState(false);
 	const startX = useRef(0);
 	const startWidth = useRef(0);
+	const resizerRef = useRef<HTMLButtonElement>(null);
+	const [isFocused, setIsFocused] = useState(false);
 
 	// ==================== EVENT HANDLERS ====================
 
@@ -75,6 +77,55 @@ export function SidebarResizer({
 		document.documentElement.style.userSelect = "";
 	}, []);
 
+	// Keyboard resizing
+	const handleKeyDown = useCallback(
+		(e: React.KeyboardEvent) => {
+			if (isCollapsed) return;
+
+			const step = 20; // pixels to resize per key press
+			let newWidth = width;
+
+			switch (e.key) {
+				case "ArrowLeft":
+					e.preventDefault();
+					newWidth = Math.max(minWidth, width - step);
+					break;
+				case "ArrowRight":
+					e.preventDefault();
+					newWidth = Math.min(maxWidth, width + step);
+					break;
+				case "Home":
+					e.preventDefault();
+					newWidth = minWidth;
+					break;
+				case "End":
+					e.preventDefault();
+					newWidth = maxWidth;
+					break;
+				case "Enter":
+				case " ":
+					e.preventDefault();
+					// Reset to default width
+					newWidth = defaultWidth;
+					break;
+				default:
+					return;
+			}
+
+			setWidth(newWidth);
+		},
+		[width, minWidth, maxWidth, defaultWidth, isCollapsed]
+	);
+
+	// Focus handlers
+	const handleFocus = useCallback(() => {
+		setIsFocused(true);
+	}, []);
+
+	const handleBlur = useCallback(() => {
+		setIsFocused(false);
+	}, []);
+
 	// ==================== GLOBAL EVENT LISTENERS ====================
 
 	// Add global mouse events when dragging
@@ -102,7 +153,7 @@ export function SidebarResizer({
 				"h-full relative bg-gray-100 dark:bg-gray-800 border-r border-gray-300 dark:border-gray-600 flex-shrink-0",
 				!isDragging && "transition-all duration-200 ease-in-out",
 				!isCollapsed && "hover:border-r-blue-500",
-				isDragging && "border-r-blue-500",
+				(isDragging || isFocused) && "border-r-blue-500",
 				isCollapsed && "border-r-transparent"
 			)}
 			style={{
@@ -124,15 +175,21 @@ export function SidebarResizer({
 			{/* Draggable resize handle - only show when not collapsed */}
 			{!isCollapsed && (
 				<button
+					ref={resizerRef}
 					type="button"
 					aria-label="Resize sidebar"
+					title="Use arrow keys to resize, Enter/Space to reset, Home/End for min/max. Ctrl+Shift+Left/Right from tree also works."
 					className={clsx(
 						"absolute top-0 right-0 w-1 h-full cursor-col-resize border-0 bg-transparent",
 						"hover:bg-blue-500 hover:bg-opacity-50 transition-colors",
-						isDragging && "bg-blue-500 bg-opacity-50",
+						(isDragging || isFocused) && "bg-blue-500 bg-opacity-50",
 						"focus:outline-none focus:bg-blue-500 focus:bg-opacity-50"
 					)}
 					onMouseDown={handleMouseDown}
+					onKeyDown={handleKeyDown}
+					onFocus={handleFocus}
+					onBlur={handleBlur}
+					tabIndex={0}
 				/>
 			)}
 		</div>

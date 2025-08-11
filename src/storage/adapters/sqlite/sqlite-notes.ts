@@ -41,10 +41,20 @@ export class SqliteNotesRepository extends BaseRepository {
 				params.push(filters.date_range.start, filters.date_range.end);
 			}
 
-			query += " ORDER BY updated_at DESC";
-
-			const results = await this.db.select<Note[]>(query, params);
-			return this.success(results);
+			// Try to use sort_order, fallback to updated_at if column doesn't exist
+			try {
+				query += " ORDER BY sort_order DESC, updated_at DESC";
+				const results = await this.db.select<Note[]>(query, params);
+				return this.success(results);
+			} catch (error: any) {
+				if (error?.message?.includes("no such column: sort_order")) {
+					// Fallback query without sort_order
+					query = query.replace(" ORDER BY sort_order DESC, updated_at DESC", " ORDER BY updated_at DESC");
+					const results = await this.db.select<Note[]>(query, params);
+					return this.success(results);
+				}
+				throw error;
+			}
 		} catch (error) {
 			return this.handleError(error, "Get notes");
 		}
@@ -86,8 +96,8 @@ export class SqliteNotesRepository extends BaseRepository {
         INSERT INTO notes (
           id, title, content, content_type, content_raw,
           created_at, updated_at, is_pinned, is_archived,
-          word_count, character_count, content_plaintext
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          word_count, character_count, content_plaintext, sort_order
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
 			await this.db.execute(insertQuery, [
@@ -103,6 +113,7 @@ export class SqliteNotesRepository extends BaseRepository {
 				wordCount,
 				characterCount,
 				contentPlaintext,
+				0, // Default sort_order
 			]);
 
 			// Create the note object to return
@@ -120,6 +131,7 @@ export class SqliteNotesRepository extends BaseRepository {
 				word_count: wordCount,
 				character_count: characterCount,
 				content_plaintext: contentPlaintext,
+				sort_order: 0,
 			};
 
 			return this.success(newNote);
@@ -248,6 +260,22 @@ export class SqliteNotesRepository extends BaseRepository {
 			return this.success(results);
 		} catch (error) {
 			return this.handleError(error, "Search notes");
+		}
+	}
+
+	async updateNoteSortOrder(noteId: string, sortOrder: number): Promise<VoidStorageResult> {
+		const dbCheck = this.checkDatabase();
+		if (dbCheck) return dbCheck;
+
+		try {
+			await this.db.execute("UPDATE notes SET sort_order = ? WHERE id = ? AND deleted_at IS NULL", [sortOrder, noteId]);
+			return this.voidSuccess();
+		} catch (error: any) {
+			if (error?.message?.includes("no such column: sort_order")) {
+				console.warn("⚠️ sort_order column not available, skipping sort order update");
+				return this.voidSuccess(); // Gracefully ignore
+			}
+			return this.handleError(error, "Update note sort order");
 		}
 	}
 }

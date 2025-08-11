@@ -148,6 +148,11 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		return this.categoriesRepo.removeNoteFromCategory(noteId, categoryId);
 	}
 
+	async updateNoteSortOrder(noteId: string, sortOrder: number): Promise<VoidStorageResult> {
+		if (!this.notesRepo) return { success: false, error: "Storage not initialized" };
+		return this.notesRepo.updateNoteSortOrder(noteId, sortOrder);
+	}
+
 	// ===== STUB METHODS (TODO: Implement with more repositories) =====
 	// For now, keeping these as minimal stubs to satisfy the interface
 	// These can be extracted into repositories later
