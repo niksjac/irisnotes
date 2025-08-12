@@ -32,3 +32,6 @@ coverage/
 
 *storybook.log
 storybook-static
+
+# Development database
+dev/notes.db
