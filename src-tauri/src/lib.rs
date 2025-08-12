@@ -3,7 +3,91 @@ use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
+use std::path::PathBuf;
 use tauri::{AppHandle, Emitter, Manager};
+
+// Helper function to determine if we're in development mode
+fn is_development_mode() -> bool {
+    cfg!(debug_assertions) || std::env::var("TAURI_ENV").as_deref() == Ok("dev")
+}
+
+// Helper function to get the appropriate config directory
+fn get_config_dir(app_handle: &AppHandle) -> Result<PathBuf, String> {
+    if is_development_mode() {
+        // In development mode, use ./dev/config relative to project root
+        let exe_path = std::env::current_exe()
+            .map_err(|e| format!("Failed to get exe path: {}", e))?;
+        let mut project_root = exe_path.parent()
+            .ok_or("Failed to get exe parent")?
+            .to_path_buf();
+
+        // Navigate up to find project root (where package.json exists)
+        loop {
+            if project_root.join("package.json").exists() {
+                break;
+            }
+            if !project_root.pop() {
+                // Fallback: use current directory
+                project_root = std::env::current_dir()
+                    .map_err(|e| format!("Failed to get current dir: {}", e))?;
+                break;
+            }
+        }
+
+        let dev_config = project_root.join("dev");
+
+        // Create the directory if it doesn't exist
+        std::fs::create_dir_all(&dev_config)
+            .map_err(|e| format!("Failed to create dev config directory: {}", e))?;
+
+        Ok(dev_config)
+    } else {
+        // In production mode, use platform-specific config directory
+        app_handle
+            .path()
+            .app_config_dir()
+            .map_err(|e| format!("Failed to get app config dir: {}", e))
+    }
+}
+
+// Helper function to get the appropriate data directory for databases
+fn get_data_dir(app_handle: &AppHandle) -> Result<PathBuf, String> {
+    if is_development_mode() {
+        // In development mode, use ./dev relative to project root
+        let exe_path = std::env::current_exe()
+            .map_err(|e| format!("Failed to get exe path: {}", e))?;
+        let mut project_root = exe_path.parent()
+            .ok_or("Failed to get exe parent")?
+            .to_path_buf();
+
+        // Navigate up to find project root (where package.json exists)
+        loop {
+            if project_root.join("package.json").exists() {
+                break;
+            }
+            if !project_root.pop() {
+                // Fallback: use current directory
+                project_root = std::env::current_dir()
+                    .map_err(|e| format!("Failed to get current dir: {}", e))?;
+                break;
+            }
+        }
+
+        let dev_data = project_root.join("dev");
+
+        // Create the directory if it doesn't exist
+        std::fs::create_dir_all(&dev_data)
+            .map_err(|e| format!("Failed to create dev data directory: {}", e))?;
+
+        Ok(dev_data)
+    } else {
+        // In production mode, use platform-specific data directory
+        app_handle
+            .path()
+            .app_data_dir()
+            .map_err(|e| format!("Failed to get app data dir: {}", e))
+    }
+}
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -14,16 +98,7 @@ fn greet(name: &str) -> String {
 async fn open_app_config_folder(app_handle: tauri::AppHandle) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt;
 
-    let app_config_dir = app_handle
-        .path()
-        .app_config_dir()
-        .map_err(|e| format!("Failed to get app config dir: {}", e))?;
-
-    // Ensure the config directory exists
-    if !app_config_dir.exists() {
-        std::fs::create_dir_all(&app_config_dir)
-            .map_err(|e| format!("Failed to create config directory: {}", e))?;
-    }
+    let app_config_dir = get_config_dir(&app_handle)?;
 
     // Open the directory using the opener plugin
     app_handle
@@ -36,11 +111,7 @@ async fn open_app_config_folder(app_handle: tauri::AppHandle) -> Result<(), Stri
 
 #[tauri::command]
 async fn read_config(app_handle: tauri::AppHandle, filename: String) -> Result<String, String> {
-    let app_config_dir = app_handle
-        .path()
-        .app_config_dir()
-        .map_err(|e| format!("Failed to get app config dir: {}", e))?;
-
+    let app_config_dir = get_config_dir(&app_handle)?;
     let config_path = app_config_dir.join(filename);
 
     if !config_path.exists() {
@@ -56,15 +127,7 @@ async fn write_config(
     filename: String,
     content: String,
 ) -> Result<(), String> {
-    let app_config_dir = app_handle
-        .path()
-        .app_config_dir()
-        .map_err(|e| format!("Failed to get app config dir: {}", e))?;
-
-    // Create the config directory if it doesn't exist
-    std::fs::create_dir_all(&app_config_dir)
-        .map_err(|e| format!("Failed to create config directory: {}", e))?;
-
+    let app_config_dir = get_config_dir(&app_handle)?;
     let config_path = app_config_dir.join(filename);
 
     std::fs::write(config_path, content).map_err(|e| format!("Failed to write config file: {}", e))
@@ -72,16 +135,7 @@ async fn write_config(
 
 #[tauri::command]
 async fn setup_config_watcher(app_handle: AppHandle) -> Result<(), String> {
-    let app_config_dir = app_handle
-        .path()
-        .app_config_dir()
-        .map_err(|e| format!("Failed to get app config dir: {}", e))?;
-
-    // Ensure the config directory exists
-    if !app_config_dir.exists() {
-        std::fs::create_dir_all(&app_config_dir)
-            .map_err(|e| format!("Failed to create config directory: {}", e))?;
-    }
+    let app_config_dir = get_config_dir(&app_handle)?;
 
     // Create a channel to receive the events
     let (tx, rx) = mpsc::channel();
@@ -116,7 +170,7 @@ async fn setup_config_watcher(app_handle: AppHandle) -> Result<(), String> {
 
         for event in rx {
             if let Some(path) = event.paths.first() {
-                if path.file_name() == Some(std::ffi::OsStr::new("app-config.json")) {
+                if path.file_name() == Some(std::ffi::OsStr::new("config.json")) {
                     let now = Instant::now();
 
                     // Debounce rapid file events
@@ -136,6 +190,27 @@ async fn setup_config_watcher(app_handle: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+async fn get_database_path(app_handle: tauri::AppHandle) -> Result<String, String> {
+    let data_dir = get_data_dir(&app_handle)?;
+    let db_path = data_dir.join("notes.db");
+    Ok(db_path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+async fn get_app_info(app_handle: tauri::AppHandle) -> Result<serde_json::Value, String> {
+    let config_dir = get_config_dir(&app_handle)?;
+    let data_dir = get_data_dir(&app_handle)?;
+    let is_dev = is_development_mode();
+
+    Ok(serde_json::json!({
+        "development_mode": is_dev,
+        "config_dir": config_dir.to_string_lossy(),
+        "data_dir": data_dir.to_string_lossy(),
+        "database_path": data_dir.join("notes.db").to_string_lossy()
+    }))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -152,7 +227,9 @@ pub fn run() {
             read_config,
             write_config,
             setup_config_watcher,
-            open_app_config_folder
+            open_app_config_folder,
+            get_database_path,
+            get_app_info
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

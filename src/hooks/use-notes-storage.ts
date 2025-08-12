@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { useConfig } from "./use-config";
 import { createSQLiteAdapter } from "@/storage";
 import type { StorageAdapter } from "@/storage";
@@ -16,8 +17,18 @@ export const useNotesStorage = () => {
 			}
 
 			try {
-				// Create storage adapter directly based on config
-				const storageConfig = config.storage;
+				// Get the actual database path from Tauri backend (handles dev vs prod)
+				const databasePath = await invoke<string>("get_database_path");
+
+				// Create storage config with resolved path
+				const storageConfig = {
+					...config.storage,
+					sqlite: {
+						...config.storage.sqlite,
+						database_path: databasePath,
+					},
+				};
+
 				const adapter = createSQLiteAdapter(storageConfig);
 
 				// Initialize the adapter

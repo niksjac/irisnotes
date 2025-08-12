@@ -147,31 +147,15 @@ export class SqliteCategoriesRepository extends BaseRepository {
 		if (dbCheck) return dbCheck;
 
 		try {
+			// SIMPLIFIED: Direct parent-child relationship, no joins needed
 			const query = `
-        SELECT n.* FROM notes n
-        JOIN note_categories nc ON n.id = nc.note_id
-        WHERE nc.category_id = ? AND n.deleted_at IS NULL
-        		ORDER BY n.sort_order DESC, n.updated_at DESC
+        SELECT * FROM notes
+        WHERE parent_category_id = ? AND deleted_at IS NULL
+        ORDER BY sort_order DESC, updated_at DESC
       `;
 
-			// Try with sort_order, fallback if column doesn't exist
-			try {
-				const results = await this.db.select<Note[]>(query, [categoryId]);
-				return this.success(results);
-			} catch (error: any) {
-				if (error?.message?.includes("no such column: sort_order")) {
-					// Fallback query without sort_order
-					const fallbackQuery = `
-		        SELECT n.* FROM notes n
-		        JOIN note_categories nc ON n.id = nc.note_id
-		        WHERE nc.category_id = ? AND n.deleted_at IS NULL
-		        ORDER BY n.updated_at DESC
-		      `;
-					const results = await this.db.select<Note[]>(fallbackQuery, [categoryId]);
-					return this.success(results);
-				}
-				throw error;
-			}
+			const results = await this.db.select<Note[]>(query, [categoryId]);
+			return this.success(results);
 		} catch (error) {
 			return this.handleError(error, "Get category notes");
 		}
@@ -182,11 +166,12 @@ export class SqliteCategoriesRepository extends BaseRepository {
 		if (dbCheck) return dbCheck;
 
 		try {
-			const now = this.now();
-			await this.db.execute(
-				"INSERT OR IGNORE INTO note_categories (note_id, category_id, created_at) VALUES (?, ?, ?)",
-				[noteId, categoryId, now]
-			);
+			// SIMPLIFIED: Update note's parent directly
+			await this.db.execute("UPDATE notes SET parent_category_id = ?, sort_order = ? WHERE id = ?", [
+				categoryId,
+				Date.now(),
+				noteId,
+			]);
 			return this.voidSuccess();
 		} catch (error) {
 			return this.handleError(error, "Add note to category");
@@ -198,7 +183,11 @@ export class SqliteCategoriesRepository extends BaseRepository {
 		if (dbCheck) return dbCheck;
 
 		try {
-			await this.db.execute("DELETE FROM note_categories WHERE note_id = ? AND category_id = ?", [noteId, categoryId]);
+			// SIMPLIFIED: Set parent to null (move to root)
+			await this.db.execute(
+				"UPDATE notes SET parent_category_id = NULL, sort_order = ? WHERE id = ? AND parent_category_id = ?",
+				[Date.now(), noteId, categoryId]
+			);
 			return this.voidSuccess();
 		} catch (error) {
 			return this.handleError(error, "Remove note from category");

@@ -155,7 +155,6 @@ export class SqliteSchemaManager {
 			);
 
 			if (tables.length === 0) {
-				console.log("Notes table doesn't exist yet, skipping migration");
 				return;
 			}
 
@@ -164,12 +163,8 @@ export class SqliteSchemaManager {
 			const hasColumn = tableInfo.some((col) => col.name === "sort_order");
 
 			if (!hasColumn) {
-				console.log("🔄 Adding sort_order column to existing notes table...");
 				// Add the column to notes table
 				await this.db.execute(`ALTER TABLE notes ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0`);
-				console.log("✅ Added sort_order column successfully");
-			} else {
-				console.log("✅ sort_order column already exists");
 			}
 		} catch (error) {
 			console.error("❌ Failed to add sort_order column:", error);

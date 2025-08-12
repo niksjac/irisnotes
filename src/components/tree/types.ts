@@ -30,6 +30,9 @@ export interface TreeNodeAPI {
 	isSelected: boolean;
 	isDragging: boolean;
 	isEditing?: boolean;
+	// Drop zone states for visual feedback
+	willReceiveDrop?: boolean;
+	isDropTarget?: boolean;
 	data: TreeNodeData;
 	toggle: () => void;
 	edit?: () => void;

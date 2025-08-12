@@ -14,7 +14,7 @@ import type {
 	UpdateNoteParams,
 } from "../../types/database";
 import type { StorageAdapter, StorageConfig, StorageResult, VoidStorageResult } from "../types";
-import { SqliteNotesRepository, SqliteCategoriesRepository, SqliteSchemaManager } from "./sqlite";
+import { SqliteNotesRepository, SqliteCategoriesRepository, SqliteSchemaManager, SqliteTreeOperations } from "./sqlite";
 
 /**
  * Clean, modular SQLite storage adapter using the repository pattern
@@ -27,6 +27,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 	private notesRepo: SqliteNotesRepository | null = null;
 	private categoriesRepo: SqliteCategoriesRepository | null = null;
 	private schemaManager: SqliteSchemaManager | null = null;
+	private treeOps: SqliteTreeOperations | null = null;
 
 	constructor(config: StorageConfig) {
 		this.config = config;
@@ -42,11 +43,10 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 			this.notesRepo = new SqliteNotesRepository(this.db);
 			this.categoriesRepo = new SqliteCategoriesRepository(this.db);
 			this.schemaManager = new SqliteSchemaManager(this.db);
+			this.treeOps = new SqliteTreeOperations(this.db);
 
 			// Create tables and indexes
 			await this.schemaManager.createTables();
-
-			console.log("✅ SQLite storage initialized successfully");
 			return { success: true };
 		} catch (error) {
 			console.error("❌ Failed to initialize SQLite storage:", error);
@@ -151,6 +151,32 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 	async updateNoteSortOrder(noteId: string, sortOrder: number): Promise<VoidStorageResult> {
 		if (!this.notesRepo) return { success: false, error: "Storage not initialized" };
 		return this.notesRepo.updateNoteSortOrder(noteId, sortOrder);
+	}
+
+	async moveNoteToCategory(noteId: string, newCategoryId: string | null): Promise<VoidStorageResult> {
+		if (!this.notesRepo) return { success: false, error: "Storage not initialized" };
+		return this.notesRepo.moveNoteToCategory(noteId, newCategoryId);
+	}
+
+	// Enhanced tree operations
+	async moveTreeItem(
+		itemId: string,
+		itemType: "note" | "category",
+		newParentId: string | null,
+		insertIndex?: number
+	): Promise<VoidStorageResult> {
+		if (!this.treeOps) return { success: false, error: "Storage not initialized" };
+		return this.treeOps.moveTreeItem(itemId, itemType, newParentId, insertIndex);
+	}
+
+	async reorderTreeItem(
+		itemId: string,
+		itemType: "note" | "category",
+		newIndex: number,
+		parentId: string | null
+	): Promise<VoidStorageResult> {
+		if (!this.treeOps) return { success: false, error: "Storage not initialized" };
+		return this.treeOps.reorderTreeItem(itemId, itemType, newIndex, parentId);
 	}
 
 	// ===== STUB METHODS (TODO: Implement with more repositories) =====

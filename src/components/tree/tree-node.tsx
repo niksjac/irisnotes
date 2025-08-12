@@ -23,21 +23,27 @@ export function TreeNode({ node, style, dragHandle, onContextMenu }: TreeNodePro
 
 	// Create dynamic className based on node state
 	const getNodeClassName = () => {
-		const baseClasses = "flex items-center gap-2 h-9 px-2 cursor-pointer transition-colors";
+		const baseClasses =
+			"flex items-center gap-2 h-9 px-2 cursor-pointer transition-all duration-200 ease-in-out rounded-md relative";
 
-		if (node.isSelected) {
-			return `${baseClasses} bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100`;
-		}
-
-		if (node.isFocused) {
-			return `${baseClasses} bg-gray-200 dark:bg-gray-700 ring-2 ring-blue-500 ring-inset`;
+		// Drop target highlighting (highest priority)
+		if (node.willReceiveDrop || node.isDropTarget) {
+			return `${baseClasses} bg-green-100 dark:bg-green-900/60 text-green-900 dark:text-green-100 ring-2 ring-green-500 ring-inset shadow-lg transform scale-[1.02] border-l-4 border-green-500`;
 		}
 
 		if (node.isDragging) {
-			return `${baseClasses} opacity-50 bg-gray-100 dark:bg-gray-800`;
+			return `${baseClasses} opacity-40 bg-gray-100 dark:bg-gray-800 transform rotate-2 shadow-xl z-50 border border-gray-300 dark:border-gray-600`;
 		}
 
-		return `${baseClasses} hover:bg-gray-100 dark:hover:bg-gray-800`;
+		if (node.isSelected) {
+			return `${baseClasses} bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100 border-l-4 border-blue-500`;
+		}
+
+		if (node.isFocused) {
+			return `${baseClasses} bg-gray-200 dark:bg-gray-700 ring-2 ring-blue-500/50 ring-inset`;
+		}
+
+		return `${baseClasses} hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-sm`;
 	};
 
 	const handleContextMenu = (event: React.MouseEvent) => {

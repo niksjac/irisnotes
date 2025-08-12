@@ -61,6 +61,21 @@ export interface StorageAdapter {
 	addNoteToCategory(noteId: string, categoryId: string): Promise<VoidStorageResult>;
 	removeNoteFromCategory(noteId: string, categoryId: string): Promise<VoidStorageResult>;
 	updateNoteSortOrder(noteId: string, sortOrder: number): Promise<VoidStorageResult>;
+	moveNoteToCategory(noteId: string, newCategoryId: string | null): Promise<VoidStorageResult>;
+
+	// Enhanced tree operations
+	moveTreeItem(
+		itemId: string,
+		itemType: "note" | "category",
+		newParentId: string | null,
+		insertIndex?: number
+	): Promise<VoidStorageResult>;
+	reorderTreeItem(
+		itemId: string,
+		itemType: "note" | "category",
+		newIndex: number,
+		parentId: string | null
+	): Promise<VoidStorageResult>;
 
 	// Tags operations
 	getTags(): Promise<StorageResult<Tag[]>>;

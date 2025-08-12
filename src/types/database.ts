@@ -16,6 +16,7 @@ export interface Note {
 	character_count: number;
 	content_plaintext: string;
 	sort_order: number;
+	parent_category_id?: string | null; // NEW: Direct parent-child relationship for tree views
 }
 
 export interface Category {

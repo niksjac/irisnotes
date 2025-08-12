@@ -96,8 +96,8 @@ export class SqliteNotesRepository extends BaseRepository {
         INSERT INTO notes (
           id, title, content, content_type, content_raw,
           created_at, updated_at, is_pinned, is_archived,
-          word_count, character_count, content_plaintext, sort_order
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          word_count, character_count, content_plaintext, sort_order, parent_category_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
 			await this.db.execute(insertQuery, [
@@ -114,6 +114,7 @@ export class SqliteNotesRepository extends BaseRepository {
 				characterCount,
 				contentPlaintext,
 				0, // Default sort_order
+				params.category_ids?.[0] || null, // Use first category as parent, or null for root
 			]);
 
 			// Create the note object to return
@@ -132,6 +133,7 @@ export class SqliteNotesRepository extends BaseRepository {
 				character_count: characterCount,
 				content_plaintext: contentPlaintext,
 				sort_order: 0,
+				parent_category_id: params.category_ids?.[0] || null,
 			};
 
 			return this.success(newNote);
@@ -276,6 +278,23 @@ export class SqliteNotesRepository extends BaseRepository {
 				return this.voidSuccess(); // Gracefully ignore
 			}
 			return this.handleError(error, "Update note sort order");
+		}
+	}
+
+	// NEW: Move note to different category (for tree drag & drop)
+	async moveNoteToCategory(noteId: string, newCategoryId: string | null): Promise<VoidStorageResult> {
+		const dbCheck = this.checkDatabase();
+		if (dbCheck) return dbCheck;
+
+		try {
+			await this.db.execute("UPDATE notes SET parent_category_id = ?, sort_order = ? WHERE id = ?", [
+				newCategoryId,
+				Date.now(),
+				noteId,
+			]);
+			return this.voidSuccess();
+		} catch (error) {
+			return this.handleError(error, "Move note to category");
 		}
 	}
 }

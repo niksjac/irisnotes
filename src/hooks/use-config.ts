@@ -19,7 +19,7 @@ const DEFAULT_CONFIG: AppConfig = {
 	},
 	development: {
 		useLocalConfig: false,
-		configPath: "./dev/config/",
+		configPath: "./dev/",
 	},
 	production: {},
 };
@@ -32,13 +32,13 @@ export const useConfig = () => {
 		try {
 			// Check if we're in development mode by checking for local config
 			const isDevelopment = import.meta.env.DEV;
-			const configPath = "app-config.json";
+			const configPath = "config.json";
 
 			if (isDevelopment) {
 				// Try to use local config first in dev mode
 				try {
 					const localConfigString = await invoke<string>("read_config", {
-						filename: "./dev/config/app-config.json",
+						filename: "config.json",
 					});
 					const parsedConfig = JSON.parse(localConfigString) as AppConfig;
 
@@ -97,7 +97,7 @@ export const useConfig = () => {
 						...DEFAULT_CONFIG,
 						development: {
 							useLocalConfig: true,
-							configPath: "./dev/config/",
+							configPath: "./dev/",
 						},
 					}
 				: DEFAULT_CONFIG;
@@ -111,7 +111,7 @@ export const useConfig = () => {
 	const saveConfig = useCallback(async (newConfig: AppConfig) => {
 		try {
 			await invoke("write_config", {
-				filename: "app-config.json",
+				filename: "config.json",
 				content: JSON.stringify(newConfig, null, 2),
 			});
 			setConfig(newConfig);

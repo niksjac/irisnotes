@@ -38,3 +38,6 @@ export { useCategoriesActions } from "./use-categories-actions";
 // Context menu hooks
 export { useContextMenu } from "./use-context-menu";
 export { useContextMenuActions } from "./use-context-menu-actions";
+
+// Debug and development
+export { useAppInfo } from "./use-app-info";
