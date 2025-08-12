@@ -5,11 +5,11 @@ import { TreeNode } from "./tree-node";
 import { useNotesSelection, useContextMenu, useContextMenuActions, useAppInfo } from "@/hooks";
 import type { TreeContextData } from "@/types";
 import { ContextMenu } from "../context-menu";
-import { useTreeDataOptimized } from "./use-tree-data-optimized";
+import { useTreeData } from "./use-tree-data";
 import { useTreeKeyboard } from "./use-tree-keyboard";
 
 export function TreeView() {
-	const { treeData, isLoading, error, updateNodeName, moveNode } = useTreeDataOptimized();
+	const { treeData, isLoading, error, updateNodeName, moveNode } = useTreeData();
 	const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
 	const { ref, width, height } = useResizeObserver();
 	const { setSelectedNoteId } = useNotesSelection();
