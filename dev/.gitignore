@@ -1,10 +1,4 @@
 # Exclude user-specific config files
-config/*.db
-config/*.db-*
-config/notes/
-
-# Keep template and documentation files
-!config/app-config.json
-!config/sample-notes.json
-!config/README.md
+*.db
+*.db-*
 !.gitignore

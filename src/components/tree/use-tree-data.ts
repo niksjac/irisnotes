@@ -26,23 +26,27 @@ export function useTreeData(): UseTreeDataOptimizedResult {
 	// Load tree data directly from storage
 	const loadTreeData = useCallback(async () => {
 		if (!storageAdapter) {
+			console.warn("⚠️ Storage adapter not available");
 			setError("Storage not available");
 			setIsLoading(false);
 			return;
 		}
 
+		console.log("🔄 Loading tree data...");
 		setIsLoading(true);
 		setError(null);
 
 		try {
 			const result = await storageAdapter.getTreeData();
 			if (result.success) {
+				console.log("✅ Tree data loaded successfully:", result.data.length, "items");
 				setTreeData(result.data);
 			} else {
+				console.error("❌ Tree data load failed:", result.error);
 				setError(`Failed to load tree data: ${result.error}`);
 			}
 		} catch (err) {
-			console.error("Failed to load tree data:", err);
+			console.error("💥 Tree data load exception:", err);
 			setError(`Failed to load tree data: ${err}`);
 		} finally {
 			setIsLoading(false);

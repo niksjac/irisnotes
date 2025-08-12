@@ -6,8 +6,10 @@
 set -e  # Exit on any error
 
 DEV_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$DEV_DIR/.." && pwd)"
 DB_FILE="$DEV_DIR/notes.db"
-INIT_SQL="$DEV_DIR/schema.sql"
+BASE_SCHEMA="$PROJECT_ROOT/src/storage/schema/base.sql"
+SEED_DATA="$PROJECT_ROOT/src/storage/schema/seed-dev.sql"
 
 echo "🗄️  Setting up IrisNotes development database..."
 
@@ -17,9 +19,12 @@ if [ -f "$DB_FILE" ]; then
     rm "$DB_FILE"
 fi
 
-# Create new database from schema
-echo "🏗️  Creating database schema and seed data..."
-sqlite3 "$DB_FILE" < "$INIT_SQL"
+# Create new database from schema files
+echo "🏗️  Creating database schema..."
+sqlite3 "$DB_FILE" < "$BASE_SCHEMA"
+
+echo "🌱 Adding development seed data..."
+sqlite3 "$DB_FILE" < "$SEED_DATA"
 
 # Verify the database was created correctly
 echo "✅ Verifying database..."

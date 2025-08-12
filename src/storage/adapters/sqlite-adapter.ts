@@ -154,16 +154,61 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		if (!this.db) return { success: false, error: "Database not initialized" };
 
 		try {
+			console.log("🔍 Fetching tree data...");
+
 			// Query the tree_items view that combines categories and notes
-			const flatItems = await this.db.select<
-				Array<{
-					id: string;
-					name: string;
-					type: "note" | "category";
-					parent_id: string | null;
-					sort_order: number;
-				}>
-			>("SELECT * FROM tree_items ORDER BY parent_id NULLS FIRST, sort_order ASC");
+			let flatItems: Array<{
+				id: string;
+				name: string;
+				type: "note" | "category";
+				parent_id: string | null;
+				sort_order: number;
+			}>;
+
+			try {
+				flatItems = await this.db.select<
+					Array<{
+						id: string;
+						name: string;
+						type: "note" | "category";
+						parent_id: string | null;
+						sort_order: number;
+					}>
+				>("SELECT * FROM tree_items ORDER BY parent_id NULLS FIRST, sort_order ASC");
+			} catch (viewError) {
+				console.warn("tree_items view not found, using fallback query:", viewError);
+
+				// Fallback to manual UNION query
+				flatItems = await this.db.select<
+					Array<{
+						id: string;
+						name: string;
+						type: "note" | "category";
+						parent_id: string | null;
+						sort_order: number;
+					}>
+				>(`
+					SELECT
+						id,
+						name,
+						'category' as type,
+						parent_id,
+						sort_order
+					FROM categories
+					UNION ALL
+					SELECT
+						id,
+						title as name,
+						'note' as type,
+						parent_category_id as parent_id,
+						sort_order
+					FROM notes
+					WHERE deleted_at IS NULL
+					ORDER BY parent_id NULLS FIRST, sort_order ASC
+				`);
+			}
+
+			console.log("📊 Found flat items:", flatItems.length);
 
 			// Build tree structure in memory (simple since data is already sorted)
 			const itemsByParent = new Map<
@@ -208,9 +253,10 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 			};
 
 			const treeData = buildTree(null);
+			console.log("🌳 Built tree data:", treeData.length, "root items");
 			return { success: true, data: treeData };
 		} catch (error) {
-			console.error("Failed to get tree data:", error);
+			console.error("❌ Failed to get tree data:", error);
 			return { success: false, error: `Failed to get tree data: ${error}` };
 		}
 	}
