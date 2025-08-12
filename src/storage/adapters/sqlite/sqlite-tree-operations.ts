@@ -106,8 +106,17 @@ export class SqliteTreeOperations extends BaseRepository {
 		}
 
 		// Insert between items - use average of adjacent sort orders
-		const prevOrder = existingItems[insertIndex - 1].sort_order;
-		const nextOrder = existingItems[insertIndex].sort_order;
+		const prevItem = existingItems[insertIndex - 1];
+		const nextItem = existingItems[insertIndex];
+
+		if (!prevItem || !nextItem) {
+			// Fallback if items are undefined
+			const maxOrder = Math.max(...existingItems.map((item) => item.sort_order));
+			return maxOrder + 1000;
+		}
+
+		const prevOrder = prevItem.sort_order;
+		const nextOrder = nextItem.sort_order;
 
 		// Always ensure at least 10 units of spacing for future insertions
 		const spacing = Math.max(Math.floor((nextOrder - prevOrder) / 2), 10);

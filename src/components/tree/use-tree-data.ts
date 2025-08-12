@@ -117,15 +117,15 @@ export function useTreeData(): UseTreeDataOptimizedResult {
 
 				if (nodeType === "category") {
 					const result = await updateCategory(nodeId, { name: newName });
-					if (!result.success) {
-						setError(`Failed to rename category: ${result.error}`);
+					if (!result || !result.success) {
+						setError(`Failed to rename category: ${result?.error || "Unknown error"}`);
 						return;
 					}
 					await loadAllCategories();
 				} else if (nodeType === "note") {
 					const result = await updateNote({ id: nodeId, title: newName });
-					if (!result.success) {
-						setError(`Failed to rename note: ${result.error}`);
+					if (!result || !result.success) {
+						setError(`Failed to rename note: ${result?.error || "Unknown error"}`);
 						return;
 					}
 					await loadAllNotes();
