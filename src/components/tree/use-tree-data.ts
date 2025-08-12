@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNotesData, useCategoriesData, useNotesActions, useCategoriesActions, useNotesStorage } from "@/hooks";
+import { useNotesActions, useCategoriesActions, useNotesStorage, useCategoriesData } from "@/hooks";
 import type { TreeData } from "@/types";
-import { buildTreeData, validateNestingDepth } from "./tree-data-transformer";
 
 interface UseTreeDataOptimizedResult {
 	treeData: TreeData[];
@@ -19,32 +18,41 @@ export function useTreeData(): UseTreeDataOptimizedResult {
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	const { notes } = useNotesData();
+	const { updateNote } = useNotesActions();
+	const { updateCategory } = useCategoriesActions();
 	const { categories } = useCategoriesData();
-	const { updateNote, loadAllNotes } = useNotesActions();
-	const { updateCategory, loadAllCategories } = useCategoriesActions();
 	const { storageAdapter } = useNotesStorage();
 
-	// Rebuild tree when data changes
-	const refreshData = useCallback(() => {
+	// Load tree data directly from storage
+	const loadTreeData = useCallback(async () => {
+		if (!storageAdapter) {
+			setError("Storage not available");
+			setIsLoading(false);
+			return;
+		}
+
 		setIsLoading(true);
 		setError(null);
 
 		try {
-			const newTreeData = buildTreeData(categories, notes);
-			setTreeData(newTreeData);
+			const result = await storageAdapter.getTreeData();
+			if (result.success) {
+				setTreeData(result.data);
+			} else {
+				setError(`Failed to load tree data: ${result.error}`);
+			}
 		} catch (err) {
-			console.error("Failed to build tree data:", err);
+			console.error("Failed to load tree data:", err);
 			setError(`Failed to load tree data: ${err}`);
 		} finally {
 			setIsLoading(false);
 		}
-	}, [categories, notes]);
+	}, [storageAdapter]);
 
-	// Rebuild tree when data changes
+	// Load tree data on mount and when storage changes
 	useEffect(() => {
-		refreshData();
-	}, [refreshData]);
+		loadTreeData();
+	}, [loadTreeData]);
 
 	// Helper to find node type recursively
 	const findNodeType = useCallback((data: TreeData[], targetId: string): "note" | "category" | null => {
@@ -76,11 +84,19 @@ export function useTreeData(): UseTreeDataOptimizedResult {
 					return;
 				}
 
-				// Validate nesting depth for categories
+				// Simple nesting depth validation for categories (max 3 levels)
 				if (nodeType === "category" && newParentId) {
-					const validation = validateNestingDepth(categories, nodeId, newParentId);
-					if (!validation.valid) {
-						setError(`Cannot nest deeper than ${validation.maxDepth} levels`);
+					// Count depth by traversing up the parent chain
+					let currentId = newParentId;
+					let depth = 1;
+					while (currentId && depth < 4) {
+						const parent = categories.find((cat) => cat.id === currentId);
+						if (!parent || !parent.parent_id) break;
+						currentId = parent.parent_id;
+						depth++;
+					}
+					if (depth >= 3) {
+						setError("Cannot nest deeper than 3 levels");
 						return;
 					}
 				}
@@ -93,15 +109,14 @@ export function useTreeData(): UseTreeDataOptimizedResult {
 					return;
 				}
 
-				// Refresh data to reflect the move
-				await loadAllNotes();
-				await loadAllCategories();
+				// Refresh tree data after move
+				await loadTreeData();
 			} catch (err) {
 				console.error("❌ Failed to move node:", err);
 				setError(`Failed to move node: ${err}`);
 			}
 		},
-		[storageAdapter, treeData, categories, findNodeType, loadAllNotes, loadAllCategories]
+		[storageAdapter, treeData, categories, findNodeType, loadTreeData]
 	);
 
 	// Rename node (F2 or double-click)
@@ -121,14 +136,14 @@ export function useTreeData(): UseTreeDataOptimizedResult {
 						setError(`Failed to rename category: ${result?.error || "Unknown error"}`);
 						return;
 					}
-					await loadAllCategories();
+					await loadTreeData();
 				} else if (nodeType === "note") {
 					const result = await updateNote({ id: nodeId, title: newName });
 					if (!result || !result.success) {
 						setError(`Failed to rename note: ${result?.error || "Unknown error"}`);
 						return;
 					}
-					await loadAllNotes();
+					await loadTreeData();
 				} else {
 					setError("Could not determine node type");
 					return;
@@ -138,7 +153,7 @@ export function useTreeData(): UseTreeDataOptimizedResult {
 				setError(`Failed to rename node: ${err}`);
 			}
 		},
-		[storageAdapter, treeData, updateNote, updateCategory, loadAllNotes, loadAllCategories, findNodeType]
+		[storageAdapter, treeData, updateNote, updateCategory, loadTreeData, findNodeType]
 	);
 
 	return {

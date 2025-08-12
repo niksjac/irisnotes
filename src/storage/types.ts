@@ -12,6 +12,7 @@ import type {
 	Tag,
 	UpdateNoteParams,
 } from "../types/database";
+import type { TreeData } from "../types";
 
 // Storage backend types
 export type StorageBackend = "sqlite" | "file-system" | "cloud";
@@ -63,7 +64,8 @@ export interface StorageAdapter {
 	updateNoteSortOrder(noteId: string, sortOrder: number): Promise<VoidStorageResult>;
 	moveNoteToCategory(noteId: string, newCategoryId: string | null): Promise<VoidStorageResult>;
 
-	// Enhanced tree operations
+	// Tree operations
+	getTreeData(): Promise<StorageResult<TreeData[]>>;
 	moveTreeItem(
 		itemId: string,
 		itemType: "note" | "category",

@@ -131,78 +131,53 @@ BEGIN
     UPDATE settings SET updated_at = datetime('now') WHERE key = NEW.key;
 END;
 
--- SEED DATA: Create realistic category hierarchy matching example structure
+-- SEED DATA: Simple initial structure for testing
 
--- Root categories
+-- Two main folders
 INSERT INTO categories (id, name, description, icon, parent_id, sort_order) VALUES
-    ('learning', 'Learning', 'Educational content and resources', '📚', NULL, 0),
-    ('work', 'Work', 'Work-related notes and projects', '🏢', NULL, 1),
-    ('personal', 'Personal', 'Personal notes and thoughts', '🌟', NULL, 2);
+    ('folder-1', 'Work', 'Work-related notes', '🏢', NULL, 0),
+    ('folder-2', 'Personal', 'Personal notes and ideas', '📝', NULL, 1);
 
--- Subcategories
-INSERT INTO categories (id, name, description, icon, parent_id, sort_order) VALUES
-    ('programming', 'Programming', 'Code, tutorials, and development notes', '💻', 'learning', 0),
-    ('design', 'Design', 'UI/UX and visual design resources', '🎨', 'learning', 1),
-    ('meetings', 'Meetings', 'Meeting notes and minutes', '📅', 'work', 0),
-    ('projects', 'Projects', 'Project documentation and planning', '📋', 'work', 1);
-
--- Sample notes with realistic content
+-- Three notes in each folder
 INSERT INTO notes (id, title, content, content_plaintext, parent_category_id, sort_order) VALUES
-    ('note-1', 'React Best Practices', '<h1>React Best Practices</h1><p>Key patterns for building maintainable React applications...</p>', 'React Best Practices Key patterns for building maintainable React applications...', 'programming', 1000),
-    ('note-2', 'TypeScript Tips', '<h1>TypeScript Tips</h1><p>Advanced TypeScript techniques and patterns...</p>', 'TypeScript Tips Advanced TypeScript techniques and patterns...', 'programming', 999),
-    ('note-3', 'CSS Grid Layout', '<h1>CSS Grid Layout</h1><p>Modern CSS Grid techniques for responsive layouts...</p>', 'CSS Grid Layout Modern CSS Grid techniques for responsive layouts...', 'programming', 998),
+    -- Work folder notes
+    ('note-1', 'Meeting Notes', '<h1>Meeting Notes</h1><p>Important discussion points from today''s meeting...</p>', 'Meeting Notes Important discussion points from todays meeting...', 'folder-1', 0),
+    ('note-2', 'Project Ideas', '<h1>Project Ideas</h1><p>Brainstorming new features and improvements...</p>', 'Project Ideas Brainstorming new features and improvements...', 'folder-1', 1),
+    ('note-3', 'Task List', '<h1>Task List</h1><p>Things to complete this week...</p>', 'Task List Things to complete this week...', 'folder-1', 2),
 
-    ('note-4', 'Color Theory', '<h1>Color Theory</h1><p>Understanding color relationships in design...</p>', 'Color Theory Understanding color relationships in design...', 'design', 1000),
-    ('note-5', 'Typography Rules', '<h1>Typography Rules</h1><p>Essential typography principles for readable designs...</p>', 'Typography Rules Essential typography principles for readable designs...', 'design', 999),
+    -- Personal folder notes
+    ('note-4', 'Book Notes', '<h1>Book Notes</h1><p>Key insights from recent reading...</p>', 'Book Notes Key insights from recent reading...', 'folder-2', 0),
+    ('note-5', 'Travel Plans', '<h1>Travel Plans</h1><p>Ideas for upcoming vacation...</p>', 'Travel Plans Ideas for upcoming vacation...', 'folder-2', 1),
+    ('note-6', 'Recipe Collection', '<h1>Recipe Collection</h1><p>Favorite recipes to try...</p>', 'Recipe Collection Favorite recipes to try...', 'folder-2', 2),
 
-    ('note-6', 'Learning Techniques', '<h1>Learning Techniques</h1><p>Effective methods for acquiring new skills...</p>', 'Learning Techniques Effective methods for acquiring new skills...', 'learning', 1000),
+    -- Three root-level notes
+    ('note-7', 'Quick Thoughts', '<h1>Quick Thoughts</h1><p>Random ideas and observations...</p>', 'Quick Thoughts Random ideas and observations...', NULL, 0),
+    ('note-8', 'Inbox', '<h1>Inbox</h1><p>Temporary storage for unprocessed notes...</p>', 'Inbox Temporary storage for unprocessed notes...', NULL, 1),
+    ('note-9', 'Scratch Pad', '<h1>Scratch Pad</h1><p>Quick notes and calculations...</p>', 'Scratch Pad Quick notes and calculations...', NULL, 2);
 
-    ('note-7', 'Sprint Planning 2024-01-15', '<h1>Sprint Planning</h1><p>Goals and tasks for the upcoming sprint...</p>', 'Sprint Planning Goals and tasks for the upcoming sprint...', 'meetings', 1000),
-    ('note-8', 'Team Retrospective', '<h1>Team Retrospective</h1><p>What went well and areas for improvement...</p>', 'Team Retrospective What went well and areas for improvement...', 'meetings', 999),
-
-    ('note-9', 'Project Ideas', '<h1>Project Ideas</h1><p>Collection of potential project concepts...</p>', 'Project Ideas Collection of potential project concepts...', 'projects', 1000),
-    ('note-10', 'Performance Review Notes', '<h1>Performance Review</h1><p>Key achievements and development goals...</p>', 'Performance Review Key achievements and development goals...', 'projects', 999),
-
-    ('note-11', 'Book Recommendations', '<h1>Book Recommendations</h1><p>Must-read books across various topics...</p>', 'Book Recommendations Must-read books across various topics...', 'personal', 1000),
-    ('note-12', 'Travel Plans', '<h1>Travel Plans</h1><p>Upcoming trips and destination research...</p>', 'Travel Plans Upcoming trips and destination research...', 'personal', 999),
-    ('note-13', 'Recipes to Try', '<h1>Recipes to Try</h1><p>Interesting recipes to experiment with...</p>', 'Recipes to Try Interesting recipes to experiment with...', 'personal', 998),
-
-    -- Root level notes (no category)
-    ('note-14', 'Quick Notes', '<h1>Quick Notes</h1><p>Fast capture space for temporary thoughts...</p>', 'Quick Notes Fast capture space for temporary thoughts...', NULL, 1000),
-    ('note-15', 'Random Thoughts', '<h1>Random Thoughts</h1><p>Stream of consciousness and ideas...</p>', 'Random Thoughts Stream of consciousness and ideas...', NULL, 999),
-    ('note-16', 'Inbox', '<h1>Inbox</h1><p>Temporary storage for unprocessed notes...</p>', 'Inbox Temporary storage for unprocessed notes...', NULL, 998);
-
--- Sample tags
-INSERT INTO tags (id, name, color, description) VALUES
-    ('javascript', 'JavaScript', '#f7df1e', 'JavaScript programming language'),
-    ('react', 'React', '#61dafb', 'React framework'),
-    ('typescript', 'TypeScript', '#3178c6', 'TypeScript language'),
-    ('css', 'CSS', '#1572b6', 'Cascading Style Sheets'),
-    ('design-system', 'Design System', '#ff6b6b', 'Design system patterns'),
-    ('meeting', 'Meeting', '#51cf66', 'Meeting notes'),
-    ('todo', 'Todo', '#ffd43b', 'Tasks and todos'),
-    ('idea', 'Idea', '#da77f2', 'Creative ideas'),
-    ('reference', 'Reference', '#74c0fc', 'Reference material');
-
--- Sample note-tag relationships
-INSERT INTO note_tags (note_id, tag_id) VALUES
-    ('note-1', 'react'),
-    ('note-1', 'javascript'),
-    ('note-2', 'typescript'),
-    ('note-2', 'javascript'),
-    ('note-3', 'css'),
-    ('note-4', 'design-system'),
-    ('note-5', 'design-system'),
-    ('note-7', 'meeting'),
-    ('note-8', 'meeting'),
-    ('note-9', 'idea'),
-    ('note-11', 'reference'),
-    ('note-14', 'todo'),
-    ('note-15', 'idea');
+-- Simple flat view for tree data (to be processed in TypeScript)
+CREATE VIEW tree_items AS
+SELECT
+    id,
+    name,
+    'category' as type,
+    parent_id,
+    sort_order
+FROM categories
+UNION ALL
+SELECT
+    id,
+    title as name,
+    'note' as type,
+    parent_category_id as parent_id,
+    sort_order
+FROM notes
+WHERE deleted_at IS NULL
+ORDER BY parent_id NULLS FIRST, sort_order ASC;
 
 -- Settings
 INSERT INTO settings (key, value) VALUES
-    ('schema_version', '2'),
+    ('schema_version', '3'),
     ('tree_optimized', 'true'),
     ('theme', 'default'),
     ('editor_mode', 'rich'),

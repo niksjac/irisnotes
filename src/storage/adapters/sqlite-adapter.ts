@@ -14,6 +14,7 @@ import type {
 	UpdateNoteParams,
 } from "../../types/database";
 import type { StorageAdapter, StorageConfig, StorageResult, VoidStorageResult } from "../types";
+import type { TreeData } from "../../types";
 import { SqliteNotesRepository, SqliteCategoriesRepository, SqliteSchemaManager, SqliteTreeOperations } from "./sqlite";
 
 /**
@@ -146,6 +147,72 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 	async removeNoteFromCategory(noteId: string, categoryId: string): Promise<VoidStorageResult> {
 		if (!this.categoriesRepo) return { success: false, error: "Storage not initialized" };
 		return this.categoriesRepo.removeNoteFromCategory(noteId, categoryId);
+	}
+
+	// ===== TREE OPERATIONS =====
+	async getTreeData(): Promise<StorageResult<TreeData[]>> {
+		if (!this.db) return { success: false, error: "Database not initialized" };
+
+		try {
+			// Query the tree_items view that combines categories and notes
+			const flatItems = await this.db.select<
+				Array<{
+					id: string;
+					name: string;
+					type: "note" | "category";
+					parent_id: string | null;
+					sort_order: number;
+				}>
+			>("SELECT * FROM tree_items ORDER BY parent_id NULLS FIRST, sort_order ASC");
+
+			// Build tree structure in memory (simple since data is already sorted)
+			const itemsByParent = new Map<
+				string | null,
+				Array<{
+					id: string;
+					name: string;
+					type: "note" | "category";
+					parent_id: string | null;
+					sort_order: number;
+				}>
+			>();
+
+			// Group items by parent
+			for (const item of flatItems) {
+				const parentId = item.parent_id;
+				const items = itemsByParent.get(parentId) || [];
+				items.push(item);
+				itemsByParent.set(parentId, items);
+			}
+
+			// Build tree recursively
+			const buildTree = (parentId: string | null): TreeData[] => {
+				const items = itemsByParent.get(parentId) || [];
+				return items.map((item) => {
+					const treeNode: TreeData = {
+						id: item.id,
+						name: item.name,
+						type: item.type,
+					};
+
+					// Add children if this is a category
+					if (item.type === "category") {
+						const children = buildTree(item.id);
+						if (children.length > 0) {
+							treeNode.children = children;
+						}
+					}
+
+					return treeNode;
+				});
+			};
+
+			const treeData = buildTree(null);
+			return { success: true, data: treeData };
+		} catch (error) {
+			console.error("Failed to get tree data:", error);
+			return { success: false, error: `Failed to get tree data: ${error}` };
+		}
 	}
 
 	async updateNoteSortOrder(noteId: string, sortOrder: number): Promise<VoidStorageResult> {

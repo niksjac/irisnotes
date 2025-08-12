@@ -7,7 +7,6 @@ export { useTreeKeyboard } from "./use-tree-keyboard";
 export { useTreeRename } from "./use-tree-rename";
 
 // Export utilities for external use
-export { buildTreeData } from "./tree-data-transformer";
 
 // Export sub-components for external use
 export { TreeNodeContent } from "./tree-node-content";
