@@ -48,6 +48,8 @@ export interface TreeNodeProps {
 	style: React.CSSProperties;
 	dragHandle?: (el: HTMLDivElement | null) => void;
 	onContextMenu?: (event: React.MouseEvent, data: TreeContextData) => void;
+	onDragStart?: (nodeId: string) => void;
+	onDragEnd?: () => void;
 }
 
 // ============================================================================

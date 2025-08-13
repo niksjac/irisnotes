@@ -2,7 +2,12 @@ import type { TreeContextData } from "@/types/context-menu";
 import { TreeNodeContent } from "./tree-node-content";
 import type { TreeNodeProps } from "./types";
 
-export function TreeNode({ node, style, dragHandle, onContextMenu }: TreeNodeProps) {
+export function TreeNode({
+	node,
+	style,
+	dragHandle,
+	onContextMenu,
+}: TreeNodeProps) {
 	const isFolder = node.isInternal;
 	const isExpanded = node.isOpen;
 	const nodeType = node.data.type;
@@ -24,7 +29,7 @@ export function TreeNode({ node, style, dragHandle, onContextMenu }: TreeNodePro
 	// Create dynamic className based on node state
 	const getNodeClassName = () => {
 		const baseClasses =
-			"flex items-center gap-2 h-9 px-2 cursor-pointer transition-all duration-200 ease-in-out rounded-md relative";
+			"flex items-center gap-2 h-full px-2 cursor-pointer transition-all duration-200 ease-in-out rounded-md relative";
 
 		// Drop target highlighting (highest priority)
 		if (node.willReceiveDrop || node.isDropTarget) {
@@ -64,6 +69,15 @@ export function TreeNode({ node, style, dragHandle, onContextMenu }: TreeNodePro
 			className={getNodeClassName()}
 			onClick={() => node.toggle()}
 			onContextMenu={handleContextMenu}
+			onMouseDown={() => {
+				console.log(`🖱️ MouseDown on ${node.data.name} (${node.id})`);
+			}}
+			onDragStart={() => {
+				console.log(`🎯 DragStart on ${node.data.name} (${node.id})`);
+			}}
+			onDragEnd={() => {
+				console.log(`🏁 DragEnd on ${node.data.name} (${node.id})`);
+			}}
 		>
 			<TreeNodeContent
 				name={node.data.name}

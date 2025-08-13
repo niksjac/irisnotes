@@ -13,9 +13,19 @@ import type {
 	Tag,
 	UpdateNoteParams,
 } from "../../types/database";
-import type { StorageAdapter, StorageConfig, StorageResult, VoidStorageResult } from "../types";
+import type {
+	StorageAdapter,
+	StorageConfig,
+	StorageResult,
+	VoidStorageResult,
+} from "../types";
 import type { TreeData } from "../../types";
-import { SqliteNotesRepository, SqliteCategoriesRepository, SqliteSchemaManager, SqliteTreeOperations } from "./sqlite";
+import {
+	SqliteNotesRepository,
+	SqliteCategoriesRepository,
+	SqliteSchemaManager,
+	SqliteTreeOperations,
+} from "./sqlite";
 
 /**
  * Clean, modular SQLite storage adapter using the repository pattern
@@ -51,7 +61,10 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 			return { success: true };
 		} catch (error) {
 			console.error("❌ Failed to initialize SQLite storage:", error);
-			return { success: false, error: `Failed to initialize storage: ${error}` };
+			return {
+				success: false,
+				error: `Failed to initialize storage: ${error}`,
+			};
 		}
 	}
 
@@ -61,17 +74,20 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 
 	// ===== NOTES OPERATIONS (via Repository) =====
 	async getNotes(filters?: NoteFilters): Promise<StorageResult<Note[]>> {
-		if (!this.notesRepo) return { success: false, error: "Storage not initialized" };
+		if (!this.notesRepo)
+			return { success: false, error: "Storage not initialized" };
 		return this.notesRepo.getNotes(filters);
 	}
 
 	async getNote(id: string): Promise<StorageResult<Note | null>> {
-		if (!this.notesRepo) return { success: false, error: "Storage not initialized" };
+		if (!this.notesRepo)
+			return { success: false, error: "Storage not initialized" };
 		return this.notesRepo.getNote(id);
 	}
 
 	async createNote(params: CreateNoteParams): Promise<StorageResult<Note>> {
-		if (!this.notesRepo || !this.categoriesRepo) return { success: false, error: "Storage not initialized" };
+		if (!this.notesRepo || !this.categoriesRepo)
+			return { success: false, error: "Storage not initialized" };
 
 		// Create the note
 		const result = await this.notesRepo.createNote(params);
@@ -94,58 +110,83 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 	}
 
 	async updateNote(params: UpdateNoteParams): Promise<StorageResult<Note>> {
-		if (!this.notesRepo) return { success: false, error: "Storage not initialized" };
+		if (!this.notesRepo)
+			return { success: false, error: "Storage not initialized" };
 		return this.notesRepo.updateNote(params);
 	}
 
 	async deleteNote(id: string): Promise<VoidStorageResult> {
-		if (!this.notesRepo) return { success: false, error: "Storage not initialized" };
+		if (!this.notesRepo)
+			return { success: false, error: "Storage not initialized" };
 		return this.notesRepo.deleteNote(id);
 	}
 
-	async searchNotes(query: string, filters?: NoteFilters): Promise<StorageResult<Note[]>> {
-		if (!this.notesRepo) return { success: false, error: "Storage not initialized" };
+	async searchNotes(
+		query: string,
+		filters?: NoteFilters
+	): Promise<StorageResult<Note[]>> {
+		if (!this.notesRepo)
+			return { success: false, error: "Storage not initialized" };
 		return this.notesRepo.searchNotes(query, filters);
 	}
 
 	// ===== CATEGORIES OPERATIONS (via Repository) =====
 	async getCategories(): Promise<StorageResult<Category[]>> {
-		if (!this.categoriesRepo) return { success: false, error: "Storage not initialized" };
+		if (!this.categoriesRepo)
+			return { success: false, error: "Storage not initialized" };
 		return this.categoriesRepo.getCategories();
 	}
 
 	async getCategory(id: string): Promise<StorageResult<Category | null>> {
-		if (!this.categoriesRepo) return { success: false, error: "Storage not initialized" };
+		if (!this.categoriesRepo)
+			return { success: false, error: "Storage not initialized" };
 		return this.categoriesRepo.getCategory(id);
 	}
 
-	async createCategory(params: CreateCategoryParams): Promise<StorageResult<Category>> {
-		if (!this.categoriesRepo) return { success: false, error: "Storage not initialized" };
+	async createCategory(
+		params: CreateCategoryParams
+	): Promise<StorageResult<Category>> {
+		if (!this.categoriesRepo)
+			return { success: false, error: "Storage not initialized" };
 		return this.categoriesRepo.createCategory(params);
 	}
 
-	async updateCategory(id: string, params: Partial<CreateCategoryParams>): Promise<StorageResult<Category>> {
-		if (!this.categoriesRepo) return { success: false, error: "Storage not initialized" };
+	async updateCategory(
+		id: string,
+		params: Partial<CreateCategoryParams>
+	): Promise<StorageResult<Category>> {
+		if (!this.categoriesRepo)
+			return { success: false, error: "Storage not initialized" };
 		return this.categoriesRepo.updateCategory(id, params);
 	}
 
 	async deleteCategory(id: string): Promise<VoidStorageResult> {
-		if (!this.categoriesRepo) return { success: false, error: "Storage not initialized" };
+		if (!this.categoriesRepo)
+			return { success: false, error: "Storage not initialized" };
 		return this.categoriesRepo.deleteCategory(id);
 	}
 
 	async getCategoryNotes(categoryId: string): Promise<StorageResult<Note[]>> {
-		if (!this.categoriesRepo) return { success: false, error: "Storage not initialized" };
+		if (!this.categoriesRepo)
+			return { success: false, error: "Storage not initialized" };
 		return this.categoriesRepo.getCategoryNotes(categoryId);
 	}
 
-	async addNoteToCategory(noteId: string, categoryId: string): Promise<VoidStorageResult> {
-		if (!this.categoriesRepo) return { success: false, error: "Storage not initialized" };
+	async addNoteToCategory(
+		noteId: string,
+		categoryId: string
+	): Promise<VoidStorageResult> {
+		if (!this.categoriesRepo)
+			return { success: false, error: "Storage not initialized" };
 		return this.categoriesRepo.addNoteToCategory(noteId, categoryId);
 	}
 
-	async removeNoteFromCategory(noteId: string, categoryId: string): Promise<VoidStorageResult> {
-		if (!this.categoriesRepo) return { success: false, error: "Storage not initialized" };
+	async removeNoteFromCategory(
+		noteId: string,
+		categoryId: string
+	): Promise<VoidStorageResult> {
+		if (!this.categoriesRepo)
+			return { success: false, error: "Storage not initialized" };
 		return this.categoriesRepo.removeNoteFromCategory(noteId, categoryId);
 	}
 
@@ -154,8 +195,6 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		if (!this.db) return { success: false, error: "Database not initialized" };
 
 		try {
-			console.log("🔍 Fetching tree data...");
-
 			// Query the tree_items view that combines categories and notes
 			let flatItems: Array<{
 				id: string;
@@ -174,9 +213,14 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 						parent_id: string | null;
 						sort_order: number;
 					}>
-				>("SELECT * FROM tree_items ORDER BY parent_id NULLS FIRST, sort_order ASC");
+				>(
+					"SELECT * FROM tree_items ORDER BY parent_id NULLS FIRST, sort_order ASC"
+				);
 			} catch (viewError) {
-				console.warn("tree_items view not found, using fallback query:", viewError);
+				console.warn(
+					"tree_items view not found, using fallback query:",
+					viewError
+				);
 
 				// Fallback to manual UNION query
 				flatItems = await this.db.select<
@@ -208,8 +252,6 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 				`);
 			}
 
-			console.log("📊 Found flat items:", flatItems.length);
-
 			// Build tree structure in memory (simple since data is already sorted)
 			const itemsByParent = new Map<
 				string | null,
@@ -222,12 +264,18 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 				}>
 			>();
 
-			// Group items by parent
+			// Group items by parent, preserving sort order
 			for (const item of flatItems) {
 				const parentId = item.parent_id;
 				const items = itemsByParent.get(parentId) || [];
 				items.push(item);
 				itemsByParent.set(parentId, items);
+			}
+
+			// Ensure each parent's children are sorted by sort_order
+			// (Should already be sorted from query, but let's be explicit)
+			for (const [, items] of itemsByParent.entries()) {
+				items.sort((a, b) => a.sort_order - b.sort_order);
 			}
 
 			// Build tree recursively
@@ -253,21 +301,27 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 			};
 
 			const treeData = buildTree(null);
-			console.log("🌳 Built tree data:", treeData.length, "root items");
 			return { success: true, data: treeData };
 		} catch (error) {
-			console.error("❌ Failed to get tree data:", error);
 			return { success: false, error: `Failed to get tree data: ${error}` };
 		}
 	}
 
-	async updateNoteSortOrder(noteId: string, sortOrder: number): Promise<VoidStorageResult> {
-		if (!this.notesRepo) return { success: false, error: "Storage not initialized" };
+	async updateNoteSortOrder(
+		noteId: string,
+		sortOrder: number
+	): Promise<VoidStorageResult> {
+		if (!this.notesRepo)
+			return { success: false, error: "Storage not initialized" };
 		return this.notesRepo.updateNoteSortOrder(noteId, sortOrder);
 	}
 
-	async moveNoteToCategory(noteId: string, newCategoryId: string | null): Promise<VoidStorageResult> {
-		if (!this.notesRepo) return { success: false, error: "Storage not initialized" };
+	async moveNoteToCategory(
+		noteId: string,
+		newCategoryId: string | null
+	): Promise<VoidStorageResult> {
+		if (!this.notesRepo)
+			return { success: false, error: "Storage not initialized" };
 		return this.notesRepo.moveNoteToCategory(noteId, newCategoryId);
 	}
 
@@ -278,8 +332,14 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		newParentId: string | null,
 		insertIndex?: number
 	): Promise<VoidStorageResult> {
-		if (!this.treeOps) return { success: false, error: "Storage not initialized" };
-		return this.treeOps.moveTreeItem(itemId, itemType, newParentId, insertIndex);
+		if (!this.treeOps)
+			return { success: false, error: "Storage not initialized" };
+		return this.treeOps.moveTreeItem(
+			itemId,
+			itemType,
+			newParentId,
+			insertIndex
+		);
 	}
 
 	async reorderTreeItem(
@@ -288,7 +348,8 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		newIndex: number,
 		parentId: string | null
 	): Promise<VoidStorageResult> {
-		if (!this.treeOps) return { success: false, error: "Storage not initialized" };
+		if (!this.treeOps)
+			return { success: false, error: "Storage not initialized" };
 		return this.treeOps.reorderTreeItem(itemId, itemType, newIndex, parentId);
 	}
 
@@ -299,7 +360,9 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 	async getTags(): Promise<StorageResult<Tag[]>> {
 		if (!this.db) return { success: false, error: "Database not initialized" };
 		try {
-			const results = await this.db.select<Tag[]>("SELECT * FROM tags ORDER BY name ASC");
+			const results = await this.db.select<Tag[]>(
+				"SELECT * FROM tags ORDER BY name ASC"
+			);
 			return { success: true, data: results };
 		} catch (error) {
 			return { success: false, error: `Failed to get tags: ${error}` };
@@ -309,7 +372,10 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 	async getTag(id: string): Promise<StorageResult<Tag | null>> {
 		if (!this.db) return { success: false, error: "Database not initialized" };
 		try {
-			const results = await this.db.select<Tag[]>("SELECT * FROM tags WHERE id = ?", [id]);
+			const results = await this.db.select<Tag[]>(
+				"SELECT * FROM tags WHERE id = ?",
+				[id]
+			);
 			const tag = results.length > 0 ? (results[0] as Tag) : null;
 			return { success: true, data: tag };
 		} catch (error) {
@@ -325,7 +391,14 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 
 			await this.db.execute(
 				"INSERT INTO tags (id, name, color, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
-				[id, params.name, params.color || null, params.description || "", now, now]
+				[
+					id,
+					params.name,
+					params.color || null,
+					params.description || "",
+					now,
+					now,
+				]
 			);
 
 			const newTag: Tag = {
@@ -418,12 +491,21 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		if (!this.db) return { success: false, error: "Database not initialized" };
 
 		try {
-			const [noteCount, categoryCount, tagCount, attachmentCount] = await Promise.all([
-				this.db.select<Array<{ count: number }>>("SELECT COUNT(*) as count FROM notes WHERE deleted_at IS NULL"),
-				this.db.select<Array<{ count: number }>>("SELECT COUNT(*) as count FROM categories"),
-				this.db.select<Array<{ count: number }>>("SELECT COUNT(*) as count FROM tags"),
-				this.db.select<Array<{ count: number }>>("SELECT COUNT(*) as count FROM attachments"),
-			]);
+			const [noteCount, categoryCount, tagCount, attachmentCount] =
+				await Promise.all([
+					this.db.select<Array<{ count: number }>>(
+						"SELECT COUNT(*) as count FROM notes WHERE deleted_at IS NULL"
+					),
+					this.db.select<Array<{ count: number }>>(
+						"SELECT COUNT(*) as count FROM categories"
+					),
+					this.db.select<Array<{ count: number }>>(
+						"SELECT COUNT(*) as count FROM tags"
+					),
+					this.db.select<Array<{ count: number }>>(
+						"SELECT COUNT(*) as count FROM attachments"
+					),
+				]);
 
 			return {
 				success: true,

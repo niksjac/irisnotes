@@ -1,12 +1,21 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNotesActions, useCategoriesActions, useNotesStorage, useCategoriesData } from "@/hooks";
+import {
+	useNotesActions,
+	useCategoriesActions,
+	useNotesStorage,
+	useCategoriesData,
+} from "@/hooks";
 import type { TreeData } from "@/types";
 
 interface UseTreeDataOptimizedResult {
 	treeData: TreeData[];
 	isLoading: boolean;
 	error: string | null;
-	moveNode: (nodeId: string, newParentId: string | null) => Promise<void>;
+	moveNode: (
+		nodeId: string,
+		newParentId: string | null,
+		insertIndex?: number
+	) => Promise<void>;
 	updateNodeName: (nodeId: string, newName: string) => Promise<void>;
 }
 
@@ -26,27 +35,22 @@ export function useTreeData(): UseTreeDataOptimizedResult {
 	// Load tree data directly from storage
 	const loadTreeData = useCallback(async () => {
 		if (!storageAdapter) {
-			console.warn("⚠️ Storage adapter not available");
 			setError("Storage not available");
 			setIsLoading(false);
 			return;
 		}
 
-		console.log("🔄 Loading tree data...");
 		setIsLoading(true);
 		setError(null);
 
 		try {
 			const result = await storageAdapter.getTreeData();
 			if (result.success) {
-				console.log("✅ Tree data loaded successfully:", result.data.length, "items");
 				setTreeData(result.data);
 			} else {
-				console.error("❌ Tree data load failed:", result.error);
 				setError(`Failed to load tree data: ${result.error}`);
 			}
 		} catch (err) {
-			console.error("💥 Tree data load exception:", err);
 			setError(`Failed to load tree data: ${err}`);
 		} finally {
 			setIsLoading(false);
@@ -59,22 +63,29 @@ export function useTreeData(): UseTreeDataOptimizedResult {
 	}, [loadTreeData]);
 
 	// Helper to find node type recursively
-	const findNodeType = useCallback((data: TreeData[], targetId: string): "note" | "category" | null => {
-		for (const item of data) {
-			if (item.id === targetId) {
-				return item.type || "note";
+	const findNodeType = useCallback(
+		(data: TreeData[], targetId: string): "note" | "category" | null => {
+			for (const item of data) {
+				if (item.id === targetId) {
+					return item.type || "note";
+				}
+				if (item.children) {
+					const found = findNodeType(item.children, targetId);
+					if (found) return found;
+				}
 			}
-			if (item.children) {
-				const found = findNodeType(item.children, targetId);
-				if (found) return found;
-			}
-		}
-		return null;
-	}, []);
+			return null;
+		},
+		[]
+	);
 
 	// Move node to new parent (drag & drop)
 	const moveNode = useCallback(
-		async (nodeId: string, newParentId: string | null) => {
+		async (
+			nodeId: string,
+			newParentId: string | null,
+			insertIndex?: number
+		) => {
 			if (!storageAdapter) {
 				setError("Storage not available");
 				return;
@@ -105,18 +116,25 @@ export function useTreeData(): UseTreeDataOptimizedResult {
 					}
 				}
 
-				// Use enhanced tree operations
-				const result = await storageAdapter.moveTreeItem(nodeId, nodeType, newParentId);
+				// Use enhanced tree operations with insert index
+				const result = await storageAdapter.moveTreeItem(
+					nodeId,
+					nodeType,
+					newParentId,
+					insertIndex
+				);
 
 				if (!result.success) {
 					setError(`Failed to move ${nodeType}: ${result.error}`);
 					return;
 				}
 
+				// Clear error state before refresh
+				setError(null);
+
 				// Refresh tree data after move
 				await loadTreeData();
 			} catch (err) {
-				console.error("❌ Failed to move node:", err);
 				setError(`Failed to move node: ${err}`);
 			}
 		},
@@ -137,14 +155,18 @@ export function useTreeData(): UseTreeDataOptimizedResult {
 				if (nodeType === "category") {
 					const result = await updateCategory(nodeId, { name: newName });
 					if (!result || !result.success) {
-						setError(`Failed to rename category: ${result?.error || "Unknown error"}`);
+						setError(
+							`Failed to rename category: ${result?.error || "Unknown error"}`
+						);
 						return;
 					}
 					await loadTreeData();
 				} else if (nodeType === "note") {
 					const result = await updateNote({ id: nodeId, title: newName });
 					if (!result || !result.success) {
-						setError(`Failed to rename note: ${result?.error || "Unknown error"}`);
+						setError(
+							`Failed to rename note: ${result?.error || "Unknown error"}`
+						);
 						return;
 					}
 					await loadTreeData();
@@ -153,11 +175,17 @@ export function useTreeData(): UseTreeDataOptimizedResult {
 					return;
 				}
 			} catch (err) {
-				console.error("Failed to rename node:", err);
 				setError(`Failed to rename node: ${err}`);
 			}
 		},
-		[storageAdapter, treeData, updateNote, updateCategory, loadTreeData, findNodeType]
+		[
+			storageAdapter,
+			treeData,
+			updateNote,
+			updateCategory,
+			loadTreeData,
+			findNodeType,
+		]
 	);
 
 	return {
