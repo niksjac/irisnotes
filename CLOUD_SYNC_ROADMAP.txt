@@ -1,0 +1,353 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                           IRIS NOTES - CLOUD SYNC ROADMAP                   ║
+║                         Multi-Platform Synchronization                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─ CURRENT ARCHITECTURE ──────────────────────────────────────────────────────┐
+│                                                                              │
+│  ✅ SQLite storage with structured schema                                   │
+│  ✅ Storage adapter pattern (perfect for adding sync backends)              │
+│  ✅ Tauri backend (can handle network operations)                           │
+│  ✅ Configuration system (easy to add sync settings)                        │
+│  ✅ Configurable hotkeys system                                             │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌─ TRILIUM-INSPIRED SYNC MODEL ───────────────────────────────────────────────┐
+│                                                                              │
+│  📱 Desktop App     ☁️  Cloud Server     📱 Mobile App                      │
+│  ┌─────────────┐    ┌──────────────┐    ┌─────────────┐                     │
+│  │SQLite Local │◄──►│SQLite Master │◄──►│SQLite Local │                     │
+│  │+ Sync Layer │    │+ REST API    │    │+ Sync Layer │                     │
+│  └─────────────┘    └──────────────┘    └─────────────┘                     │
+│                                                                              │
+│  🔄 Star-shaped topology with central sync server                           │
+│  🔄 Automatic, ongoing synchronization                                      │
+│  🔄 Offline-first with conflict resolution                                  │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                              SYNC OPTIONS ANALYSIS                          ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─ OPTION 1: SELF-HOSTED SERVER (RECOMMENDED) ────────────────────────────────┐
+│                                                                              │
+│  🎯 ARCHITECTURE: Central sync server + multiple clients                    │
+│                                                                              │
+│  ✅ ADVANTAGES:                                                             │
+│     • Full control over your infrastructure                                 │
+│     • Complete privacy - data stays on your servers                         │
+│     • Cost effective - one VPS handles everything                           │
+│     • Trilium-proven model that works well                                  │
+│     • Easy to maintain and scale                                            │
+│                                                                              │
+│  💰 COST: $5-10/month (DigitalOcean, Linode, Vultr)                        │
+│  🛠️  EFFORT: Medium setup, low maintenance                                  │
+│  🔒 CONTROL: Full                                                           │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌─ OPTION 2: BACKEND-AS-A-SERVICE (BaaS) ─────────────────────────────────────┐
+│                                                                              │
+│  🌐 SERVICES:                                                               │
+│     • Supabase (PostgreSQL + real-time sync)                               │
+│     • Firebase (NoSQL + real-time)                                          │
+│     • PocketBase (SQLite + Go backend, self-hostable)                       │
+│     • Appwrite (Self-hostable BaaS)                                         │
+│                                                                              │
+│  ✅ ADVANTAGES:                                                             │
+│     • Quick setup with managed infrastructure                               │
+│     • Built-in real-time sync capabilities                                  │
+│     • Automatic scaling and backups                                         │
+│     • Rich feature set (auth, storage, functions)                           │
+│                                                                              │
+│  💰 COST: $0-25/month depending on usage                                   │
+│  🛠️  EFFORT: Low setup, minimal maintenance                                │
+│  🔒 CONTROL: Medium (vendor lock-in considerations)                        │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌─ OPTION 3: FILE-BASED SYNC (GIT-STYLE) ─────────────────────────────────────┐
+│                                                                              │
+│  📁 APPROACH: Store notes as JSON/Markdown files with git versioning       │
+│                                                                              │
+│  🌐 SERVICES: GitHub, GitLab, Dropbox, Google Drive, iCloud                │
+│                                                                              │
+│  ✅ ADVANTAGES:                                                             │
+│     • Full version history with git benefits                                │
+│     • Platform agnostic - works anywhere                                    │
+│     • Built-in backup through git history                                   │
+│     • Human-readable file format                                            │
+│                                                                              │
+│  ⚠️  CONSIDERATIONS:                                                        │
+│     • Merge conflicts need manual resolution                                │
+│     • Large binary attachments can be problematic                           │
+│     • Real-time sync is more complex                                        │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌─ OPTION 4: HYBRID P2P + CLOUD ──────────────────────────────────────────────┐
+│                                                                              │
+│  🔗 APPROACH: Direct device sync + cloud relay for offline devices          │
+│                                                                              │
+│  🛠️  TECHNOLOGY: Tauri + libp2p for P2P, cloud for relay                   │
+│                                                                              │
+│  ✅ ADVANTAGES:                                                             │
+│     • Fast direct sync when devices are online together                     │
+│     • Reduced server costs                                                  │
+│     • High privacy for direct connections                                   │
+│                                                                              │
+│  ⚠️  CONSIDERATIONS:                                                        │
+│     • Complex implementation                                                │
+│     • NAT traversal challenges                                              │
+│     • Still needs cloud component for reliability                           │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                        IMPLEMENTATION ROADMAP                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─ PHASE 1: FOUNDATION & SYNC INFRASTRUCTURE ─────────────────────────────────┐
+│                                                                              │
+│  📅 TIMELINE: 2-3 weeks                                                     │
+│                                                                              │
+│  🎯 GOALS:                                                                  │
+│     1. Add sync configuration to AppConfig                                  │
+│     2. Create SyncAdapter interface                                         │
+│     3. Implement basic conflict resolution strategies                        │
+│     4. Add sync status indicators to UI                                     │
+│                                                                              │
+│  📂 FILES TO CREATE/MODIFY:                                                 │
+│     • src/storage/adapters/sync-adapter.ts                                  │
+│     • src/types/sync.ts                                                     │
+│     • src/hooks/use-sync.ts                                                 │
+│     • src/components/sync-status.tsx                                        │
+│                                                                              │
+│  🔧 TECHNICAL TASKS:                                                        │
+│     • Extend AppConfig interface with sync settings                         │
+│     • Add sync endpoints to Tauri backend                                   │
+│     • Implement change tracking for notes                                   │
+│     • Create sync state management atoms                                    │
+│     • Add sync settings to configuration view                               │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌─ PHASE 2: SERVER DEPLOYMENT (TRILIUM-STYLE) ────────────────────────────────┐
+│                                                                              │
+│  📅 TIMELINE: 1-2 weeks                                                     │
+│                                                                              │
+│  🎯 GOALS:                                                                  │
+│     1. Create Docker containerization for server mode                       │
+│     2. Add REST API endpoints for sync operations                           │
+│     3. Set up database schema for server instance                           │
+│     4. Implement authentication and API key management                      │
+│                                                                              │
+│  📂 FILES TO CREATE:                                                        │
+│     • Dockerfile                                                            │
+│     • docker-compose.yml                                                    │
+│     • src/server/api.rs (Tauri backend)                                     │
+│     • src/server/auth.rs                                                    │
+│     • deploy/server-setup.sh                                                │
+│                                                                              │
+│  🔧 TECHNICAL TASKS:                                                        │
+│     • Configure app to run in server mode vs desktop mode                   │
+│     • Add HTTP endpoints for CRUD operations                                │
+│     • Implement user authentication system                                  │
+│     • Set up persistent volume for Docker data                              │
+│     • Create deployment scripts for common cloud providers                  │
+│                                                                              │
+│  🐳 DOCKER SETUP:                                                           │
+│     docker run -d \                                                         │
+│       -p 8080:8080 \                                                        │
+│       -v ~/irisnotes-data:/app/data \                                       │
+│       irisnotes-server                                                      │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌─ PHASE 3: SYNC LOGIC & CONFLICT RESOLUTION ─────────────────────────────────┐
+│                                                                              │
+│  📅 TIMELINE: 2-3 weeks                                                     │
+│                                                                              │
+│  🎯 GOALS:                                                                  │
+│     1. Implement incremental sync algorithms                                │
+│     2. Add robust conflict resolution strategies                            │
+│     3. Create sync queuing for offline changes                              │
+│     4. Add progress indicators and error handling                           │
+│                                                                              │
+│  🔧 CONFLICT RESOLUTION STRATEGIES:                                         │
+│     • Last-Write-Wins (simple, good for single user)                        │
+│     • Manual Resolution (user chooses which version to keep)                │
+│     • Content Merging (smart merge for text content)                        │
+│     • Version Branching (keep both versions as separate notes)              │
+│                                                                              │
+│  📊 SYNC STATE TRACKING:                                                    │
+│     • lastSyncTimestamp: number                                             │
+│     • localChanges: Change[]                                                │
+│     • conflictingNotes: string[]                                            │
+│     • syncStatus: 'idle' | 'syncing' | 'error' | 'conflict'                │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌─ PHASE 4: MOBILE OPTIMIZATION ──────────────────────────────────────────────┐
+│                                                                              │
+│  📅 TIMELINE: 1-2 weeks                                                     │
+│                                                                              │
+│  🎯 GOALS:                                                                  │
+│     1. Optimize sync for mobile constraints                                 │
+│     2. Add smart sync scheduling                                            │
+│     3. Implement data usage controls                                        │
+│     4. Add offline-first mobile experience                                  │
+│                                                                              │
+│  📱 MOBILE-SPECIFIC FEATURES:                                               │
+│     • WiFi-only sync option to save cellular data                           │
+│     • Battery-aware sync (pause on low battery)                             │
+│     • Background sync with appropriate intervals                            │
+│     • Compress sync payloads for mobile networks                            │
+│     • Queue changes for batch upload                                        │
+│                                                                              │
+│  🔧 TAURI MOBILE INTEGRATION:                                               │
+│     • Use Tauri's mobile APIs for network detection                         │
+│     • Implement proper background task handling                             │
+│     • Add mobile-specific storage optimizations                             │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                           DEPLOYMENT OPTIONS                                ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─ CLOUD PROVIDERS COMPARISON ─────────────────────────────────────────────────┐
+│                                                                              │
+│  🌊 DIGITALOCEAN DROPLET:                                                   │
+│     • $5-10/month for basic VPS                                             │
+│     • Simple deployment with Docker                                         │
+│     • Good performance and reliability                                      │
+│     • Easy backup and snapshot features                                     │
+│                                                                              │
+│  🚄 RAILWAY.APP:                                                            │
+│     • Git-based deployment (push to deploy)                                 │
+│     • Automatic HTTPS and custom domains                                    │
+│     • Pay-per-use pricing model                                             │
+│     • Great for prototyping and small scale                                 │
+│                                                                              │
+│  🪰 FLY.IO:                                                                 │
+│     • Global edge deployment                                                │
+│     • Fast cold starts and excellent latency                                │
+│     • Docker-native deployment                                              │
+│     • Good for worldwide user base                                          │
+│                                                                              │
+│  🏠 SELF-HOSTED:                                                            │
+│     • Home server with dynamic DNS                                          │
+│     • Raspberry Pi or old laptop                                            │
+│     • Complete control and zero ongoing costs                               │
+│     • Requires network configuration                                        │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                              SECURITY CONSIDERATIONS                        ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─ DATA PROTECTION ────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  🔐 ENCRYPTION:                                                             │
+│     • End-to-end encryption for sensitive notes                             │
+│     • TLS/HTTPS for all network communication                               │
+│     • Encrypted local storage option                                        │
+│     • Key derivation from user password                                     │
+│                                                                              │
+│  🔑 AUTHENTICATION:                                                         │
+│     • API key based authentication for sync                                 │
+│     • Optional user accounts for multi-user servers                         │
+│     • Device registration and management                                    │
+│     • Session management and token refresh                                  │
+│                                                                              │
+│  🛡️  ADDITIONAL SECURITY:                                                   │
+│     • Rate limiting on sync endpoints                                       │
+│     • Input validation and sanitization                                     │
+│     • Audit logging for sync operations                                     │
+│     • Backup encryption and secure storage                                  │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                NEXT STEPS                                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─ IMMEDIATE ACTIONS (THIS WEEK) ──────────────────────────────────────────────┐
+│                                                                              │
+│  1. 📋 Design sync configuration schema                                     │
+│     • Add sync settings to AppConfig interface                              │
+│     • Define SyncAdapter interface and methods                              │
+│     • Plan database schema changes for sync metadata                        │
+│                                                                              │
+│  2. 🧪 Set up development environment                                       │
+│     • Create local Docker setup for testing                                 │
+│     • Add sync-related npm scripts                                          │
+│     • Configure development database for sync testing                       │
+│                                                                              │
+│  3. 📚 Research and prototyping                                             │
+│     • Study Trilium's sync implementation details                           │
+│     • Test conflict resolution algorithms                                   │
+│     • Evaluate network libraries for Tauri                                  │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌─ MONTH 1 GOALS ──────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  🎯 Phase 1 + 2 Completion:                                                 │
+│     • Basic sync infrastructure in place                                    │
+│     • Working Docker server deployment                                      │
+│     • Simple sync between two desktop instances                             │
+│     • Configuration UI for sync settings                                    │
+│                                                                              │
+│  📊 Success Metrics:                                                        │
+│     • Can create note on Device A, see it on Device B                       │
+│     • Basic conflict detection works                                        │
+│     • Server can be deployed with one command                               │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌─ MONTH 2-3 GOALS ────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  🎯 Phase 3 + 4 Completion:                                                 │
+│     • Robust conflict resolution                                            │
+│     • Mobile app with optimized sync                                        │
+│     • Production-ready deployment                                           │
+│     • Documentation and user guides                                         │
+│                                                                              │
+│  📊 Success Metrics:                                                        │
+│     • Handles concurrent edits gracefully                                   │
+│     • Mobile sync works reliably on cellular                                │
+│     • Zero data loss in normal operation                                    │
+│     • Users can deploy their own sync servers                               │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                               REFERENCES                                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📖 Trilium Synchronization Documentation:
+   https://github.com/TriliumNext/Trilium/wiki/Synchronization
+
+🐳 Trilium Docker Setup:
+   https://github.com/TriliumNext/Trilium/wiki/Docker-server-installation
+
+🦀 Tauri Mobile Development:
+   https://tauri.app/v1/guides/building/mobile
+
+🔄 Conflict-Free Replicated Data Types (CRDTs):
+   Research for advanced conflict resolution
+
+📱 Progressive Web App Guidelines:
+   For web deployment considerations
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                         🌟 End of Cloud Sync Roadmap 🌟
+                    Ready to bring multi-device sync to Iris Notes!
+
+═══════════════════════════════════════════════════════════════════════════════
