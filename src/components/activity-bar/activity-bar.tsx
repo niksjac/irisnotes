@@ -2,6 +2,8 @@ import clsx from "clsx";
 import * as Icons from "lucide-react";
 import { useEditorLayout, useSidebar, useView } from "@/hooks";
 import { useEditorState, useLineWrapping } from "@/hooks";
+import { useAtom } from "jotai";
+import { paneStateAtom } from "@/atoms";
 import { ActivityBarButton } from "./activity-bar-button";
 
 export function ActivityBar() {
@@ -27,8 +29,16 @@ export function ActivityBar() {
 	const { toolbarVisible, toggleToolbar } = useEditorLayout();
 	const { fontSize } = useEditorState();
 	const { isWrapping, toggleLineWrapping } = useLineWrapping();
+	const [paneState, setPaneState] = useAtom(paneStateAtom);
 
 	const fontSizeIndicatorClasses = `flex flex-col items-center justify-center gap-0.5 cursor-default ${COLORS.textSecondary} text-xs font-medium p-0.5 md:h-8 h-6`;
+
+	const togglePaneMode = () => {
+		setPaneState(prev => ({
+			...prev,
+			count: prev.count === 1 ? 2 : 1
+		}));
+	};
 
 	if (!activityBarVisible) return null;
 
@@ -70,6 +80,13 @@ export function ActivityBar() {
 					isActive={databaseStatusVisible}
 					onClick={toggleDatabaseStatus}
 					title="Database Status"
+				/>
+
+				<ActivityBarButton
+					icon={paneState.count === 1 ? Icons.Columns2 : Icons.Minus}
+					isActive={paneState.count === 2}
+					onClick={togglePaneMode}
+					title={paneState.count === 1 ? "Split into two panes" : "Merge to single pane"}
 				/>
 			</div>
 

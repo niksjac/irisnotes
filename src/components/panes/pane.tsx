@@ -8,6 +8,7 @@ interface PaneProps {
 	onTabSelect: (tabId: string) => void;
 	onTabClose?: (tabId: string) => void;
 	onNewTab?: () => void;
+	onTabReorder?: (draggedTabId: string, targetTabId: string) => void;
 	isActive?: boolean;
 	onPaneClick?: () => void;
 }
@@ -18,6 +19,7 @@ export const Pane: FC<PaneProps> = ({
 	onTabSelect,
 	onTabClose,
 	onNewTab,
+	onTabReorder,
 	isActive = false,
 	onPaneClick
 }) => {
@@ -29,10 +31,10 @@ export const Pane: FC<PaneProps> = ({
 		}
 	};
 
-	return (
+		return (
 		<div
 			className={`
-				flex flex-col h-full
+				flex flex-col h-full bg-white dark:bg-gray-900
 				${isActive ? 'ring-2 ring-blue-500 ring-inset' : ''}
 			`}
 			onClick={handlePaneClick}
@@ -43,6 +45,7 @@ export const Pane: FC<PaneProps> = ({
 				onTabSelect={onTabSelect}
 				onTabClose={onTabClose}
 				onNewTab={onNewTab}
+				onTabReorder={onTabReorder}
 			/>
 			<TabContent tab={activeTab} />
 		</div>

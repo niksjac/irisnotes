@@ -34,21 +34,73 @@ export class SqliteSchemaManager {
 	}
 
 	private async executeSQLStatements(sqlContent: string, description: string): Promise<void> {
-		const statements = sqlContent
-			.split(";")
-			.map((stmt) => stmt.trim())
-			.filter((stmt) => stmt.length > 0 && !stmt.startsWith("--"));
+		// Improved SQL statement splitting that handles multi-line statements properly
+		const statements = this.splitSQLStatements(sqlContent);
 
 		for (const statement of statements) {
 			if (statement.trim()) {
 				try {
 					await this.db.execute(statement);
-				} catch (error) {
-					console.warn(`${description} statement ignored (likely already exists): ${error}`);
+				} catch (error: any) {
+					// Only warn for actual errors, not "already exists" conditions
+					if (!this.isExpectedError(error)) {
+						console.warn(`${description} statement ignored (likely already exists): ${error.message || error}`);
+					}
 					// Continue with other statements - some might fail if already exist
 				}
 			}
 		}
+	}
+
+	private splitSQLStatements(sqlContent: string): string[] {
+		// Remove comments and normalize whitespace
+		const cleaned = sqlContent
+			.split('\n')
+			.map(line => line.replace(/--.*$/, '').trim())
+			.filter(line => line.length > 0)
+			.join(' ');
+
+		// Split on semicolons, but be careful with complex statements
+		const statements: string[] = [];
+		let current = '';
+		let inQuotes = false;
+		let quoteChar = '';
+
+		for (let i = 0; i < cleaned.length; i++) {
+			const char = cleaned[i];
+
+			if (!inQuotes && (char === '"' || char === "'")) {
+				inQuotes = true;
+				quoteChar = char;
+			} else if (inQuotes && char === quoteChar) {
+				inQuotes = false;
+				quoteChar = '';
+			} else if (!inQuotes && char === ';') {
+				if (current.trim()) {
+					statements.push(current.trim());
+					current = '';
+				}
+				continue;
+			}
+
+			current += char;
+		}
+
+		// Add the last statement if it doesn't end with semicolon
+		if (current.trim()) {
+			statements.push(current.trim());
+		}
+
+		return statements.filter(stmt => stmt.length > 0);
+	}
+
+	private isExpectedError(error: any): boolean {
+		const errorMessage = error.message || error.toString();
+		return (
+			errorMessage.includes('already exists') ||
+			errorMessage.includes('duplicate column name') ||
+			errorMessage.includes('table') && errorMessage.includes('already exists')
+		);
 	}
 
 	private async addMissingColumns(): Promise<void> {

@@ -1,12 +1,11 @@
 import type { FC } from "react";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import {
 	paneStateAtom,
 	pane0TabsAtom,
 	pane1TabsAtom,
 	pane0ActiveTabAtom,
-	pane1ActiveTabAtom,
-	currentViewAtom
+	pane1ActiveTabAtom
 } from "@/atoms";
 import type { Tab } from "@/types";
 import { Pane } from "./pane";
@@ -19,21 +18,8 @@ export const PaneContainer: FC = () => {
 	const [pane1Tabs, setPane1Tabs] = useAtom(pane1TabsAtom);
 	const [pane0ActiveTab, setPane0ActiveTab] = useAtom(pane0ActiveTabAtom);
 	const [pane1ActiveTab, setPane1ActiveTab] = useAtom(pane1ActiveTabAtom);
-	const currentView = useAtomValue(currentViewAtom);
 
-	// Initialize with a default tab if none exist
-	useEffect(() => {
-		if (pane0Tabs.length === 0) {
-			const defaultTab: Tab = {
-				id: 'default-welcome',
-				title: 'Welcome',
-				viewType: currentView,
-				canClose: false,
-			};
-			setPane0Tabs([defaultTab]);
-			setPane0ActiveTab(defaultTab.id);
-		}
-	}, [pane0Tabs.length, setPane0Tabs, setPane0ActiveTab, currentView]);
+	// No default tabs - start with empty panes
 
 	// Set initial CSS custom properties for pane widths
 	useEffect(() => {
@@ -58,12 +44,17 @@ export const PaneContainer: FC = () => {
 		const activeTabId = paneIndex === 0 ? pane0ActiveTab : pane1ActiveTab;
 		const setActiveTab = paneIndex === 0 ? setPane0ActiveTab : setPane1ActiveTab;
 
+		// Find the index of the tab being closed
+		const closingTabIndex = tabs.findIndex(tab => tab.id === tabId);
 		const newTabs = tabs.filter(tab => tab.id !== tabId);
 		setTabs(newTabs);
 
-		// If we closed the active tab, select another one
+		// If we closed the active tab, select the next appropriate tab
 		if (activeTabId === tabId && newTabs.length > 0) {
-			setActiveTab(newTabs[0]?.id || null);
+			// If there's a tab after the closed one, select it
+			// Otherwise, select the previous tab (or the last one if closing the last tab)
+			const nextTabIndex = Math.min(closingTabIndex, newTabs.length - 1);
+			setActiveTab(newTabs[nextTabIndex]?.id || null);
 		} else if (newTabs.length === 0) {
 			setActiveTab(null);
 		}
@@ -71,10 +62,9 @@ export const PaneContainer: FC = () => {
 
 	const handleNewTab = (paneIndex: 0 | 1) => {
 		const newTab: Tab = {
-			id: `tab-${Date.now()}`,
-			title: 'New Tab',
-			viewType: 'welcome-view',
-			canClose: true,
+			id: `empty-tab-${Date.now()}`,
+			title: 'Empty Tab',
+			viewType: 'empty-view',
 		};
 
 		if (paneIndex === 0) {
@@ -93,67 +83,44 @@ export const PaneContainer: FC = () => {
 		setPaneState(prev => ({ ...prev, activePane: paneIndex }));
 	};
 
-	const handleSplitPane = () => {
-		if (paneState.count === 1) {
-			// Create a duplicate of the current active tab in the new pane
-			const activeTab = pane0Tabs.find(tab => tab.id === pane0ActiveTab);
-			if (activeTab) {
-				const newTab: Tab = {
-					...activeTab,
-					id: `${activeTab.id}-split`,
-					title: `${activeTab.title} (Split)`,
-				};
-				setPane1Tabs([newTab]);
-				setPane1ActiveTab(newTab.id);
-			}
-			setPaneState(prev => ({ ...prev, count: 2, activePane: 1 }));
+	const handleTabReorder = (paneIndex: 0 | 1, draggedTabId: string, targetTabId: string) => {
+		const tabs = paneIndex === 0 ? pane0Tabs : pane1Tabs;
+		const setTabs = paneIndex === 0 ? setPane0Tabs : setPane1Tabs;
+
+		const draggedIndex = tabs.findIndex(tab => tab.id === draggedTabId);
+		const targetIndex = tabs.findIndex(tab => tab.id === targetTabId);
+
+		if (draggedIndex === -1 || targetIndex === -1) return;
+
+		// Create new array with reordered tabs
+		const newTabs = [...tabs];
+		const [draggedTab] = newTabs.splice(draggedIndex, 1);
+		if (draggedTab) {
+			newTabs.splice(targetIndex, 0, draggedTab);
 		}
+
+		setTabs(newTabs);
 	};
 
-	if (paneState.count === 1) {
-		return (
-			<div className="flex flex-col h-full">
-				{/* Single pane toolbar */}
-				<div className="flex items-center justify-between px-2 py-1 bg-gray-100 border-b border-gray-200">
-					<div className="text-xs text-gray-600">Single Pane Mode</div>
-					<button
-						onClick={handleSplitPane}
-						className="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-					>
-						Split Pane
-					</button>
-				</div>
+	// No automatic tab creation when switching to dual pane mode
 
-				<Pane
-					tabs={pane0Tabs}
-					activeTabId={pane0ActiveTab}
-					onTabSelect={(tabId) => handleTabSelect(0, tabId)}
-					onTabClose={(tabId) => handleTabClose(0, tabId)}
-					onNewTab={() => handleNewTab(0)}
-					isActive={paneState.activePane === 0}
-					onPaneClick={() => handlePaneClick(0)}
-				/>
-			</div>
+		if (paneState.count === 1) {
+		return (
+			<Pane
+				tabs={pane0Tabs}
+				activeTabId={pane0ActiveTab}
+				onTabSelect={(tabId) => handleTabSelect(0, tabId)}
+				onTabClose={(tabId) => handleTabClose(0, tabId)}
+				onNewTab={() => handleNewTab(0)}
+				onTabReorder={(draggedTabId, targetTabId) => handleTabReorder(0, draggedTabId, targetTabId)}
+				isActive={paneState.activePane === 0}
+				onPaneClick={() => handlePaneClick(0)}
+			/>
 		);
 	}
 
-	return (
-		<div className="flex flex-col h-full">
-			{/* Two pane toolbar */}
-			<div className="flex items-center justify-between px-2 py-1 bg-gray-100 border-b border-gray-200">
-				<div className="text-xs text-gray-600">
-					Two Pane Mode - Active: Pane {paneState.activePane + 1}
-				</div>
-				<button
-					onClick={() => setPaneState(prev => ({ ...prev, count: 1 }))}
-					className="text-xs px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
-				>
-					Single Pane
-				</button>
-			</div>
-
-			{/* Pane container */}
-			<div className="flex flex-1 overflow-hidden pane-container">
+		return (
+		<div className="flex flex-1 overflow-hidden pane-container">
 				<div
 					className="flex-shrink-0 overflow-hidden"
 					style={{ width: 'var(--pane-left-width, 50%)' }}
@@ -164,6 +131,7 @@ export const PaneContainer: FC = () => {
 						onTabSelect={(tabId) => handleTabSelect(0, tabId)}
 						onTabClose={(tabId) => handleTabClose(0, tabId)}
 						onNewTab={() => handleNewTab(0)}
+						onTabReorder={(draggedTabId, targetTabId) => handleTabReorder(0, draggedTabId, targetTabId)}
 						isActive={paneState.activePane === 0}
 						onPaneClick={() => handlePaneClick(0)}
 					/>
@@ -181,11 +149,11 @@ export const PaneContainer: FC = () => {
 						onTabSelect={(tabId) => handleTabSelect(1, tabId)}
 						onTabClose={(tabId) => handleTabClose(1, tabId)}
 						onNewTab={() => handleNewTab(1)}
+						onTabReorder={(draggedTabId, targetTabId) => handleTabReorder(1, draggedTabId, targetTabId)}
 						isActive={paneState.activePane === 1}
 						onPaneClick={() => handlePaneClick(1)}
 					/>
 				</div>
 			</div>
-		</div>
 	);
 };

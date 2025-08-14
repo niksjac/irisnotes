@@ -5,6 +5,9 @@ interface AppHotkeysProps {
 	onToggleSidebar?: () => void;
 	onToggleActivityBar?: () => void;
 
+	// Tab hotkeys
+	onCloseTab?: () => void;
+
 	// Editor hotkeys (future)
 	// onSave?: () => void;
 	// onUndo?: () => void;
@@ -27,6 +30,8 @@ export function useAppHotkeys({
 	// Layout hotkeys
 	onToggleSidebar,
 	onToggleActivityBar,
+	// Tab hotkeys
+	onCloseTab,
 }: AppHotkeysProps) {
 	// Global hotkeys that should work everywhere (including form fields)
 	const globalHotkeyOptions = {
@@ -45,6 +50,9 @@ export function useAppHotkeys({
 	// Layout hotkeys - These should be global since they don't interfere with text input
 	useHotkeys("ctrl+b", () => onToggleSidebar?.(), globalHotkeyOptions);
 	useHotkeys("ctrl+j", () => onToggleActivityBar?.(), globalHotkeyOptions);
+
+	// Tab hotkeys - Global since they're UI navigation
+	useHotkeys("ctrl+w", () => onCloseTab?.(), globalHotkeyOptions);
 
 	// Future hotkey categories can be added here:
 

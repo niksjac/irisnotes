@@ -71,7 +71,8 @@ export type ViewType =
 	| "folder-view"
 	| "editor-rich-view"
 	| "editor-source-view"
-	| "welcome-view";
+	| "welcome-view"
+	| "empty-view";
 
 // Tree view types
 export interface TreeData {
@@ -93,7 +94,6 @@ export interface Tab {
 	viewType: ViewType;
 	viewData?: any; // For note IDs, folder IDs, etc.
 	isDirty?: boolean;
-	canClose?: boolean;
 }
 
 export interface PaneState {

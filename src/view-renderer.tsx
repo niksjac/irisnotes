@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import type { ViewType } from "@/types";
-import { ConfigView, HotkeysView, FolderView, EditorRichView, EditorSourceView, WelcomeView } from "@/views";
+import { ConfigView, HotkeysView, FolderView, EditorRichView, EditorSourceView, WelcomeView, EmptyView } from "@/views";
 
 interface ViewRendererProps {
 	viewType: ViewType;
@@ -15,6 +15,7 @@ export const ViewRenderer: FC<ViewRendererProps> = ({ viewType }) => {
 		"editor-rich-view": <EditorRichView />,
 		"editor-source-view": <EditorSourceView />,
 		"welcome-view": <WelcomeView />,
+		"empty-view": <EmptyView />,
 	};
 
 	return viewMapping[viewType];

@@ -54,8 +54,8 @@ export const PaneResizer: FC<PaneResizerProps> = ({
 	return (
 		<div
 			className={`
-				w-1 bg-gray-200 hover:bg-blue-400 cursor-col-resize flex-shrink-0
-				${isResizing ? 'bg-blue-500' : ''}
+				w-1 bg-gray-300 dark:bg-gray-600 hover:bg-blue-500 hover:bg-opacity-50 cursor-col-resize flex-shrink-0 transition-colors duration-200
+				${isResizing ? 'bg-blue-500 bg-opacity-50' : ''}
 			`}
 			onMouseDown={handleMouseDown}
 		>

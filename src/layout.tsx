@@ -1,14 +1,18 @@
 import type React from "react";
 import { ActivityBar, SidebarResizer, Sidebar, PaneContainer } from "@/components";
 import { useLayout, useAppHotkeys } from "@/hooks";
+import { useSetAtom } from "jotai";
+import { closeActiveTabAtom } from "@/atoms";
 
 export const Layout: React.FC = () => {
 	const { sidebar, views } = useLayout();
+	const closeActiveTab = useSetAtom(closeActiveTabAtom);
 
 	// Centralized app hotkeys
 	useAppHotkeys({
 		onToggleSidebar: sidebar.toggle,
 		onToggleActivityBar: views.toggleActivityBar,
+		onCloseTab: closeActiveTab,
 	});
 
 	return (

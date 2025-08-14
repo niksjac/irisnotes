@@ -1,20 +1,20 @@
 {
-	"editor": {
-		"lineWrapping": false,
-		"toolbarVisible": true
-	},
-	"debug": {
-		"enableExampleNote": false
-	},
-	"storage": {
-		"backend": "sqlite",
-		"sqlite": {
-			"database_path": "./dev/notes.db"
-		}
-	},
-	"development": {
-		"useLocalConfig": true,
-		"configPath": "./dev/config/"
-	},
-	"production": {}
+  "editor": {
+    "lineWrapping": false,
+    "toolbarVisible": false
+  },
+  "debug": {
+    "enableExampleNote": false
+  },
+  "storage": {
+    "backend": "sqlite",
+    "sqlite": {
+      "database_path": "./dev/notes.db"
+    }
+  },
+  "development": {
+    "useLocalConfig": true,
+    "configPath": "./dev/config/"
+  },
+  "production": {}
 }
