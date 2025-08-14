@@ -6,7 +6,6 @@ import {
 	useNotesSelection,
 	useContextMenu,
 	useContextMenuActions,
-	useAppInfo,
 } from "@/hooks";
 import type { TreeContextData } from "@/types";
 import { ContextMenu } from "../context-menu";
@@ -17,19 +16,11 @@ export function TreeView() {
 	const { treeData, isLoading, error, updateNodeName, moveNode } =
 		useTreeData();
 	const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
-	const [dragDebugInfo, setDragDebugInfo] = useState<string[]>([]);
 	const { ref, width, height } = useResizeObserver();
 	const { setSelectedNoteId } = useNotesSelection();
 	const { contextMenu, handleContextMenu, hideContextMenu } = useContextMenu();
 	const { getTreeNodeMenuGroups } = useContextMenuActions();
-	const { appInfo } = useAppInfo();
 	const treeRef = useRef<any>(null);
-
-	// Add drag debug info
-	const addDebugInfo = (info: string) => {
-		const timestamp = new Date().toLocaleTimeString();
-		setDragDebugInfo((prev) => [...prev.slice(-4), `${timestamp}: ${info}`]);
-	};
 
 	// Extract keyboard handling
 	useTreeKeyboard({ treeRef });
@@ -56,9 +47,6 @@ export function TreeView() {
 		parentId: string | null;
 		index: number;
 	}) => {
-		const debugMsg = `onMove: ${dragIds[0]} → parent: ${parentId}, index: ${index}`;
-		addDebugInfo(debugMsg);
-
 		// Only support single item moves for simplicity
 		if (dragIds.length !== 1) return;
 
@@ -133,33 +121,6 @@ export function TreeView() {
 	return (
 		<>
 			<div ref={ref} className="flex flex-col h-full bg-white dark:bg-gray-900">
-				{/* Debug info */}
-				<div className="px-4 py-2 text-xs text-gray-500 border-b border-gray-200 dark:border-gray-700">
-					Tree: {treeData.length} items |{" "}
-					{appInfo?.development_mode ? "Dev" : "Prod"}
-				</div>
-				{/* Drag Debug Overlay */}
-				{dragDebugInfo.length > 0 && (
-					<div className="px-4 py-2 bg-yellow-50 dark:bg-yellow-900 border-b border-yellow-200 dark:border-yellow-700">
-						<div className="text-xs font-semibold text-yellow-800 dark:text-yellow-200 mb-1">
-							Drag & Drop Debug:
-						</div>
-						{dragDebugInfo.map((info, idx) => (
-							<div
-								key={idx}
-								className="text-xs text-yellow-700 dark:text-yellow-300 font-mono"
-							>
-								{info}
-							</div>
-						))}
-						<button
-							onClick={() => setDragDebugInfo([])}
-							className="mt-1 text-xs text-yellow-600 dark:text-yellow-400 hover:underline"
-						>
-							Clear
-						</button>
-					</div>
-				)}
 				<div className="flex-1 overflow-hidden" style={{ minHeight: "400px" }}>
 					{width && height && (
 						<Tree
