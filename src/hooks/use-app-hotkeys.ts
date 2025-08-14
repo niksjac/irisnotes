@@ -7,6 +7,37 @@ interface AppHotkeysProps {
 
 	// Tab hotkeys
 	onCloseTab?: () => void;
+	onNewTab?: () => void;
+	onMoveTabLeft?: () => void;
+	onMoveTabRight?: () => void;
+
+	// Pane hotkeys
+	onToggleDualPane?: () => void;
+	onPaneResizeLeft?: () => void;
+	onPaneResizeRight?: () => void;
+
+	// Sidebar resizing hotkeys
+	onSidebarResizeLeft?: () => void;
+	onSidebarResizeRight?: () => void;
+
+	// Pane focus hotkeys
+	onFocusPane1?: () => void;
+	onFocusPane2?: () => void;
+
+	// Tab movement between panes hotkeys
+	onMoveTabToPaneLeft?: () => void;
+	onMoveTabToPaneRight?: () => void;
+
+	// Tab focus by number hotkeys
+	onFocusTab1?: () => void;
+	onFocusTab2?: () => void;
+	onFocusTab3?: () => void;
+	onFocusTab4?: () => void;
+	onFocusTab5?: () => void;
+	onFocusTab6?: () => void;
+	onFocusTab7?: () => void;
+	onFocusTab8?: () => void;
+	onFocusTab9?: () => void;
 
 	// Editor hotkeys (future)
 	// onSave?: () => void;
@@ -32,6 +63,32 @@ export function useAppHotkeys({
 	onToggleActivityBar,
 	// Tab hotkeys
 	onCloseTab,
+	onNewTab,
+	onMoveTabLeft,
+	onMoveTabRight,
+	// Pane hotkeys
+	onToggleDualPane,
+	onPaneResizeLeft,
+	onPaneResizeRight,
+	// Sidebar resizing hotkeys
+	onSidebarResizeLeft,
+	onSidebarResizeRight,
+	// Pane focus hotkeys
+	onFocusPane1,
+	onFocusPane2,
+	// Tab movement between panes hotkeys
+	onMoveTabToPaneLeft,
+	onMoveTabToPaneRight,
+	// Tab focus by number hotkeys
+	onFocusTab1,
+	onFocusTab2,
+	onFocusTab3,
+	onFocusTab4,
+	onFocusTab5,
+	onFocusTab6,
+	onFocusTab7,
+	onFocusTab8,
+	onFocusTab9,
 }: AppHotkeysProps) {
 	// Global hotkeys that should work everywhere (including form fields)
 	const globalHotkeyOptions = {
@@ -53,6 +110,37 @@ export function useAppHotkeys({
 
 	// Tab hotkeys - Global since they're UI navigation
 	useHotkeys("ctrl+w", () => onCloseTab?.(), globalHotkeyOptions);
+	useHotkeys("ctrl+t", () => onNewTab?.(), globalHotkeyOptions);
+	useHotkeys("ctrl+shift+alt+left", () => onMoveTabLeft?.(), globalHotkeyOptions);
+	useHotkeys("ctrl+shift+alt+right", () => onMoveTabRight?.(), globalHotkeyOptions);
+
+	// Pane hotkeys - Global UI navigation
+	useHotkeys("ctrl+d", () => onToggleDualPane?.(), globalHotkeyOptions);
+	useHotkeys("alt+left", () => onPaneResizeLeft?.(), globalHotkeyOptions);
+	useHotkeys("alt+right", () => onPaneResizeRight?.(), globalHotkeyOptions);
+
+	// Sidebar resizing hotkeys - Global since they're layout controls
+	useHotkeys("ctrl+left", () => onSidebarResizeLeft?.(), globalHotkeyOptions);
+	useHotkeys("ctrl+right", () => onSidebarResizeRight?.(), globalHotkeyOptions);
+
+	// Pane focus hotkeys - Global UI navigation
+	useHotkeys("ctrl+alt+1", () => onFocusPane1?.(), globalHotkeyOptions);
+	useHotkeys("ctrl+alt+2", () => onFocusPane2?.(), globalHotkeyOptions);
+
+	// Tab movement between panes hotkeys - Global since they're UI navigation
+	useHotkeys("ctrl+alt+left", () => onMoveTabToPaneLeft?.(), globalHotkeyOptions);
+	useHotkeys("ctrl+alt+right", () => onMoveTabToPaneRight?.(), globalHotkeyOptions);
+
+	// Tab focus by number hotkeys - Global since they're navigation
+	useHotkeys("ctrl+1", () => onFocusTab1?.(), globalHotkeyOptions);
+	useHotkeys("ctrl+2", () => onFocusTab2?.(), globalHotkeyOptions);
+	useHotkeys("ctrl+3", () => onFocusTab3?.(), globalHotkeyOptions);
+	useHotkeys("ctrl+4", () => onFocusTab4?.(), globalHotkeyOptions);
+	useHotkeys("ctrl+5", () => onFocusTab5?.(), globalHotkeyOptions);
+	useHotkeys("ctrl+6", () => onFocusTab6?.(), globalHotkeyOptions);
+	useHotkeys("ctrl+7", () => onFocusTab7?.(), globalHotkeyOptions);
+	useHotkeys("ctrl+8", () => onFocusTab8?.(), globalHotkeyOptions);
+	useHotkeys("ctrl+9", () => onFocusTab9?.(), globalHotkeyOptions);
 
 	// Future hotkey categories can be added here:
 

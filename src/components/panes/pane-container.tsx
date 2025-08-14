@@ -102,6 +102,8 @@ export const PaneContainer: FC = () => {
 		setTabs(newTabs);
 	};
 
+
+
 	// No automatic tab creation when switching to dual pane mode
 
 		if (paneState.count === 1) {
@@ -115,6 +117,7 @@ export const PaneContainer: FC = () => {
 				onTabReorder={(draggedTabId, targetTabId) => handleTabReorder(0, draggedTabId, targetTabId)}
 				isActive={paneState.activePane === 0}
 				onPaneClick={() => handlePaneClick(0)}
+				isDualPaneMode={false}
 			/>
 		);
 	}
@@ -134,6 +137,7 @@ export const PaneContainer: FC = () => {
 						onTabReorder={(draggedTabId, targetTabId) => handleTabReorder(0, draggedTabId, targetTabId)}
 						isActive={paneState.activePane === 0}
 						onPaneClick={() => handlePaneClick(0)}
+						isDualPaneMode={true}
 					/>
 				</div>
 
@@ -152,6 +156,7 @@ export const PaneContainer: FC = () => {
 						onTabReorder={(draggedTabId, targetTabId) => handleTabReorder(1, draggedTabId, targetTabId)}
 						isActive={paneState.activePane === 1}
 						onPaneClick={() => handlePaneClick(1)}
+						isDualPaneMode={true}
 					/>
 				</div>
 			</div>
