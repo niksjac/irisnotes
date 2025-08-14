@@ -21,7 +21,7 @@
 				"recommended": false
 			},
 			"complexity": {
-				"noExcessiveCognitiveComplexity": "warn",
+				"noExcessiveCognitiveComplexity": "off",
 				"noForEach": "off"
 			},
 			"correctness": {
