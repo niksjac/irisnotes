@@ -72,5 +72,8 @@ const getDefaultView = (get: any): ViewType => {
 	return "welcome-view";
 };
 
+// Import pane atoms
+export * from "./panes";
+
 // Current view state derived atom (for single-pane mode or when no pane specified)
 export const currentViewAtom = atom<ViewType>((get) => getDefaultView(get));

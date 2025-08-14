@@ -1,12 +1,13 @@
 import type { FC } from "react";
 import type { ViewType } from "@/types";
-import { useAtomValue } from "jotai";
-import { currentViewAtom } from "@/atoms";
 import { ConfigView, HotkeysView, FolderView, EditorRichView, EditorSourceView, WelcomeView } from "@/views";
 
-export const Content: FC = () => {
-	const currentView = useAtomValue(currentViewAtom);
+interface ViewRendererProps {
+	viewType: ViewType;
+	viewData?: any;
+}
 
+export const ViewRenderer: FC<ViewRendererProps> = ({ viewType }) => {
 	const viewMapping: Record<ViewType, React.ReactElement> = {
 		"config-view": <ConfigView />,
 		"hotkeys-view": <HotkeysView />,
@@ -16,5 +17,5 @@ export const Content: FC = () => {
 		"welcome-view": <WelcomeView />,
 	};
 
-	return viewMapping[currentView];
+	return viewMapping[viewType];
 };

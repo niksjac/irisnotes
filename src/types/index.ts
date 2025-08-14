@@ -86,4 +86,20 @@ export interface TreeData {
 	};
 }
 
+// Pane and Tab types
+export interface Tab {
+	id: string;
+	title: string;
+	viewType: ViewType;
+	viewData?: any; // For note IDs, folder IDs, etc.
+	isDirty?: boolean;
+	canClose?: boolean;
+}
+
+export interface PaneState {
+	count: 1 | 2; // 1 or 2 panes
+	activePane: 0 | 1; // 0 or 1
+	splitDirection: 'horizontal'; // Future: could add vertical
+}
+
 // Test comment for prettier hook

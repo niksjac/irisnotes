@@ -1,7 +1,6 @@
 import type React from "react";
-import { ActivityBar, SidebarResizer, Sidebar } from "@/components";
+import { ActivityBar, SidebarResizer, Sidebar, PaneContainer } from "@/components";
 import { useLayout, useAppHotkeys } from "@/hooks";
-import { Content } from "./content";
 
 export const Layout: React.FC = () => {
 	const { sidebar, views } = useLayout();
@@ -33,7 +32,7 @@ export const Layout: React.FC = () => {
 
 					{/* Main Content Area */}
 					<div className="flex-1 flex flex-col overflow-hidden __4">
-						<Content />
+						<PaneContainer />
 					</div>
 				</div>
 			</div>
