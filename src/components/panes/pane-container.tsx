@@ -19,6 +19,33 @@ export const PaneContainer: FC = () => {
 	const [pane0ActiveTab, setPane0ActiveTab] = useAtom(pane0ActiveTabAtom);
 	const [pane1ActiveTab, setPane1ActiveTab] = useAtom(pane1ActiveTabAtom);
 
+	// Force single pane mode on mobile
+	useEffect(() => {
+		const handleResize = () => {
+			const isMobile = window.innerWidth < 768; // md breakpoint
+			if (isMobile && paneState.count === 2) {
+				// Merge all tabs from pane1 to pane0 when switching to mobile
+				if (pane1Tabs.length > 0) {
+					setPane0Tabs(prev => [...prev, ...pane1Tabs]);
+					setPane1Tabs([]);
+					// If pane1 had an active tab, make it active in pane0
+					if (pane1ActiveTab) {
+						setPane0ActiveTab(pane1ActiveTab);
+						setPane1ActiveTab(null);
+					}
+				}
+				setPaneState(prev => ({ ...prev, count: 1, activePane: 0 }));
+			}
+		};
+
+		// Check on mount
+		handleResize();
+
+		// Check on window resize
+		window.addEventListener('resize', handleResize);
+		return () => window.removeEventListener('resize', handleResize);
+	}, [paneState.count, pane1Tabs, pane1ActiveTab, setPaneState, setPane0Tabs, setPane1Tabs, setPane0ActiveTab, setPane1ActiveTab]);
+
 	// No default tabs - start with empty panes
 
 	// Set initial CSS custom properties for pane widths

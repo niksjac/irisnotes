@@ -82,12 +82,15 @@ export function ActivityBar() {
 					title="Database Status"
 				/>
 
-				<ActivityBarButton
-					icon={paneState.count === 1 ? Icons.Columns2 : Icons.Minus}
-					isActive={paneState.count === 2}
-					onClick={togglePaneMode}
-					title={paneState.count === 1 ? "Split into two panes" : "Merge to single pane"}
-				/>
+				{/* Dual pane button - hidden on mobile */}
+				<div className="hidden md:block">
+					<ActivityBarButton
+						icon={paneState.count === 1 ? Icons.Columns2 : Icons.Minus}
+						isActive={paneState.count === 2}
+						onClick={togglePaneMode}
+						title={paneState.count === 1 ? "Split into two panes" : "Merge to single pane"}
+					/>
+				</div>
 			</div>
 
 			{/* Editor controls section */}

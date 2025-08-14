@@ -20,6 +20,7 @@ export const noteCategoriesAtom = atom<any[]>([]);
 // Layout atoms
 export const sidebarCollapsed = atom<boolean>(false);
 export const sidebarWidth = atom<number>(300); // Default width
+export const sidebarHeight = atom<number>(200); // Default height for mobile
 export const activityBarVisible = atom<boolean>(true);
 export const configViewActive = atom<boolean>(false);
 export const hotkeysViewActive = atom<boolean>(false);

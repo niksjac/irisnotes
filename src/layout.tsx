@@ -92,7 +92,8 @@ export const Layout: React.FC = () => {
 	return (
 		<div className="flex flex-col h-screen w-screen">
 			<div className="flex-1 overflow-hidden">
-				<div className="overflow-hidden h-full flex md:flex-row flex-col __3">
+				{/* Desktop Layout */}
+				<div className="overflow-hidden h-full hidden md:flex flex-row __3">
 					{/* Activity Bar */}
 					<ActivityBar />
 
@@ -104,6 +105,30 @@ export const Layout: React.FC = () => {
 						maxWidth={600}
 						defaultWidth={300}
 						autoCollapseOnResize={false}
+					>
+						<Sidebar />
+					</SidebarResizer>
+
+					{/* Main Content Area */}
+					<div className="flex-1 flex flex-col overflow-hidden __4">
+						<PaneContainer />
+					</div>
+				</div>
+
+				{/* Mobile Layout */}
+				<div className="overflow-hidden h-full flex md:hidden flex-col __3">
+					{/* Activity Bar at Top */}
+					<ActivityBar />
+
+					{/* Mobile Sidebar Below Activity Bar */}
+					<SidebarResizer
+						isCollapsed={sidebar.collapsed}
+						onCollapsedChange={sidebar.setCollapsed}
+						minWidth={200}
+						maxWidth={600}
+						defaultWidth={300}
+						autoCollapseOnResize={false}
+						isMobile={true}
 					>
 						<Sidebar />
 					</SidebarResizer>

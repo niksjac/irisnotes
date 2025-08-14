@@ -114,10 +114,25 @@ export function useAppHotkeys({
 	useHotkeys("ctrl+shift+alt+left", () => onMoveTabLeft?.(), globalHotkeyOptions);
 	useHotkeys("ctrl+shift+alt+right", () => onMoveTabRight?.(), globalHotkeyOptions);
 
-	// Pane hotkeys - Global UI navigation
-	useHotkeys("ctrl+d", () => onToggleDualPane?.(), globalHotkeyOptions);
-	useHotkeys("alt+left", () => onPaneResizeLeft?.(), globalHotkeyOptions);
-	useHotkeys("alt+right", () => onPaneResizeRight?.(), globalHotkeyOptions);
+	// Pane hotkeys - Global UI navigation (disabled on mobile)
+	useHotkeys("ctrl+d", () => {
+		const isMobile = window.innerWidth < 768; // md breakpoint
+		if (!isMobile) {
+			onToggleDualPane?.();
+		}
+	}, globalHotkeyOptions);
+	useHotkeys("alt+left", () => {
+		const isMobile = window.innerWidth < 768;
+		if (!isMobile) {
+			onPaneResizeLeft?.();
+		}
+	}, globalHotkeyOptions);
+	useHotkeys("alt+right", () => {
+		const isMobile = window.innerWidth < 768;
+		if (!isMobile) {
+			onPaneResizeRight?.();
+		}
+	}, globalHotkeyOptions);
 
 	// Sidebar resizing hotkeys - Global since they're layout controls
 	useHotkeys("ctrl+left", () => onSidebarResizeLeft?.(), globalHotkeyOptions);
