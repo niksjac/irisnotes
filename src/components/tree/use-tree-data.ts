@@ -1,198 +1,177 @@
-import { useCallback, useEffect, useState } from "react";
-import {
-	useNotesActions,
-	useCategoriesActions,
-	useNotesStorage,
-	useCategoriesData,
-} from "@/hooks";
+import { useState, useEffect, useCallback } from "react";
+import { useNotesActions, useCategoriesActions, useNotesStorage, useCategoriesData } from "@/hooks";
 import type { TreeData } from "@/types";
 
-interface UseTreeDataOptimizedResult {
-	treeData: TreeData[];
-	isLoading: boolean;
-	error: string | null;
-	moveNode: (
-		nodeId: string,
-		newParentId: string | null,
-		insertIndex?: number
-	) => Promise<void>;
-	updateNodeName: (nodeId: string, newName: string) => Promise<void>;
+interface TreeNodeData {
+  id: string;
+  name: string;
+  type: "category" | "note";
+  children?: TreeNodeData[];
 }
 
-/**
- * Tree data hook optimized for the new schema with direct parent-child relationships
- */
-export function useTreeData(): UseTreeDataOptimizedResult {
-	const [treeData, setTreeData] = useState<TreeData[]>([]);
-	const [isLoading, setIsLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
+interface UseTreeDataResult {
+  treeData: TreeNodeData[];
+  isLoading: boolean;
+  error: string | null;
+  reloadData: () => Promise<void>;
+  updateNodeName: (nodeId: string, newName: string) => Promise<void>;
+  moveNode: (nodeId: string, newParentId: string | null, position: number) => Promise<void>;
+}
 
-	const { updateNote } = useNotesActions();
-	const { updateCategory } = useCategoriesActions();
-	const { categories } = useCategoriesData();
-	const { storageAdapter } = useNotesStorage();
+export function useTreeData(): UseTreeDataResult {
+  const [treeData, setTreeData] = useState<TreeNodeData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-	// Load tree data directly from storage
-	const loadTreeData = useCallback(async () => {
-		if (!storageAdapter) {
-			setError("Storage not available");
-			setIsLoading(false);
-			return;
-		}
+  const { updateNote } = useNotesActions();
+  const { updateCategory } = useCategoriesActions();
+  const { categories } = useCategoriesData();
+  const { storageAdapter } = useNotesStorage();
 
-		setIsLoading(true);
-		setError(null);
+  // Convert TreeData to TreeNodeData
+  const convertTreeData = (data: TreeData[]): TreeNodeData[] => {
+    return data.map(item => ({
+      id: item.id,
+      name: item.name,
+      type: item.type || "note",
+      children: item.children ? convertTreeData(item.children) : undefined,
+    }));
+  };
 
-		try {
-			const result = await storageAdapter.getTreeData();
-			if (result.success) {
-				setTreeData(result.data);
-			} else {
-				setError(`Failed to load tree data: ${result.error}`);
-			}
-		} catch (err) {
-			setError(`Failed to load tree data: ${err}`);
-		} finally {
-			setIsLoading(false);
-		}
-	}, [storageAdapter]);
+  const loadTreeData = useCallback(async () => {
+    if (!storageAdapter) {
+      setError("Storage not available");
+      setIsLoading(false);
+      return;
+    }
 
-	// Load tree data on mount and when storage changes
-	useEffect(() => {
-		loadTreeData();
-	}, [loadTreeData]);
+    setIsLoading(true);
+    setError(null);
 
-	// Helper to find node type recursively
-	const findNodeType = useCallback(
-		(data: TreeData[], targetId: string): "note" | "category" | null => {
-			for (const item of data) {
-				if (item.id === targetId) {
-					return item.type || "note";
-				}
-				if (item.children) {
-					const found = findNodeType(item.children, targetId);
-					if (found) return found;
-				}
-			}
-			return null;
-		},
-		[]
-	);
+    try {
+      const result = await storageAdapter.getTreeData();
+      if (result.success) {
+        setTreeData(convertTreeData(result.data));
+      } else {
+        setError(`Failed to load tree data: ${result.error}`);
+      }
+    } catch (err) {
+      setError(`Failed to load tree data: ${err}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [storageAdapter]);
 
-	// Move node to new parent (drag & drop)
-	const moveNode = useCallback(
-		async (
-			nodeId: string,
-			newParentId: string | null,
-			insertIndex?: number
-		) => {
-			if (!storageAdapter) {
-				setError("Storage not available");
-				return;
-			}
+  useEffect(() => {
+    loadTreeData();
+  }, [loadTreeData]);
 
-			try {
-				// Determine node type from current tree data
-				const nodeType = findNodeType(treeData, nodeId);
-				if (!nodeType) {
-					setError("Could not determine node type");
-					return;
-				}
+  const findNodeType = useCallback(
+    (data: TreeNodeData[], targetId: string): "note" | "category" | null => {
+      for (const item of data) {
+        if (item.id === targetId) {
+          return item.type;
+        }
+        if (item.children) {
+          const found = findNodeType(item.children, targetId);
+          if (found) return found;
+        }
+      }
+      return null;
+    },
+    []
+  );
 
-				// Simple nesting depth validation for categories (max 3 levels)
-				if (nodeType === "category" && newParentId) {
-					// Count depth by traversing up the parent chain
-					let currentId = newParentId;
-					let depth = 1;
-					while (currentId && depth < 4) {
-						const parent = categories.find((cat) => cat.id === currentId);
-						if (!parent || !parent.parent_id) break;
-						currentId = parent.parent_id;
-						depth++;
-					}
-					if (depth >= 3) {
-						setError("Cannot nest deeper than 3 levels");
-						return;
-					}
-				}
+  const updateNodeName = useCallback(
+    async (nodeId: string, newName: string) => {
+      if (!storageAdapter) {
+        setError("Storage not available");
+        return;
+      }
 
-				// Use enhanced tree operations with insert index
-				const result = await storageAdapter.moveTreeItem(
-					nodeId,
-					nodeType,
-					newParentId,
-					insertIndex
-				);
+      try {
+        const nodeType = findNodeType(treeData, nodeId);
 
-				if (!result.success) {
-					setError(`Failed to move ${nodeType}: ${result.error}`);
-					return;
-				}
+        if (nodeType === "category") {
+          const result = await updateCategory(nodeId, { name: newName });
+          if (!result || !result.success) {
+            setError(`Failed to rename category: ${result?.error || "Unknown error"}`);
+            return;
+          }
+          await loadTreeData();
+        } else if (nodeType === "note") {
+          const result = await updateNote({ id: nodeId, title: newName });
+          if (!result || !result.success) {
+            setError(`Failed to rename note: ${result?.error || "Unknown error"}`);
+            return;
+          }
+          await loadTreeData();
+        } else {
+          setError("Could not determine node type");
+        }
+      } catch (err) {
+        setError(`Failed to rename node: ${err}`);
+      }
+    },
+    [storageAdapter, treeData, updateNote, updateCategory, loadTreeData, findNodeType]
+  );
 
-				// Clear error state before refresh
-				setError(null);
+  const moveNode = useCallback(
+    async (nodeId: string, newParentId: string | null, position: number) => {
+      if (!storageAdapter) {
+        setError("Storage not available");
+        return;
+      }
 
-				// Refresh tree data after move
-				await loadTreeData();
-			} catch (err) {
-				setError(`Failed to move node: ${err}`);
-			}
-		},
-		[storageAdapter, treeData, categories, findNodeType, loadTreeData]
-	);
+      try {
+        const nodeType = findNodeType(treeData, nodeId);
+        if (!nodeType) {
+          setError("Could not determine node type");
+          return;
+        }
 
-	// Rename node (F2 or double-click)
-	const updateNodeName = useCallback(
-		async (nodeId: string, newName: string) => {
-			if (!storageAdapter) {
-				setError("Storage not available");
-				return;
-			}
+        if (nodeType === "category" && newParentId) {
+          let currentId = newParentId;
+          let depth = 1;
+          while (currentId && depth < 4) {
+            const parent = categories.find((cat) => cat.id === currentId);
+            if (!parent || !parent.parent_id) break;
+            currentId = parent.parent_id;
+            depth++;
+          }
+          if (depth >= 3) {
+            setError("Cannot nest deeper than 3 levels");
+            return;
+          }
+        }
 
-			try {
-				const nodeType = findNodeType(treeData, nodeId);
+        const result = await storageAdapter.moveTreeItem(
+          nodeId,
+          nodeType,
+          newParentId,
+          position
+        );
 
-				if (nodeType === "category") {
-					const result = await updateCategory(nodeId, { name: newName });
-					if (!result || !result.success) {
-						setError(
-							`Failed to rename category: ${result?.error || "Unknown error"}`
-						);
-						return;
-					}
-					await loadTreeData();
-				} else if (nodeType === "note") {
-					const result = await updateNote({ id: nodeId, title: newName });
-					if (!result || !result.success) {
-						setError(
-							`Failed to rename note: ${result?.error || "Unknown error"}`
-						);
-						return;
-					}
-					await loadTreeData();
-				} else {
-					setError("Could not determine node type");
-					return;
-				}
-			} catch (err) {
-				setError(`Failed to rename node: ${err}`);
-			}
-		},
-		[
-			storageAdapter,
-			treeData,
-			updateNote,
-			updateCategory,
-			loadTreeData,
-			findNodeType,
-		]
-	);
+        if (!result.success) {
+          setError(`Failed to move ${nodeType}: ${result.error}`);
+          return;
+        }
 
-	return {
-		treeData,
-		isLoading,
-		error,
-		moveNode,
-		updateNodeName,
-	};
+        setError(null);
+        await loadTreeData();
+      } catch (err) {
+        setError(`Failed to move node: ${err}`);
+      }
+    },
+    [storageAdapter, treeData, categories, findNodeType, loadTreeData]
+  );
+
+  return {
+    treeData,
+    isLoading,
+    error,
+    reloadData: loadTreeData,
+    updateNodeName,
+    moveNode,
+  };
 }

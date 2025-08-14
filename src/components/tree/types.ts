@@ -1,118 +1,115 @@
-import type { MutableRefObject } from "react";
-import type { TreeContextData } from "@/types";
-
+// Tree Component Types - Clean separation of concerns
 // ============================================================================
-// Tree Component Types
+// Core Tree Data Types
 // ============================================================================
 
-/**
- * Props for the main TreeView component
- */
-export type TreeViewProps = Record<string, never>;
-
-/**
- * React Arborist node shape with tree-specific data
- */
 export interface TreeNodeData {
-	id: string;
-	name: string;
-	type?: "category" | "note";
+  id: string;
+  name: string;
+  type: "category" | "note";
+  children?: TreeNodeData[];
 }
 
-/**
- * React Arborist node API interface
- */
-export interface TreeNodeAPI {
-	id: string;
-	isInternal: boolean;
-	isOpen: boolean;
-	isFocused: boolean;
-	isSelected: boolean;
-	isDragging: boolean;
-	isEditing?: boolean;
-	// Drop zone states for visual feedback
-	willReceiveDrop?: boolean;
-	isDropTarget?: boolean;
-	data: TreeNodeData;
-	toggle: () => void;
-	edit?: () => void;
-	submit?: (value: string) => void;
-	reset?: () => void;
+// ============================================================================
+// Tree State Management Types
+// ============================================================================
+
+export interface TreeState {
+  expandedIds: Set<string>;
+  selectedId: string | null;
+  focusedId: string | null;
+  editingId: string | null;
+  dragState: DragState | null;
 }
 
-/**
- * Props for the TreeNode component
- */
+export interface DragState {
+  draggedId: string;
+  dropTargetId: string | null;
+  dropPosition: "before" | "after" | "inside" | null;
+}
+
+// ============================================================================
+// Component Props Types
+// ============================================================================
+
+export interface TreeViewProps {
+  data: TreeNodeData[];
+  onNodeSelect?: (nodeId: string) => void;
+  onNodeActivate?: (nodeId: string, nodeType: "category" | "note") => void;
+  onNodeRename?: (nodeId: string, newName: string) => void;
+  onNodeMove?: (nodeId: string, targetParentId: string | null, position: number) => void;
+  onContextMenu?: (nodeId: string, nodeType: "category" | "note", event: React.MouseEvent) => void;
+  className?: string;
+}
+
 export interface TreeNodeProps {
-	node: TreeNodeAPI;
-	style: React.CSSProperties;
-	dragHandle?: (el: HTMLDivElement | null) => void;
-	onContextMenu?: (event: React.MouseEvent, data: TreeContextData) => void;
-	onDragStart?: (nodeId: string) => void;
-	onDragEnd?: () => void;
+  node: TreeNodeData;
+  level: number;
+  index: number;
+  isExpanded: boolean;
+  isSelected: boolean;
+  isFocused: boolean;
+  isEditing: boolean;
+  isDragging: boolean;
+  isDropTarget: boolean;
+  dropPosition: "before" | "after" | "inside" | null;
+  onToggle: (nodeId: string) => void;
+  onSelect: (nodeId: string) => void;
+  onFocus: (nodeId: string) => void;
+  onEdit: (nodeId: string) => void;
+  onSubmitEdit: (nodeId: string, newName: string) => void;
+  onCancelEdit: () => void;
+  onDragStart: (nodeId: string, event: React.DragEvent) => void;
+  onDragOver: (nodeId: string, event: React.DragEvent) => void;
+  onDrop: (nodeId: string, event: React.DragEvent) => void;
+  onContextMenu: (nodeId: string, nodeType: "category" | "note", event: React.MouseEvent) => void;
 }
 
-// ============================================================================
-// Tree Sub-Component Types
-// ============================================================================
-
-/**
- * Props for TreeNodeContent component
- */
 export interface TreeNodeContentProps {
-	name: string;
-	isFolder: boolean;
-	isExpanded: boolean;
-	isCategory: boolean;
-	isEditing: boolean;
-	onSubmit?: (value: string) => void;
-	onCancel?: () => void;
-}
-
-/**
- * Props for TreeNodeEditor component
- */
-export interface TreeNodeEditorProps {
-	initialValue: string;
-	onSubmit: (value: string) => void;
-	onCancel: () => void;
-}
-
-/**
- * Props for TreeNodeIcon component
- */
-export interface TreeNodeIconProps {
-	isFolder: boolean;
-	isExpanded: boolean;
-	isCategory: boolean;
+  name: string;
+  type: "category" | "note";
+  isExpanded: boolean;
+  isEditing: boolean;
+  onSubmitEdit: (name: string) => void;
+  onCancelEdit: () => void;
 }
 
 // ============================================================================
 // Hook Types
 // ============================================================================
 
-/**
- * Props for useTreeKeyboard hook
- */
-export interface UseTreeKeyboardProps {
-	treeRef: MutableRefObject<any>;
+export interface UseTreeStateOptions {
+  initialExpandedIds?: string[];
+  initialSelectedId?: string | null;
+  onSelectionChange?: (nodeId: string | null) => void;
 }
 
-/**
- * Return type for useTreeRename hook
- */
-export interface UseTreeRenameReturn {
-	handleRename: ({ node, name }: { node: any; name: string }) => Promise<void>;
+export interface UseTreeKeyboardOptions {
+  containerRef: React.RefObject<HTMLDivElement>;
+  onNodeSelect: (nodeId: string) => void;
+  onNodeActivate: (nodeId: string) => void;
+  onNodeEdit: (nodeId: string) => void;
+  onNodeToggle: (nodeId: string) => void;
+}
+
+export interface UseTreeDragDropOptions {
+  onNodeMove: (nodeId: string, targetParentId: string | null, position: number) => void;
+  isValidDrop?: (draggedId: string, targetId: string) => boolean;
 }
 
 // ============================================================================
 // Utility Types
 // ============================================================================
 
-/**
- * Type for tree rename operation parameters
- */
-export interface TreeRenameParams {
-	node: any; // React Arborist node - keeping as any due to external library
-	name: string;
+export interface FlatTreeNode extends TreeNodeData {
+  level: number;
+  parentId: string | null;
+  index: number;
+  hasChildren: boolean;
+}
+
+export interface DropTargetInfo {
+  nodeId: string;
+  position: "before" | "after" | "inside";
+  valid: boolean;
 }

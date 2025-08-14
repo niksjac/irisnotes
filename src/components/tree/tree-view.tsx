@@ -1,161 +1,221 @@
-import { useState, useRef } from "react";
-import { Tree } from "react-arborist";
-import useResizeObserver from "use-resize-observer";
+import { useState, useRef, useCallback } from "react";
 import { TreeNode } from "./tree-node";
-import {
-	useNotesSelection,
-	useContextMenu,
-	useContextMenuActions,
-} from "@/hooks";
-import type { TreeContextData } from "@/types";
-import { ContextMenu } from "../context-menu";
 import { useTreeData } from "./use-tree-data";
 import { useTreeKeyboard } from "./use-tree-keyboard";
 
-export function TreeView() {
-	const { treeData, isLoading, error, updateNodeName, moveNode } =
-		useTreeData();
-	const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
-	const { ref, width, height } = useResizeObserver();
-	const { setSelectedNoteId } = useNotesSelection();
-	const { contextMenu, handleContextMenu, hideContextMenu } = useContextMenu();
-	const { getTreeNodeMenuGroups } = useContextMenuActions();
-	const treeRef = useRef<any>(null);
+interface TreeNodeData {
+  id: string;
+  name: string;
+  type: "category" | "note";
+  children?: TreeNodeData[];
+}
 
-	// Extract keyboard handling
-	useTreeKeyboard({ treeRef });
+interface FlatTreeNode extends TreeNodeData {
+  level: number;
+  parentId: string | null;
+}
 
-	// Simple rename handler for example data
-	const handleRename = async ({ node, name }: { node: any; name: string }) => {
-		updateNodeName(node.id, name);
-	};
+interface TreeViewProps {
+  onNodeSelect?: (nodeId: string) => void;
+  onNodeActivate?: (nodeId: string, nodeType: "category" | "note") => void;
+  onNodeRename?: (nodeId: string, newName: string) => void;
+  onNodeMove?: (nodeId: string, targetParentId: string | null, position: number) => void;
+  onContextMenu?: (nodeId: string, nodeType: "category" | "note", event: React.MouseEvent) => void;
+  className?: string;
+}
 
-	const handleActivate = (node: any) => {
-		// Handle note selection
-		if (node.data.type === "note") {
-			setSelectedNoteId(node.data.id);
-		}
-	};
+export function TreeView({
+  onNodeSelect,
+  onNodeActivate,
+  onNodeRename,
+  onNodeMove: _onNodeMove,
+  onContextMenu,
+  className = "",
+}: TreeViewProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [focusedId, setFocusedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
-	// Optimized move handler for real database
-	const handleMove = async ({
-		dragIds,
-		parentId,
-		index,
-	}: {
-		dragIds: string[];
-		parentId: string | null;
-		index: number;
-	}) => {
-		// Only support single item moves for simplicity
-		if (dragIds.length !== 1) return;
+  const {
+    treeData,
+    isLoading,
+    error,
+    updateNodeName,
+    moveNode: _dbMoveNode,
+  } = useTreeData();
 
-		const nodeId = dragIds[0];
-		if (!nodeId) return;
+  // Flatten tree data for rendering
+  const flattenTreeData = useCallback((
+    data: TreeNodeData[],
+    expanded: Set<string>,
+    parentId: string | null = null,
+    level: number = 0
+  ): FlatTreeNode[] => {
+    const result: FlatTreeNode[] = [];
 
-		// Move the node in database with specific position
-		await moveNode(nodeId, parentId, index);
-	};
+    data.forEach((node) => {
+      const flatNode: FlatTreeNode = {
+        ...node,
+        level,
+        parentId,
+      };
 
-	// Loading state
-	if (isLoading) {
-		return (
-			<div ref={ref} className="flex flex-col h-full bg-white dark:bg-gray-900">
-				<div className="flex items-center justify-center h-full">
-					<div className="text-center">
-						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-						<p className="text-sm text-gray-500 dark:text-gray-400">
-							Loading notes...
-						</p>
-					</div>
-				</div>
-			</div>
-		);
-	}
+      result.push(flatNode);
 
-	// Error state
-	if (error) {
-		return (
-			<div ref={ref} className="flex flex-col h-full bg-white dark:bg-gray-900">
-				<div className="flex items-center justify-center h-full">
-					<div className="text-center text-red-500 dark:text-red-400">
-						<p className="text-sm">Failed to load tree data</p>
-						<p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-							{error}
-						</p>
-					</div>
-				</div>
-			</div>
-		);
-	}
+      if (node.children && expanded.has(node.id)) {
+        const childNodes = flattenTreeData(node.children, expanded, node.id, level + 1);
+        result.push(...childNodes);
+      }
+    });
 
-	const handleTreeContextMenu = (
-		event: React.MouseEvent,
-		data: TreeContextData
-	) => {
-		const menuGroups = getTreeNodeMenuGroups(data);
-		handleContextMenu(event, {
-			targetId: data.nodeId,
-			targetType: data.nodeType,
-			menuGroups,
-		});
-	};
+    return result;
+  }, []);
 
-	// Custom cursor component for better drop feedback
-	const CustomCursor = ({ top, left }: { top: number; left: number }) => (
-		<div
-			style={{
-				position: "absolute",
-				top: top - 1,
-				left: left,
-				right: 20,
-				height: "3px",
-				backgroundColor: "#3b82f6",
-				borderRadius: "2px",
-				boxShadow: "0 0 4px rgba(59, 130, 246, 0.5)",
-				zIndex: 1000,
-			}}
-		/>
-	);
+  const flatNodes = flattenTreeData(treeData, expandedIds);
 
-	return (
-		<>
-			<div ref={ref} className="flex flex-col h-full bg-white dark:bg-gray-900">
-				<div className="flex-1 overflow-hidden" style={{ minHeight: "400px" }}>
-					{width && height && (
-						<Tree
-							ref={treeRef}
-							data={treeData}
-							openByDefault={true}
-							width={width}
-							height={height}
-							indent={20}
-							rowHeight={20}
-							selection={selectedId}
-							selectionFollowsFocus={false}
-							disableEdit={false}
-							disableDrag={false}
-							disableDrop={false}
-							padding={25}
-							searchTerm=""
-							searchMatch={(node, term) =>
-								node.data.name.toLowerCase().includes(term.toLowerCase())
-							}
-							className="[&_*]:!outline-none [&_*]:!outline-offset-0 h-full"
-							onSelect={(nodes) => setSelectedId(nodes[0]?.id)}
-							onActivate={handleActivate}
-							onRename={handleRename}
-							onMove={handleMove}
-							renderCursor={CustomCursor}
-						>
-							{(props) => (
-								<TreeNode {...props} onContextMenu={handleTreeContextMenu} />
-							)}
-						</Tree>
-					)}
-				</div>
-			</div>
-			<ContextMenu data={contextMenu} onClose={hideContextMenu} />
-		</>
-	);
+  // Event handlers
+  const handleNodeToggle = useCallback((nodeId: string) => {
+    setExpandedIds(prev => {
+      const newExpanded = new Set(prev);
+      if (newExpanded.has(nodeId)) {
+        newExpanded.delete(nodeId);
+      } else {
+        newExpanded.add(nodeId);
+      }
+      return newExpanded;
+    });
+  }, []);
+
+  const handleNodeSelect = useCallback((nodeId: string) => {
+    setSelectedId(nodeId);
+    onNodeSelect?.(nodeId);
+  }, [onNodeSelect]);
+
+  const handleNodeFocus = useCallback((nodeId: string) => {
+    setFocusedId(nodeId);
+  }, []);
+
+  const handleNodeEdit = useCallback((nodeId: string) => {
+    setEditingId(nodeId);
+  }, []);
+
+  const handleSubmitEdit = useCallback((nodeId: string, newName: string) => {
+    setEditingId(null);
+    if (onNodeRename) {
+      onNodeRename(nodeId, newName);
+    } else {
+      updateNodeName(nodeId, newName);
+    }
+  }, [onNodeRename, updateNodeName]);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingId(null);
+  }, []);
+
+  const handleNodeContextMenu = useCallback((nodeId: string, nodeType: "category" | "note", event: React.MouseEvent) => {
+    onContextMenu?.(nodeId, nodeType, event);
+  }, [onContextMenu]);
+
+  // Simplified drag handlers
+  const handleNodeDragStart = useCallback((_nodeId: string, event: React.DragEvent) => {
+    event.dataTransfer.effectAllowed = "move";
+  }, []);
+
+  const handleNodeDragOver = useCallback((_nodeId: string, event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const handleNodeDrop = useCallback((_nodeId: string, event: React.DragEvent) => {
+    event.preventDefault();
+    // Simplified - no actual move logic yet
+  }, []);
+
+  // Keyboard navigation
+  useTreeKeyboard({
+    containerRef,
+    onNodeSelect: (nodeId) => {
+      handleNodeSelect(nodeId);
+      handleNodeFocus(nodeId);
+    },
+    onNodeActivate: (nodeId) => {
+      const node = flatNodes.find(n => n.id === nodeId);
+      if (node) {
+        onNodeActivate?.(nodeId, node.type);
+      }
+    },
+    onNodeEdit: handleNodeEdit,
+    onNodeToggle: handleNodeToggle,
+  });
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Loading tree...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center text-red-500 dark:text-red-400">
+          <p className="text-sm">Failed to load tree data</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      className={`tree-view h-full overflow-auto focus:outline-none ${className}`}
+      role="tree"
+      tabIndex={0}
+      onFocus={() => {
+        if (!focusedId && flatNodes.length > 0) {
+          setFocusedId(flatNodes[0]?.id || null);
+        }
+      }}
+    >
+      {flatNodes.map((node) => (
+        <TreeNode
+          key={node.id}
+          node={node}
+          level={node.level}
+          isExpanded={expandedIds.has(node.id)}
+          isSelected={selectedId === node.id}
+          isFocused={focusedId === node.id}
+          isEditing={editingId === node.id}
+          isDragging={false}
+          isDropTarget={false}
+          dropPosition={null}
+          onToggle={handleNodeToggle}
+          onSelect={handleNodeSelect}
+          onFocus={handleNodeFocus}
+          onEdit={handleNodeEdit}
+          onSubmitEdit={handleSubmitEdit}
+          onCancelEdit={handleCancelEdit}
+          onDragStart={handleNodeDragStart}
+          onDragOver={handleNodeDragOver}
+          onDrop={handleNodeDrop}
+          onContextMenu={handleNodeContextMenu}
+        />
+      ))}
+
+      {flatNodes.length === 0 && (
+        <div className="flex items-center justify-center h-32 text-gray-500 dark:text-gray-400">
+          <p className="text-sm">No items to display</p>
+        </div>
+      )}
+    </div>
+  );
 }

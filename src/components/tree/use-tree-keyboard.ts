@@ -1,155 +1,177 @@
 import { useEffect } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
-import type { UseTreeKeyboardProps } from "./types";
 
-export function useTreeKeyboard({ treeRef }: UseTreeKeyboardProps) {
-	// Handle F2 key for renaming
-	useHotkeys(
-		"f2",
-		() => {
-			const tree = treeRef.current;
-			if (tree) {
-				// Use focusedNode to get the item with blue highlight (arrow key navigation)
-				const focusedNode = tree.focusedNode;
-				if (focusedNode) {
-					focusedNode.edit();
-				}
-			}
-		},
-		{
-			preventDefault: true,
-			enableOnContentEditable: false,
-			enableOnFormTags: false,
-		}
-	);
+interface UseTreeKeyboardOptions {
+  containerRef: React.RefObject<HTMLDivElement>;
+  onNodeSelect: (nodeId: string) => void;
+  onNodeActivate: (nodeId: string) => void;
+  onNodeEdit: (nodeId: string) => void;
+  onNodeToggle: (nodeId: string) => void;
+}
 
-	// Simple resize shortcuts - directly manipulate sidebar width when tree is focused
-	useHotkeys(
-		"ctrl+shift+left",
-		() => {
-			// Check if tree has focus
-			const activeElement = document.activeElement;
-			const isTreeFocused =
-				activeElement?.closest('[role="tree"]') ||
-				activeElement?.closest("[data-react-arborist]") ||
-				document.querySelector('[role="tree"]:focus-within');
+export function useTreeKeyboard(options: UseTreeKeyboardOptions) {
+  const { containerRef, onNodeSelect, onNodeActivate, onNodeEdit, onNodeToggle } = options;
 
-			if (isTreeFocused) {
-				// Find the sidebar resizer button and trigger resize
-				const resizeButton = document.querySelector('[aria-label="Resize sidebar"]') as HTMLButtonElement;
-				if (resizeButton) {
-					// Simulate arrow left key press on the resize button
-					const event = new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true });
-					resizeButton.dispatchEvent(event);
-				}
-			}
-		},
-		{
-			preventDefault: true,
-			enableOnContentEditable: false,
-			enableOnFormTags: false,
-		}
-	);
+  useHotkeys(
+    "f2",
+    () => {
+      const container = containerRef.current;
+      if (container) {
+        const focusedElement = container.querySelector('[data-tree-focused="true"]');
+        if (focusedElement) {
+          const nodeId = focusedElement.getAttribute('data-node-id');
+          if (nodeId) {
+            onNodeEdit(nodeId);
+          }
+        }
+      }
+    },
+    {
+      preventDefault: true,
+      enableOnContentEditable: false,
+      enableOnFormTags: false,
+    }
+  );
 
-	useHotkeys(
-		"ctrl+shift+right",
-		() => {
-			// Check if tree has focus
-			const activeElement = document.activeElement;
-			const isTreeFocused =
-				activeElement?.closest('[role="tree"]') ||
-				activeElement?.closest("[data-react-arborist]") ||
-				document.querySelector('[role="tree"]:focus-within');
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const container = containerRef.current;
+      if (!container || !container.contains(event.target as Node)) {
+        return;
+      }
 
-			if (isTreeFocused) {
-				// Find the sidebar resizer button and trigger resize
-				const resizeButton = document.querySelector('[aria-label="Resize sidebar"]') as HTMLButtonElement;
-				if (resizeButton) {
-					// Simulate arrow right key press on the resize button
-					const event = new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true });
-					resizeButton.dispatchEvent(event);
-				}
-			}
-		},
-		{
-			preventDefault: true,
-			enableOnContentEditable: false,
-			enableOnFormTags: false,
-		}
-	);
+      if (container.querySelector('[data-tree-editing="true"]')) {
+        return;
+      }
 
-	// Tab key to switch focus from tree to resizer
-	useHotkeys(
-		"tab",
-		(e) => {
-			const activeElement = document.activeElement;
-			const isTreeFocused =
-				activeElement?.closest('[role="tree"]') ||
-				activeElement?.closest("[data-react-arborist]") ||
-				document.querySelector('[role="tree"]:focus-within');
+      const focusedElement = container.querySelector('[data-tree-focused="true"]');
+      if (!focusedElement) return;
 
-			if (isTreeFocused) {
-				e.preventDefault();
-				const resizeHandle = document.querySelector('[aria-label="Resize sidebar"]') as HTMLElement;
-				if (resizeHandle) {
-					resizeHandle.focus();
-				}
-			}
-		},
-		{
-			preventDefault: false,
-			enableOnContentEditable: false,
-			enableOnFormTags: false,
-		}
-	);
+      const nodeId = focusedElement.getAttribute('data-node-id');
+      if (!nodeId) return;
 
-	// Make Enter key behave like Space key
-	useEffect(() => {
-		const handleKeyDown = (e: KeyboardEvent) => {
-			if (e.key === "Enter") {
-				const activeElement = document.activeElement;
-				// Only handle if we're not in an input field
-				if (!activeElement || (activeElement.tagName !== "INPUT" && activeElement.tagName !== "TEXTAREA")) {
-					// Check if the tree has focus by looking for React Arborist elements
-					const isTreeFocused =
-						activeElement?.closest('[role="tree"]') ||
-						activeElement?.closest("[data-react-arborist]") ||
-						document.querySelector('[role="tree"]:focus-within');
+      switch (event.key) {
+        case 'ArrowDown':
+          event.preventDefault();
+          navigateToNext(container, focusedElement);
+          break;
 
-					if (isTreeFocused) {
-						e.preventDefault();
-						e.stopPropagation();
+        case 'ArrowUp':
+          event.preventDefault();
+          navigateToPrevious(container, focusedElement);
+          break;
 
-						// Get the focused node from the tree
-						const tree = treeRef.current;
-						if (tree?.focusedNode) {
-							const focusedNode = tree.focusedNode;
+        case 'ArrowRight':
+          event.preventDefault();
+          const isExpanded = focusedElement.getAttribute('data-tree-expanded') === 'true';
+          const hasChildren = focusedElement.getAttribute('data-tree-has-children') === 'true';
 
-							// Mimic Space key behavior:
-							// 1. Always select the node (creates blue highlight)
-							// 2. For internal nodes: also toggle open/closed
-							// 3. For leaf nodes: also activate
+          if (hasChildren) {
+            if (!isExpanded) {
+              onNodeToggle(nodeId);
+            } else {
+              navigateToNext(container, focusedElement);
+            }
+          }
+          break;
 
-							// First, select the node to get the blue highlight
-							focusedNode.select();
+        case 'ArrowLeft':
+          event.preventDefault();
+          const expanded = focusedElement.getAttribute('data-tree-expanded') === 'true';
+          const children = focusedElement.getAttribute('data-tree-has-children') === 'true';
 
-							if (focusedNode.isInternal) {
-								// Internal node - also toggle like Space does
-								focusedNode.toggle();
-							} else {
-								// Leaf node - also activate like Space does
-								focusedNode.activate();
-							}
-						}
-					}
-				}
-			}
-		};
+          if (children && expanded) {
+            onNodeToggle(nodeId);
+          } else {
+            const parentElement = findParentNode(container, focusedElement);
+            if (parentElement) {
+              const parentId = parentElement.getAttribute('data-node-id');
+              if (parentId) {
+                focusNode(parentElement);
+              }
+            }
+          }
+          break;
 
-		// Add capture: true to intercept before React Arborist processes the key
-		document.addEventListener("keydown", handleKeyDown, { capture: true });
-		return () => {
-			document.removeEventListener("keydown", handleKeyDown, { capture: true });
-		};
-	}, [treeRef]);
+        case 'Enter':
+        case ' ':
+          event.preventDefault();
+          if (event.key === 'Enter') {
+            onNodeActivate(nodeId);
+          } else {
+            onNodeToggle(nodeId);
+          }
+          break;
+
+        case 'Home':
+          event.preventDefault();
+          const firstNode = container.querySelector('[data-tree-node]');
+          if (firstNode) {
+            focusNode(firstNode as HTMLElement);
+          }
+          break;
+
+        case 'End':
+          event.preventDefault();
+          const allNodes = container.querySelectorAll('[data-tree-node]');
+          const lastNode = allNodes[allNodes.length - 1];
+          if (lastNode) {
+            focusNode(lastNode as HTMLElement);
+          }
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [containerRef, onNodeSelect, onNodeActivate, onNodeEdit, onNodeToggle]);
+
+  const navigateToNext = (container: HTMLDivElement, currentElement: Element) => {
+    const allNodes = Array.from(container.querySelectorAll('[data-tree-node]'));
+    const currentIndex = allNodes.indexOf(currentElement);
+    const nextNode = allNodes[currentIndex + 1];
+    if (nextNode) {
+      focusNode(nextNode as HTMLElement);
+    }
+  };
+
+  const navigateToPrevious = (container: HTMLDivElement, currentElement: Element) => {
+    const allNodes = Array.from(container.querySelectorAll('[data-tree-node]'));
+    const currentIndex = allNodes.indexOf(currentElement);
+    const prevNode = allNodes[currentIndex - 1];
+    if (prevNode) {
+      focusNode(prevNode as HTMLElement);
+    }
+  };
+
+  const findParentNode = (container: HTMLDivElement, currentElement: Element) => {
+    const currentLevel = parseInt(currentElement.getAttribute('data-tree-level') || '0');
+    const allNodes = Array.from(container.querySelectorAll('[data-tree-node]'));
+    const currentIndex = allNodes.indexOf(currentElement);
+
+    for (let i = currentIndex - 1; i >= 0; i--) {
+      const node = allNodes[i];
+      if (node) {
+        const nodeLevel = parseInt(node.getAttribute('data-tree-level') || '0');
+        if (nodeLevel === currentLevel - 1) {
+          return node as HTMLElement;
+        }
+      }
+    }
+    return null;
+  };
+
+  const focusNode = (element: HTMLElement) => {
+    containerRef.current?.querySelectorAll('[data-tree-focused="true"]').forEach(el => {
+      el.setAttribute('data-tree-focused', 'false');
+    });
+
+    element.setAttribute('data-tree-focused', 'true');
+    element.focus();
+
+    const nodeId = element.getAttribute('data-node-id');
+    if (nodeId) {
+      onNodeSelect(nodeId);
+    }
+  };
 }

@@ -1,93 +1,161 @@
-import type { TreeContextData } from "@/types/context-menu";
 import { TreeNodeContent } from "./tree-node-content";
-import type { TreeNodeProps } from "./types";
+
+interface TreeNodeProps {
+  node: {
+    id: string;
+    name: string;
+    type: "category" | "note";
+  };
+  level: number;
+  isExpanded: boolean;
+  isSelected: boolean;
+  isFocused: boolean;
+  isEditing: boolean;
+  isDragging: boolean;
+  isDropTarget: boolean;
+  dropPosition: "before" | "after" | "inside" | null;
+  onToggle: (nodeId: string) => void;
+  onSelect: (nodeId: string) => void;
+  onFocus: (nodeId: string) => void;
+  onEdit: (nodeId: string) => void;
+  onSubmitEdit: (nodeId: string, newName: string) => void;
+  onCancelEdit: () => void;
+  onDragStart: (nodeId: string, event: React.DragEvent) => void;
+  onDragOver: (nodeId: string, event: React.DragEvent) => void;
+  onDrop: (nodeId: string, event: React.DragEvent) => void;
+  onContextMenu: (nodeId: string, nodeType: "category" | "note", event: React.MouseEvent) => void;
+}
 
 export function TreeNode({
-	node,
-	style,
-	dragHandle,
-	onContextMenu,
+  node,
+  level,
+  isExpanded,
+  isSelected,
+  isFocused,
+  isEditing,
+  isDragging,
+  isDropTarget,
+  dropPosition,
+  onToggle,
+  onSelect,
+  onFocus,
+  onEdit,
+  onSubmitEdit,
+  onCancelEdit,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onContextMenu,
 }: TreeNodeProps) {
-	const isFolder = node.isInternal;
-	const isExpanded = node.isOpen;
-	const nodeType = node.data.type;
-	const isCategory = nodeType === "category";
-	const isEditing = node.isEditing;
+  const paddingLeft = level * 20;
 
-	const handleSubmit = (value: string) => {
-		if (node.submit) {
-			node.submit(value);
-		}
-	};
+  const getNodeClasses = () => {
+    const baseClasses = "flex items-center h-8 px-2 cursor-pointer transition-all duration-150 relative select-none";
 
-	const handleCancel = () => {
-		if (node.reset) {
-			node.reset();
-		}
-	};
+    if (isDragging) {
+      return `${baseClasses} opacity-50 z-10`;
+    }
 
-	// Create dynamic className based on node state
-	const getNodeClassName = () => {
-		const baseClasses =
-			"flex items-center gap-2 h-full px-2 cursor-pointer transition-all duration-200 ease-in-out rounded-md relative";
+    if (isDropTarget && dropPosition) {
+      const dropClasses = {
+        before: "border-t-2 border-blue-500",
+        after: "border-b-2 border-blue-500",
+        inside: "bg-blue-100 dark:bg-blue-900/50 ring-2 ring-blue-500 ring-inset"
+      };
+      return `${baseClasses} ${dropClasses[dropPosition]}`;
+    }
 
-		// Drop target highlighting (highest priority)
-		if (node.willReceiveDrop || node.isDropTarget) {
-			return `${baseClasses} bg-green-100 dark:bg-green-900/60 text-green-900 dark:text-green-100 ring-2 ring-green-500 ring-inset shadow-lg transform scale-[1.02] border-l-4 border-green-500`;
-		}
+    if (isSelected) {
+      return `${baseClasses} bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100`;
+    }
 
-		if (node.isDragging) {
-			return `${baseClasses} opacity-40 bg-gray-100 dark:bg-gray-800 transform rotate-2 shadow-xl z-50 border border-gray-300 dark:border-gray-600`;
-		}
+    if (isFocused) {
+      return `${baseClasses} bg-gray-100 dark:bg-gray-700 ring-1 ring-blue-500`;
+    }
 
-		if (node.isSelected) {
-			return `${baseClasses} bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100 border-l-4 border-blue-500`;
-		}
+    return `${baseClasses} hover:bg-gray-50 dark:hover:bg-gray-800`;
+  };
 
-		if (node.isFocused) {
-			return `${baseClasses} bg-gray-200 dark:bg-gray-700 ring-2 ring-blue-500/50 ring-inset`;
-		}
+  const handleClick = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    onSelect(node.id);
+    onFocus(node.id);
+  };
 
-		return `${baseClasses} hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-sm`;
-	};
+  const handleDoubleClick = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (node.type === "category") {
+      onToggle(node.id);
+    } else {
+      onEdit(node.id);
+    }
+  };
 
-	const handleContextMenu = (event: React.MouseEvent) => {
-		if (onContextMenu) {
-			const contextData: TreeContextData = {
-				nodeId: node.data.id,
-				nodeType: isCategory ? "category" : "note",
-				nodeName: node.data.name,
-			};
-			onContextMenu(event, contextData);
-		}
-	};
+  const handleToggleClick = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (node.type === "category") {
+      onToggle(node.id);
+    }
+  };
 
-	return (
-		<div
-			ref={dragHandle}
-			style={style}
-			className={getNodeClassName()}
-			onClick={() => node.toggle()}
-			onContextMenu={handleContextMenu}
-			onMouseDown={() => {
-				console.log(`🖱️ MouseDown on ${node.data.name} (${node.id})`);
-			}}
-			onDragStart={() => {
-				console.log(`🎯 DragStart on ${node.data.name} (${node.id})`);
-			}}
-			onDragEnd={() => {
-				console.log(`🏁 DragEnd on ${node.data.name} (${node.id})`);
-			}}
-		>
-			<TreeNodeContent
-				name={node.data.name}
-				isFolder={isFolder}
-				isExpanded={isExpanded}
-				isCategory={isCategory}
-				isEditing={isEditing || false}
-				onSubmit={handleSubmit}
-				onCancel={handleCancel}
-			/>
-		</div>
-	);
+  const handleContextMenu = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onContextMenu(node.id, node.type, event);
+  };
+
+  const handleDragStart = (event: React.DragEvent) => {
+    onDragStart(node.id, event);
+  };
+
+  const handleDragOver = (event: React.DragEvent) => {
+    onDragOver(node.id, event);
+  };
+
+  const handleDrop = (event: React.DragEvent) => {
+    onDrop(node.id, event);
+  };
+
+  const handleSubmitEdit = (newName: string) => {
+    onSubmitEdit(node.id, newName);
+  };
+
+  return (
+    <div
+      className={getNodeClasses()}
+      style={{ paddingLeft }}
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
+      onContextMenu={handleContextMenu}
+      draggable={!isEditing}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      tabIndex={isFocused ? 0 : -1}
+      data-tree-node="true"
+      data-node-id={node.id}
+      data-tree-level={level}
+      data-tree-expanded={isExpanded}
+      data-tree-has-children={node.type === "category"}
+      data-tree-focused={isFocused}
+      data-tree-selected={isSelected}
+      role="treeitem"
+      aria-level={level + 1}
+      aria-expanded={node.type === "category" ? isExpanded : undefined}
+      aria-selected={isSelected}
+    >
+      <div onClick={handleToggleClick} className="flex-shrink-0">
+        {/* TreeNodeContent handles the icon which includes expand/collapse */}
+      </div>
+
+      <TreeNodeContent
+        name={node.name}
+        type={node.type}
+        isExpanded={isExpanded}
+        isEditing={isEditing}
+        onSubmitEdit={handleSubmitEdit}
+        onCancelEdit={onCancelEdit}
+      />
+    </div>
+  );
 }

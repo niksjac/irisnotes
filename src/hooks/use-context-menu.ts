@@ -3,7 +3,7 @@ import type { ContextMenuData, ContextMenuPosition } from "@/types/context-menu"
 
 export function useContextMenu() {
 	const [contextMenu, setContextMenu] = useState<ContextMenuData | null>(null);
-	const timeoutRef = useRef<NodeJS.Timeout>();
+	const timeoutRef = useRef<number>();
 
 	const showContextMenu = useCallback((data: ContextMenuData) => {
 		// Clear any existing timeout
