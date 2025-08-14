@@ -32,6 +32,9 @@ export default defineConfig(() => ({
 		},
 	},
 
+	// Reduce console noise in development
+	logLevel: 'info' as const,
+
 	// Bundle optimization
 	build: {
 		// Optimize chunks

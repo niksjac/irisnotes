@@ -8,7 +8,7 @@ interface HotkeyItem {
 }
 
 export function HotkeysView() {
-	const userHotkeys = useHotkeyConfig();
+	const { hotkeys: userHotkeys } = useHotkeyConfig();
 	const hotkeysByCategory = getHotkeysByCategory(userHotkeys);
 
 	// Convert user hotkeys to the display format

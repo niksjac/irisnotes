@@ -1,5 +1,4 @@
 import { DEFAULT_HOTKEYS } from "@/config/default-hotkeys";
-import type { HotkeyMapping } from "@/types";
 
 /**
  * Generate a complete hotkeys template with all available actions

@@ -44,5 +44,8 @@ export { useCategoriesActions } from "./use-categories-actions";
 export { useContextMenu } from "./use-context-menu";
 export { useContextMenuActions } from "./use-context-menu-actions";
 
+// Responsive design hooks
+export { useMediaQuery, useIsMobile, useIsTablet, useIsDesktop } from "./use-media-query";
+
 // Debug and development
 export { useAppInfo } from "./use-app-info";

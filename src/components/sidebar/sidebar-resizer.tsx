@@ -2,6 +2,7 @@ import clsx from "clsx";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAtom } from "jotai";
 import { sidebarWidth, sidebarHeight } from "@/atoms";
+import { useIsMobile } from "@/hooks/use-media-query";
 
 // ==================== COMPONENT INTERFACE ====================
 
@@ -13,7 +14,6 @@ interface SidebarResizerProps {
 	maxWidth?: number;
 	defaultWidth?: number;
 	autoCollapseOnResize?: boolean;
-	isMobile?: boolean;
 }
 
 export function SidebarResizer({
@@ -24,9 +24,11 @@ export function SidebarResizer({
 	maxWidth = 600,
 	defaultWidth = 300,
 	autoCollapseOnResize = true,
-	isMobile = false,
 }: SidebarResizerProps) {
 	// ==================== STATE MANAGEMENT ====================
+
+	// Modern responsive detection using matchMedia API
+	const isMobile = useIsMobile();
 
 	const [width, setWidth] = useAtom(sidebarWidth);
 	const [height, setHeight] = useAtom(sidebarHeight);

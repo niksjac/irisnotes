@@ -38,13 +38,19 @@ export class SqliteSchemaManager {
 		const statements = this.splitSQLStatements(sqlContent);
 
 		for (const statement of statements) {
-			if (statement.trim()) {
+			const trimmed = statement.trim();
+			if (trimmed && !trimmed.startsWith('--')) {
 				try {
-					await this.db.execute(statement);
+					await this.db.execute(trimmed);
 				} catch (error: any) {
+					const errorMsg = error.message || error.toString();
+
 					// Only warn for actual errors, not "already exists" conditions
 					if (!this.isExpectedError(error)) {
-						console.warn(`${description} statement ignored (likely already exists): ${error.message || error}`);
+						// Skip incomplete input errors (likely from SQL parsing issues)
+						if (!errorMsg.includes('incomplete input') && !errorMsg.includes('cannot commit')) {
+							console.warn(`${description} statement ignored: ${errorMsg}`);
+						}
 					}
 					// Continue with other statements - some might fail if already exist
 				}
@@ -53,45 +59,58 @@ export class SqliteSchemaManager {
 	}
 
 	private splitSQLStatements(sqlContent: string): string[] {
-		// Remove comments and normalize whitespace
-		const cleaned = sqlContent
-			.split('\n')
-			.map(line => line.replace(/--.*$/, '').trim())
-			.filter(line => line.length > 0)
-			.join(' ');
-
-		// Split on semicolons, but be careful with complex statements
+		// Better SQL statement splitting that preserves structure
+		const lines = sqlContent.split('\n');
 		const statements: string[] = [];
-		let current = '';
-		let inQuotes = false;
-		let quoteChar = '';
+		let currentStatement = '';
+		let inMultiLineStatement = false;
+		let parenLevel = 0;
 
-		for (let i = 0; i < cleaned.length; i++) {
-			const char = cleaned[i];
+		for (const line of lines) {
+			const trimmedLine = line.trim();
 
-			if (!inQuotes && (char === '"' || char === "'")) {
-				inQuotes = true;
-				quoteChar = char;
-			} else if (inQuotes && char === quoteChar) {
-				inQuotes = false;
-				quoteChar = '';
-			} else if (!inQuotes && char === ';') {
-				if (current.trim()) {
-					statements.push(current.trim());
-					current = '';
-				}
+			// Skip empty lines and comments
+			if (!trimmedLine || trimmedLine.startsWith('--')) {
 				continue;
 			}
 
-			current += char;
+			// Track parentheses for complex statements like triggers/views
+			for (const char of trimmedLine) {
+				if (char === '(') parenLevel++;
+				if (char === ')') parenLevel--;
+			}
+
+			// Check if we're in a multi-line statement
+			if (trimmedLine.includes('CREATE TRIGGER') ||
+				trimmedLine.includes('CREATE VIEW') ||
+				trimmedLine.includes('BEGIN') ||
+				parenLevel > 0) {
+				inMultiLineStatement = true;
+			}
+
+			currentStatement += (currentStatement ? ' ' : '') + trimmedLine;
+
+			// End of statement detection
+			if (trimmedLine.endsWith(';') && (!inMultiLineStatement || parenLevel === 0)) {
+				if (trimmedLine.includes('END;')) {
+					inMultiLineStatement = false;
+				}
+
+				if (currentStatement.trim()) {
+					statements.push(currentStatement.trim());
+				}
+				currentStatement = '';
+				inMultiLineStatement = false;
+				parenLevel = 0;
+			}
 		}
 
-		// Add the last statement if it doesn't end with semicolon
-		if (current.trim()) {
-			statements.push(current.trim());
+		// Add final statement if exists
+		if (currentStatement.trim()) {
+			statements.push(currentStatement.trim());
 		}
 
-		return statements.filter(stmt => stmt.length > 0);
+		return statements.filter(stmt => stmt.length > 5); // Filter out tiny fragments
 	}
 
 	private isExpectedError(error: any): boolean {
@@ -99,7 +118,13 @@ export class SqliteSchemaManager {
 		return (
 			errorMessage.includes('already exists') ||
 			errorMessage.includes('duplicate column name') ||
-			errorMessage.includes('table') && errorMessage.includes('already exists')
+			errorMessage.includes('duplicate index name') ||
+			errorMessage.includes('duplicate trigger name') ||
+			errorMessage.includes('duplicate view name') ||
+			errorMessage.includes('table') && errorMessage.includes('already exists') ||
+			errorMessage.includes('index') && errorMessage.includes('already exists') ||
+			errorMessage.includes('incomplete input') ||
+			errorMessage.includes('cannot commit - no transaction is active')
 		);
 	}
 
