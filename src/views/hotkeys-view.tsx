@@ -1,3 +1,6 @@
+import { useHotkeyConfig } from "@/hooks";
+import { getHotkeysByCategory } from "@/config/default-hotkeys";
+
 interface HotkeyItem {
 	key: string;
 	description: string;
@@ -5,19 +8,24 @@ interface HotkeyItem {
 }
 
 export function HotkeysView() {
-	const hotkeys: HotkeyItem[] = [
-		// Application shortcuts
-		{
-			key: "Ctrl+B",
-			description: "Toggle Notes Sidebar",
-			category: "Application",
-		},
-		{
-			key: "Ctrl+J",
-			description: "Toggle Activity Bar",
-			category: "Application",
-		},
+	const userHotkeys = useHotkeyConfig();
+	const hotkeysByCategory = getHotkeysByCategory(userHotkeys);
 
+	// Convert user hotkeys to the display format
+	const configurableHotkeys: HotkeyItem[] = [];
+	Object.entries(hotkeysByCategory).forEach(([category, hotkeys]) => {
+		hotkeys.forEach(({ config }) => {
+			configurableHotkeys.push({
+				key: config.key.toUpperCase().replace(/\+/g, '+'),
+				description: config.description,
+				category: category,
+			});
+		});
+	});
+
+	// Static hotkeys that aren't configurable yet (editor shortcuts, etc.)
+	const staticHotkeys: HotkeyItem[] = [
+		// Application shortcuts (non-configurable)
 		{
 			key: "Alt+Z",
 			description: "Toggle Line Wrapping",
@@ -207,7 +215,9 @@ export function HotkeysView() {
 		},
 	];
 
-	const categories = Array.from(new Set(hotkeys.map((h) => h.category)));
+	// Combine configurable and static hotkeys
+	const allHotkeys = [...configurableHotkeys, ...staticHotkeys];
+	const categories = Array.from(new Set(allHotkeys.map((h) => h.category)));
 
 	const formatKey = (key: string) => {
 		return key
@@ -224,14 +234,18 @@ export function HotkeysView() {
 			<h1 className="text-xl font-semibold mb-6 text-gray-900 dark:text-gray-100">Keyboard Shortcuts</h1>
 
 			<div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
-				<p className="m-0 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+				<p className="m-0 text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-2">
 					<strong>Note:</strong> On macOS, use Cmd (⌘) instead of Ctrl for most shortcuts. Hotkey sequences require
 					pressing keys in order (e.g., Ctrl+K, then R).
 				</p>
+				<p className="m-0 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+					<strong>Configuration:</strong> Layout, Tab, Pane, Sidebar, Focus, and Tab Movement hotkeys can be customized
+					by adding a <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">hotkeys</code> section to your config.json file.
+				</p>
 			</div>
 
-			{categories.map((category) => {
-				const categoryHotkeys = hotkeys.filter((h) => h.category === category);
+					{categories.map((category) => {
+			const categoryHotkeys = allHotkeys.filter((h) => h.category === category);
 				return (
 					<section key={category} className="mb-8">
 						<h2 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">

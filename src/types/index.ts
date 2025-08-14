@@ -29,6 +29,115 @@ export type {
 	ContextMenuType,
 } from "./context-menu";
 
+// Hotkey configuration types
+export interface HotkeyConfig {
+	key: string; // Key combination like "ctrl+b", "ctrl+shift+alt+left"
+	description: string; // Human-readable description
+	category: string; // Category for organization
+	global?: boolean; // Whether hotkey works in form fields
+}
+
+export interface HotkeyMapping {
+	// Layout hotkeys
+	toggleSidebar: HotkeyConfig;
+	toggleActivityBar: HotkeyConfig;
+
+	// Tab hotkeys
+	closeTab: HotkeyConfig;
+	newTab: HotkeyConfig;
+	moveTabLeft: HotkeyConfig;
+	moveTabRight: HotkeyConfig;
+
+	// Pane hotkeys
+	toggleDualPane: HotkeyConfig;
+	paneResizeLeft: HotkeyConfig;
+	paneResizeRight: HotkeyConfig;
+
+	// Sidebar resizing hotkeys
+	sidebarResizeLeft: HotkeyConfig;
+	sidebarResizeRight: HotkeyConfig;
+
+	// Pane focus hotkeys
+	focusPane1: HotkeyConfig;
+	focusPane2: HotkeyConfig;
+
+	// Tab movement between panes
+	moveTabToPaneLeft: HotkeyConfig;
+	moveTabToPaneRight: HotkeyConfig;
+
+	// Tab focus by number
+	focusTab1: HotkeyConfig;
+	focusTab2: HotkeyConfig;
+	focusTab3: HotkeyConfig;
+	focusTab4: HotkeyConfig;
+	focusTab5: HotkeyConfig;
+	focusTab6: HotkeyConfig;
+	focusTab7: HotkeyConfig;
+	focusTab8: HotkeyConfig;
+	focusTab9: HotkeyConfig;
+
+	// Tab navigation
+	focusNextTab: HotkeyConfig;
+	focusPreviousTab: HotkeyConfig;
+}
+
+export interface AppHotkeysProps {
+	// Layout hotkeys
+	onToggleSidebar?: () => void;
+	onToggleActivityBar?: () => void;
+
+	// Tab hotkeys
+	onCloseTab?: () => void;
+	onNewTab?: () => void;
+	onMoveTabLeft?: () => void;
+	onMoveTabRight?: () => void;
+
+	// Pane hotkeys
+	onToggleDualPane?: () => void;
+	onPaneResizeLeft?: () => void;
+	onPaneResizeRight?: () => void;
+
+	// Sidebar resizing hotkeys
+	onSidebarResizeLeft?: () => void;
+	onSidebarResizeRight?: () => void;
+
+	// Pane focus hotkeys
+	onFocusPane1?: () => void;
+	onFocusPane2?: () => void;
+
+	// Tab movement between panes hotkeys
+	onMoveTabToPaneLeft?: () => void;
+	onMoveTabToPaneRight?: () => void;
+
+	// Tab focus by number hotkeys
+	onFocusTab1?: () => void;
+	onFocusTab2?: () => void;
+	onFocusTab3?: () => void;
+	onFocusTab4?: () => void;
+	onFocusTab5?: () => void;
+	onFocusTab6?: () => void;
+	onFocusTab7?: () => void;
+	onFocusTab8?: () => void;
+	onFocusTab9?: () => void;
+
+	// Tab navigation hotkeys
+	onFocusNextTab?: () => void;
+	onFocusPreviousTab?: () => void;
+
+	// Editor hotkeys (future)
+	// onSave?: () => void;
+	// onUndo?: () => void;
+	// onRedo?: () => void;
+
+	// Navigation hotkeys (future)
+	// onFocusEditor?: () => void;
+	// onFocusSidebar?: () => void;
+
+	// Notes hotkeys (future)
+	// onNewNote?: () => void;
+	// onDeleteNote?: () => void;
+}
+
 // Storage configuration types
 export interface StorageSettings {
 	backend: "sqlite" | "file-system" | "cloud"; // Available storage backends
@@ -53,6 +162,7 @@ export interface AppConfig {
 		enableExampleNote: boolean;
 	};
 	storage: StorageSettings;
+	hotkeys?: HotkeyMapping; // Optional hotkey configuration
 	development: {
 		useLocalConfig: boolean;
 		configPath: string;

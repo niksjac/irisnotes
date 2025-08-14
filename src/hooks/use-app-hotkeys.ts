@@ -1,57 +1,6 @@
 import { useHotkeys } from "react-hotkeys-hook";
-
-interface AppHotkeysProps {
-	// Layout hotkeys
-	onToggleSidebar?: () => void;
-	onToggleActivityBar?: () => void;
-
-	// Tab hotkeys
-	onCloseTab?: () => void;
-	onNewTab?: () => void;
-	onMoveTabLeft?: () => void;
-	onMoveTabRight?: () => void;
-
-	// Pane hotkeys
-	onToggleDualPane?: () => void;
-	onPaneResizeLeft?: () => void;
-	onPaneResizeRight?: () => void;
-
-	// Sidebar resizing hotkeys
-	onSidebarResizeLeft?: () => void;
-	onSidebarResizeRight?: () => void;
-
-	// Pane focus hotkeys
-	onFocusPane1?: () => void;
-	onFocusPane2?: () => void;
-
-	// Tab movement between panes hotkeys
-	onMoveTabToPaneLeft?: () => void;
-	onMoveTabToPaneRight?: () => void;
-
-	// Tab focus by number hotkeys
-	onFocusTab1?: () => void;
-	onFocusTab2?: () => void;
-	onFocusTab3?: () => void;
-	onFocusTab4?: () => void;
-	onFocusTab5?: () => void;
-	onFocusTab6?: () => void;
-	onFocusTab7?: () => void;
-	onFocusTab8?: () => void;
-	onFocusTab9?: () => void;
-
-	// Editor hotkeys (future)
-	// onSave?: () => void;
-	// onUndo?: () => void;
-	// onRedo?: () => void;
-
-	// Navigation hotkeys (future)
-	// onFocusEditor?: () => void;
-	// onFocusSidebar?: () => void;
-
-	// Notes hotkeys (future)
-	// onNewNote?: () => void;
-	// onDeleteNote?: () => void;
-}
+import { useHotkeysConfig } from "./use-hotkeys-config";
+import type { AppHotkeysProps } from "@/types";
 
 /**
  * Centralized app-wide hotkeys hook
@@ -89,13 +38,19 @@ export function useAppHotkeys({
 	onFocusTab7,
 	onFocusTab8,
 	onFocusTab9,
+	// Tab navigation hotkeys
+	onFocusNextTab,
+	onFocusPreviousTab,
 }: AppHotkeysProps) {
-	// Global hotkeys that should work everywhere (including form fields)
-	const globalHotkeyOptions = {
+	// Get user's hotkey configuration
+	const { hotkeys: hotkeyMapping } = useHotkeysConfig();
+
+	// Create hotkey options based on global setting
+	const createHotkeyOptions = (global: boolean = true) => ({
 		preventDefault: true,
-		enableOnContentEditable: true,
-		enableOnFormTags: true,
-	};
+		enableOnContentEditable: global,
+		enableOnFormTags: global,
+	});
 
 	// Restricted hotkeys that should NOT work in form fields to avoid conflicts
 	// const restrictedHotkeyOptions = {
@@ -104,58 +59,62 @@ export function useAppHotkeys({
 	// 	enableOnFormTags: false,
 	// };
 
-	// Layout hotkeys - These should be global since they don't interfere with text input
-	useHotkeys("ctrl+b", () => onToggleSidebar?.(), globalHotkeyOptions);
-	useHotkeys("ctrl+j", () => onToggleActivityBar?.(), globalHotkeyOptions);
+	// Layout hotkeys - Use configurable keys
+	useHotkeys(hotkeyMapping.toggleSidebar.key, () => onToggleSidebar?.(), createHotkeyOptions(hotkeyMapping.toggleSidebar.global));
+	useHotkeys(hotkeyMapping.toggleActivityBar.key, () => onToggleActivityBar?.(), createHotkeyOptions(hotkeyMapping.toggleActivityBar.global));
 
-	// Tab hotkeys - Global since they're UI navigation
-	useHotkeys("ctrl+w", () => onCloseTab?.(), globalHotkeyOptions);
-	useHotkeys("ctrl+t", () => onNewTab?.(), globalHotkeyOptions);
-	useHotkeys("ctrl+shift+alt+left", () => onMoveTabLeft?.(), globalHotkeyOptions);
-	useHotkeys("ctrl+shift+alt+right", () => onMoveTabRight?.(), globalHotkeyOptions);
+	// Tab hotkeys - Use configurable keys
+	useHotkeys(hotkeyMapping.closeTab.key, () => onCloseTab?.(), createHotkeyOptions(hotkeyMapping.closeTab.global));
+	useHotkeys(hotkeyMapping.newTab.key, () => onNewTab?.(), createHotkeyOptions(hotkeyMapping.newTab.global));
+	useHotkeys(hotkeyMapping.moveTabLeft.key, () => onMoveTabLeft?.(), createHotkeyOptions(hotkeyMapping.moveTabLeft.global));
+	useHotkeys(hotkeyMapping.moveTabRight.key, () => onMoveTabRight?.(), createHotkeyOptions(hotkeyMapping.moveTabRight.global));
 
-	// Pane hotkeys - Global UI navigation (disabled on mobile)
-	useHotkeys("ctrl+d", () => {
+	// Pane hotkeys - Use configurable keys (disabled on mobile)
+	useHotkeys(hotkeyMapping.toggleDualPane.key, () => {
 		const isMobile = window.innerWidth < 768; // md breakpoint
 		if (!isMobile) {
 			onToggleDualPane?.();
 		}
-	}, globalHotkeyOptions);
-	useHotkeys("alt+left", () => {
+	}, createHotkeyOptions(hotkeyMapping.toggleDualPane.global));
+	useHotkeys(hotkeyMapping.paneResizeLeft.key, () => {
 		const isMobile = window.innerWidth < 768;
 		if (!isMobile) {
 			onPaneResizeLeft?.();
 		}
-	}, globalHotkeyOptions);
-	useHotkeys("alt+right", () => {
+	}, createHotkeyOptions(hotkeyMapping.paneResizeLeft.global));
+	useHotkeys(hotkeyMapping.paneResizeRight.key, () => {
 		const isMobile = window.innerWidth < 768;
 		if (!isMobile) {
 			onPaneResizeRight?.();
 		}
-	}, globalHotkeyOptions);
+	}, createHotkeyOptions(hotkeyMapping.paneResizeRight.global));
 
-	// Sidebar resizing hotkeys - Global since they're layout controls
-	useHotkeys("ctrl+left", () => onSidebarResizeLeft?.(), globalHotkeyOptions);
-	useHotkeys("ctrl+right", () => onSidebarResizeRight?.(), globalHotkeyOptions);
+	// Sidebar resizing hotkeys - Use configurable keys
+	useHotkeys(hotkeyMapping.sidebarResizeLeft.key, () => onSidebarResizeLeft?.(), createHotkeyOptions(hotkeyMapping.sidebarResizeLeft.global));
+	useHotkeys(hotkeyMapping.sidebarResizeRight.key, () => onSidebarResizeRight?.(), createHotkeyOptions(hotkeyMapping.sidebarResizeRight.global));
 
-	// Pane focus hotkeys - Global UI navigation
-	useHotkeys("ctrl+alt+1", () => onFocusPane1?.(), globalHotkeyOptions);
-	useHotkeys("ctrl+alt+2", () => onFocusPane2?.(), globalHotkeyOptions);
+	// Pane focus hotkeys - Use configurable keys
+	useHotkeys(hotkeyMapping.focusPane1.key, () => onFocusPane1?.(), createHotkeyOptions(hotkeyMapping.focusPane1.global));
+	useHotkeys(hotkeyMapping.focusPane2.key, () => onFocusPane2?.(), createHotkeyOptions(hotkeyMapping.focusPane2.global));
 
-	// Tab movement between panes hotkeys - Global since they're UI navigation
-	useHotkeys("ctrl+alt+left", () => onMoveTabToPaneLeft?.(), globalHotkeyOptions);
-	useHotkeys("ctrl+alt+right", () => onMoveTabToPaneRight?.(), globalHotkeyOptions);
+	// Tab movement between panes hotkeys - Use configurable keys
+	useHotkeys(hotkeyMapping.moveTabToPaneLeft.key, () => onMoveTabToPaneLeft?.(), createHotkeyOptions(hotkeyMapping.moveTabToPaneLeft.global));
+	useHotkeys(hotkeyMapping.moveTabToPaneRight.key, () => onMoveTabToPaneRight?.(), createHotkeyOptions(hotkeyMapping.moveTabToPaneRight.global));
 
-	// Tab focus by number hotkeys - Global since they're navigation
-	useHotkeys("ctrl+1", () => onFocusTab1?.(), globalHotkeyOptions);
-	useHotkeys("ctrl+2", () => onFocusTab2?.(), globalHotkeyOptions);
-	useHotkeys("ctrl+3", () => onFocusTab3?.(), globalHotkeyOptions);
-	useHotkeys("ctrl+4", () => onFocusTab4?.(), globalHotkeyOptions);
-	useHotkeys("ctrl+5", () => onFocusTab5?.(), globalHotkeyOptions);
-	useHotkeys("ctrl+6", () => onFocusTab6?.(), globalHotkeyOptions);
-	useHotkeys("ctrl+7", () => onFocusTab7?.(), globalHotkeyOptions);
-	useHotkeys("ctrl+8", () => onFocusTab8?.(), globalHotkeyOptions);
-	useHotkeys("ctrl+9", () => onFocusTab9?.(), globalHotkeyOptions);
+	// Tab focus by number hotkeys - Use configurable keys
+	useHotkeys(hotkeyMapping.focusTab1.key, () => onFocusTab1?.(), createHotkeyOptions(hotkeyMapping.focusTab1.global));
+	useHotkeys(hotkeyMapping.focusTab2.key, () => onFocusTab2?.(), createHotkeyOptions(hotkeyMapping.focusTab2.global));
+	useHotkeys(hotkeyMapping.focusTab3.key, () => onFocusTab3?.(), createHotkeyOptions(hotkeyMapping.focusTab3.global));
+	useHotkeys(hotkeyMapping.focusTab4.key, () => onFocusTab4?.(), createHotkeyOptions(hotkeyMapping.focusTab4.global));
+	useHotkeys(hotkeyMapping.focusTab5.key, () => onFocusTab5?.(), createHotkeyOptions(hotkeyMapping.focusTab5.global));
+	useHotkeys(hotkeyMapping.focusTab6.key, () => onFocusTab6?.(), createHotkeyOptions(hotkeyMapping.focusTab6.global));
+	useHotkeys(hotkeyMapping.focusTab7.key, () => onFocusTab7?.(), createHotkeyOptions(hotkeyMapping.focusTab7.global));
+	useHotkeys(hotkeyMapping.focusTab8.key, () => onFocusTab8?.(), createHotkeyOptions(hotkeyMapping.focusTab8.global));
+	useHotkeys(hotkeyMapping.focusTab9.key, () => onFocusTab9?.(), createHotkeyOptions(hotkeyMapping.focusTab9.global));
+
+	// Tab navigation hotkeys - Use configurable keys
+	useHotkeys(hotkeyMapping.focusNextTab.key, () => onFocusNextTab?.(), createHotkeyOptions(hotkeyMapping.focusNextTab.global));
+	useHotkeys(hotkeyMapping.focusPreviousTab.key, () => onFocusPreviousTab?.(), createHotkeyOptions(hotkeyMapping.focusPreviousTab.global));
 
 	// Future hotkey categories can be added here:
 

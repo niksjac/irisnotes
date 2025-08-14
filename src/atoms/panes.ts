@@ -270,6 +270,55 @@ export const focusTab7Atom = atom(null, (_, set) => set(focusTabByNumberAtom, 7)
 export const focusTab8Atom = atom(null, (_, set) => set(focusTabByNumberAtom, 8));
 export const focusTab9Atom = atom(null, (_, set) => set(focusTabByNumberAtom, 9));
 
+// Tab navigation atoms
+export const focusNextTabAtom = atom(null, (get, set) => {
+	const paneState = get(paneStateAtom);
+	const activePane = paneState.activePane;
+	const tabs = activePane === 0 ? get(pane0TabsAtom) : get(pane1TabsAtom);
+	const currentActiveTabId = activePane === 0 ? get(pane0ActiveTabAtom) : get(pane1ActiveTabAtom);
+
+	if (tabs.length <= 1 || !currentActiveTabId) return;
+
+	const currentIndex = tabs.findIndex(tab => tab.id === currentActiveTabId);
+	if (currentIndex === -1) return;
+
+	// Move to next tab, wrapping around to first if at the end
+	const nextIndex = (currentIndex + 1) % tabs.length;
+	const nextTab = tabs[nextIndex];
+
+	if (nextTab) {
+		if (activePane === 0) {
+			set(pane0ActiveTabAtom, nextTab.id);
+		} else {
+			set(pane1ActiveTabAtom, nextTab.id);
+		}
+	}
+});
+
+export const focusPreviousTabAtom = atom(null, (get, set) => {
+	const paneState = get(paneStateAtom);
+	const activePane = paneState.activePane;
+	const tabs = activePane === 0 ? get(pane0TabsAtom) : get(pane1TabsAtom);
+	const currentActiveTabId = activePane === 0 ? get(pane0ActiveTabAtom) : get(pane1ActiveTabAtom);
+
+	if (tabs.length <= 1 || !currentActiveTabId) return;
+
+	const currentIndex = tabs.findIndex(tab => tab.id === currentActiveTabId);
+	if (currentIndex === -1) return;
+
+	// Move to previous tab, wrapping around to last if at the beginning
+	const prevIndex = currentIndex === 0 ? tabs.length - 1 : currentIndex - 1;
+	const prevTab = tabs[prevIndex];
+
+	if (prevTab) {
+		if (activePane === 0) {
+			set(pane0ActiveTabAtom, prevTab.id);
+		} else {
+			set(pane1ActiveTabAtom, prevTab.id);
+		}
+	}
+});
+
 export const closeActiveTabAtom = atom(null, (get, set) => {
 	const paneState = get(paneStateAtom);
 	const activePane = paneState.activePane;

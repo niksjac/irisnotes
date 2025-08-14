@@ -16,6 +16,11 @@ export { useView } from "./use-view";
 export { useLayout } from "./use-layout";
 // App-wide hotkeys
 export { useAppHotkeys } from "./use-app-hotkeys";
+export { useHotkeysConfig } from "./use-hotkeys-config";
+export { useHotkeyHandlers } from "./use-hotkey-handlers";
+
+// Re-export useHotkeyConfig for backward compatibility
+export { useHotkeysConfig as useHotkeyConfig } from "./use-hotkeys-config";
 
 // Editor hooks
 export { useEditorState } from "./use-editor-state";
