@@ -1,6 +1,5 @@
 import type Database from "@tauri-apps/plugin-sql";
-import baseSchemaSQL from "../../schema/base.sql?raw";
-import seedProdSQL from "../../schema/seed-prod.sql?raw";
+import baseSchemaSQL from "@schema/base.sql?raw";
 
 /**
  * Manages SQLite database schema creation and migrations
@@ -26,11 +25,8 @@ export class SqliteSchemaManager {
 	}
 
 	private async executeSchemaSQL(): Promise<void> {
-		// Execute base schema first
+		// Execute base schema
 		await this.executeSQLStatements(baseSchemaSQL, "base schema");
-
-		// Then execute production seed data
-		await this.executeSQLStatements(seedProdSQL, "seed data");
 	}
 
 	private async executeSQLStatements(sqlContent: string, description: string): Promise<void> {

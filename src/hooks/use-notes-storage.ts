@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useConfig } from "./use-config";
-import { createSQLiteAdapter } from "@/storage";
+import { createStorageAdapter } from "@/storage";
 import type { StorageAdapter } from "@/storage";
 
 export const useNotesStorage = () => {
@@ -17,19 +17,22 @@ export const useNotesStorage = () => {
 			}
 
 			try {
-				// Get the actual database path from Tauri backend (handles dev vs prod)
-				const databasePath = await invoke<string>("get_database_path");
+				// Create storage config based on backend type
+				let storageConfig = { ...config.storage };
 
-				// Create storage config with resolved path
-				const storageConfig = {
-					...config.storage,
-					sqlite: {
-						...config.storage.sqlite,
-						database_path: databasePath,
-					},
-				};
+				if (config.storage.backend === "sqlite") {
+					// Get the actual database path from Tauri backend (handles dev vs prod)
+					const databasePath = await invoke<string>("get_database_path");
+					storageConfig = {
+						...storageConfig,
+						sqlite: {
+							...config.storage.sqlite,
+							database_path: databasePath,
+						},
+					};
+				}
 
-				const adapter = createSQLiteAdapter(storageConfig);
+				const adapter = createStorageAdapter(storageConfig);
 
 				// Initialize the adapter
 				const result = await adapter.init();

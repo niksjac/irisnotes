@@ -1,11 +1,19 @@
 // Clean storage exports - no wrapper managers!
 import { SQLiteStorageAdapter } from "./adapters/sqlite-adapter";
+import { JsonSingleStorageAdapter } from "./adapters/json-single-adapter";
+import { JsonHybridStorageAdapter } from "./adapters/json-hybrid-adapter";
+import { createStorageAdapter } from "./factory";
 import type { StorageConfig } from "./types";
 
-export { SQLiteStorageAdapter };
+export {
+	SQLiteStorageAdapter,
+	JsonSingleStorageAdapter,
+	JsonHybridStorageAdapter,
+	createStorageAdapter
+};
 export type { StorageAdapter, StorageConfig, StorageResult, VoidStorageResult, StorageBackend } from "./types";
 
-// Factory function for creating SQLite adapter
+// Legacy factory function for backward compatibility
 export function createSQLiteAdapter(config: StorageConfig) {
 	return new SQLiteStorageAdapter(config);
 }

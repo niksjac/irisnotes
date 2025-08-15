@@ -24,7 +24,8 @@
 			"@/atoms": ["src/atoms"],
 			"@/types": ["src/types"],
 			"@/storage": ["src/storage"],
-			"@/styles": ["src/styles"]
+			"@/styles": ["src/styles"],
+			"@schema/*": ["schema/*"]
 		},
 
 		/* Development experience */

@@ -10,6 +10,13 @@
     "backend": "sqlite",
     "sqlite": {
       "database_path": "./dev/notes.db"
+    },
+    "jsonSingle": {
+      "file_path": "./dev/storage.json"
+    },
+    "jsonHybrid": {
+      "structure_file": "./dev/structure.json",
+      "content_dir": "./dev/content/"
     }
   },
   "development": {

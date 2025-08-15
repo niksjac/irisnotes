@@ -140,12 +140,16 @@ export interface AppHotkeysProps {
 
 // Storage configuration types
 export interface StorageSettings {
-	backend: "sqlite" | "file-system" | "cloud"; // Available storage backends
+	backend: "sqlite" | "json-single" | "json-hybrid" | "cloud"; // Available storage backends
 	sqlite?: {
 		database_path: string;
 	};
-	fileSystem?: {
-		notes_directory: string;
+	jsonSingle?: {
+		file_path: string;
+	};
+	jsonHybrid?: {
+		structure_file: string;
+		content_dir: string;
 	};
 	cloud?: {
 		provider: "google-drive" | "dropbox" | "onedrive";

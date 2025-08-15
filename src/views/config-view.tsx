@@ -16,10 +16,15 @@ export function ConfigView() {
 			newStorageConfig.sqlite = {
 				database_path: config.storage.sqlite?.database_path || "notes.db",
 			};
-		} else if (backend === "file-system") {
-			newStorageConfig.fileSystem = {
-				notes_directory: config.storage.fileSystem?.notes_directory || "./notes",
-			};
+			} else if (backend === "json-single") {
+		newStorageConfig.jsonSingle = {
+			file_path: config.storage.jsonSingle?.file_path || "./dev/storage.json",
+		};
+	} else if (backend === "json-hybrid") {
+		newStorageConfig.jsonHybrid = {
+			structure_file: config.storage.jsonHybrid?.structure_file || "./dev/structure.json",
+			content_dir: config.storage.jsonHybrid?.content_dir || "./dev/content/",
+		};
 		} else if (backend === "cloud") {
 			newStorageConfig.cloud = {
 				provider: config.storage.cloud?.provider || "google-drive",
@@ -42,12 +47,38 @@ export function ConfigView() {
 		});
 	};
 
-	const handleFileSystemPathChange = async (path: string) => {
+	const handleJsonSinglePathChange = async (path: string) => {
 		await updateConfig({
 			storage: {
 				...config.storage,
-				fileSystem: {
-					notes_directory: path,
+				jsonSingle: {
+					file_path: path,
+				},
+			},
+		});
+	};
+
+	const handleJsonHybridStructureChange = async (path: string) => {
+		await updateConfig({
+			storage: {
+				...config.storage,
+				jsonHybrid: {
+					...config.storage.jsonHybrid,
+					structure_file: path,
+					content_dir: config.storage.jsonHybrid?.content_dir || "./dev/content/",
+				},
+			},
+		});
+	};
+
+	const handleJsonHybridContentDirChange = async (path: string) => {
+		await updateConfig({
+			storage: {
+				...config.storage,
+				jsonHybrid: {
+					...config.storage.jsonHybrid,
+					structure_file: config.storage.jsonHybrid?.structure_file || "./dev/structure.json",
+					content_dir: path,
 				},
 			},
 		});
@@ -115,9 +146,10 @@ export function ConfigView() {
 							value={config.storage.backend}
 							onChange={(e) => handleStorageBackendChange(e.target.value as StorageSettings["backend"])}
 						>
-							<option value="sqlite">SQLite Database</option>
-							<option value="file-system">File System</option>
-							<option value="cloud">Cloud Storage</option>
+												<option value="sqlite">SQLite Database</option>
+					<option value="json-single">JSON Single File</option>
+					<option value="json-hybrid">JSON Hybrid</option>
+					<option value="cloud">Cloud Storage</option>
 						</select>
 					</div>
 
@@ -135,20 +167,49 @@ export function ConfigView() {
 						</div>
 					)}
 
-					{/* File System Configuration */}
-					{config.storage.backend === "file-system" && (
+					{/* JSON Single File Configuration */}
+					{config.storage.backend === "json-single" && (
 						<div className="config-card">
-							<div className="config-setting-label">Notes Directory</div>
+							<div className="config-setting-label">Storage File Path</div>
 							<div className="config-setting-description">
-								Directory where note files will be stored (Not yet implemented)
+								Path to the JSON file where all data will be stored
 							</div>
 							<input
 								type="text"
 								className="config-input config-input--path"
-								value={config.storage.fileSystem?.notes_directory || "./notes"}
-								onChange={(e) => handleFileSystemPathChange(e.target.value)}
-								disabled
+								value={config.storage.jsonSingle?.file_path || "./dev/storage.json"}
+								onChange={(e) => handleJsonSinglePathChange(e.target.value)}
 							/>
+						</div>
+					)}
+
+					{/* JSON Hybrid Configuration */}
+					{config.storage.backend === "json-hybrid" && (
+						<div className="config-card">
+							<div className="config-setting-label">JSON Hybrid Storage</div>
+							<div className="config-setting-description">
+								Structure in JSON file, content in separate files
+							</div>
+							<div className="space-y-4">
+								<div>
+									<label className="block text-sm font-medium mb-2">Structure File</label>
+									<input
+										type="text"
+										className="config-input config-input--path"
+										value={config.storage.jsonHybrid?.structure_file || "./dev/structure.json"}
+										onChange={(e) => handleJsonHybridStructureChange(e.target.value)}
+									/>
+								</div>
+								<div>
+									<label className="block text-sm font-medium mb-2">Content Directory</label>
+									<input
+										type="text"
+										className="config-input config-input--path"
+										value={config.storage.jsonHybrid?.content_dir || "./dev/content/"}
+										onChange={(e) => handleJsonHybridContentDirChange(e.target.value)}
+									/>
+								</div>
+							</div>
 						</div>
 					)}
 
@@ -176,9 +237,15 @@ export function ConfigView() {
 						<div className="config-status">
 							Backend: {config.storage.backend}
 							{config.storage.backend === "sqlite" && <div>Database: {config.storage.sqlite?.database_path}</div>}
-							{config.storage.backend === "file-system" && (
-								<div>Directory: {config.storage.fileSystem?.notes_directory}</div>
-							)}
+									{config.storage.backend === "json-single" && (
+			<div>File: {config.storage.jsonSingle?.file_path}</div>
+		)}
+		{config.storage.backend === "json-hybrid" && (
+			<div>
+				<div>Structure: {config.storage.jsonHybrid?.structure_file}</div>
+				<div>Content Dir: {config.storage.jsonHybrid?.content_dir}</div>
+			</div>
+		)}
 							{config.storage.backend === "cloud" && <div>Provider: {config.storage.cloud?.provider}</div>}
 						</div>
 						<div className="config-status-warning">

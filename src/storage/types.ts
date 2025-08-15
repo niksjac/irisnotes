@@ -15,7 +15,7 @@ import type {
 import type { TreeData } from "../types";
 
 // Storage backend types
-export type StorageBackend = "sqlite" | "file-system" | "cloud";
+export type StorageBackend = "sqlite" | "json-single" | "json-hybrid" | "cloud";
 
 // Storage configuration
 export interface StorageConfig {
@@ -23,8 +23,12 @@ export interface StorageConfig {
 	sqlite?: {
 		database_path: string;
 	};
-	fileSystem?: {
-		notes_directory: string;
+	jsonSingle?: {
+		file_path: string;
+	};
+	jsonHybrid?: {
+		structure_file: string;
+		content_dir: string;
 	};
 	cloud?: {
 		provider: "google-drive" | "dropbox" | "onedrive";
