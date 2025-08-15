@@ -1,13 +1,13 @@
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState } from "react";
-import type { ContextMenuData, MenuItem } from "@/types/context-menu";
+import type { RightClickMenuData, MenuItem } from "@/types/right-click-menu";
 
-interface ContextMenuProps {
-	data: ContextMenuData | null;
+interface RightClickMenuProps {
+	data: RightClickMenuData | null;
 	onClose: () => void;
 }
 
-export function ContextMenu({ data, onClose }: ContextMenuProps) {
+export function RightClickMenu({ data, onClose }: RightClickMenuProps) {
 	const menuRef = useRef<HTMLDivElement>(null);
 	const [adjustedPosition, setAdjustedPosition] = useState({ x: 0, y: 0 });
 

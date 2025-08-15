@@ -1,7 +1,5 @@
 import type {
 	Attachment,
-	Category,
-	CreateCategoryParams,
 	CreateNoteParams,
 	CreateTagParams,
 	Note,
@@ -12,6 +10,7 @@ import type {
 	Tag,
 	UpdateNoteParams,
 } from "../types/database";
+import type { FlexibleItem, CreateItemParams } from "../types/items";
 import type { TreeData } from "../types";
 
 // Storage backend types
@@ -56,29 +55,22 @@ export interface StorageAdapter {
 	deleteNote(id: string): Promise<VoidStorageResult>;
 	searchNotes(query: string, filters?: NoteFilters): Promise<StorageResult<Note[]>>;
 
-	// Categories operations
-	getCategories(): Promise<StorageResult<Category[]>>;
-	getCategory(id: string): Promise<StorageResult<Category | null>>;
-	createCategory(params: CreateCategoryParams): Promise<StorageResult<Category>>;
-	updateCategory(id: string, params: Partial<CreateCategoryParams>): Promise<StorageResult<Category>>;
-	deleteCategory(id: string): Promise<VoidStorageResult>;
-	getCategoryNotes(categoryId: string): Promise<StorageResult<Note[]>>;
-	addNoteToCategory(noteId: string, categoryId: string): Promise<VoidStorageResult>;
-	removeNoteFromCategory(noteId: string, categoryId: string): Promise<VoidStorageResult>;
-	updateNoteSortOrder(noteId: string, sortOrder: number): Promise<VoidStorageResult>;
-	moveNoteToCategory(noteId: string, newCategoryId: string | null): Promise<VoidStorageResult>;
+	// Items operations (books, sections - unified with notes)
+	createItem(params: CreateItemParams): Promise<StorageResult<FlexibleItem>>;
+	updateItem(id: string, params: Partial<FlexibleItem>): Promise<StorageResult<FlexibleItem>>;
+	deleteItem(id: string): Promise<VoidStorageResult>;
 
 	// Tree operations
 	getTreeData(): Promise<StorageResult<TreeData[]>>;
 	moveTreeItem(
 		itemId: string,
-		itemType: "note" | "category",
+		itemType: "note" | "book" | "section",
 		newParentId: string | null,
 		insertIndex?: number
 	): Promise<VoidStorageResult>;
 	reorderTreeItem(
 		itemId: string,
-		itemType: "note" | "category",
+		itemType: "note" | "book" | "section",
 		newIndex: number,
 		parentId: string | null
 	): Promise<VoidStorageResult>;

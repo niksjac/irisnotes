@@ -3,7 +3,6 @@
 
 import type {
 	Attachment,
-	Category,
 	CreateNoteParams,
 	Note,
 	NoteFilters,
@@ -191,7 +190,7 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 
 	private extractPlaintext(content: string): string {
 		// Simple plaintext extraction (remove markdown/html)
-		return content.replace(/[#*_`\[\]()]/g, '').replace(/\n+/g, ' ').trim();
+		return content.replace(/[#*_`[\]()]/g, '').replace(/\n+/g, ' ').trim();
 	}
 
 	private getNextSortOrder(parentId: string | null): number {
@@ -260,6 +259,88 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 			return { success: true, data: fullItem };
 		} catch (error) {
 			return { success: false, error: `Failed to create item: ${error}` };
+		}
+	}
+
+	async updateItem(id: string, params: Partial<FlexibleItem>): Promise<StorageResult<FlexibleItem>> {
+		try {
+			const itemIndex = this.structureData.items.findIndex(item => item.id === id);
+
+			if (itemIndex === -1) {
+				return { success: false, error: "Item not found" };
+			}
+
+			const structureItem = this.structureData.items[itemIndex];
+			if (!structureItem) {
+				return { success: false, error: "Item not found" };
+			}
+
+			const now = new Date().toISOString();
+
+			// Update structure fields
+			if (params.title !== undefined) structureItem.title = params.title;
+			if (params.type !== undefined) structureItem.type = params.type;
+			if (params.parent_id !== undefined) structureItem.parent_id = params.parent_id;
+			if (params.sort_order !== undefined) structureItem.sort_order = params.sort_order;
+			if (params.metadata !== undefined) {
+				structureItem.metadata = { ...structureItem.metadata, ...params.metadata };
+			}
+			structureItem.updated_at = now;
+
+			// Update content separately if provided
+			if (params.content !== undefined) {
+				await this.saveContent(id, params.content, structureItem.content_type);
+			}
+
+			await this.saveStructureData();
+
+			// Return full item with content
+			const content = await this.loadContent(id);
+			const fullItem: FlexibleItem = {
+				id: structureItem.id,
+				type: structureItem.type,
+				title: structureItem.title,
+				content: content,
+				content_type: structureItem.content_type,
+				content_raw: params.content_raw || content,
+				content_plaintext: this.extractPlaintext(content),
+				parent_id: structureItem.parent_id,
+				sort_order: structureItem.sort_order,
+				metadata: structureItem.metadata,
+				created_at: structureItem.created_at,
+				updated_at: structureItem.updated_at,
+			};
+
+			return { success: true, data: fullItem };
+		} catch (error) {
+			return { success: false, error: `Failed to update item: ${error}` };
+		}
+	}
+
+	async deleteItem(id: string): Promise<VoidStorageResult> {
+		try {
+			const itemIndex = this.structureData.items.findIndex(item => item.id === id);
+
+			if (itemIndex === -1) {
+				return { success: false, error: "Item not found" };
+			}
+
+			// Remove from structure
+			this.structureData.items.splice(itemIndex, 1);
+
+			// Delete content file (if exists)
+			try {
+				const contentFile = `${this.contentDir}${id}.md`;
+				// File deletion would happen here in real implementation
+				console.log(`Would delete content file: ${contentFile}`);
+			} catch {
+				// Content file might not exist, continue
+			}
+
+			await this.saveStructureData();
+			return { success: true };
+		} catch (error) {
+			return { success: false, error: `Failed to delete item: ${error}` };
 		}
 	}
 
@@ -409,18 +490,7 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async getCategories(): Promise<StorageResult<Category[]>> {
-		try {
-			const items = this.structureData.items.filter(item =>
-				(item.type === 'book' || item.type === 'section') && !item.deleted_at
-			);
 
-			const categories: Category[] = items.map(item => this.structureToCategory(item));
-			return { success: true, data: categories };
-		} catch (error) {
-			return { success: false, error: `Failed to get categories: ${error}` };
-		}
-	}
 
 	async getTreeData(): Promise<StorageResult<TreeData[]>> {
 		try {
@@ -447,7 +517,12 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 					const treeNode: TreeData = {
 						id: item.id,
 						name: item.title,
-						type: item.type === 'book' || item.type === 'section' ? 'category' : item.type as 'note',
+						type: item.type,
+						parent_id: item.parent_id,
+						sort_order: item.sort_order,
+						custom_icon: (item as any).metadata?.custom_icon || null,
+						custom_text_color: (item as any).metadata?.custom_text_color || null,
+						is_pinned: (item as any).metadata?.is_pinned || null,
 					};
 
 					// Add children for container types
@@ -510,30 +585,9 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 		};
 	}
 
-	private structureToCategory(structure: Omit<FlexibleItem, 'content' | 'content_raw' | 'content_plaintext'>): Category {
-		return {
-			id: structure.id,
-			name: structure.title,
-			description: structure.metadata.description || '',
-			color: structure.metadata.custom_text_color || null,
-			icon: structure.metadata.custom_icon || null,
-			parent_id: structure.parent_id,
-			sort_order: structure.sort_order,
-			created_at: structure.created_at,
-			updated_at: structure.updated_at,
-		};
-	}
 
-	// Stub implementations for interface compliance
-	async getCategory(): Promise<StorageResult<Category | null>> { throw new Error("Not implemented"); }
-	async createCategory(): Promise<StorageResult<Category>> { throw new Error("Not implemented"); }
-	async updateCategory(): Promise<StorageResult<Category>> { throw new Error("Not implemented"); }
-	async deleteCategory(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async getCategoryNotes(): Promise<StorageResult<Note[]>> { throw new Error("Not implemented"); }
-	async addNoteToCategory(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async removeNoteFromCategory(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async updateNoteSortOrder(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async moveNoteToCategory(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
+
+
 	async moveTreeItem(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
 	async reorderTreeItem(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
 	async getTags(): Promise<StorageResult<Tag[]>> { return { success: true, data: this.structureData.tags }; }

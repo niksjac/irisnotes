@@ -1,6 +1,6 @@
 // UI Components - Barrel Exports
 export { ActivityBar, ActivityBarButton } from "./activity-bar";
-export { ContextMenu } from "./context-menu";
+export { RightClickMenu } from "./right-click-menu";
 export { EditorContainer } from "./editor";
 export { Sidebar, SidebarResizer } from "./sidebar";
 export { TreeView } from "./tree";

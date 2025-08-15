@@ -1,10 +1,10 @@
 import type React from "react";
-import { useNotesData, useNotesStorage } from "@/hooks";
+import { useItems, useNotesStorage } from "@/hooks";
 import { TreeView } from "../tree";
 
 export const Sidebar: React.FC = () => {
 	const { isInitialized } = useNotesStorage();
-	const { isLoading } = useNotesData();
+	const { isLoading } = useItems();
 
 	if (!isInitialized || isLoading) {
 		return (

@@ -1,7 +1,7 @@
 import type React from "react";
-import { useContextMenu, useContextMenuActions } from "@/hooks";
-import { ContextMenu } from "../context-menu";
-import type { EditorContextData } from "@/types/context-menu";
+import { useRightClickMenu, useRightClickMenuActions } from "@/hooks";
+import { RightClickMenu } from "../right-click-menu";
+import type { EditorRightClickData } from "@/types/right-click-menu";
 
 interface EditorContainerProps {
 	content?: string;
@@ -26,27 +26,27 @@ export const EditorContainer: React.FC<EditorContainerProps> = ({
 	toolbarVisible: _toolbarVisible,
 	noteId,
 }) => {
-	const { contextMenu, handleContextMenu, hideContextMenu } = useContextMenu();
-	const { getEditorMenuGroups } = useContextMenuActions();
+	const { rightClickMenu, handleRightClickMenu, hideRightClickMenu } = useRightClickMenu();
+	const { getEditorMenuGroups } = useRightClickMenuActions();
 	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		if (onChange && !readOnly) {
 			onChange(e.target.value);
 		}
 	};
 
-	const handleEditorContextMenu = (event: React.MouseEvent) => {
+	const handleEditorRightClick = (event: React.MouseEvent) => {
 		const target = event.target as HTMLTextAreaElement;
 		const hasSelection = target.selectionStart !== target.selectionEnd;
 		const selectedText = hasSelection ? target.value.substring(target.selectionStart, target.selectionEnd) : undefined;
 
-		const contextData: EditorContextData = {
+		const rightClickData: EditorRightClickData = {
 			noteId,
 			selectedText,
 			hasSelection,
 		};
 
-		const menuGroups = getEditorMenuGroups(contextData);
-		handleContextMenu(event, {
+		const menuGroups = getEditorMenuGroups(rightClickData);
+		handleRightClickMenu(event, {
 			targetId: noteId,
 			targetType: "editor",
 			menuGroups,
@@ -60,13 +60,13 @@ export const EditorContainer: React.FC<EditorContainerProps> = ({
 				<textarea
 					value={content}
 					onChange={handleChange}
-					onContextMenu={handleEditorContextMenu}
+					onContextMenu={handleEditorRightClick}
 					readOnly={readOnly}
 					className="flex-1 w-full p-4 border-0 resize-none focus:outline-none bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
 					placeholder={placeholder}
 				/>
 			</div>
-			<ContextMenu data={contextMenu} onClose={hideContextMenu} />
+			<RightClickMenu data={rightClickMenu} onClose={hideRightClickMenu} />
 		</>
 	);
 };

@@ -19,17 +19,7 @@ export interface Note {
 	parent_category_id?: string | null; // NEW: Direct parent-child relationship for tree views
 }
 
-export interface Category {
-	id: string;
-	name: string;
-	description: string;
-	color?: string | null;
-	icon?: string | null;
-	parent_id?: string | null;
-	sort_order: number;
-	created_at: string;
-	updated_at: string;
-}
+
 
 export interface Tag {
 	id: string;
@@ -90,7 +80,6 @@ export interface Setting {
 
 // Extended types with relationships
 export interface NoteWithRelations extends Note {
-	categories?: Category[];
 	tags?: Tag[];
 	attachments?: Attachment[];
 	parent_notes?: Note[];
@@ -98,11 +87,7 @@ export interface NoteWithRelations extends Note {
 	related_notes?: Note[];
 }
 
-export interface CategoryWithNotes extends Category {
-	notes?: Note[];
-	subcategories?: Category[];
-	parent_category?: Category;
-}
+
 
 export interface TagWithNotes extends Tag {
 	notes?: Note[];
@@ -137,11 +122,12 @@ export interface NoteSortOptions {
 
 // Database operation types
 export interface CreateNoteParams {
-	title?: string;
+	title: string;
 	content?: string;
 	content_type?: "html" | "markdown" | "plain" | "custom";
 	content_raw?: string; // original custom format when content_type is 'custom'
-	category_ids?: string[];
+	parent_id?: string | null; // For unified items system
+	category_ids?: string[]; // Legacy support
 	tag_ids?: string[];
 }
 
@@ -150,19 +136,13 @@ export interface UpdateNoteParams {
 	title?: string;
 	content?: string;
 	content_type?: "html" | "markdown" | "plain" | "custom";
-	content_raw?: string; // original custom format when content_type is 'custom'
+	content_raw?: string | null; // original custom format when content_type is 'custom'
+	parent_id?: string | null; // For unified items system
 	is_pinned?: boolean;
 	is_archived?: boolean;
 }
 
-export interface CreateCategoryParams {
-	name: string;
-	description?: string;
-	color?: string;
-	icon?: string;
-	parent_id?: string;
-	sort_order?: number;
-}
+
 
 export interface CreateTagParams {
 	name: string;
@@ -193,7 +173,6 @@ export interface DatabaseInfo {
 
 export interface BackupData {
 	notes: Note[];
-	categories: Category[];
 	tags: Tag[];
 	note_categories: NoteCategory[];
 	note_tags: NoteTag[];

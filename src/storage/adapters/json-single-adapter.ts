@@ -3,7 +3,6 @@
 
 import type {
 	Attachment,
-	Category,
 	CreateNoteParams,
 	Note,
 	NoteFilters,
@@ -199,9 +198,63 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 		}
 	}
 
+	async updateItem(id: string, params: Partial<FlexibleItem>): Promise<StorageResult<FlexibleItem>> {
+		try {
+			const itemIndex = this.data.items.findIndex(item => item.id === id);
+
+			if (itemIndex === -1) {
+				return { success: false, error: "Item not found" };
+			}
+
+			const item = this.data.items[itemIndex];
+			if (!item) {
+				return { success: false, error: "Item not found" };
+			}
+
+			const now = new Date().toISOString();
+
+			// Update fields
+			if (params.title !== undefined) item.title = params.title;
+			if (params.content !== undefined) {
+				item.content = params.content;
+				item.content_plaintext = this.extractPlaintext(params.content);
+			}
+			if (params.content_raw !== undefined) item.content_raw = params.content_raw;
+			if (params.type !== undefined) item.type = params.type;
+			if (params.parent_id !== undefined) item.parent_id = params.parent_id;
+			if (params.sort_order !== undefined) item.sort_order = params.sort_order;
+			if (params.metadata !== undefined) {
+				item.metadata = { ...item.metadata, ...params.metadata };
+			}
+			item.updated_at = now;
+
+			await this.saveData();
+
+			return { success: true, data: item };
+		} catch (error) {
+			return { success: false, error: `Failed to update item: ${error}` };
+		}
+	}
+
+	async deleteItem(id: string): Promise<VoidStorageResult> {
+		try {
+			const itemIndex = this.data.items.findIndex(item => item.id === id);
+
+			if (itemIndex === -1) {
+				return { success: false, error: "Item not found" };
+			}
+
+			this.data.items.splice(itemIndex, 1);
+			await this.saveData();
+			return { success: true };
+		} catch (error) {
+			return { success: false, error: `Failed to delete item: ${error}` };
+		}
+	}
+
 	private extractPlaintext(content: string): string {
 		// Simple plaintext extraction (remove markdown/html)
-		return content.replace(/[#*_`\[\]()]/g, '').replace(/\n+/g, ' ').trim();
+		return content.replace(/[#*_`[\]()]/g, '').replace(/\n+/g, ' ').trim();
 	}
 
 	private getNextSortOrder(parentId: string | null): number {
@@ -330,18 +383,7 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async getCategories(): Promise<StorageResult<Category[]>> {
-		try {
-			const items = this.data.items.filter(item =>
-				(item.type === 'book' || item.type === 'section') && !item.deleted_at
-			);
 
-			const categories: Category[] = items.map(item => this.itemToCategory(item));
-			return { success: true, data: categories };
-		} catch (error) {
-			return { success: false, error: `Failed to get categories: ${error}` };
-		}
-	}
 
 	async getTreeData(): Promise<StorageResult<TreeData[]>> {
 		try {
@@ -368,7 +410,12 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 					const treeNode: TreeData = {
 						id: item.id,
 						name: item.title,
-						type: item.type === 'book' || item.type === 'section' ? 'category' : item.type as 'note',
+						type: item.type,
+						parent_id: item.parent_id,
+						sort_order: item.sort_order,
+						custom_icon: item.metadata.custom_icon || null,
+						custom_text_color: item.metadata.custom_text_color || null,
+						is_pinned: item.metadata.is_pinned || null,
 					};
 
 					// Add children for container types
@@ -411,30 +458,9 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 		};
 	}
 
-	private itemToCategory(item: FlexibleItem): Category {
-		return {
-			id: item.id,
-			name: item.title,
-			description: item.metadata.description || '',
-			color: item.metadata.custom_text_color || null,
-			icon: item.metadata.custom_icon || null,
-			parent_id: item.parent_id,
-			sort_order: item.sort_order,
-			created_at: item.created_at,
-			updated_at: item.updated_at,
-		};
-	}
 
-	// Stub implementations for interface compliance
-	async getCategory(): Promise<StorageResult<Category | null>> { throw new Error("Not implemented"); }
-	async createCategory(): Promise<StorageResult<Category>> { throw new Error("Not implemented"); }
-	async updateCategory(): Promise<StorageResult<Category>> { throw new Error("Not implemented"); }
-	async deleteCategory(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async getCategoryNotes(): Promise<StorageResult<Note[]>> { throw new Error("Not implemented"); }
-	async addNoteToCategory(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async removeNoteFromCategory(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async updateNoteSortOrder(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async moveNoteToCategory(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
+
+
 	async moveTreeItem(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
 	async reorderTreeItem(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
 	async getTags(): Promise<StorageResult<Tag[]>> { return { success: true, data: this.data.tags }; }

@@ -4,7 +4,6 @@
 import Database from "@tauri-apps/plugin-sql";
 import type {
 	Attachment,
-	Category,
 	CreateNoteParams,
 	Note,
 	NoteFilters,
@@ -170,7 +169,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 
 	private extractPlaintext(content: string): string {
 		// Simple plaintext extraction (remove markdown/html)
-		return content.replace(/[#*_`\[\]()]/g, '').replace(/\n+/g, ' ').trim();
+		return content.replace(/[#*_`[\]()]/g, '').replace(/\n+/g, ' ').trim();
 	}
 
 	private countWords(content: string): number {
@@ -366,20 +365,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async getCategories(): Promise<StorageResult<Category[]>> {
-		if (!this.db) return { success: false, error: "Database not initialized" };
 
-		try {
-			const results = await this.db.select<any[]>(
-				"SELECT * FROM items WHERE type IN ('book', 'section') AND deleted_at IS NULL ORDER BY sort_order"
-			);
-
-			const categories: Category[] = results.map(row => this.rowToCategory(row));
-			return { success: true, data: categories };
-		} catch (error) {
-			return { success: false, error: `Failed to get categories: ${error}` };
-		}
-	}
 
 	async getTreeData(): Promise<StorageResult<TreeData[]>> {
 		if (!this.db) return { success: false, error: "Database not initialized" };
@@ -421,7 +407,12 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 					const treeNode: TreeData = {
 						id: item.id,
 						name: item.name,
-						type: item.type === 'book' || item.type === 'section' ? 'category' : item.type,
+						type: item.type === 'book' ? 'book' : item.type === 'section' ? 'section' : 'note',
+						parent_id: item.parent_id,
+						sort_order: item.sort_order,
+						custom_icon: item.custom_icon,
+						custom_text_color: item.custom_text_color,
+						is_pinned: item.is_pinned,
 					};
 
 					// Add children for container types
@@ -485,31 +476,80 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		};
 	}
 
-	private rowToCategory(row: any): Category {
-		const metadata = row.metadata ? JSON.parse(row.metadata) : {};
-		return {
-			id: row.id,
-			name: row.title,
-			description: metadata.description || '',
-			color: metadata.custom_text_color || null,
-			icon: metadata.custom_icon || null,
-			parent_id: row.parent_id,
-			sort_order: row.sort_order,
-			created_at: row.created_at,
-			updated_at: row.updated_at,
-		};
+	async updateItem(id: string, params: Partial<FlexibleItem>): Promise<StorageResult<FlexibleItem>> {
+		if (!this.db) return { success: false, error: "Database not initialized" };
+
+		try {
+			const updates: string[] = [];
+			const values: any[] = [];
+
+			if (params.title !== undefined) {
+				updates.push('title = ?');
+				values.push(params.title);
+			}
+			if (params.content !== undefined) {
+				updates.push('content = ?', 'content_plaintext = ?');
+				values.push(params.content, this.extractPlaintext(params.content));
+			}
+			if (params.content_raw !== undefined) {
+				updates.push('content_raw = ?');
+				values.push(params.content_raw);
+			}
+			if (params.type !== undefined) {
+				updates.push('type = ?');
+				values.push(params.type);
+			}
+			if (params.parent_id !== undefined) {
+				updates.push('parent_id = ?');
+				values.push(params.parent_id);
+			}
+			if (params.sort_order !== undefined) {
+				updates.push('sort_order = ?');
+				values.push(params.sort_order);
+			}
+			if (params.metadata !== undefined) {
+				updates.push('metadata = ?');
+				values.push(JSON.stringify(params.metadata));
+			}
+
+			if (updates.length === 0) {
+				return { success: false, error: "No fields to update" };
+			}
+
+			updates.push('updated_at = ?');
+			values.push(new Date().toISOString());
+			values.push(id);
+
+			await this.db.execute(
+				`UPDATE items SET ${updates.join(', ')} WHERE id = ?`,
+				values
+			);
+
+			const result = await this.db.select<any[]>("SELECT * FROM items WHERE id = ?", [id]);
+			if (result.length === 0) {
+				return { success: false, error: "Item not found after update" };
+			}
+
+			return { success: true, data: this.rowToFlexibleItem(result[0]) };
+		} catch (error) {
+			return { success: false, error: `Failed to update item: ${error}` };
+		}
 	}
 
-	// Stub implementations for interface compliance
-	async getCategory(): Promise<StorageResult<Category | null>> { throw new Error("Not implemented"); }
-	async createCategory(): Promise<StorageResult<Category>> { throw new Error("Not implemented"); }
-	async updateCategory(): Promise<StorageResult<Category>> { throw new Error("Not implemented"); }
-	async deleteCategory(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async getCategoryNotes(): Promise<StorageResult<Note[]>> { throw new Error("Not implemented"); }
-	async addNoteToCategory(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async removeNoteFromCategory(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async updateNoteSortOrder(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async moveNoteToCategory(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
+	async deleteItem(id: string): Promise<VoidStorageResult> {
+		if (!this.db) return { success: false, error: "Database not initialized" };
+
+		try {
+			// Soft delete by setting deleted_at timestamp
+			await this.db.execute(
+				"UPDATE items SET deleted_at = ? WHERE id = ?",
+				[new Date().toISOString(), id]
+			);
+			return { success: true };
+		} catch (error) {
+			return { success: false, error: `Failed to delete item: ${error}` };
+		}
+	}
 	async moveTreeItem(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
 	async reorderTreeItem(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
 	async getTags(): Promise<StorageResult<Tag[]>> {

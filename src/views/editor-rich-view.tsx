@@ -1,23 +1,23 @@
 import { useAtomValue } from "jotai";
 import { selectedNoteAtom } from "@/atoms";
 import { EditorContainer } from "@/components";
-import { useNotesActions } from "@/hooks";
+import { useItems } from "@/hooks";
 import { useEditorLayout } from "@/hooks/use-editor-layout";
 
 export function EditorRichView() {
 	const selectedNote = useAtomValue(selectedNoteAtom);
-	const { updateNoteContent, updateNoteTitle } = useNotesActions();
+	const { updateItemContent, updateItemTitle } = useItems();
 	const { toolbarVisible } = useEditorLayout();
 
 	// Get the selected note
 	const note = selectedNote;
 
 	const handleNoteContentChange = (noteId: string, content: string) => {
-		updateNoteContent(noteId, content);
+		updateItemContent(noteId, content);
 	};
 
 	const handleNoteTitleChange = (noteId: string, title: string) => {
-		updateNoteTitle(noteId, title);
+		updateItemTitle(noteId, title);
 	};
 
 	if (!note) {

@@ -3,115 +3,124 @@ import type { StorageAdapter } from "@/storage";
 
 interface UseNotesHandlersProps {
 	storageAdapter: StorageAdapter | null;
-	setSelectedNoteId: (noteId: string | null) => void;
-	updateNoteTitle: (noteId: string, title: string) => void;
-	updateNoteContent: (noteId: string, content: string) => void;
-	createNewNote: () => Promise<{ success: boolean; data?: any }>;
-	loadAllNotes: () => Promise<void>;
-	loadNoteCategories: () => Promise<any[]>;
+	setSelectedItemId: (itemId: string | null) => void;
+	updateItemTitle: (itemId: string, title: string) => void;
+	updateItemContent: (itemId: string, content: string) => void;
+	createNote: () => Promise<{ success: boolean; data?: any }>;
+	loadAllItems: () => Promise<void>;
 }
 
 export function useNotesHandlers({
 	storageAdapter,
-	setSelectedNoteId,
-	updateNoteTitle,
-	updateNoteContent,
-	createNewNote,
-	loadAllNotes,
-	loadNoteCategories,
+	setSelectedItemId,
+	updateItemTitle,
+	updateItemContent,
+	createNote,
+	loadAllItems,
 }: UseNotesHandlersProps) {
-	const handleNoteClick = useCallback(
-		(noteId: string) => {
-			setSelectedNoteId(noteId);
+	const handleItemClick = useCallback(
+		(itemId: string) => {
+			setSelectedItemId(itemId);
 		},
-		[setSelectedNoteId]
+		[setSelectedItemId]
 	);
 
 	const handleItemSelect = useCallback(
-		(itemId: string, itemType: "note" | "category") => {
-			// Handle both note and category selection for proper navigation state
-			if (itemType === "category") {
-				// For folders, we don't load them in the editor, just select them
-				setSelectedNoteId(null);
+		(itemId: string, itemType: "note" | "book" | "section") => {
+			// Handle item selection for proper navigation state
+			if (itemType === "book" || itemType === "section") {
+				// For books/sections, we don't load them in the editor, just select them
+				setSelectedItemId(null);
 			} else if (itemType === "note") {
-				// For notes, update the selection but don't open automatically
-				// Opening will be handled by onNoteSelect when appropriate (click, Enter, Space)
-				setSelectedNoteId(itemId);
+				// For notes, update the selection
+				setSelectedItemId(itemId);
 			}
 		},
-		[setSelectedNoteId]
+		[setSelectedItemId]
 	);
 
 	const handleTitleChange = useCallback(
-		(noteId: string, title: string) => {
-			updateNoteTitle(noteId, title);
+		(itemId: string, title: string) => {
+			updateItemTitle(itemId, title);
 		},
-		[updateNoteTitle]
+		[updateItemTitle]
 	);
 
 	const handleContentChange = useCallback(
-		(noteId: string, content: string) => {
-			updateNoteContent(noteId, content);
+		(itemId: string, content: string) => {
+			updateItemContent(itemId, content);
 		},
-		[updateNoteContent]
+		[updateItemContent]
 	);
 
-	const handleFolderSelect = useCallback(
-		(_folderId: string) => {
-			setSelectedNoteId(null);
+	const handleContainerSelect = useCallback(
+		(_itemId: string) => {
+			setSelectedItemId(null);
 		},
-		[setSelectedNoteId]
+		[setSelectedItemId]
 	);
 
 	const handleCreateNote = useCallback(
-		async (parentCategoryId?: string) => {
-			if (!storageAdapter) return;
-
+		async (_parentId?: string) => {
 			try {
-				const result = await createNewNote();
-				if (result.success && result.data && parentCategoryId) {
-					// Add the note to the category
-					await storageAdapter.addNoteToCategory(result.data.id, parentCategoryId);
-					// Reload note categories to update the tree
-					await loadNoteCategories();
+				const result = await createNote();
+				if (result.success) {
+					// Note: parent_id is now handled directly in createNote
+					await loadAllItems();
 				}
 			} catch (error) {
 				console.error("Failed to create note:", error);
 			}
 		},
-		[storageAdapter, createNewNote, loadNoteCategories]
+		[createNote, loadAllItems]
 	);
 
-	const handleDeleteNote = useCallback(
-		async (noteId: string) => {
+	const handleDeleteItem = useCallback(
+		async (itemId: string) => {
 			if (!storageAdapter) return;
 
 			try {
-				await storageAdapter.deleteNote(noteId);
-				// Reload notes to update the UI
-				await loadAllNotes();
+				// Get item to determine type for proper deletion
+				const items = await storageAdapter.getTreeData();
+				if (items.success) {
+					const item = items.data.find(i => i.id === itemId);
+					if (!item) return;
+
+					if (item.type === 'note') {
+						await storageAdapter.deleteNote(itemId);
+					} else {
+						      await storageAdapter.deleteItem(itemId);
+					}
+
+					await loadAllItems();
+				}
 			} catch (error) {
-				console.error("Failed to delete note:", error);
+				console.error("Failed to delete item:", error);
 			}
 		},
-		[storageAdapter, loadAllNotes]
+		[storageAdapter, loadAllItems]
 	);
 
-	const handleRenameNote = useCallback(
-		async (noteId: string, newTitle: string) => {
-			await updateNoteTitle(noteId, newTitle);
+	const handleRenameItem = useCallback(
+		async (itemId: string, newTitle: string) => {
+			await updateItemTitle(itemId, newTitle);
 		},
-		[updateNoteTitle]
+		[updateItemTitle]
 	);
 
 	return {
-		handleNoteClick,
+		handleItemClick,
 		handleItemSelect,
 		handleTitleChange,
 		handleContentChange,
-		handleFolderSelect,
+		handleContainerSelect,
 		handleCreateNote,
-		handleDeleteNote,
-		handleRenameNote,
+		handleDeleteItem,
+		handleRenameItem,
+		// Legacy aliases for backward compatibility
+		handleNoteClick: handleItemClick,
+		handleFolderSelect: handleContainerSelect,
+		handleDeleteNote: handleDeleteItem,
+		handleRenameNote: handleRenameItem,
 	};
 }

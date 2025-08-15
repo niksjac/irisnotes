@@ -29,20 +29,16 @@ export { useLineWrapping } from "./use-line-wrapping";
 // Theme hook
 export { useTheme } from "./use-theme";
 
-// Notes hooks (moved from nested structure)
-export { useNotesActions } from "./use-notes-actions";
-export { useNotesData } from "./use-notes-data";
+// Unified items system (replaces notes/categories)
+export { useItems } from "./use-items";
+
+// Storage and handlers
 export { useNotesHandlers } from "./use-notes-handlers";
-export { useNotesSelection } from "./use-notes-selection";
 export { useNotesStorage } from "./use-notes-storage";
 
-// Categories infrastructure (new pattern)
-export { useCategoriesData } from "./use-categories-data";
-export { useCategoriesActions } from "./use-categories-actions";
-
-// Context menu hooks
-export { useContextMenu } from "./use-context-menu";
-export { useContextMenuActions } from "./use-context-menu-actions";
+// Right-click menu hooks
+export { useRightClickMenu } from "./use-right-click-menu";
+export { useRightClickMenuActions } from "./use-right-click-menu-actions";
 
 // Responsive design hooks
 export { useMediaQuery, useIsMobile, useIsTablet, useIsDesktop } from "./use-media-query";

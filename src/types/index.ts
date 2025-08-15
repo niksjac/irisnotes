@@ -2,9 +2,6 @@
 export type {
 	AppSettings,
 	BackupData,
-	Category,
-	CategoryWithNotes,
-	CreateCategoryParams,
 	CreateNoteParams,
 	CreateTagParams,
 	DatabaseInfo,
@@ -22,12 +19,12 @@ export type {
 export type {
 	MenuItem,
 	MenuGroup,
-	ContextMenuPosition,
-	ContextMenuData,
-	TreeContextData,
-	EditorContextData,
-	ContextMenuType,
-} from "./context-menu";
+	RightClickMenuPosition,
+	RightClickMenuData,
+	TreeRightClickData,
+	EditorRightClickData,
+	RightClickMenuType,
+} from "./right-click-menu";
 
 // Hotkey configuration types
 export interface HotkeyConfig {
@@ -182,22 +179,25 @@ export interface AppConfig {
 export type ViewType =
 	| "config-view"
 	| "hotkeys-view"
-	| "folder-view"
 	| "editor-rich-view"
 	| "editor-source-view"
-	| "welcome-view"
 	| "empty-view";
 
 // Tree view types
 export interface TreeData {
 	id: string;
 	name: string;
-	type?: "note" | "category";
+	type: "note" | "book" | "section";
+	parent_id?: string | null;
+	sort_order: number;
+	custom_icon?: string | null;
+	custom_text_color?: string | null;
+	is_pinned?: boolean | null;
 	children?: TreeData[];
 	data?: {
 		id: string;
 		name: string;
-		type?: "note" | "category";
+		type: "note" | "book" | "section";
 	};
 }
 

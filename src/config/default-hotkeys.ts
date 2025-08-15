@@ -199,7 +199,7 @@ export const getHotkeysByCategory = (mapping: HotkeyMapping = DEFAULT_HOTKEYS): 
 		if (!byCategory[config.category]) {
 			byCategory[config.category] = [];
 		}
-		byCategory[config.category]!.push({ action, config });
+		byCategory[config.category]?.push({ action, config });
 	});
 
 	return byCategory;

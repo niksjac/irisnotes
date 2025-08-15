@@ -1,21 +1,21 @@
 import { useAtomValue } from "jotai";
 import { selectedNoteAtom } from "@/atoms";
 import { EditorContainer } from "@/components";
-import { useNotesActions } from "@/hooks";
+import { useItems } from "@/hooks";
 
 export function EditorSourceView() {
 	const selectedNote = useAtomValue(selectedNoteAtom);
-	const { updateNoteContent, updateNoteTitle } = useNotesActions();
+	const { updateItemContent, updateItemTitle } = useItems();
 
 	// Get the selected note
 	const note = selectedNote;
 
 	const handleNoteContentChange = (noteId: string, content: string) => {
-		updateNoteContent(noteId, content);
+		updateItemContent(noteId, content);
 	};
 
 	const handleNoteTitleChange = (noteId: string, title: string) => {
-		updateNoteTitle(noteId, title);
+		updateItemTitle(noteId, title);
 	};
 
 	if (!note) {

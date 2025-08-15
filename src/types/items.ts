@@ -60,6 +60,7 @@ export interface CreateItemParams {
 	content_type?: 'html' | 'markdown' | 'plain' | 'custom';
 	content_raw?: string;
 	parent_id?: string | null;
+	sort_order?: number;
 	metadata?: Record<string, any>;
 }
 
