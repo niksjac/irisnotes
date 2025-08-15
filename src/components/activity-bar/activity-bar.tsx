@@ -5,6 +5,7 @@ import { useEditorState, useLineWrapping } from "@/hooks";
 import { useAtom } from "jotai";
 import { paneStateAtom } from "@/atoms";
 import { ActivityBarButton } from "./activity-bar-button";
+import { StorageAdapterButton } from "./storage-adapter-button";
 
 export function ActivityBar() {
 	// Component-level color constants
@@ -81,6 +82,8 @@ export function ActivityBar() {
 					onClick={toggleDatabaseStatus}
 					title="Database Status"
 				/>
+
+				<StorageAdapterButton />
 
 				{/* Dual pane button - hidden on mobile */}
 				<div className="hidden md:block">
