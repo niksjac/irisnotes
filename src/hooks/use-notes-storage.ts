@@ -11,11 +11,12 @@ export const useNotesStorage = () => {
 
 	// Initialize storage when config loads or changes
 	useEffect(() => {
-		const initializeStorage = async () => {
-			if (configLoading) {
-				return;
-			}
+		// Prevent multiple initialization attempts
+		if (configLoading || isInitialized) {
+			return;
+		}
 
+		const initializeStorage = async () => {
 			try {
 				// Create storage config based on backend type
 				let storageConfig = { ...config.storage };
@@ -39,19 +40,21 @@ export const useNotesStorage = () => {
 
 				if (!result.success) {
 					console.error("❌ Failed to initialize storage:", result.error);
-					throw new Error(result.error);
+					// Don't throw on init failure, let the adapter fall back to sample data
+					console.warn("🔄 Storage will use fallback data");
 				}
 
 				setStorageAdapter(adapter);
 				setIsInitialized(true);
 			} catch (err) {
 				console.error("❌ Failed to initialize storage:", err);
-				throw err;
+				// Don't throw to prevent app crash, allow fallback behavior
+				console.warn("🔄 Storage initialization failed, using fallback");
 			}
 		};
 
 		initializeStorage();
-	}, [configLoading, config.storage]);
+	}, [configLoading, config.storage, isInitialized]);
 
 	const syncStorage = useCallback(async () => {
 		if (!storageAdapter?.sync) {

@@ -38,6 +38,8 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 	private config: StorageConfig;
 	private data: JsonStorageData;
 	private filePath: string;
+	private initializationAttempted: boolean = false;
+	private isFileAccessible: boolean = false;
 
 	constructor(config: StorageConfig) {
 		this.config = config;
@@ -56,15 +58,19 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 	}
 
 	async init(): Promise<VoidStorageResult> {
+		if (this.initializationAttempted) {
+			return { success: true };
+		}
+
+		this.initializationAttempted = true;
+
 		try {
 			await this.loadData();
 			return { success: true };
 		} catch (error) {
 			console.error("❌ Failed to initialize JSON storage:", error);
-			return {
-				success: false,
-				error: `Failed to initialize storage: ${error}`,
-			};
+			// Still return success since we have fallback data
+			return { success: true };
 		}
 	}
 
@@ -77,6 +83,7 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 			if (fileData && fileData.items && fileData.items.length > 0) {
 				console.log("✅ Loaded data from file:", fileData.items.length, "items");
 				this.data = fileData;
+				this.isFileAccessible = true;
 				return;
 			}
 
@@ -93,12 +100,20 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 
 	private async loadFromFile(): Promise<JsonStorageData | null> {
 		try {
-			// For now, simulate file loading with a fetch to the local file
-			// In a real Tauri app, this would use the fs API
-			const response = await fetch(this.filePath);
-			if (response.ok) {
-				const fileData = await response.json();
-				return fileData;
+			// Check if we're in a Tauri context first
+			if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+				// Use Tauri filesystem plugin API
+				const { readTextFile } = await import("@tauri-apps/plugin-fs");
+				const fileContent = await readTextFile(this.filePath);
+				return JSON.parse(fileContent);
+			} else {
+				// In web context, try to load from public directory or use fetch for dev server
+				const publicPath = this.filePath.replace('./dev/', '/dev/');
+				const response = await fetch(publicPath);
+				if (response.ok) {
+					const fileData = await response.json();
+					return fileData;
+				}
 			}
 		} catch (error) {
 			console.log("📁 File not accessible, will use sample data:", error);
@@ -170,12 +185,25 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 		this.data.last_modified = new Date().toISOString();
 
 		try {
-			// For now, simulate file saving
-			// In a real Tauri app, this would use the fs API
-			console.log("💾 JSON storage saved to:", this.filePath);
-			console.log("📊 Data:", JSON.stringify(this.data, null, 2));
+			// Check if we're in a Tauri context first
+			if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+				// Use Tauri filesystem plugin API
+				const { writeTextFile } = await import("@tauri-apps/plugin-fs");
+				const jsonContent = JSON.stringify(this.data, null, 2);
+				await writeTextFile(this.filePath, jsonContent);
+				console.log("💾 JSON storage saved to:", this.filePath);
+				this.isFileAccessible = true;
+			} else {
+				// In web context, we can't save files directly
+				// Just log for development purposes
+				console.log("💾 JSON storage would save to:", this.filePath);
+				if (this.isFileAccessible) {
+					console.log("📊 Data preview (first 3 items):", JSON.stringify(this.data.items.slice(0, 3), null, 2));
+				}
+			}
 		} catch (error) {
-			console.error("❌ Failed to save data:", error);
+			console.warn("⚠️ Could not save to file (using in-memory storage):", error);
+			this.isFileAccessible = false;
 		}
 	}
 

@@ -37,17 +37,23 @@ export const useAppPersistence = () => {
 		window.addEventListener("beforeunload", persistAppState);
 
 		// For Tauri apps, also listen for the app close event
+		let tauriUnlisten: (() => void) | null = null;
+
 		const setupTauriCloseHandler = async () => {
 			try {
-				// Dynamically import Tauri API (only available in Tauri context)
-				const { listen } = await import("@tauri-apps/api/event");
+				// Check if we're in a Tauri context first
+				if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+					// Dynamically import Tauri API (only available in Tauri context)
+					const { listen } = await import("@tauri-apps/api/event");
 
-				// Listen for close event
-				const unlistenClose = await listen("tauri://close-requested", () => {
-					persistAppState();
-				});
+					// Listen for close event
+					const unlistenClose = await listen("tauri://close-requested", () => {
+						persistAppState();
+					});
 
-				return unlistenClose;
+					return unlistenClose;
+				}
+				return null;
 			} catch (error) {
 				// Not in Tauri context or Tauri not available
 				console.debug("Tauri APIs not available, skipping native close handler:", error);
@@ -55,7 +61,6 @@ export const useAppPersistence = () => {
 			}
 		};
 
-		let tauriUnlisten: (() => void) | null = null;
 		setupTauriCloseHandler()
 			.then((unlisten) => {
 				if (unlisten) {
@@ -69,8 +74,13 @@ export const useAppPersistence = () => {
 		// Cleanup
 		return () => {
 			window.removeEventListener("beforeunload", persistAppState);
-			if (tauriUnlisten) {
-				tauriUnlisten();
+			// Only try to unlisten if we have a valid unlisten function
+			if (tauriUnlisten && typeof tauriUnlisten === 'function') {
+				try {
+					tauriUnlisten();
+				} catch (error) {
+					console.debug("Failed to unlisten Tauri event:", error);
+				}
 			}
 			// Final save on component unmount
 			persistAppState();
