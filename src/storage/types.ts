@@ -56,6 +56,7 @@ export interface StorageAdapter {
 	searchNotes(query: string, filters?: NoteFilters): Promise<StorageResult<Note[]>>;
 
 	// Items operations (books, sections - unified with notes)
+	getAllItems(): Promise<StorageResult<FlexibleItem[]>>;
 	createItem(params: CreateItemParams): Promise<StorageResult<FlexibleItem>>;
 	updateItem(id: string, params: Partial<FlexibleItem>): Promise<StorageResult<FlexibleItem>>;
 	deleteItem(id: string): Promise<VoidStorageResult>;

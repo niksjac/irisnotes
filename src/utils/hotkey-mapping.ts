@@ -66,8 +66,10 @@ export function mapHotkeyHandlers(
 		onFocusTab7: handlers.focusTab7,
 		onFocusTab8: handlers.focusTab8,
 		onFocusTab9: handlers.focusTab9,
-		// Tab navigation hotkeys
-		onFocusNextTab: handlers.focusNextTab,
-		onFocusPreviousTab: handlers.focusPreviousTab,
-	};
+			// Tab navigation hotkeys
+	onFocusNextTab: handlers.focusNextTab,
+	onFocusPreviousTab: handlers.focusPreviousTab,
+	// App hotkeys
+	onRefreshApp: () => window.location.reload(),
+};
 }

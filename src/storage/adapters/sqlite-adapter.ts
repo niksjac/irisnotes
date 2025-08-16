@@ -64,6 +64,21 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 
 	// ===== FLEXIBLE ITEM OPERATIONS =====
 
+	async getAllItems(): Promise<StorageResult<FlexibleItem[]>> {
+		if (!this.db) return { success: false, error: "Database not initialized" };
+
+		try {
+			const results = await this.db.select<any[]>(
+				"SELECT * FROM items WHERE deleted_at IS NULL ORDER BY sort_order, created_at"
+			);
+
+			const items: FlexibleItem[] = results.map(row => this.rowToFlexibleItem(row));
+			return { success: true, data: items };
+		} catch (error) {
+			return { success: false, error: `Failed to get all items: ${error}` };
+		}
+	}
+
 	async createItem(params: CreateItemParams): Promise<StorageResult<FlexibleItem>> {
 		if (!this.db) return { success: false, error: "Database not initialized" };
 

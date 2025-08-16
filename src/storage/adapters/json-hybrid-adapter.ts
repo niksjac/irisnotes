@@ -206,6 +206,15 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 
 	// ===== FLEXIBLE ITEM OPERATIONS =====
 
+	async getAllItems(): Promise<StorageResult<FlexibleItem[]>> {
+		try {
+			const items = this.structureData.items.filter(item => !item.deleted_at);
+			return { success: true, data: items };
+		} catch (error) {
+			return { success: false, error: `Failed to get all items: ${error}` };
+		}
+	}
+
 	async createItem(params: CreateItemParams): Promise<StorageResult<FlexibleItem>> {
 		try {
 			// Validate hierarchy

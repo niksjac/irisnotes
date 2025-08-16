@@ -176,6 +176,14 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		category: "Tab Navigation",
 		global: true,
 	},
+
+	// App hotkeys
+	refreshApp: {
+		key: "f5",
+		description: "Refresh Application",
+		category: "App",
+		global: true,
+	},
 };
 
 /**

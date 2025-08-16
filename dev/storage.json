@@ -1,0 +1,293 @@
+{
+  "items": [
+    {
+      "id": "book-1",
+      "type": "book",
+      "title": "Personal",
+      "parent_id": null,
+      "sort_order": 1,
+      "metadata": {
+        "description": "Personal notes and ideas"
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "book-2",
+      "type": "book",
+      "title": "Work",
+      "parent_id": null,
+      "sort_order": 2,
+      "metadata": {
+        "description": "Work-related projects and documentation"
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "book-3",
+      "type": "book",
+      "title": "Reading List",
+      "parent_id": null,
+      "sort_order": 3,
+      "metadata": {
+        "description": "Books and articles to read"
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "section-1",
+      "type": "section",
+      "title": "Meeting Notes",
+      "parent_id": "book-1",
+      "sort_order": 1,
+      "metadata": {
+        "description": "Notes from various meetings"
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "section-2",
+      "type": "section",
+      "title": "Ideas",
+      "parent_id": "book-1",
+      "sort_order": 2,
+      "metadata": {
+        "description": "Personal ideas and concepts"
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "section-3",
+      "type": "section",
+      "title": "Projects",
+      "parent_id": "book-2",
+      "sort_order": 1,
+      "metadata": {
+        "description": "Active work projects"
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "section-4",
+      "type": "section",
+      "title": "Documentation",
+      "parent_id": "book-2",
+      "sort_order": 2,
+      "metadata": {
+        "description": "Technical documentation"
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "section-5",
+      "type": "section",
+      "title": "Technical Books",
+      "parent_id": "book-3",
+      "sort_order": 1,
+      "metadata": {
+        "description": "Programming and technical books"
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "section-6",
+      "type": "section",
+      "title": "Articles",
+      "parent_id": "book-3",
+      "sort_order": 2,
+      "metadata": {
+        "description": "Online articles and papers"
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "note-1",
+      "type": "note",
+      "title": "Weekly Standup",
+      "content": "Team discussed progress on current sprint. Next milestone: API completion.",
+      "content_type": "plain",
+      "parent_id": "section-1",
+      "sort_order": 1,
+      "metadata": {
+        "word_count": 15,
+        "is_pinned": false
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "note-2",
+      "type": "note",
+      "title": "Project Review",
+      "content": "Reviewed Q1 goals and identified areas for improvement.",
+      "content_type": "plain",
+      "parent_id": "section-1",
+      "sort_order": 2,
+      "metadata": {
+        "word_count": 12,
+        "is_pinned": true
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "note-3",
+      "type": "note",
+      "title": "App Concept",
+      "content": "Mobile app for habit tracking with gamification elements.",
+      "content_type": "plain",
+      "parent_id": "section-2",
+      "sort_order": 1,
+      "metadata": {
+        "word_count": 12,
+        "is_pinned": false
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "note-4",
+      "type": "note",
+      "title": "Learning Goals",
+      "content": "Master React performance optimization and TypeScript advanced patterns.",
+      "content_type": "plain",
+      "parent_id": "section-2",
+      "sort_order": 2,
+      "metadata": {
+        "word_count": 10,
+        "is_pinned": true
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "note-5",
+      "type": "note",
+      "title": "Project A",
+      "content": "E-commerce platform redesign. Status: In progress, 60% complete.",
+      "content_type": "plain",
+      "parent_id": "section-3",
+      "sort_order": 1,
+      "metadata": {
+        "word_count": 12,
+        "is_pinned": true
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "note-6",
+      "type": "note",
+      "title": "Project B",
+      "content": "Mobile app for internal tools. Status: Planning phase.",
+      "content_type": "plain",
+      "parent_id": "section-3",
+      "sort_order": 2,
+      "metadata": {
+        "word_count": 11,
+        "is_pinned": false
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "note-7",
+      "type": "note",
+      "title": "API Spec",
+      "content": "REST API documentation for user management endpoints.",
+      "content_type": "markdown",
+      "parent_id": "section-4",
+      "sort_order": 1,
+      "metadata": {
+        "word_count": 8,
+        "is_pinned": true
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "note-8",
+      "type": "note",
+      "title": "User Guide",
+      "content": "Step-by-step guide for new team members.",
+      "content_type": "markdown",
+      "parent_id": "section-4",
+      "sort_order": 2,
+      "metadata": {
+        "word_count": 9,
+        "is_pinned": false
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "note-9",
+      "type": "note",
+      "title": "Design Patterns",
+      "content": "Gang of Four patterns for object-oriented design.",
+      "content_type": "plain",
+      "parent_id": "section-5",
+      "sort_order": 1,
+      "metadata": {
+        "word_count": 10,
+        "is_pinned": false
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "note-10",
+      "type": "note",
+      "title": "Clean Code",
+      "content": "Robert Martin's principles for writing maintainable code.",
+      "content_type": "plain",
+      "parent_id": "section-5",
+      "sort_order": 2,
+      "metadata": {
+        "word_count": 9,
+        "is_pinned": true
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "note-11",
+      "type": "note",
+      "title": "React Best Practices",
+      "content": "Modern React patterns and performance tips.",
+      "content_type": "markdown",
+      "parent_id": "section-6",
+      "sort_order": 1,
+      "metadata": {
+        "word_count": 8,
+        "is_pinned": true
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "note-12",
+      "type": "note",
+      "title": "Performance Tips",
+      "content": "Optimization techniques for web applications.",
+      "content_type": "markdown",
+      "parent_id": "section-6",
+      "sort_order": 2,
+      "metadata": {
+        "word_count": 9,
+        "is_pinned": false
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "last_modified": "2024-01-01T00:00:00Z"
+}

@@ -73,6 +73,9 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 	useHotkeys(hotkeyMapping.focusNextTab.key, createHandler(handlers.onFocusNextTab), createHotkeyOptions(hotkeyMapping.focusNextTab.global));
 	useHotkeys(hotkeyMapping.focusPreviousTab.key, createHandler(handlers.onFocusPreviousTab), createHotkeyOptions(hotkeyMapping.focusPreviousTab.global));
 
+	// App hotkeys
+	useHotkeys(hotkeyMapping.refreshApp.key, createHandler(handlers.onRefreshApp), createHotkeyOptions(hotkeyMapping.refreshApp.global));
+
 	// Future hotkey categories can be added here:
 
 	// Editor hotkeys - Use restrictedHotkeyOptions to avoid conflicts with text editing

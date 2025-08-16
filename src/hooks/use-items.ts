@@ -31,30 +31,10 @@ export const useItems = () => {
 				return;
 			}
 
-			const result = await storageAdapter.getTreeData();
+			const result = await storageAdapter.getAllItems();
 			if (result.success) {
-				// Convert TreeData to FlexibleItem format
-				const convertedItems: FlexibleItem[] = result.data.map(treeItem => ({
-					id: treeItem.id,
-					type: treeItem.type as 'note' | 'book' | 'section',
-					title: treeItem.name,
-					content: '',
-					content_type: 'html' as const,
-					content_raw: null,
-					content_plaintext: '',
-					parent_id: treeItem.parent_id,
-					sort_order: treeItem.sort_order,
-					metadata: {
-						custom_icon: treeItem.custom_icon,
-						custom_text_color: treeItem.custom_text_color,
-						is_pinned: treeItem.is_pinned,
-					},
-					created_at: new Date().toISOString(),
-					updated_at: new Date().toISOString(),
-					deleted_at: null,
-				}));
-
-				setItems(convertedItems);
+				console.log("📦 Loaded items directly:", result.data.length, "items");
+				setItems(result.data);
 			} else {
 				setError(result.error);
 			}
