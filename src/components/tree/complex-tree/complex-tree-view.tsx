@@ -1,196 +1,47 @@
+import { UncontrolledTreeEnvironment, Tree, StaticTreeDataProvider } from 'react-complex-tree';
+import 'react-complex-tree/lib/style-modern.css';
 import { useItems, useTabManagement } from '../../../hooks';
-import { FileText, BookOpen, Folder, ChevronRight, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { FileText, BookOpen, Folder } from 'lucide-react';
+import { adaptFlexibleItemsToComplexTree } from './complex-tree-adapter';
+import { useState, useEffect } from 'react';
 
-interface TreeNodeProps {
-  item: any;
-  level: number;
-  isSelected: boolean;
-  isExpanded: boolean;
-  onSelect: (id: string) => void;
-  onToggle: (id: string) => void;
-  childNodes: any[];
-}
-
-function TreeNode({ item, level, isSelected, isExpanded, onSelect, onToggle, childNodes }: TreeNodeProps) {
-  const hasChildren = childNodes.length > 0;
+export function ComplexTreeView() {
+  const { items, selectItem, selectedItem, moveItem } = useItems();
   const { openNoteInTab, openTreeViewInTab } = useTabManagement();
-  const { items, moveItem } = useItems();
-  const [isDragging, setIsDragging] = useState(false);
-  const [isDragOver, setIsDragOver] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<string[]>(['root']);
 
-  const getIcon = () => {
-    switch (item.type) {
+  // Convert items to tree format
+  const { rootItem, items: treeItems } = adaptFlexibleItemsToComplexTree(items);
+
+  // Create focused item state based on selected item
+  const focusedItem = selectedItem?.id || undefined;
+
+  // Auto-expand path to selected item
+  useEffect(() => {
+    if (selectedItem) {
+      const pathToItem: string[] = ['root'];
+      let currentId = selectedItem.parent_id;
+      while (currentId && currentId !== 'root') {
+        pathToItem.unshift(currentId);
+        const parentItem = items.find(item => item.id === currentId);
+        currentId = parentItem?.parent_id;
+      }
+      setExpandedItems(prev => [...new Set([...prev, ...pathToItem])]);
+    }
+  }, [selectedItem, items]);
+
+  const getIcon = (type: 'book' | 'section' | 'note') => {
+    switch (type) {
       case 'book':
-        return <BookOpen className="w-4 h-4 text-gray-600 dark:text-gray-400" />;
+        return <BookOpen className="w-3 h-3 text-current opacity-70" />;
       case 'section':
-        return <Folder className="w-4 h-4 text-gray-600 dark:text-gray-400" />;
+        return <Folder className="w-3 h-3 text-current opacity-70" />;
       case 'note':
-        return <FileText className="w-4 h-4 text-gray-600 dark:text-gray-400" />;
+        return <FileText className="w-3 h-3 text-current opacity-70" />;
       default:
         return null;
     }
   };
-
-  const handleDragStart = (e: React.DragEvent) => {
-    setIsDragging(true);
-    e.dataTransfer.setData('text/plain', JSON.stringify({
-      id: item.id,
-      type: item.type,
-      title: item.title
-    }));
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragEnd = () => {
-    setIsDragging(false);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setIsDragOver(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragOver(false);
-  };
-
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-
-    try {
-      const dragData = JSON.parse(e.dataTransfer.getData('text/plain'));
-
-      // Don't drop on itself
-      if (dragData.id === item.id) return;
-
-      // Notes can't be drop targets, only books and sections
-      if (item.type === 'note') return;
-
-      // Move the item to this container
-      await moveItem(dragData.id, item.id);
-
-    } catch (error) {
-      console.error('Error handling drop:', error);
-    }
-  };
-
-  return (
-    <div>
-      <div
-        className={`flex items-center gap-2 px-2 py-1 cursor-pointer transition-colors duration-200 rounded select-none ${
-          isDragging ? 'opacity-50' : ''
-        } ${
-          isDragOver ? 'bg-blue-200 dark:bg-blue-800' : ''
-        }`}
-        style={{
-          paddingLeft: `${level * 16 + 8}px`,
-          backgroundColor: isSelected ? 'var(--tree-selected-bg)' : undefined,
-        }}
-        onMouseEnter={(e) => {
-          if (!isSelected) {
-            e.currentTarget.style.backgroundColor = 'var(--tree-hover-bg)';
-          } else {
-            e.currentTarget.style.backgroundColor = 'var(--tree-selected-hover-bg)';
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = isSelected ? 'var(--tree-selected-bg)' : '';
-        }}
-        onClick={() => onSelect(item.id)}
-        onDoubleClick={() => {
-          if (item.type === 'note') {
-            openNoteInTab(item);
-          } else {
-            openTreeViewInTab(item, items);
-          }
-        }}
-        draggable
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        {hasChildren && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggle(item.id);
-            }}
-            className="w-4 h-4 flex items-center justify-center"
-          >
-            {isExpanded ? (
-              <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-            ) : (
-              <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-            )}
-          </button>
-        )}
-        {!hasChildren && <div className="w-4 h-4" />}
-        {getIcon()}
-        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{item.title}</span>
-      </div>
-
-      {isExpanded && childNodes.map((child) => (
-        <ComplexTreeNodeRenderer
-          key={child.item.id}
-          item={child.item}
-          level={level + 1}
-          childNodes={child.children}
-        />
-      ))}
-    </div>
-  );
-}
-
-function ComplexTreeNodeRenderer({ item, level, childNodes }: { item: any; level: number; childNodes: any[] }) {
-  const { selectedItem, selectItem } = useItems();
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-
-  const isSelected = selectedItem?.id === item.id;
-  const isExpanded = expandedItems.has(item.id);
-
-  const handleToggle = (id: string) => {
-    const newExpanded = new Set(expandedItems);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
-    } else {
-      newExpanded.add(id);
-    }
-    setExpandedItems(newExpanded);
-  };
-
-  return (
-    <TreeNode
-      item={item}
-      level={level}
-      isSelected={isSelected}
-      isExpanded={isExpanded}
-      onSelect={selectItem}
-      onToggle={handleToggle}
-      childNodes={childNodes}
-    />
-  );
-}
-
-export function ComplexTreeView() {
-  const { items } = useItems();
-
-  // Build tree structure
-  const buildTree = (parentId: string | null = null): any[] => {
-    return items
-      .filter(item => item.parent_id === parentId)
-      .sort((a, b) => a.sort_order - b.sort_order)
-      .map(item => ({
-        item,
-        children: buildTree(item.id)
-      }));
-  };
-
-  const treeData = buildTree();
 
   if (items.length === 0) {
     return (
@@ -204,17 +55,99 @@ export function ComplexTreeView() {
   }
 
   return (
-    <div className="w-full h-full overflow-auto p-2 select-none">
-      <div className="space-y-1">
-        {treeData.map((node) => (
-          <ComplexTreeNodeRenderer
-            key={node.item.id}
-            item={node.item}
-            level={0}
-            childNodes={node.children}
-          />
-        ))}
-      </div>
+    <div className="w-full h-full overflow-auto rct-tree-root p-1" tabIndex={0}>
+      <UncontrolledTreeEnvironment
+        dataProvider={new StaticTreeDataProvider(treeItems)}
+        getItemTitle={item => item.data.title}
+        viewState={{
+          'main-tree': {
+            focusedItem,
+            expandedItems,
+            selectedItems: selectedItem ? [selectedItem.id] : [],
+          },
+        }}
+        renderItem={({ title, item, context, arrow }) => (
+          <div
+            className={`flex items-center w-full h-full px-2 ${
+              context.isSelected
+                ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
+                : context.isFocused
+                ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100 ring-1 ring-yellow-400'
+                : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+            }`}
+          >
+            {arrow}
+            <div className="flex items-center gap-1.5 ml-1">
+              {getIcon(item.data.type)}
+              <span className="text-xs font-medium truncate">
+                {title}
+              </span>
+            </div>
+          </div>
+        )}
+        onFocusItem={(item) => {
+          if (item.data.originalItem) {
+            selectItem(item.data.originalItem.id);
+          }
+        }}
+        onSelectItems={(itemIds) => {
+          if (itemIds.length > 0) {
+            const itemId = itemIds[0];
+            if (typeof itemId === 'string' && treeItems[itemId]) {
+              const item = treeItems[itemId];
+              if (item?.data.originalItem) {
+                selectItem(item.data.originalItem.id);
+              }
+            }
+          }
+        }}
+        onPrimaryAction={(item) => {
+          if (item.data.originalItem) {
+            if (item.data.type === 'note') {
+              openNoteInTab(item.data.originalItem);
+            } else {
+              openTreeViewInTab(item.data.originalItem, items);
+            }
+          }
+        }}
+        onDrop={async (itemIds, target) => {
+          if (itemIds.length > 0 && target.targetType === 'item') {
+            const draggedItemId = itemIds[0];
+            const targetItemId = target.targetItem;
+
+            // Ensure both IDs are strings
+            if (typeof draggedItemId !== 'string' || typeof targetItemId !== 'string') return;
+
+            // Don't drop on itself
+            if (draggedItemId === targetItemId) return;
+
+            // Notes can't be drop targets, only books and sections
+            const targetItem = treeItems[targetItemId];
+            if (targetItem?.data.type === 'note') return;
+
+            try {
+              await moveItem(draggedItemId, targetItemId);
+            } catch (error) {
+              console.error('Error moving item:', error);
+            }
+          }
+        }}
+        canDragAndDrop={true}
+        canDropOnFolder={true}
+        canReorderItems={true}
+        onExpandItem={(item) => {
+          setExpandedItems(prev => [...prev, item.index as string]);
+        }}
+        onCollapseItem={(item) => {
+          setExpandedItems(prev => prev.filter(id => id !== item.index));
+        }}
+      >
+        <Tree
+          treeId="main-tree"
+          rootItem={rootItem as string}
+          treeLabel="Notes Tree"
+        />
+      </UncontrolledTreeEnvironment>
     </div>
   );
 }

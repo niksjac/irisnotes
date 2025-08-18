@@ -1,5 +1,5 @@
 import { atom } from 'jotai';
 
-export type TreeViewType = 'native' | 'complex' | 'mui';
+export type TreeViewType = 'complex';
 
-export const treeViewTypeAtom = atom<TreeViewType>('native');
+export const treeViewTypeAtom = atom<TreeViewType>('complex');

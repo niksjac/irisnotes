@@ -1,7 +1,4 @@
 export { TreeView } from './tree-view';
-export { TreeSwitcher } from './tree-switcher';
 
-// Export tree implementations
-export { NativeTreeView } from './native-tree';
+// Export tree implementation
 export { ComplexTreeView } from './complex-tree';
-export { MuiTreeView } from './mui-tree';

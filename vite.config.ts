@@ -114,4 +114,7 @@ export default defineConfig(() => ({
 	optimizeDeps: {
 		include: ["react", "react-dom", "prosemirror-state", "prosemirror-view", "prosemirror-model"],
 	},
+
+	// Handle SQL files as raw text
+	assetsInclude: ['**/*.sql'],
 }));

@@ -134,6 +134,48 @@
   .debug-bg {
     @apply bg-red-500 text-white;
   }
+
+  /* React Complex Tree Custom Styling */
+  .rct-tree-root {
+    /* Compact tree styling */
+    --rct-item-height: 24px;
+    --rct-item-padding-horizontal: 8px;
+    --rct-color-tree-bg: transparent;
+
+    /* Light mode colors */
+    --rct-color-focustree-item-selected-bg: rgb(239 246 255);
+    --rct-color-focustree-item-selected-text: rgb(30 58 138);
+    --rct-color-focustree-item-focused-bg: rgb(254 249 195);
+    --rct-color-focustree-item-focused-text: rgb(120 53 15);
+    --rct-color-focustree-item-focused-border: rgb(245 158 11);
+    --rct-color-focustree-item-active-bg: rgb(243 244 246);
+    --rct-color-focustree-item-active-text: rgb(55 65 81);
+    --rct-color-focustree-item-hover-bg: rgb(249 250 251);
+    --rct-color-focustree-item-hover-text: rgb(17 24 39);
+
+    /* Arrows and expand/collapse */
+    --rct-color-arrow: rgb(107 114 128);
+    --rct-color-arrow-hover: rgb(55 65 81);
+
+    /* Drag and drop */
+    --rct-color-drag-between-line: rgb(59 130 246);
+    --rct-color-drop-target: rgba(59, 130, 246, 0.1);
+  }
+
+  /* Dark mode overrides */
+  .dark .rct-tree-root {
+    --rct-color-focustree-item-selected-bg: rgb(30 58 138);
+    --rct-color-focustree-item-selected-text: rgb(239 246 255);
+    --rct-color-focustree-item-focused-bg: rgb(120 53 15);
+    --rct-color-focustree-item-focused-text: rgb(254 249 195);
+    --rct-color-focustree-item-focused-border: rgb(245 158 11);
+    --rct-color-focustree-item-active-bg: rgb(55 65 81);
+    --rct-color-focustree-item-active-text: rgb(243 244 246);
+    --rct-color-focustree-item-hover-bg: rgb(31 41 55);
+    --rct-color-focustree-item-hover-text: rgb(249 250 251);
+    --rct-color-arrow: rgb(156 163 175);
+    --rct-color-arrow-hover: rgb(209 213 219);
+  }
 }
 
 /*
