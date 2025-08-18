@@ -33,7 +33,6 @@ export const useItems = () => {
 
 			const result = await storageAdapter.getAllItems();
 			if (result.success) {
-				console.log("📦 Loaded items directly:", result.data.length, "items");
 				setItems(result.data);
 			} else {
 				setError(result.error);
@@ -301,9 +300,54 @@ export const useItems = () => {
 		return updateItem(id, updates);
 	}, [updateItem]);
 
-	const moveItem = useCallback((id: string, newParentId: string | null) => {
-		return updateItem(id, { parent_id: newParentId });
-	}, [updateItem]);
+	const moveItem = useCallback(async (id: string, newParentId: string | null, insertIndex?: number) => {
+		setError(null);
+
+		try {
+			if (!storageAdapter) {
+				setError("Storage not initialized");
+				return { success: false, error: "Storage not initialized" };
+			}
+
+			const item = items.find(i => i.id === id);
+			if (!item) {
+				setError("Item not found");
+				return { success: false, error: "Item not found" };
+			}
+
+			// Validate hierarchy
+			const newParentType = newParentId
+				? items.find(i => i.id === newParentId)?.type || null
+				: null;
+
+			if (!canBeChildOf(item.type, newParentType)) {
+				const errorMsg = `Cannot move ${item.type} under ${newParentType || 'root'}`;
+				setError(errorMsg);
+				return { success: false, error: errorMsg };
+			}
+
+			// Use the storage adapter's moveTreeItem method
+			const result = await storageAdapter.moveTreeItem(
+				id,
+				item.type as "note" | "book" | "section",
+				newParentId,
+				insertIndex
+			);
+
+			if (result.success) {
+				// Reload to get updated tree data
+				await loadAllItems();
+				return { success: true };
+			} else {
+				setError(result.error);
+				return result;
+			}
+		} catch (err) {
+			const errorMsg = `Failed to move item: ${err}`;
+			setError(errorMsg);
+			return { success: false, error: errorMsg };
+		}
+	}, [storageAdapter, items, loadAllItems]);
 
 	const clearError = useCallback(() => {
 		setError(null);

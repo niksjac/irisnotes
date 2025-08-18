@@ -70,5 +70,8 @@ export * from "./panes";
 // Import new unified items atoms
 export * from "./items";
 
+// Import tree view atoms
+export * from "./tree";
+
 // Current view state derived atom (for single-pane mode or when no pane specified)
 export const currentViewAtom = atom<ViewType>((get) => getDefaultView(get));

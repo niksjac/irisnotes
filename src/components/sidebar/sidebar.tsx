@@ -1,6 +1,7 @@
 import type React from "react";
 import { useItems, useNotesStorage } from "@/hooks";
 import { TreeView } from "../tree";
+import { TreeSwitcher } from "../tree/tree-switcher";
 
 export const Sidebar: React.FC = () => {
 	const { isInitialized } = useNotesStorage();
@@ -19,7 +20,12 @@ export const Sidebar: React.FC = () => {
 
 	return (
 		<div className="flex flex-col h-full bg-white dark:bg-gray-900">
-			<TreeView />
+			<div className="flex-shrink-0 p-2 border-b border-gray-200 dark:border-gray-700">
+				<TreeSwitcher />
+			</div>
+			<div className="flex-1 overflow-hidden">
+				<TreeView />
+			</div>
 		</div>
 	);
 };

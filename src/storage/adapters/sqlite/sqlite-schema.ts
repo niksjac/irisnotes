@@ -131,7 +131,6 @@ export class SqliteSchemaManager {
 			const hasParentCategory = noteTableInfo.some((col) => col.name === "parent_category_id");
 
 			if (!hasParentCategory) {
-				console.log("Adding parent_category_id column to notes table...");
 				await this.db.execute(`ALTER TABLE notes ADD COLUMN parent_category_id TEXT NULL`);
 				await this.db.execute(`CREATE INDEX IF NOT EXISTS idx_notes_parent_category_id ON notes(parent_category_id)`);
 			}

@@ -38,14 +38,17 @@ interface StructureData {
 export class JsonHybridStorageAdapter implements StorageAdapter {
 	private config: StorageConfig;
 	private structureData: StructureData;
-	private structureFile: string;
+	private _structureFile: string;
 	private contentDir: string;
 
 	constructor(config: StorageConfig) {
 		this.config = config;
-		this.structureFile = config.jsonHybrid?.structure_file || './dev/structure.json';
+		this._structureFile = config.jsonHybrid?.structure_file || './dev/structure.json';
 		this.contentDir = config.jsonHybrid?.content_dir || './dev/content/';
 		this.structureData = this.getDefaultStructureData();
+
+		// Silence unused property warning until implementation
+		void this._structureFile;
 	}
 
 	private getDefaultStructureData(): StructureData {
@@ -75,7 +78,7 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 	private async loadStructureData(): Promise<void> {
 		try {
 			// TODO: Implement actual file loading with Tauri fs API
-			console.log("📁 Loading structure from:", this.structureFile);
+
 			this.structureData = this.getDefaultStructureData();
 			this.addSampleStructureData();
 		} catch (error) {
@@ -87,7 +90,6 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 
 	private async ensureContentDirectory(): Promise<void> {
 		// TODO: Implement directory creation with Tauri fs API
-		console.log("📁 Ensuring content directory:", this.contentDir);
 	}
 
 	private addSampleStructureData(): void {
@@ -156,7 +158,6 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 		// TODO: Implement actual file saving with Tauri fs API
 		// await writeTextFile(this.structureFile, JSON.stringify(this.structureData, null, 2));
 
-		console.log("💾 Structure data saved (simulated)");
 	}
 
 	private async loadContent(itemId: string): Promise<string> {
@@ -171,12 +172,14 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 		private async saveContent(itemId: string, content: string, contentType: string = 'markdown'): Promise<void> {
 		// TODO: Implement actual file saving with Tauri fs API
 		const extension = this.getFileExtension(contentType);
-		const filename = `${itemId}.${extension}`;
+		const _filename = `${itemId}.${extension}`;
 
 		// const contentFile = path.join(this.contentDir, filename);
 		// await writeTextFile(contentFile, content);
 
-		console.log(`💾 Content saved to ${filename} (simulated)`, { contentLength: content.length });
+		// Silence unused parameter warnings until implementation
+		void content;
+		void _filename;
 	}
 
 	private getFileExtension(contentType: string): string {
@@ -339,9 +342,9 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 
 			// Delete content file (if exists)
 			try {
-				const contentFile = `${this.contentDir}${id}.md`;
+				const _contentFile = `${this.contentDir}${id}.md`;
 				// File deletion would happen here in real implementation
-				console.log(`Would delete content file: ${contentFile}`);
+				void _contentFile;
 			} catch {
 				// Content file might not exist, continue
 			}
@@ -597,8 +600,85 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 
 
 
-	async moveTreeItem(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async reorderTreeItem(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
+	async moveTreeItem(
+		itemId: string,
+		_itemType: "note" | "book" | "section",
+		newParentId: string | null,
+		insertIndex?: number
+	): Promise<VoidStorageResult> {
+		try {
+			const itemIndex = this.structureData.items.findIndex(item => item.id === itemId);
+			if (itemIndex === -1) {
+				return { success: false, error: "Item not found" };
+			}
+
+			const item = this.structureData.items[itemIndex];
+			if (!item) {
+				return { success: false, error: "Item not found" };
+			}
+
+			// Update parent
+			item.parent_id = newParentId;
+
+			// Calculate new sort order
+			const siblings = this.structureData.items
+				.filter(i => i.parent_id === newParentId && i.id !== itemId)
+				.sort((a, b) => a.sort_order - b.sort_order);
+
+			if (insertIndex !== undefined && insertIndex < siblings.length) {
+				// Insert at specific position
+				const targetSortOrder = siblings[insertIndex]?.sort_order || 0;
+				item.sort_order = targetSortOrder - 0.5;
+			} else {
+				// Append at end
+				const maxSort = siblings.length > 0 ? Math.max(...siblings.map(s => s.sort_order)) : 0;
+				item.sort_order = maxSort + 1;
+			}
+
+			item.updated_at = new Date().toISOString();
+
+			await this.saveStructureData();
+			return { success: true };
+		} catch (error) {
+			return { success: false, error: `Failed to move item: ${error}` };
+		}
+	}
+	async reorderTreeItem(
+		itemId: string,
+		_itemType: "note" | "book" | "section",
+		newIndex: number,
+		parentId: string | null
+	): Promise<VoidStorageResult> {
+		try {
+			const itemIndex = this.structureData.items.findIndex(item => item.id === itemId);
+			if (itemIndex === -1) {
+				return { success: false, error: "Item not found" };
+			}
+
+			const item = this.structureData.items[itemIndex];
+			if (!item) {
+				return { success: false, error: "Item not found" };
+			}
+			const siblings = this.structureData.items
+				.filter(i => i.parent_id === parentId && i.id !== itemId)
+				.sort((a, b) => a.sort_order - b.sort_order);
+
+			if (newIndex < siblings.length) {
+				const targetSortOrder = siblings[newIndex]?.sort_order || 0;
+				item.sort_order = targetSortOrder - 0.5;
+			} else {
+				const maxSort = siblings.length > 0 ? Math.max(...siblings.map(s => s.sort_order)) : 0;
+				item.sort_order = maxSort + 1;
+			}
+
+			item.updated_at = new Date().toISOString();
+
+			await this.saveStructureData();
+			return { success: true };
+		} catch (error) {
+			return { success: false, error: `Failed to reorder item: ${error}` };
+		}
+	}
 	async getTags(): Promise<StorageResult<Tag[]>> { return { success: true, data: this.structureData.tags }; }
 	async getTag(): Promise<StorageResult<Tag | null>> { throw new Error("Not implemented"); }
 	async createTag(): Promise<StorageResult<Tag>> { throw new Error("Not implemented"); }

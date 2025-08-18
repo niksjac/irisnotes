@@ -155,7 +155,6 @@ export function useRightClickMenuActions({
 						icon: Copy,
 						action: () => {
 							// TODO: Implement duplicate functionality
-							console.log("Duplicate", data.nodeType, data.nodeId);
 						},
 						disabled: !isNote, // Only enable for notes initially
 					},

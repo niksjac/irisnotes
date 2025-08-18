@@ -15,6 +15,11 @@
   /* Editor background - used by CodeMirror and ProseMirror components */
   --editor-bg: #f9fafb;
 
+  /* Tree theming variables */
+  --tree-hover-bg: rgb(243 244 246);
+  --tree-selected-bg: rgb(219 234 254);
+  --tree-selected-hover-bg: rgb(191 219 254);
+
   /* Editor-specific font size variables - dynamically updated by use-font-size.ts */
   /* These cannot be replaced by Tailwind as they change at runtime */
   --editor-font-size: 14px;
@@ -31,5 +36,10 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --editor-bg: #111827;
+
+    /* Dark theme tree variables */
+    --tree-hover-bg: rgb(31 41 55);
+    --tree-selected-bg: rgb(30 58 138);
+    --tree-selected-hover-bg: rgb(29 78 216);
   }
 }

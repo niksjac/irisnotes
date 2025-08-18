@@ -68,9 +68,12 @@ export const moveActiveTabLeftAtom = atom(null, (get, set) => {
 	if (currentIndex <= 0) return; // Already at leftmost position
 
 	const newTabs = [...tabs];
-	const temp = newTabs[currentIndex - 1]!;
-	newTabs[currentIndex - 1] = newTabs[currentIndex]!;
-	newTabs[currentIndex] = temp;
+	const temp = newTabs[currentIndex - 1];
+	const current = newTabs[currentIndex];
+	if (temp && current) {
+		newTabs[currentIndex - 1] = current;
+		newTabs[currentIndex] = temp;
+	}
 	set(setTabs, newTabs);
 });
 
@@ -87,9 +90,12 @@ export const moveActiveTabRightAtom = atom(null, (get, set) => {
 	if (currentIndex >= tabs.length - 1) return; // Already at rightmost position
 
 	const newTabs = [...tabs];
-	const temp = newTabs[currentIndex]!;
-	newTabs[currentIndex] = newTabs[currentIndex + 1]!;
-	newTabs[currentIndex + 1] = temp;
+	const temp = newTabs[currentIndex];
+	const next = newTabs[currentIndex + 1];
+	if (temp && next) {
+		newTabs[currentIndex] = next;
+		newTabs[currentIndex + 1] = temp;
+	}
 	set(setTabs, newTabs);
 });
 

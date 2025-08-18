@@ -76,19 +76,16 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 
 	private async loadData(): Promise<void> {
 		try {
-			console.log("📁 Loading JSON storage from:", this.filePath);
 
 			// Try to load from file first
 			const fileData = await this.loadFromFile();
-			if (fileData && fileData.items && fileData.items.length > 0) {
-				console.log("✅ Loaded data from file:", fileData.items.length, "items");
+			if (fileData?.items && fileData.items.length > 0) {
 				this.data = fileData;
 				this.isFileAccessible = true;
 				return;
 			}
 
 			// Fallback to sample data if file is empty or doesn't exist
-			console.log("📝 No file data found, using sample data");
 			this.data = this.getDefaultData();
 			this.addSampleData();
 		} catch (error) {
@@ -115,8 +112,7 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 					return fileData;
 				}
 			}
-		} catch (error) {
-			console.log("📁 File not accessible, will use sample data:", error);
+		} catch (_error) {
 		}
 		return null;
 	}
@@ -191,14 +187,11 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 				const { writeTextFile } = await import("@tauri-apps/plugin-fs");
 				const jsonContent = JSON.stringify(this.data, null, 2);
 				await writeTextFile(this.filePath, jsonContent);
-				console.log("💾 JSON storage saved to:", this.filePath);
 				this.isFileAccessible = true;
 			} else {
 				// In web context, we can't save files directly
 				// Just log for development purposes
-				console.log("💾 JSON storage would save to:", this.filePath);
 				if (this.isFileAccessible) {
-					console.log("📊 Data preview (first 3 items):", JSON.stringify(this.data.items.slice(0, 3), null, 2));
 				}
 			}
 		} catch (error) {
@@ -526,8 +519,86 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 
 
 
-	async moveTreeItem(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async reorderTreeItem(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
+	async moveTreeItem(
+		itemId: string,
+		_itemType: "note" | "book" | "section",
+		newParentId: string | null,
+		insertIndex?: number
+	): Promise<VoidStorageResult> {
+		try {
+			const itemIndex = this.data.items.findIndex(item => item.id === itemId);
+			if (itemIndex === -1) {
+				return { success: false, error: "Item not found" };
+			}
+
+			const item = this.data.items[itemIndex];
+			if (!item) {
+				return { success: false, error: "Item not found" };
+			}
+
+			// Update parent
+			item.parent_id = newParentId;
+
+			// Calculate new sort order
+			const siblings = this.data.items
+				.filter(i => i.parent_id === newParentId && i.id !== itemId)
+				.sort((a, b) => a.sort_order - b.sort_order);
+
+			if (insertIndex !== undefined && insertIndex < siblings.length) {
+				// Insert at specific position
+				const targetSortOrder = siblings[insertIndex]?.sort_order || 0;
+				item.sort_order = targetSortOrder - 0.5;
+			} else {
+				// Append at end
+				const maxSort = siblings.length > 0 ? Math.max(...siblings.map(s => s.sort_order)) : 0;
+				item.sort_order = maxSort + 1;
+			}
+
+			item.updated_at = new Date().toISOString();
+
+			await this.saveData();
+			return { success: true };
+		} catch (error) {
+			return { success: false, error: `Failed to move item: ${error}` };
+		}
+	}
+
+	async reorderTreeItem(
+		itemId: string,
+		_itemType: "note" | "book" | "section",
+		newIndex: number,
+		parentId: string | null
+	): Promise<VoidStorageResult> {
+		try {
+			const itemIndex = this.data.items.findIndex(item => item.id === itemId);
+			if (itemIndex === -1) {
+				return { success: false, error: "Item not found" };
+			}
+
+			const item = this.data.items[itemIndex];
+			if (!item) {
+				return { success: false, error: "Item not found" };
+			}
+			const siblings = this.data.items
+				.filter(i => i.parent_id === parentId && i.id !== itemId)
+				.sort((a, b) => a.sort_order - b.sort_order);
+
+			if (newIndex < siblings.length) {
+				const targetSortOrder = siblings[newIndex]?.sort_order || 0;
+				item.sort_order = targetSortOrder - 0.5;
+			} else {
+				const maxSort = siblings.length > 0 ? Math.max(...siblings.map(s => s.sort_order)) : 0;
+				item.sort_order = maxSort + 1;
+			}
+
+			item.updated_at = new Date().toISOString();
+
+			await this.saveData();
+			return { success: true };
+		} catch (error) {
+			return { success: false, error: `Failed to reorder item: ${error}` };
+		}
+	}
 	async getTags(): Promise<StorageResult<Tag[]>> { return { success: true, data: this.data.tags }; }
 	async getTag(): Promise<StorageResult<Tag | null>> { throw new Error("Not implemented"); }
 	async createTag(): Promise<StorageResult<Tag>> { throw new Error("Not implemented"); }

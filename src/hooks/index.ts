@@ -32,6 +32,12 @@ export { useTheme } from "./use-theme";
 // Unified items system (replaces notes/categories)
 export { useItems } from "./use-items";
 
+// Tree view management
+export { useTreeView } from "./use-tree-view";
+
+// Tab management
+export { useTabManagement } from "./use-tab-management";
+
 // Storage and handlers
 export { useNotesHandlers } from "./use-notes-handlers";
 export { useNotesStorage } from "./use-notes-storage";
