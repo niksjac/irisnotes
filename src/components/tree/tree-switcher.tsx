@@ -7,7 +7,6 @@ const treeViewOptions: { value: TreeViewType; label: string }[] = [
   { value: 'native', label: 'Native' },
   { value: 'complex', label: 'Complex Tree' },
   { value: 'mui', label: 'MUI Tree' },
-  { value: 'antd', label: 'Ant Design' },
 ];
 
 export function TreeSwitcher() {
