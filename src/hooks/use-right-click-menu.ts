@@ -3,7 +3,7 @@ import type { RightClickMenuData, RightClickMenuPosition } from "@/types/right-c
 
 export function useRightClickMenu() {
 	const [rightClickMenu, setRightClickMenu] = useState<RightClickMenuData | null>(null);
-	const timeoutRef = useRef<number>();
+	const timeoutRef = useRef<number | null>(null);
 
 	const showRightClickMenu = useCallback((data: RightClickMenuData) => {
 		// Clear any existing timeout

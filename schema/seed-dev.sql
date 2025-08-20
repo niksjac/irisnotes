@@ -45,7 +45,7 @@ INSERT INTO items (id, type, title, content, content_type, parent_id, sort_order
 -- Insert notes under Technical Books
 INSERT INTO items (id, type, title, content, content_type, parent_id, sort_order, metadata, created_at, updated_at) VALUES
 ('note-9', 'note', 'Design Patterns', 'Gang of Four patterns for object-oriented design.', 'plain', 'section-5', 1, '{"word_count": 10, "is_pinned": false}', datetime('now'), datetime('now')),
-('note-10', 'note', 'Clean Code', 'Robert Martin\'s principles for writing maintainable code.', 'plain', 'section-5', 2, '{"word_count": 9, "is_pinned": true}', datetime('now'), datetime('now'));
+('note-10', 'note', 'Clean Code', 'Robert Martin''s principles for writing maintainable code.', 'plain', 'section-5', 2, '{"word_count": 9, "is_pinned": true}', datetime('now'), datetime('now'));
 
 -- Insert notes under Articles
 INSERT INTO items (id, type, title, content, content_type, parent_id, sort_order, metadata, created_at, updated_at) VALUES

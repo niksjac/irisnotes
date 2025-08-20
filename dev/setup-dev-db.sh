@@ -8,8 +8,8 @@ set -e  # Exit on any error
 DEV_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$DEV_DIR/.." && pwd)"
 DB_FILE="$DEV_DIR/notes.db"
-BASE_SCHEMA="$PROJECT_ROOT/src/storage/schema/base.sql"
-SEED_DATA="$PROJECT_ROOT/src/storage/schema/seed-dev.sql"
+BASE_SCHEMA="$PROJECT_ROOT/schema/base.sql"
+SEED_DATA="$PROJECT_ROOT/schema/seed-dev.sql"
 
 echo "🗄️  Setting up IrisNotes development database..."
 
@@ -28,12 +28,16 @@ sqlite3 "$DB_FILE" < "$SEED_DATA"
 
 # Verify the database was created correctly
 echo "✅ Verifying database..."
-CATEGORIES=$(sqlite3 "$DB_FILE" "SELECT COUNT(*) FROM categories;")
-NOTES=$(sqlite3 "$DB_FILE" "SELECT COUNT(*) FROM notes;")
+ITEMS=$(sqlite3 "$DB_FILE" "SELECT COUNT(*) FROM items;")
 TAGS=$(sqlite3 "$DB_FILE" "SELECT COUNT(*) FROM tags;")
+BOOKS=$(sqlite3 "$DB_FILE" "SELECT COUNT(*) FROM items WHERE type='book';")
+SECTIONS=$(sqlite3 "$DB_FILE" "SELECT COUNT(*) FROM items WHERE type='section';")
+NOTES=$(sqlite3 "$DB_FILE" "SELECT COUNT(*) FROM items WHERE type='note';")
 
 echo "📊 Database created successfully:"
-echo "   • Categories: $CATEGORIES"
+echo "   • Total Items: $ITEMS"
+echo "   • Books: $BOOKS"
+echo "   • Sections: $SECTIONS"
 echo "   • Notes: $NOTES"
 echo "   • Tags: $TAGS"
 

@@ -75,9 +75,9 @@ export function SidebarResizer({
 	const startY = useRef(0);
 	const startWidth = useRef(0);
 	const startHeight = useRef(0);
-	const resizerRef = useRef<HTMLButtonElement>(null);
+	const resizerRef = useRef<HTMLButtonElement | null>(null);
 	const [isFocused, setIsFocused] = useState(false);
-	const hotkeyResizeTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+	const hotkeyResizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	// Track external dimension changes (hotkey resizing) to disable transitions
 	const prevWidthRef = useRef(width);
@@ -324,7 +324,7 @@ interface MobileLayoutProps {
 	isDragging: boolean;
 	isHotkeyResizing: boolean;
 	isFocused: boolean;
-	resizerRef: React.RefObject<HTMLButtonElement>;
+	resizerRef: React.RefObject<HTMLButtonElement | null>;
 	children: React.ReactNode;
 	handleMouseDown: (e: React.MouseEvent) => void;
 	handleKeyDown: (e: React.KeyboardEvent) => void;
@@ -374,7 +374,7 @@ function MobileLayout({
 
 			{!isCollapsed && (
 				<button
-					ref={resizerRef}
+					ref={resizerRef as React.RefObject<HTMLButtonElement>}
 					type="button"
 					aria-label="Resize sidebar"
 					title="Use up/down arrow keys to resize, Enter/Space to reset, Home/End for min/max."
@@ -403,7 +403,7 @@ interface DesktopLayoutProps {
 	isDragging: boolean;
 	isHotkeyResizing: boolean;
 	isFocused: boolean;
-	resizerRef: React.RefObject<HTMLButtonElement>;
+	resizerRef: React.RefObject<HTMLButtonElement | null>;
 	children: React.ReactNode;
 	handleMouseDown: (e: React.MouseEvent) => void;
 	handleKeyDown: (e: React.KeyboardEvent) => void;
@@ -453,7 +453,7 @@ function DesktopLayout({
 
 			{!isCollapsed && (
 				<button
-					ref={resizerRef}
+					ref={resizerRef as React.RefObject<HTMLButtonElement>}
 					type="button"
 					aria-label="Resize sidebar"
 					title="Use arrow keys to resize, Enter/Space to reset, Home/End for min/max. Ctrl+Shift+Left/Right from tree also works."

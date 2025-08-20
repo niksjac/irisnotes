@@ -126,14 +126,16 @@ export class SqliteSchemaManager {
 
 	private async addMissingColumns(): Promise<void> {
 		try {
-			// Check if parent_category_id column exists in notes table
-			const noteTableInfo = await this.db.select<Array<{ name: string }>>("PRAGMA table_info(notes)");
-			const hasParentCategory = noteTableInfo.some((col) => col.name === "parent_category_id");
+			// Check if the items table exists and has the expected structure
+			const itemsTableInfo = await this.db.select<Array<{ name: string }>>("PRAGMA table_info(items)");
 
-			if (!hasParentCategory) {
-				await this.db.execute(`ALTER TABLE notes ADD COLUMN parent_category_id TEXT NULL`);
-				await this.db.execute(`CREATE INDEX IF NOT EXISTS idx_notes_parent_category_id ON notes(parent_category_id)`);
+			// Add any missing columns that might be needed for future migrations
+			// Currently all required columns are in the base schema
+			// This method is kept for potential future schema updates
+			if (itemsTableInfo.length === 0) {
+				console.warn("⚠️ Items table not found - schema may need to be recreated");
 			}
+
 		} catch (error) {
 			console.error("❌ Failed to add missing columns:", error);
 			console.warn("⚠️ App will continue with existing schema");

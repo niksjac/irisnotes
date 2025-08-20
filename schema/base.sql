@@ -82,28 +82,24 @@ CREATE INDEX IF NOT EXISTS idx_item_tags_tag_id ON item_tags(tag_id);
 
 -- Full-text search
 CREATE VIRTUAL TABLE IF NOT EXISTS items_fts USING fts5(
+    id UNINDEXED,
     title,
-    content_plaintext,
-    content=items,
-    content_rowid=rowid
+    content_plaintext
 );
 
 -- FTS triggers
 CREATE TRIGGER IF NOT EXISTS items_fts_insert AFTER INSERT ON items BEGIN
-    INSERT INTO items_fts(rowid, title, content_plaintext)
-    VALUES (new.rowid, new.title, new.content_plaintext);
+    INSERT INTO items_fts(id, title, content_plaintext)
+    VALUES (new.id, new.title, new.content_plaintext);
 END;
 
 CREATE TRIGGER IF NOT EXISTS items_fts_delete AFTER DELETE ON items BEGIN
-    INSERT INTO items_fts(items_fts, rowid, title, content_plaintext)
-    VALUES ('delete', old.rowid, old.title, old.content_plaintext);
+    DELETE FROM items_fts WHERE id = old.id;
 END;
 
 CREATE TRIGGER IF NOT EXISTS items_fts_update AFTER UPDATE ON items BEGIN
-    INSERT INTO items_fts(items_fts, rowid, title, content_plaintext)
-    VALUES ('delete', old.rowid, old.title, old.content_plaintext);
-    INSERT INTO items_fts(rowid, title, content_plaintext)
-    VALUES (new.rowid, new.title, new.content_plaintext);
+    UPDATE items_fts SET title = new.title, content_plaintext = new.content_plaintext
+    WHERE id = old.id;
 END;
 
 -- Timestamp triggers

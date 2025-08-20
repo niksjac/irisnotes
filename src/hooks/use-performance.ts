@@ -84,7 +84,7 @@ export const useDebounce = <T extends (...args: any[]) => any>(
 	callback: T,
 	delay: number
 ): T & { cancel: () => void } => {
-	const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+	const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const callbackRef = useRef(callback);
 
 	// Keep callback ref current
