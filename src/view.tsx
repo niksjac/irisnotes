@@ -2,12 +2,12 @@ import type { FC } from "react";
 import type { ViewType } from "@/types";
 import { ConfigView, HotkeysView, EditorRichView, EditorSourceView, EmptyView } from "@/views";
 
-interface ViewRendererProps {
+interface ViewProps {
 	viewType: ViewType;
 	viewData?: any;
 }
 
-export const ViewRenderer: FC<ViewRendererProps> = ({ viewType }) => {
+export const View: FC<ViewProps> = ({ viewType }) => {
 	const viewMapping: Record<ViewType, React.ReactElement> = {
 		"config-view": <ConfigView />,
 		"hotkeys-view": <HotkeysView />,

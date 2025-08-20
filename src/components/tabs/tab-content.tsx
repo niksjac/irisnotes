@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import type { Tab } from "@/types";
-import { ViewRenderer } from "@/view-renderer";
+import { View } from "@/view";
 
 interface TabContentProps {
 	tab: Tab | null;
@@ -22,7 +22,7 @@ export const TabContent: FC<TabContentProps> = ({ tab }) => {
 
 	return (
 		<div className="flex-1 flex flex-col overflow-hidden">
-			<ViewRenderer viewType={tab.viewType} viewData={tab.viewData} />
+			<View viewType={tab.viewType} viewData={tab.viewData} />
 		</div>
 	);
 };
