@@ -7,7 +7,7 @@
     "enableExampleNote": false
   },
   "storage": {
-    "backend": "json-hybrid",
+    "backend": "sqlite",
     "sqlite": {
       "database_path": "./dev/notes.db"
     },

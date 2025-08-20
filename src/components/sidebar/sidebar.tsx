@@ -1,6 +1,7 @@
 import type React from "react";
 import { useItems, useNotesStorage } from "@/hooks";
 import { TreeView } from "../tree";
+import { StorageIndicator } from "./storage-indicator";
 
 export const Sidebar: React.FC = () => {
 	const { isInitialized } = useNotesStorage();
@@ -19,6 +20,7 @@ export const Sidebar: React.FC = () => {
 
 	return (
 		<div className="flex flex-col h-full bg-white dark:bg-gray-900">
+			<StorageIndicator />
 			<div className="flex-1 overflow-hidden">
 				<TreeView />
 			</div>
