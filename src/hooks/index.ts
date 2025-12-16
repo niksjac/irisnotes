@@ -14,6 +14,7 @@ export { useSidebar } from "./use-sidebar";
 export { useView } from "./use-view";
 // Consolidated layout hook
 export { useLayout } from "./use-layout";
+export { useLayoutPersistence, loadLayoutState } from "./use-layout-persistence";
 // App-wide hotkeys
 export { useAppHotkeys } from "./use-app-hotkeys";
 export { useHotkeysConfig } from "./use-hotkeys-config";

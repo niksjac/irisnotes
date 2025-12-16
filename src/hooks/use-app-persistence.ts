@@ -4,8 +4,8 @@ import { isWrappingAtom } from "../atoms";
 import { useConfig } from "./use-config";
 
 /**
- * Hook to persist critical app state to config on shutdown
- * This ensures user preferences are saved even if the app closes unexpectedly
+ * Hook to persist editor settings to config on shutdown
+ * Layout state is handled separately via localStorage in use-layout-persistence.ts
  */
 export const useAppPersistence = () => {
 	const isWrapping = useAtomValue(isWrappingAtom);
@@ -17,10 +17,10 @@ export const useAppPersistence = () => {
 
 		const persistAppState = () => {
 			try {
-				// Only update if state has changed to avoid unnecessary writes
-				const needsUpdate = config?.editor?.lineWrapping !== isWrapping;
+				// Only update if editor state has changed
+				const editorNeedsUpdate = config?.editor?.lineWrapping !== isWrapping;
 
-				if (needsUpdate && config?.editor) {
+				if (editorNeedsUpdate && config?.editor) {
 					updateConfig({
 						editor: {
 							...config.editor,
@@ -85,5 +85,5 @@ export const useAppPersistence = () => {
 			// Final save on component unmount
 			persistAppState();
 		};
-	}, [isWrapping, config.editor, updateConfig, loading]);
+	}, [isWrapping, config, updateConfig, loading]);
 };

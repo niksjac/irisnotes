@@ -47,11 +47,11 @@ export const useConfig = () => {
 						...DEFAULT_CONFIG,
 						...parsedConfig,
 						editor: { ...DEFAULT_CONFIG.editor, ...parsedConfig.editor },
+
 						debug: { ...DEFAULT_CONFIG.debug, ...parsedConfig.debug },
 						storage: { ...DEFAULT_CONFIG.storage, ...parsedConfig.storage },
 						hotkeys: parsedConfig.hotkeys, // Use user hotkeys if provided, otherwise undefined (falls back to defaults)
 						development: {
-							...DEFAULT_CONFIG.development,
 							...parsedConfig.development,
 						},
 						production: {
@@ -76,6 +76,7 @@ export const useConfig = () => {
 			const mergedConfig: AppConfig = {
 				...DEFAULT_CONFIG,
 				...parsedConfig,
+				layout: { ...DEFAULT_CONFIG.layout, ...parsedConfig.layout },
 				editor: { ...DEFAULT_CONFIG.editor, ...parsedConfig.editor },
 				debug: { ...DEFAULT_CONFIG.debug, ...parsedConfig.debug },
 				storage: { ...DEFAULT_CONFIG.storage, ...parsedConfig.storage },
