@@ -34,7 +34,10 @@ The app migrated from separate `notes`/`categories` tables to a **single `items`
 ```sql
 -- items table supports: type IN ('note', 'book', 'section')
 -- Hierarchy: parent_id references items(id)
--- Books contain Sections, Sections contain Notes
+-- Books: always at root (parent_id IS NULL)
+-- Sections: always under a book
+-- Notes: can be at root, under books, OR under sections (flexible placement)
+-- Notes CANNOT be inside other notes (enforced by trigger)
 ```
 
 ### 2. Jotai State Management

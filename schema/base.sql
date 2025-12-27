@@ -3,22 +3,14 @@
 -- Supports notes, books, and sections with flexible metadata
 --
 -- HIERARCHY RULES:
---   Books (type='book'):    parent_id MUST be NULL (root level)
+--   Books (type='book'):     parent_id MUST be NULL (root level only)
 --   Sections (type='section'): parent_id MUST reference a book
---   Notes (type='note'):    parent_id can reference a book OR a section
+--   Notes (type='note'):     parent_id can be NULL (root), a book, or a section
+--                           Notes CANNOT be inside other notes (trigger enforced)
 --
 -- METADATA SCHEMA (JSON fields):
---   Common: {
---     "description": string,
---     "custom_icon": string (emoji or icon name),
---     "custom_text_color": string (hex color),
---     "is_pinned": boolean,
---     "is_favorite": boolean
---   }
---   Notes only: {
---     "last_cursor_position": number,
---     "editor_mode": "rich" | "source"
---   }
+--   Common: { custom_icon, custom_text_color, is_pinned, is_favorite }
+--   Notes only: { last_cursor_position, editor_mode }
 
 -- Main items table - unified storage for all content types
 CREATE TABLE IF NOT EXISTS items (
@@ -30,35 +22,56 @@ CREATE TABLE IF NOT EXISTS items (
     content TEXT DEFAULT '',
     content_type TEXT DEFAULT 'html' CHECK (content_type IN ('html', 'markdown', 'plain', 'custom')),
     content_raw TEXT NULL, -- original format when content_type is 'custom'
-    content_plaintext TEXT DEFAULT '', -- for full-text search (auto-populated by trigger)
+    content_plaintext TEXT DEFAULT '', -- for full-text search
 
     -- Hierarchy - direct parent-child relationship
     parent_id TEXT NULL, -- references items(id), NULL for root level
     sort_order INTEGER NOT NULL DEFAULT 0, -- ordering within parent
 
-    -- Flexible metadata - JSON column for experimentation (see schema above)
+    -- Flexible metadata - JSON column for experimentation
     metadata TEXT DEFAULT '{}', -- JSON object for custom fields
 
     -- Standard metadata
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-    deleted_at TEXT NULL, -- soft delete (user can recover)
-    archived_at TEXT NULL, -- archive (hidden from main view but not deleted)
+    deleted_at TEXT NULL, -- soft delete
 
     -- Content metrics (for notes)
     word_count INTEGER DEFAULT 0,
     character_count INTEGER DEFAULT 0,
 
     -- Hierarchy constraints
-    -- Books must be root, sections under books, notes under books or sections
+    -- Books must be root, sections under books, notes anywhere except inside notes
     CHECK (
         (type = 'book' AND parent_id IS NULL) OR
         (type = 'section' AND parent_id IS NOT NULL) OR
-        (type = 'note' AND parent_id IS NOT NULL)
+        (type = 'note')  -- notes can be at root or under books/sections (trigger prevents note-in-note)
     ),
 
     FOREIGN KEY (parent_id) REFERENCES items(id) ON DELETE SET NULL
 );
+
+-- Trigger to prevent notes being placed inside other notes (INSERT)
+CREATE TRIGGER IF NOT EXISTS prevent_note_in_note_insert
+BEFORE INSERT ON items
+WHEN NEW.type = 'note' AND NEW.parent_id IS NOT NULL
+BEGIN
+    SELECT RAISE(ABORT, 'Notes cannot be placed inside other notes')
+    WHERE EXISTS (
+        SELECT 1 FROM items WHERE id = NEW.parent_id AND type = 'note'
+    );
+END;
+
+-- Trigger to prevent notes being placed inside other notes (UPDATE)
+CREATE TRIGGER IF NOT EXISTS prevent_note_in_note_update
+BEFORE UPDATE ON items
+WHEN NEW.type = 'note' AND NEW.parent_id IS NOT NULL
+BEGIN
+    SELECT RAISE(ABORT, 'Notes cannot be placed inside other notes')
+    WHERE EXISTS (
+        SELECT 1 FROM items WHERE id = NEW.parent_id AND type = 'note'
+    );
+END;
 
 -- Tags table - for flexible labeling (separate from hierarchy)
 CREATE TABLE IF NOT EXISTS tags (
@@ -88,34 +101,6 @@ CREATE TABLE IF NOT EXISTS settings (
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
--- Item revisions table - version history for notes
-CREATE TABLE IF NOT EXISTS item_revisions (
-    id TEXT PRIMARY KEY,
-    item_id TEXT NOT NULL,
-    version_number INTEGER NOT NULL,
-
-    -- Snapshot of content at this version
-    title TEXT NOT NULL,
-    content TEXT,
-    content_type TEXT,
-    metadata TEXT,
-
-    -- Audit trail
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    created_by TEXT DEFAULT 'system', -- future: user tracking
-    change_summary TEXT, -- optional: what changed in this version
-
-    FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE,
-
--- Archive index
-CREATE INDEX IF NOT EXISTS idx_items_archived_at ON items(archived_at);
-
--- Revision indexes
-CREATE INDEX IF NOT EXISTS idx_item_revisions_item_id ON item_revisions(item_id);
-CREATE INDEX IF NOT EXISTS idx_item_revisions_created_at ON item_revisions(created_at DESC);
-    UNIQUE(item_id, version_number)
-);
-
 -- Performance indexes
 CREATE INDEX IF NOT EXISTS idx_items_type ON items(type);
 CREATE INDEX IF NOT EXISTS idx_items_parent_id ON items(parent_id);
@@ -137,110 +122,28 @@ CREATE INDEX IF NOT EXISTS idx_item_tags_tag_id ON item_tags(tag_id);
 
 -- Full-text search
 CREATE VIRTUAL TABLE IF NOT EXISTS items_fts USING fts5(
-    id UNINDEXED,
     title,
-    content_plaintext
+    content_plaintext,
+    content=items,
+    content_rowid=rowid
 );
 
 -- FTS triggers
 CREATE TRIGGER IF NOT EXISTS items_fts_insert AFTER INSERT ON items BEGIN
-    INSERT INTO items_fts(id, title, content_plaintext)
-    VALUES (new.id, new.title, new.content_plaintext);
+    INSERT INTO items_fts(rowid, title, content_plaintext)
+    VALUES (new.rowid, new.title, new.content_plaintext);
 END;
 
-CREA
-
--- Content plaintext extraction trigger
--- Note: This is a basic implementation. For production, consider using
--- a SQLite extension or application-level HTML stripping
-CREATE TRIGGER IF NOT EXISTS items_content_plaintext_update
-AFTER UPDATE OF content ON items
-WHEN NEW.content_type IN ('html', 'markdown')
-BEGIN
-    -- Basic HTML tag stripping (limited - consider app-level processing)
-    UPDATE items SET content_plaintext = 
-        CASE 
-            WHEN NEW.content_type = 'html' THEN
-                -- Strip HTML tags (basic regex-like replacement)
-                replace(replace(replace(NEW.content, '<', ' <'), '>', '> '), '  ', ' ')
-            WHEN NEW.content_type = 'markdown' THEN
-                NEW.content
-            ELSE
-                NEW.content
-        END
-    WHERE id = NEW.id;
-END;
-
--- Version history trigger - auto-create revision on significant changes
-CREATE TRIGGER IF NOT EXISTS items_revision_trigger 
-AFTER UPDATE ON items
-WHEN (NEW.content != OLD.content OR NEW.title != OLD.title)
-    AND NEW.type = 'note'  -- Only track note revisions
-    AND OLD.deleted_at IS NULL  -- Don't version deleted items
-BEGIjson_extract(metadata, '$.is_favorite') as is_favorite,
-    created_at,
-    updated_at,
-    archived_at
-FROM items
-WHERE deleted_at IS NULL  -- Hide deleted items
-  AND archived_at IS NULL  -- Hide archived items (toggle separately in UI)
-ORDER BY parent_id NULLS FIRST, sort_order ASC;
-
--- View for hierarchy validation queries
-CREATE VIEW IF NOT EXISTS hierarchy_check AS
-SELECT
-    i.id,
-    i.type,
-    i.parent_id,
-    p.type as parent_type,
-    CASE
-        WHEN i.type = 'book' AND i.parent_id IS NOT NULL THEN 'ERROR: Books must be root level'
-        WHEN i.type = 'section' Ap.type IS NULL THEN 'ERROR: Notes must have a parent'
-        WHEN i.type = 'note' AND p.type NOT IN ('book', 'section') THEN 'ERROR: Notes must have book orave book parent'
-        WHEN i.type = 'note' AND (p.type IS NULL OR p.type != 'section') THEN 'ERROR: Notes must have section parent'
-        ELSE 'OK'
-    END as validation_status
-FROM items i
-LEFT JOIN items p ON i.parent_id = p.id
-WHERE i.deleted_at IS NULL;
-
--- View for getting note revision history
-CREATE VIEW IF NOT EXISTS note_revisions AS
-SELECT
-    r.id,
-    r.item_id,
-    r.version_number,
-    r.title,
-    r.created_at as revision_date,
-    r.created_by,
-    r.change_summary,
-    i.title as current_title
-FROM item_revisions r
-JOIN items i ON r.item_id = i.id
-ORDER BY r.item_id, r.version_number DE
-    )
-    SELECT
-        lower(hex(randomblob(16))),
-        NEW.id,
-        COALESCE((SELECT MAX(version_number) + 1 FROM item_revisions WHERE item_id = NEW.id), 1),
-        OLD.title,  -- Store the OLD version
-        OLD.content,
-        OLD.content_type,
-        OLD.metadata,
-        OLD.updated_at,  -- Use the old update time
-        CASE
-            WHEN NEW.title != OLD.title AND NEW.content != OLD.content THEN 'Title and content changed'
-            WHEN NEW.title != OLD.title THEN 'Title changed'
-            WHEN NEW.content != OLD.content THEN 'Content changed'
-        END
-    ;
-END;TE TRIGGER IF NOT EXISTS items_fts_delete AFTER DELETE ON items BEGIN
-    DELETE FROM items_fts WHERE id = old.id;
+CREATE TRIGGER IF NOT EXISTS items_fts_delete AFTER DELETE ON items BEGIN
+    INSERT INTO items_fts(items_fts, rowid, title, content_plaintext)
+    VALUES ('delete', old.rowid, old.title, old.content_plaintext);
 END;
 
 CREATE TRIGGER IF NOT EXISTS items_fts_update AFTER UPDATE ON items BEGIN
-    UPDATE items_fts SET title = new.title, content_plaintext = new.content_plaintext
-    WHERE id = old.id;
+    INSERT INTO items_fts(items_fts, rowid, title, content_plaintext)
+    VALUES ('delete', old.rowid, old.title, old.content_plaintext);
+    INSERT INTO items_fts(rowid, title, content_plaintext)
+    VALUES (new.rowid, new.title, new.content_plaintext);
 END;
 
 -- Timestamp triggers

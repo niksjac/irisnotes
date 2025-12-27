@@ -73,7 +73,7 @@ CREATE TABLE items (
     CHECK (
         (type = 'book' AND parent_id IS NULL) OR
         (type = 'section' AND parent_id IS NOT NULL) OR
-        (type = 'note' AND parent_id IS NOT NULL)
+        (type = 'note')  -- notes can be anywhere (triggers prevent note-in-note)
     ),
     FOREIGN KEY (parent_id) REFERENCES items(id) ON DELETE SET NULL
 );
@@ -168,24 +168,30 @@ CREATE TABLE settings (
 
 ## Hierarchy Rules
 
-### Three-Level Structure
+### Flexible Note Placement
 
 ```
+📄 Root Notes (no parent)         ✅ Notes at root level
 📚 Books (Root Level)
-├─ 📄 Notes (direct children) ✅
+├─ 📄 Notes (direct children)     ✅ Notes under books
 └─ 📁 Sections (middle level)
-   └─ 📄 Notes ✅
+   └─ 📄 Notes                    ✅ Notes under sections
 ```
 
-**Rules Enforced by CHECK Constraint:**
+**Rules Enforced by CHECK Constraint + Triggers:**
 1. **Books** (`type='book'`): Must have `parent_id IS NULL`
 2. **Sections** (`type='section'`): Must have `parent_id` pointing to a book
-3. **Notes** (`type='note'`): Must have `parent_id` (book OR section)
+3. **Notes** (`type='note'`): Can be anywhere EXCEPT inside another note
+   - Root level (`parent_id IS NULL`) ✅
+   - Under a book ✅
+   - Under a section ✅
+   - Under another note ❌ (prevented by trigger)
 
 **Why This Design?**
-- Flexible: Sections are optional organizational layers
-- Simple: Maximum 3 levels (prevents deep nesting)
-- Predictable: Easy to query and display
+- **Inbox Pattern**: Create notes without deciding organization yet
+- **Flat Option**: Some users prefer minimal hierarchy
+- **Drag & Drop**: Easily reorganize notes via tree view
+- **Flexible**: Notes can be moved in/out of books and sections
 
 ---
 
