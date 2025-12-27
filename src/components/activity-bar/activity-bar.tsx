@@ -35,9 +35,9 @@ export function ActivityBar() {
 	const fontSizeIndicatorClasses = `flex flex-col items-center justify-center gap-0.5 cursor-default ${COLORS.textSecondary} text-xs font-medium p-0.5 md:h-8 h-6`;
 
 	const togglePaneMode = () => {
-		setPaneState(prev => ({
+		setPaneState((prev) => ({
 			...prev,
-			count: prev.count === 1 ? 2 : 1
+			count: prev.count === 1 ? 2 : 1,
 		}));
 	};
 
@@ -91,7 +91,11 @@ export function ActivityBar() {
 						icon={paneState.count === 1 ? Icons.Columns2 : Icons.Minus}
 						isActive={paneState.count === 2}
 						onClick={togglePaneMode}
-						title={paneState.count === 1 ? "Split into two panes" : "Merge to single pane"}
+						title={
+							paneState.count === 1
+								? "Split into two panes"
+								: "Merge to single pane"
+						}
 					/>
 				</div>
 			</div>
@@ -108,7 +112,10 @@ export function ActivityBar() {
 				)}
 			>
 				{/* Font Size Indicator */}
-				<div className={fontSizeIndicatorClasses} title={`Editor font size: ${fontSize}px (Ctrl+Plus/Minus to adjust)`}>
+				<div
+					className={fontSizeIndicatorClasses}
+					title={`Editor font size: ${fontSize}px (Ctrl+Plus/Minus to adjust)`}
+				>
 					<Icons.Type size={10} className="md:w-3 md:h-3" />
 					<span className="hidden md:inline">{fontSize}px</span>
 				</div>
@@ -124,7 +131,7 @@ export function ActivityBar() {
 					icon={isWrapping ? Icons.WrapText : Icons.ArrowRight}
 					isActive={isWrapping}
 					onClick={toggleLineWrapping}
-					title={`${isWrapping ? "Disable" : "Enable"} line wrapping (Ctrl+Alt+W)`}
+					title={`${isWrapping ? "Disable" : "Enable"} line wrapping (Alt+Z)`}
 				/>
 			</div>
 		</div>

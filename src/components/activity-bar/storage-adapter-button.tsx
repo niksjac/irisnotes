@@ -17,7 +17,10 @@ export function StorageAdapterButton() {
 	// Close dropdown when clicking outside
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
-			if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+			if (
+				dropdownRef.current &&
+				!dropdownRef.current.contains(event.target as Node)
+			) {
 				setIsOpen(false);
 				setIsActive(false);
 			}
@@ -123,7 +126,8 @@ export function StorageAdapterButton() {
 									className={clsx(
 										"w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors",
 										{
-											"bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400": isCurrent,
+											"bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400":
+												isCurrent,
 											"text-gray-700 dark:text-gray-300": !isCurrent,
 										}
 									)}

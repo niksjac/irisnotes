@@ -9,7 +9,13 @@ interface ActivityBarButtonProps {
 	iconSize?: number;
 }
 
-export function ActivityBarButton({ icon: Icon, isActive, onClick, title, iconSize = 18 }: ActivityBarButtonProps) {
+export function ActivityBarButton({
+	icon: Icon,
+	isActive,
+	onClick,
+	title,
+	iconSize = 18,
+}: ActivityBarButtonProps) {
 	// Component-level color constants
 	const COLORS = {
 		text: "text-gray-600 dark:text-gray-400",
