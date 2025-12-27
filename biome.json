@@ -1,7 +1,11 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.1.3/schema.json",
 	"files": {
-		"includes": ["src/**/*.{js,jsx,ts,tsx}", "tests/**/*.{js,jsx,ts,tsx}", "*.{js,jsx,ts,tsx,json,css}"]
+		"includes": [
+			"src/**/*.{js,jsx,ts,tsx}",
+			"tests/**/*.{js,jsx,ts,tsx}",
+			"*.{js,jsx,ts,tsx,json,css}"
+		]
 	},
 	"formatter": {
 		"indentWidth": 2,

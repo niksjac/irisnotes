@@ -33,7 +33,7 @@ export default defineConfig(() => ({
 	},
 
 	// Reduce console noise in development
-	logLevel: 'info' as const,
+	logLevel: "info" as const,
 
 	// Bundle optimization
 	build: {
@@ -112,9 +112,15 @@ export default defineConfig(() => ({
 
 	// Optimize dependencies
 	optimizeDeps: {
-		include: ["react", "react-dom", "prosemirror-state", "prosemirror-view", "prosemirror-model"],
+		include: [
+			"react",
+			"react-dom",
+			"prosemirror-state",
+			"prosemirror-view",
+			"prosemirror-model",
+		],
 	},
 
 	// Handle SQL files as raw text
-	assetsInclude: ['**/*.sql'],
+	assetsInclude: ["**/*.sql"],
 }));
