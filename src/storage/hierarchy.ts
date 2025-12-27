@@ -1,7 +1,7 @@
 // Hierarchy validation logic for the unified items system
 // Business rules for parent-child relationships
 
-import type { ItemType } from '@/types/items';
+import type { ItemType } from "@/types/items";
 
 // Define what item types can be children of what parents
 const HIERARCHY_RULES: Record<ItemType, (ItemType | null)[]> = {
@@ -9,10 +9,10 @@ const HIERARCHY_RULES: Record<ItemType, (ItemType | null)[]> = {
 	book: [null],
 
 	// Sections can be at root or inside books
-	section: [null, 'book'],
+	section: [null, "book"],
 
 	// Notes can be anywhere (root, books, or sections)
-	note: [null, 'book', 'section']
+	note: [null, "book", "section"],
 };
 
 /**
@@ -21,7 +21,10 @@ const HIERARCHY_RULES: Record<ItemType, (ItemType | null)[]> = {
  * @param parentType - The type of the parent item (null for root)
  * @returns true if the relationship is valid
  */
-export function canBeChildOf(childType: ItemType, parentType: ItemType | null): boolean {
+export function canBeChildOf(
+	childType: ItemType,
+	parentType: ItemType | null
+): boolean {
 	const allowedParents = HIERARCHY_RULES[childType];
 	return allowedParents.includes(parentType);
 }
@@ -66,14 +69,14 @@ export function validateMove(
 		return { valid: true };
 	}
 
-	const parentName = newParentType || 'root';
+	const parentName = newParentType || "root";
 	const allowedParents = getValidParentTypes(itemType)
-		.map(p => p || 'root')
-		.join(', ');
+		.map((p) => p || "root")
+		.join(", ");
 
 	return {
 		valid: false,
-		error: `${itemType}s cannot be placed in ${parentName}. Valid locations: ${allowedParents}`
+		error: `${itemType}s cannot be placed in ${parentName}. Valid locations: ${allowedParents}`,
 	};
 }
 

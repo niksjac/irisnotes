@@ -1,4 +1,9 @@
-import type { CreateNoteParams, Note, NoteFilters, UpdateNoteParams } from "../../../types/database";
+import type {
+	CreateNoteParams,
+	Note,
+	NoteFilters,
+	UpdateNoteParams,
+} from "../../../types/database";
 import type { StorageResult, VoidStorageResult } from "../../types";
 import { BaseRepository } from "./sqlite-base";
 
@@ -49,7 +54,10 @@ export class SqliteNotesRepository extends BaseRepository {
 			} catch (error: any) {
 				if (error?.message?.includes("no such column: sort_order")) {
 					// Fallback query without sort_order
-					query = query.replace(" ORDER BY sort_order DESC, updated_at DESC", " ORDER BY updated_at DESC");
+					query = query.replace(
+						" ORDER BY sort_order DESC, updated_at DESC",
+						" ORDER BY updated_at DESC"
+					);
 					const results = await this.db.select<Note[]>(query, params);
 					return this.success(results);
 				}
@@ -65,7 +73,10 @@ export class SqliteNotesRepository extends BaseRepository {
 		if (dbCheck) return dbCheck;
 
 		try {
-			const results = await this.db.select<Note[]>("SELECT * FROM notes WHERE id = ? AND deleted_at IS NULL", [id]);
+			const results = await this.db.select<Note[]>(
+				"SELECT * FROM notes WHERE id = ? AND deleted_at IS NULL",
+				[id]
+			);
 			const note = results.length > 0 ? (results[0] as Note) : null;
 			return this.success(note);
 		} catch (error) {
@@ -86,7 +97,9 @@ export class SqliteNotesRepository extends BaseRepository {
 			const contentRaw = params.content_raw || null;
 
 			// Calculate word count and character count
-			const wordCount = content.split(/\s+/).filter((word) => word.length > 0).length;
+			const wordCount = content
+				.split(/\s+/)
+				.filter((word) => word.length > 0).length;
 			const characterCount = content.length;
 
 			// Extract plain text for search
@@ -161,11 +174,17 @@ export class SqliteNotesRepository extends BaseRepository {
 				queryParams.push(params.content);
 
 				// Update word count and character count
-				const wordCount = params.content.split(/\s+/).filter((word) => word.length > 0).length;
+				const wordCount = params.content
+					.split(/\s+/)
+					.filter((word) => word.length > 0).length;
 				const characterCount = params.content.length;
 				const contentPlaintext = params.content.replace(/<[^>]*>/g, "").trim();
 
-				setParts.push("word_count = ?", "character_count = ?", "content_plaintext = ?");
+				setParts.push(
+					"word_count = ?",
+					"character_count = ?",
+					"content_plaintext = ?"
+				);
 				queryParams.push(wordCount, characterCount, contentPlaintext);
 			}
 			if (params.content_type !== undefined) {
@@ -196,9 +215,10 @@ export class SqliteNotesRepository extends BaseRepository {
 			await this.db.execute(updateQuery, queryParams);
 
 			// Get the updated note
-			const results = await this.db.select<Note[]>("SELECT * FROM notes WHERE id = ? AND deleted_at IS NULL", [
-				params.id,
-			]);
+			const results = await this.db.select<Note[]>(
+				"SELECT * FROM notes WHERE id = ? AND deleted_at IS NULL",
+				[params.id]
+			);
 
 			if (results.length === 0) {
 				return this.failure("Note not found");
@@ -217,14 +237,20 @@ export class SqliteNotesRepository extends BaseRepository {
 
 		try {
 			const now = this.now();
-			await this.db.execute("UPDATE notes SET deleted_at = ? WHERE id = ?", [now, id]);
+			await this.db.execute("UPDATE notes SET deleted_at = ? WHERE id = ?", [
+				now,
+				id,
+			]);
 			return this.voidSuccess();
 		} catch (error) {
 			return this.handleError(error, "Delete note");
 		}
 	}
 
-	async searchNotes(query: string, filters?: NoteFilters): Promise<StorageResult<Note[]>> {
+	async searchNotes(
+		query: string,
+		filters?: NoteFilters
+	): Promise<StorageResult<Note[]>> {
 		const dbCheck = this.checkDatabase();
 		if (dbCheck) return dbCheck;
 
@@ -265,16 +291,24 @@ export class SqliteNotesRepository extends BaseRepository {
 		}
 	}
 
-	async updateNoteSortOrder(noteId: string, sortOrder: number): Promise<VoidStorageResult> {
+	async updateNoteSortOrder(
+		noteId: string,
+		sortOrder: number
+	): Promise<VoidStorageResult> {
 		const dbCheck = this.checkDatabase();
 		if (dbCheck) return dbCheck;
 
 		try {
-			await this.db.execute("UPDATE notes SET sort_order = ? WHERE id = ? AND deleted_at IS NULL", [sortOrder, noteId]);
+			await this.db.execute(
+				"UPDATE notes SET sort_order = ? WHERE id = ? AND deleted_at IS NULL",
+				[sortOrder, noteId]
+			);
 			return this.voidSuccess();
 		} catch (error: any) {
 			if (error?.message?.includes("no such column: sort_order")) {
-				console.warn("⚠️ sort_order column not available, skipping sort order update");
+				console.warn(
+					"⚠️ sort_order column not available, skipping sort order update"
+				);
 				return this.voidSuccess(); // Gracefully ignore
 			}
 			return this.handleError(error, "Update note sort order");
@@ -282,16 +316,18 @@ export class SqliteNotesRepository extends BaseRepository {
 	}
 
 	// NEW: Move note to different category (for tree drag & drop)
-	async moveNoteToCategory(noteId: string, newCategoryId: string | null): Promise<VoidStorageResult> {
+	async moveNoteToCategory(
+		noteId: string,
+		newCategoryId: string | null
+	): Promise<VoidStorageResult> {
 		const dbCheck = this.checkDatabase();
 		if (dbCheck) return dbCheck;
 
 		try {
-			await this.db.execute("UPDATE notes SET parent_category_id = ?, sort_order = ? WHERE id = ?", [
-				newCategoryId,
-				Date.now(),
-				noteId,
-			]);
+			await this.db.execute(
+				"UPDATE notes SET parent_category_id = ?, sort_order = ? WHERE id = ?",
+				[newCategoryId, Date.now(), noteId]
+			);
 			return this.voidSuccess();
 		} catch (error) {
 			return this.handleError(error, "Move note to category");

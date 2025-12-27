@@ -72,14 +72,18 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 				"SELECT * FROM items WHERE deleted_at IS NULL ORDER BY sort_order, created_at"
 			);
 
-			const items: FlexibleItem[] = results.map(row => this.rowToFlexibleItem(row));
+			const items: FlexibleItem[] = results.map((row) =>
+				this.rowToFlexibleItem(row)
+			);
 			return { success: true, data: items };
 		} catch (error) {
 			return { success: false, error: `Failed to get all items: ${error}` };
 		}
 	}
 
-	async createItem(params: CreateItemParams): Promise<StorageResult<FlexibleItem>> {
+	async createItem(
+		params: CreateItemParams
+	): Promise<StorageResult<FlexibleItem>> {
 		if (!this.db) return { success: false, error: "Database not initialized" };
 
 		try {
@@ -87,11 +91,14 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 			if (params.parent_id) {
 				const parentResult = await this.getItem(params.parent_id);
 				if (!parentResult.success || !parentResult.data) {
-					return { success: false, error: 'Parent item not found' };
+					return { success: false, error: "Parent item not found" };
 				}
 
 				if (!canBeChildOf(params.type, parentResult.data.type)) {
-					return { success: false, error: `${params.type}s cannot be placed in ${parentResult.data.type}s` };
+					return {
+						success: false,
+						error: `${params.type}s cannot be placed in ${parentResult.data.type}s`,
+					};
 				}
 			}
 
@@ -108,7 +115,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 				content: params.content,
 				content_type: params.content_type,
 				content_raw: params.content_raw,
-				content_plaintext: this.extractPlaintext(params.content || ''),
+				content_plaintext: this.extractPlaintext(params.content || ""),
 				parent_id: params.parent_id || null,
 				sort_order: sortOrder,
 				metadata: params.metadata || {},
@@ -126,8 +133,8 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 					newItem.id,
 					newItem.type,
 					newItem.title,
-					newItem.content || '',
-					newItem.content_type || 'html',
+					newItem.content || "",
+					newItem.content_type || "html",
 					newItem.content_raw,
 					newItem.content_plaintext,
 					newItem.parent_id,
@@ -135,8 +142,8 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 					JSON.stringify(newItem.metadata),
 					newItem.created_at,
 					newItem.updated_at,
-					this.countWords(newItem.content || ''),
-					(newItem.content || '').length,
+					this.countWords(newItem.content || ""),
+					(newItem.content || "").length,
 				]
 			);
 
@@ -184,11 +191,17 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 
 	private extractPlaintext(content: string): string {
 		// Simple plaintext extraction (remove markdown/html)
-		return content.replace(/[#*_`[\]()]/g, '').replace(/\n+/g, ' ').trim();
+		return content
+			.replace(/[#*_`[\]()]/g, "")
+			.replace(/\n+/g, " ")
+			.trim();
 	}
 
 	private countWords(content: string): number {
-		return content.trim().split(/\s+/).filter(word => word.length > 0).length;
+		return content
+			.trim()
+			.split(/\s+/)
+			.filter((word) => word.length > 0).length;
 	}
 
 	private rowToFlexibleItem(row: any): FlexibleItem {
@@ -219,7 +232,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 				"SELECT * FROM items WHERE type = 'note' AND deleted_at IS NULL ORDER BY created_at DESC"
 			);
 
-			const notes: Note[] = results.map(row => this.rowToNote(row));
+			const notes: Note[] = results.map((row) => this.rowToNote(row));
 			return { success: true, data: notes };
 		} catch (error) {
 			return { success: false, error: `Failed to get notes: ${error}` };
@@ -248,10 +261,10 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 
 	async createNote(params: CreateNoteParams): Promise<StorageResult<Note>> {
 		const result = await this.createItem({
-			type: 'note',
-			title: params.title || 'Untitled Note',
-			content: params.content || '',
-			content_type: params.content_type || 'html',
+			type: "note",
+			title: params.title || "Untitled Note",
+			content: params.content || "",
+			content_type: params.content_type || "html",
 			content_raw: params.content_raw,
 			metadata: {},
 		});
@@ -266,7 +279,9 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		try {
 			const now = new Date().toISOString();
 			const content = params.content;
-			const contentPlaintext = content ? this.extractPlaintext(content) : undefined;
+			const contentPlaintext = content
+				? this.extractPlaintext(content)
+				: undefined;
 			const wordCount = content ? this.countWords(content) : undefined;
 			const characterCount = content ? content.length : undefined;
 
@@ -279,8 +294,18 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 				values.push(params.title);
 			}
 			if (params.content !== undefined) {
-				updates.push("content = ?", "content_plaintext = ?", "word_count = ?", "character_count = ?");
-				values.push(params.content, contentPlaintext, wordCount, characterCount);
+				updates.push(
+					"content = ?",
+					"content_plaintext = ?",
+					"word_count = ?",
+					"character_count = ?"
+				);
+				values.push(
+					params.content,
+					contentPlaintext,
+					wordCount,
+					characterCount
+				);
 			}
 			if (params.content_type !== undefined) {
 				updates.push("content_type = ?");
@@ -294,14 +319,22 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 				// Update metadata JSON
 				const currentResult = await this.getNote(params.id);
 				if (currentResult.success && currentResult.data) {
-					const currentMetadata = JSON.parse(await this.db.select<any[]>(
-						"SELECT metadata FROM items WHERE id = ?", [params.id]
-					).then(rows => rows[0]?.metadata || '{}'));
+					const currentMetadata = JSON.parse(
+						await this.db
+							.select<any[]>("SELECT metadata FROM items WHERE id = ?", [
+								params.id,
+							])
+							.then((rows) => rows[0]?.metadata || "{}")
+					);
 
 					const newMetadata = {
 						...currentMetadata,
-						...(params.is_pinned !== undefined && { is_pinned: params.is_pinned }),
-						...(params.is_archived !== undefined && { is_archived: params.is_archived }),
+						...(params.is_pinned !== undefined && {
+							is_pinned: params.is_pinned,
+						}),
+						...(params.is_archived !== undefined && {
+							is_archived: params.is_archived,
+						}),
 					};
 
 					updates.push("metadata = ?");
@@ -348,7 +381,10 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async searchNotes(query: string, _filters?: NoteFilters): Promise<StorageResult<Note[]>> {
+	async searchNotes(
+		query: string,
+		_filters?: NoteFilters
+	): Promise<StorageResult<Note[]>> {
 		if (!this.db) return { success: false, error: "Database not initialized" };
 
 		try {
@@ -373,14 +409,12 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 				);
 			}
 
-			const notes: Note[] = results.map(row => this.rowToNote(row));
+			const notes: Note[] = results.map((row) => this.rowToNote(row));
 			return { success: true, data: notes };
 		} catch (error) {
 			return { success: false, error: `Failed to search notes: ${error}` };
 		}
 	}
-
-
 
 	async getTreeData(): Promise<StorageResult<TreeData[]>> {
 		if (!this.db) return { success: false, error: "Database not initialized" };
@@ -418,11 +452,16 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 
 			const buildTree = (parentId: string | null): TreeData[] => {
 				const items = itemsByParent.get(parentId) || [];
-				return items.map(item => {
+				return items.map((item) => {
 					const treeNode: TreeData = {
 						id: item.id,
 						name: item.name,
-						type: item.type === 'book' ? 'book' : item.type === 'section' ? 'section' : 'note',
+						type:
+							item.type === "book"
+								? "book"
+								: item.type === "section"
+									? "section"
+									: "note",
 						parent_id: item.parent_id,
 						sort_order: item.sort_order,
 						custom_icon: item.custom_icon,
@@ -431,7 +470,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 					};
 
 					// Add children for container types
-					if (item.type === 'book' || item.type === 'section') {
+					if (item.type === "book" || item.type === "section") {
 						const children = buildTree(item.id);
 						if (children.length > 0) {
 							treeNode.children = children;
@@ -455,8 +494,8 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		return {
 			id: row.id,
 			title: row.title,
-			content: row.content || '',
-			content_type: row.content_type || 'html',
+			content: row.content || "",
+			content_type: row.content_type || "html",
 			content_raw: row.content_raw,
 			created_at: row.created_at,
 			updated_at: row.updated_at,
@@ -465,7 +504,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 			is_archived: metadata.is_archived || false,
 			word_count: row.word_count || 0,
 			character_count: row.character_count || 0,
-			content_plaintext: row.content_plaintext || '',
+			content_plaintext: row.content_plaintext || "",
 			sort_order: row.sort_order,
 			parent_category_id: row.parent_id,
 		};
@@ -475,8 +514,8 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		return {
 			id: item.id,
 			title: item.title,
-			content: item.content || '',
-			content_type: (item.content_type as any) || 'html',
+			content: item.content || "",
+			content_type: (item.content_type as any) || "html",
 			content_raw: item.content_raw || null,
 			created_at: item.created_at,
 			updated_at: item.updated_at,
@@ -485,13 +524,16 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 			is_archived: item.metadata.is_archived || false,
 			word_count: item.metadata.word_count || 0,
 			character_count: item.metadata.character_count || 0,
-			content_plaintext: item.content_plaintext || '',
+			content_plaintext: item.content_plaintext || "",
 			sort_order: item.sort_order,
 			parent_category_id: item.parent_id,
 		};
 	}
 
-	async updateItem(id: string, params: Partial<FlexibleItem>): Promise<StorageResult<FlexibleItem>> {
+	async updateItem(
+		id: string,
+		params: Partial<FlexibleItem>
+	): Promise<StorageResult<FlexibleItem>> {
 		if (!this.db) return { success: false, error: "Database not initialized" };
 
 		try {
@@ -499,31 +541,31 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 			const values: any[] = [];
 
 			if (params.title !== undefined) {
-				updates.push('title = ?');
+				updates.push("title = ?");
 				values.push(params.title);
 			}
 			if (params.content !== undefined) {
-				updates.push('content = ?', 'content_plaintext = ?');
+				updates.push("content = ?", "content_plaintext = ?");
 				values.push(params.content, this.extractPlaintext(params.content));
 			}
 			if (params.content_raw !== undefined) {
-				updates.push('content_raw = ?');
+				updates.push("content_raw = ?");
 				values.push(params.content_raw);
 			}
 			if (params.type !== undefined) {
-				updates.push('type = ?');
+				updates.push("type = ?");
 				values.push(params.type);
 			}
 			if (params.parent_id !== undefined) {
-				updates.push('parent_id = ?');
+				updates.push("parent_id = ?");
 				values.push(params.parent_id);
 			}
 			if (params.sort_order !== undefined) {
-				updates.push('sort_order = ?');
+				updates.push("sort_order = ?");
 				values.push(params.sort_order);
 			}
 			if (params.metadata !== undefined) {
-				updates.push('metadata = ?');
+				updates.push("metadata = ?");
 				values.push(JSON.stringify(params.metadata));
 			}
 
@@ -531,16 +573,19 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 				return { success: false, error: "No fields to update" };
 			}
 
-			updates.push('updated_at = ?');
+			updates.push("updated_at = ?");
 			values.push(new Date().toISOString());
 			values.push(id);
 
 			await this.db.execute(
-				`UPDATE items SET ${updates.join(', ')} WHERE id = ?`,
+				`UPDATE items SET ${updates.join(", ")} WHERE id = ?`,
 				values
 			);
 
-			const result = await this.db.select<any[]>("SELECT * FROM items WHERE id = ?", [id]);
+			const result = await this.db.select<any[]>(
+				"SELECT * FROM items WHERE id = ?",
+				[id]
+			);
 			if (result.length === 0) {
 				return { success: false, error: "Item not found after update" };
 			}
@@ -556,42 +601,80 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 
 		try {
 			// Soft delete by setting deleted_at timestamp
-			await this.db.execute(
-				"UPDATE items SET deleted_at = ? WHERE id = ?",
-				[new Date().toISOString(), id]
-			);
+			await this.db.execute("UPDATE items SET deleted_at = ? WHERE id = ?", [
+				new Date().toISOString(),
+				id,
+			]);
 			return { success: true };
 		} catch (error) {
 			return { success: false, error: `Failed to delete item: ${error}` };
 		}
 	}
-	async moveTreeItem(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async reorderTreeItem(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
+	async moveTreeItem(): Promise<VoidStorageResult> {
+		throw new Error("Not implemented");
+	}
+	async reorderTreeItem(): Promise<VoidStorageResult> {
+		throw new Error("Not implemented");
+	}
 	async getTags(): Promise<StorageResult<Tag[]>> {
 		if (!this.db) return { success: false, error: "Database not initialized" };
 		try {
-			const results = await this.db.select<Tag[]>("SELECT * FROM tags ORDER BY name ASC");
+			const results = await this.db.select<Tag[]>(
+				"SELECT * FROM tags ORDER BY name ASC"
+			);
 			return { success: true, data: results };
 		} catch (error) {
 			return { success: false, error: `Failed to get tags: ${error}` };
 		}
 	}
-	async getTag(): Promise<StorageResult<Tag | null>> { throw new Error("Not implemented"); }
-	async createTag(): Promise<StorageResult<Tag>> { throw new Error("Not implemented"); }
-	async updateTag(): Promise<StorageResult<Tag>> { throw new Error("Not implemented"); }
-	async deleteTag(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async getTagNotes(): Promise<StorageResult<Note[]>> { throw new Error("Not implemented"); }
-	async addNoteTag(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async removeNoteTag(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async getNoteRelationships(): Promise<StorageResult<NoteRelationship[]>> { throw new Error("Not implemented"); }
-	async createNoteRelationship(): Promise<StorageResult<NoteRelationship>> { throw new Error("Not implemented"); }
-	async deleteNoteRelationship(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async getNoteAttachments(): Promise<StorageResult<Attachment[]>> { throw new Error("Not implemented"); }
-	async createAttachment(): Promise<StorageResult<Attachment>> { throw new Error("Not implemented"); }
-	async deleteAttachment(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async getNoteVersions(): Promise<StorageResult<NoteVersion[]>> { throw new Error("Not implemented"); }
-	async createNoteVersion(): Promise<StorageResult<NoteVersion>> { throw new Error("Not implemented"); }
-	async restoreNoteVersion(): Promise<StorageResult<Note>> { throw new Error("Not implemented"); }
+	async getTag(): Promise<StorageResult<Tag | null>> {
+		throw new Error("Not implemented");
+	}
+	async createTag(): Promise<StorageResult<Tag>> {
+		throw new Error("Not implemented");
+	}
+	async updateTag(): Promise<StorageResult<Tag>> {
+		throw new Error("Not implemented");
+	}
+	async deleteTag(): Promise<VoidStorageResult> {
+		throw new Error("Not implemented");
+	}
+	async getTagNotes(): Promise<StorageResult<Note[]>> {
+		throw new Error("Not implemented");
+	}
+	async addNoteTag(): Promise<VoidStorageResult> {
+		throw new Error("Not implemented");
+	}
+	async removeNoteTag(): Promise<VoidStorageResult> {
+		throw new Error("Not implemented");
+	}
+	async getNoteRelationships(): Promise<StorageResult<NoteRelationship[]>> {
+		throw new Error("Not implemented");
+	}
+	async createNoteRelationship(): Promise<StorageResult<NoteRelationship>> {
+		throw new Error("Not implemented");
+	}
+	async deleteNoteRelationship(): Promise<VoidStorageResult> {
+		throw new Error("Not implemented");
+	}
+	async getNoteAttachments(): Promise<StorageResult<Attachment[]>> {
+		throw new Error("Not implemented");
+	}
+	async createAttachment(): Promise<StorageResult<Attachment>> {
+		throw new Error("Not implemented");
+	}
+	async deleteAttachment(): Promise<VoidStorageResult> {
+		throw new Error("Not implemented");
+	}
+	async getNoteVersions(): Promise<StorageResult<NoteVersion[]>> {
+		throw new Error("Not implemented");
+	}
+	async createNoteVersion(): Promise<StorageResult<NoteVersion>> {
+		throw new Error("Not implemented");
+	}
+	async restoreNoteVersion(): Promise<StorageResult<Note>> {
+		throw new Error("Not implemented");
+	}
 	async getSettings(): Promise<StorageResult<Setting[]>> {
 		if (!this.db) return { success: false, error: "Database not initialized" };
 		try {
@@ -601,20 +684,30 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 			return { success: false, error: `Failed to get settings: ${error}` };
 		}
 	}
-	async getSetting(): Promise<StorageResult<Setting | null>> { throw new Error("Not implemented"); }
-	async setSetting(): Promise<StorageResult<Setting>> { throw new Error("Not implemented"); }
-	async deleteSetting(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async sync(): Promise<VoidStorageResult> { return { success: true }; }
+	async getSetting(): Promise<StorageResult<Setting | null>> {
+		throw new Error("Not implemented");
+	}
+	async setSetting(): Promise<StorageResult<Setting>> {
+		throw new Error("Not implemented");
+	}
+	async deleteSetting(): Promise<VoidStorageResult> {
+		throw new Error("Not implemented");
+	}
+	async sync(): Promise<VoidStorageResult> {
+		return { success: true };
+	}
 
-	async getStorageInfo(): Promise<StorageResult<{
-		backend: "sqlite" | "json-single" | "json-hybrid" | "cloud";
-		note_count: number;
-		category_count: number;
-		tag_count: number;
-		attachment_count: number;
-		last_sync?: string;
-		storage_size?: number;
-	}>> {
+	async getStorageInfo(): Promise<
+		StorageResult<{
+			backend: "sqlite" | "json-single" | "json-hybrid" | "cloud";
+			note_count: number;
+			category_count: number;
+			tag_count: number;
+			attachment_count: number;
+			last_sync?: string;
+			storage_size?: number;
+		}>
+	> {
 		if (!this.db) return { success: false, error: "Database not initialized" };
 
 		try {

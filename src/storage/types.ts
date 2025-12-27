@@ -36,10 +36,14 @@ export interface StorageConfig {
 }
 
 // Storage operation results - discriminated union for type safety
-export type StorageResult<T> = { success: true; data: T } | { success: false; error: string };
+export type StorageResult<T> =
+	| { success: true; data: T }
+	| { success: false; error: string };
 
 // Specific type for void operations
-export type VoidStorageResult = { success: true } | { success: false; error: string };
+export type VoidStorageResult =
+	| { success: true }
+	| { success: false; error: string };
 
 // Core storage interface - clean and focused
 export interface StorageAdapter {
@@ -53,12 +57,18 @@ export interface StorageAdapter {
 	createNote(params: CreateNoteParams): Promise<StorageResult<Note>>;
 	updateNote(params: UpdateNoteParams): Promise<StorageResult<Note>>;
 	deleteNote(id: string): Promise<VoidStorageResult>;
-	searchNotes(query: string, filters?: NoteFilters): Promise<StorageResult<Note[]>>;
+	searchNotes(
+		query: string,
+		filters?: NoteFilters
+	): Promise<StorageResult<Note[]>>;
 
 	// Items operations (books, sections - unified with notes)
 	getAllItems(): Promise<StorageResult<FlexibleItem[]>>;
 	createItem(params: CreateItemParams): Promise<StorageResult<FlexibleItem>>;
-	updateItem(id: string, params: Partial<FlexibleItem>): Promise<StorageResult<FlexibleItem>>;
+	updateItem(
+		id: string,
+		params: Partial<FlexibleItem>
+	): Promise<StorageResult<FlexibleItem>>;
 	deleteItem(id: string): Promise<VoidStorageResult>;
 
 	// Tree operations
@@ -80,14 +90,19 @@ export interface StorageAdapter {
 	getTags(): Promise<StorageResult<Tag[]>>;
 	getTag(id: string): Promise<StorageResult<Tag | null>>;
 	createTag(params: CreateTagParams): Promise<StorageResult<Tag>>;
-	updateTag(id: string, params: Partial<CreateTagParams>): Promise<StorageResult<Tag>>;
+	updateTag(
+		id: string,
+		params: Partial<CreateTagParams>
+	): Promise<StorageResult<Tag>>;
 	deleteTag(id: string): Promise<VoidStorageResult>;
 	getTagNotes(tagId: string): Promise<StorageResult<Note[]>>;
 	addNoteTag(noteId: string, tagId: string): Promise<VoidStorageResult>;
 	removeNoteTag(noteId: string, tagId: string): Promise<VoidStorageResult>;
 
 	// Note relationships
-	getNoteRelationships(noteId: string): Promise<StorageResult<NoteRelationship[]>>;
+	getNoteRelationships(
+		noteId: string
+	): Promise<StorageResult<NoteRelationship[]>>;
 	createNoteRelationship(
 		sourceId: string,
 		targetId: string,
@@ -116,7 +131,10 @@ export interface StorageAdapter {
 		contentRaw?: string,
 		comment?: string
 	): Promise<StorageResult<NoteVersion>>;
-	restoreNoteVersion(noteId: string, versionId: string): Promise<StorageResult<Note>>;
+	restoreNoteVersion(
+		noteId: string,
+		versionId: string
+	): Promise<StorageResult<Note>>;
 
 	// Settings
 	getSettings(): Promise<StorageResult<Setting[]>>;

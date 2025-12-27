@@ -9,9 +9,15 @@ export {
 	SQLiteStorageAdapter,
 	JsonSingleStorageAdapter,
 	JsonHybridStorageAdapter,
-	createStorageAdapter
+	createStorageAdapter,
 };
-export type { StorageAdapter, StorageConfig, StorageResult, VoidStorageResult, StorageBackend } from "./types";
+export type {
+	StorageAdapter,
+	StorageConfig,
+	StorageResult,
+	VoidStorageResult,
+	StorageBackend,
+} from "./types";
 
 // Legacy factory function for backward compatibility
 export function createSQLiteAdapter(config: StorageConfig) {

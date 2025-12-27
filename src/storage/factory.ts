@@ -1,9 +1,9 @@
 // Storage adapter factory - creates appropriate adapter based on configuration
 
-import type { StorageAdapter, StorageConfig } from './types';
-import { SQLiteStorageAdapter } from './adapters/sqlite-adapter';
-import { JsonSingleStorageAdapter } from './adapters/json-single-adapter';
-import { JsonHybridStorageAdapter } from './adapters/json-hybrid-adapter';
+import type { StorageAdapter, StorageConfig } from "./types";
+import { SQLiteStorageAdapter } from "./adapters/sqlite-adapter";
+import { JsonSingleStorageAdapter } from "./adapters/json-single-adapter";
+import { JsonHybridStorageAdapter } from "./adapters/json-hybrid-adapter";
 
 /**
  * Create a storage adapter based on the configuration
@@ -13,13 +13,13 @@ import { JsonHybridStorageAdapter } from './adapters/json-hybrid-adapter';
  */
 export function createStorageAdapter(config: StorageConfig): StorageAdapter {
 	switch (config.backend) {
-		case 'sqlite':
+		case "sqlite":
 			return new SQLiteStorageAdapter(config);
 
-		case 'json-single':
+		case "json-single":
 			return new JsonSingleStorageAdapter(config);
 
-		case 'json-hybrid':
+		case "json-hybrid":
 			return new JsonHybridStorageAdapter(config);
 
 		default:
@@ -32,7 +32,7 @@ export function createStorageAdapter(config: StorageConfig): StorageAdapter {
  * @returns Array of supported backend names
  */
 export function getAvailableBackends(): string[] {
-	return ['sqlite', 'json-single', 'json-hybrid'];
+	return ["sqlite", "json-single", "json-hybrid"];
 }
 
 /**
@@ -40,38 +40,47 @@ export function getAvailableBackends(): string[] {
  * @param config - Configuration to validate
  * @returns Validation result with error message if invalid
  */
-export function validateStorageConfig(config: StorageConfig): { valid: boolean; error?: string } {
+export function validateStorageConfig(config: StorageConfig): {
+	valid: boolean;
+	error?: string;
+} {
 	if (!config.backend) {
-		return { valid: false, error: 'Storage backend is required' };
+		return { valid: false, error: "Storage backend is required" };
 	}
 
 	const availableBackends = getAvailableBackends();
 	if (!availableBackends.includes(config.backend)) {
 		return {
 			valid: false,
-			error: `Unsupported backend '${config.backend}'. Available: ${availableBackends.join(', ')}`
+			error: `Unsupported backend '${config.backend}'. Available: ${availableBackends.join(", ")}`,
 		};
 	}
 
 	// Backend-specific validation
 	switch (config.backend) {
-		case 'sqlite':
+		case "sqlite":
 			if (!config.sqlite?.database_path) {
-				return { valid: false, error: 'SQLite backend requires database_path' };
+				return { valid: false, error: "SQLite backend requires database_path" };
 			}
 			break;
 
-		case 'json-single':
+		case "json-single":
 			if (!config.jsonSingle?.file_path) {
-				return { valid: false, error: 'JSON Single backend requires file_path' };
-			}
-			break;
-
-		case 'json-hybrid':
-			if (!config.jsonHybrid?.structure_file || !config.jsonHybrid?.content_dir) {
 				return {
 					valid: false,
-					error: 'JSON Hybrid backend requires structure_file and content_dir'
+					error: "JSON Single backend requires file_path",
+				};
+			}
+			break;
+
+		case "json-hybrid":
+			if (
+				!config.jsonHybrid?.structure_file ||
+				!config.jsonHybrid?.content_dir
+			) {
+				return {
+					valid: false,
+					error: "JSON Hybrid backend requires structure_file and content_dir",
 				};
 			}
 			break;

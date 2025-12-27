@@ -14,7 +14,10 @@ export abstract class BaseRepository {
 	/**
 	 * Helper method to handle database errors consistently
 	 */
-	protected handleError(error: unknown, operation: string): { success: false; error: string } {
+	protected handleError(
+		error: unknown,
+		operation: string
+	): { success: false; error: string } {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		console.error(`${operation} failed:`, error);
 		return { success: false, error: `${operation} failed: ${errorMessage}` };

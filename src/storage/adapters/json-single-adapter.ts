@@ -43,7 +43,7 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 
 	constructor(config: StorageConfig) {
 		this.config = config;
-		this.filePath = config.jsonSingle?.file_path || './dev/storage.json';
+		this.filePath = config.jsonSingle?.file_path || "./dev/storage.json";
 		this.data = this.getDefaultData();
 	}
 
@@ -52,7 +52,7 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 			items: [],
 			tags: [],
 			settings: [],
-			version: '1.0.0',
+			version: "1.0.0",
 			last_modified: new Date().toISOString(),
 		};
 	}
@@ -76,7 +76,6 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 
 	private async loadData(): Promise<void> {
 		try {
-
 			// Try to load from file first
 			const fileData = await this.loadFromFile();
 			if (fileData?.items && fileData.items.length > 0) {
@@ -98,22 +97,21 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 	private async loadFromFile(): Promise<JsonStorageData | null> {
 		try {
 			// Check if we're in a Tauri context first
-			if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+			if (typeof window !== "undefined" && (window as any).__TAURI__) {
 				// Use Tauri filesystem plugin API
 				const { readTextFile } = await import("@tauri-apps/plugin-fs");
 				const fileContent = await readTextFile(this.filePath);
 				return JSON.parse(fileContent);
 			} else {
 				// In web context, try to load from public directory or use fetch for dev server
-				const publicPath = this.filePath.replace('./dev/', '/dev/');
+				const publicPath = this.filePath.replace("./dev/", "/dev/");
 				const response = await fetch(publicPath);
 				if (response.ok) {
 					const fileData = await response.json();
 					return fileData;
 				}
 			}
-		} catch (_error) {
-		}
+		} catch (_error) {}
 		return null;
 	}
 
@@ -124,15 +122,15 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 		const bookId = `book_${Date.now()}`;
 		this.data.items.push({
 			id: bookId,
-			type: 'book',
-			title: 'Learning Journal',
+			type: "book",
+			title: "Learning Journal",
 			parent_id: null,
 			sort_order: 0,
 			metadata: {
-				custom_icon: '📚',
-				custom_text_color: '#2563eb',
-				description: 'My personal learning notes',
-				author: 'Me',
+				custom_icon: "📚",
+				custom_text_color: "#2563eb",
+				description: "My personal learning notes",
+				author: "Me",
 			},
 			created_at: now,
 			updated_at: now,
@@ -142,14 +140,14 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 		const sectionId = `section_${Date.now() + 1}`;
 		this.data.items.push({
 			id: sectionId,
-			type: 'section',
-			title: 'JavaScript Concepts',
+			type: "section",
+			title: "JavaScript Concepts",
 			parent_id: bookId,
 			sort_order: 0,
 			metadata: {
-				custom_icon: '⚡',
-				custom_text_color: '#f59e0b',
-				difficulty: 'intermediate',
+				custom_icon: "⚡",
+				custom_text_color: "#f59e0b",
+				difficulty: "intermediate",
 			},
 			created_at: now,
 			updated_at: now,
@@ -158,17 +156,19 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 		// Sample note
 		this.data.items.push({
 			id: `note_${Date.now() + 2}`,
-			type: 'note',
-			title: 'Closures in JavaScript',
-			content: '# Closures\n\nA closure is a function that has access to variables in its outer scope...',
-			content_type: 'markdown',
-			content_plaintext: 'Closures A closure is a function that has access to variables in its outer scope...',
+			type: "note",
+			title: "Closures in JavaScript",
+			content:
+				"# Closures\n\nA closure is a function that has access to variables in its outer scope...",
+			content_type: "markdown",
+			content_plaintext:
+				"Closures A closure is a function that has access to variables in its outer scope...",
 			parent_id: sectionId,
 			sort_order: 0,
 			metadata: {
-				custom_icon: '🔒',
-				custom_text_color: '#10b981',
-				difficulty: 'intermediate',
+				custom_icon: "🔒",
+				custom_text_color: "#10b981",
+				difficulty: "intermediate",
 				word_count: 150,
 				character_count: 800,
 			},
@@ -182,7 +182,7 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 
 		try {
 			// Check if we're in a Tauri context first
-			if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+			if (typeof window !== "undefined" && (window as any).__TAURI__) {
 				// Use Tauri filesystem plugin API
 				const { writeTextFile } = await import("@tauri-apps/plugin-fs");
 				const jsonContent = JSON.stringify(this.data, null, 2);
@@ -195,7 +195,10 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 				}
 			}
 		} catch (error) {
-			console.warn("⚠️ Could not save to file (using in-memory storage):", error);
+			console.warn(
+				"⚠️ Could not save to file (using in-memory storage):",
+				error
+			);
 			this.isFileAccessible = false;
 		}
 	}
@@ -208,24 +211,31 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 
 	async getAllItems(): Promise<StorageResult<FlexibleItem[]>> {
 		try {
-			const items = this.data.items.filter(item => !item.deleted_at);
+			const items = this.data.items.filter((item) => !item.deleted_at);
 			return { success: true, data: items };
 		} catch (error) {
 			return { success: false, error: `Failed to get all items: ${error}` };
 		}
 	}
 
-	async createItem(params: CreateItemParams): Promise<StorageResult<FlexibleItem>> {
+	async createItem(
+		params: CreateItemParams
+	): Promise<StorageResult<FlexibleItem>> {
 		try {
 			// Validate hierarchy
 			if (params.parent_id) {
-				const parent = this.data.items.find(item => item.id === params.parent_id);
+				const parent = this.data.items.find(
+					(item) => item.id === params.parent_id
+				);
 				if (!parent) {
-					return { success: false, error: 'Parent item not found' };
+					return { success: false, error: "Parent item not found" };
 				}
 
 				if (!canBeChildOf(params.type, parent.type)) {
-					return { success: false, error: `${params.type}s cannot be placed in ${parent.type}s` };
+					return {
+						success: false,
+						error: `${params.type}s cannot be placed in ${parent.type}s`,
+					};
 				}
 			}
 
@@ -239,7 +249,7 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 				content: params.content,
 				content_type: params.content_type,
 				content_raw: params.content_raw,
-				content_plaintext: this.extractPlaintext(params.content || ''),
+				content_plaintext: this.extractPlaintext(params.content || ""),
 				parent_id: params.parent_id || null,
 				sort_order: this.getNextSortOrder(params.parent_id || null),
 				metadata: params.metadata || {},
@@ -256,9 +266,12 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async updateItem(id: string, params: Partial<FlexibleItem>): Promise<StorageResult<FlexibleItem>> {
+	async updateItem(
+		id: string,
+		params: Partial<FlexibleItem>
+	): Promise<StorageResult<FlexibleItem>> {
 		try {
-			const itemIndex = this.data.items.findIndex(item => item.id === id);
+			const itemIndex = this.data.items.findIndex((item) => item.id === id);
 
 			if (itemIndex === -1) {
 				return { success: false, error: "Item not found" };
@@ -277,7 +290,8 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 				item.content = params.content;
 				item.content_plaintext = this.extractPlaintext(params.content);
 			}
-			if (params.content_raw !== undefined) item.content_raw = params.content_raw;
+			if (params.content_raw !== undefined)
+				item.content_raw = params.content_raw;
 			if (params.type !== undefined) item.type = params.type;
 			if (params.parent_id !== undefined) item.parent_id = params.parent_id;
 			if (params.sort_order !== undefined) item.sort_order = params.sort_order;
@@ -296,7 +310,7 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 
 	async deleteItem(id: string): Promise<VoidStorageResult> {
 		try {
-			const itemIndex = this.data.items.findIndex(item => item.id === id);
+			const itemIndex = this.data.items.findIndex((item) => item.id === id);
 
 			if (itemIndex === -1) {
 				return { success: false, error: "Item not found" };
@@ -312,14 +326,19 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 
 	private extractPlaintext(content: string): string {
 		// Simple plaintext extraction (remove markdown/html)
-		return content.replace(/[#*_`[\]()]/g, '').replace(/\n+/g, ' ').trim();
+		return content
+			.replace(/[#*_`[\]()]/g, "")
+			.replace(/\n+/g, " ")
+			.trim();
 	}
 
 	private getNextSortOrder(parentId: string | null): number {
-		const siblings = this.data.items.filter(item =>
-			item.parent_id === parentId && !item.deleted_at
+		const siblings = this.data.items.filter(
+			(item) => item.parent_id === parentId && !item.deleted_at
 		);
-		return siblings.length > 0 ? Math.max(...siblings.map(s => s.sort_order)) + 1 : 0;
+		return siblings.length > 0
+			? Math.max(...siblings.map((s) => s.sort_order)) + 1
+			: 0;
 	}
 
 	// ===== ADAPTER INTERFACE IMPLEMENTATION =====
@@ -327,11 +346,11 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 
 	async getNotes(_filters?: NoteFilters): Promise<StorageResult<Note[]>> {
 		try {
-			const items = this.data.items.filter(item =>
-				item.type === 'note' && !item.deleted_at
+			const items = this.data.items.filter(
+				(item) => item.type === "note" && !item.deleted_at
 			);
 
-			const notes: Note[] = items.map(item => this.itemToNote(item));
+			const notes: Note[] = items.map((item) => this.itemToNote(item));
 			return { success: true, data: notes };
 		} catch (error) {
 			return { success: false, error: `Failed to get notes: ${error}` };
@@ -340,7 +359,9 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 
 	async getNote(id: string): Promise<StorageResult<Note | null>> {
 		try {
-			const item = this.data.items.find(item => item.id === id && item.type === 'note');
+			const item = this.data.items.find(
+				(item) => item.id === id && item.type === "note"
+			);
 			if (!item) return { success: true, data: null };
 
 			return { success: true, data: this.itemToNote(item) };
@@ -351,10 +372,10 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 
 	async createNote(params: CreateNoteParams): Promise<StorageResult<Note>> {
 		const result = await this.createItem({
-			type: 'note',
-			title: params.title || 'Untitled Note',
-			content: params.content || '',
-			content_type: params.content_type || 'html',
+			type: "note",
+			title: params.title || "Untitled Note",
+			content: params.content || "",
+			content_type: params.content_type || "html",
 			content_raw: params.content_raw,
 			metadata: {},
 		});
@@ -363,16 +384,18 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 		return { success: true, data: this.itemToNote(result.data) };
 	}
 
-		async updateNote(params: UpdateNoteParams): Promise<StorageResult<Note>> {
+	async updateNote(params: UpdateNoteParams): Promise<StorageResult<Note>> {
 		try {
-			const itemIndex = this.data.items.findIndex(item => item.id === params.id);
+			const itemIndex = this.data.items.findIndex(
+				(item) => item.id === params.id
+			);
 			if (itemIndex === -1) {
-				return { success: false, error: 'Note not found' };
+				return { success: false, error: "Note not found" };
 			}
 
 			const item = this.data.items[itemIndex];
 			if (!item) {
-				return { success: false, error: 'Note not found' };
+				return { success: false, error: "Note not found" };
 			}
 
 			const updatedItem: FlexibleItem = {
@@ -381,7 +404,9 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 				content: params.content ?? item.content,
 				content_type: params.content_type ?? item.content_type,
 				content_raw: params.content_raw ?? item.content_raw,
-				content_plaintext: params.content ? this.extractPlaintext(params.content) : (item.content_plaintext || ''),
+				content_plaintext: params.content
+					? this.extractPlaintext(params.content)
+					: item.content_plaintext || "",
 				metadata: {
 					...item.metadata,
 					is_pinned: params.is_pinned ?? item.metadata.is_pinned,
@@ -401,14 +426,14 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 
 	async deleteNote(id: string): Promise<VoidStorageResult> {
 		try {
-			const itemIndex = this.data.items.findIndex(item => item.id === id);
+			const itemIndex = this.data.items.findIndex((item) => item.id === id);
 			if (itemIndex === -1) {
-				return { success: false, error: 'Note not found' };
+				return { success: false, error: "Note not found" };
 			}
 
 			const item = this.data.items[itemIndex];
 			if (!item) {
-				return { success: false, error: 'Note not found' };
+				return { success: false, error: "Note not found" };
 			}
 
 			this.data.items[itemIndex] = {
@@ -424,30 +449,32 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async searchNotes(query: string, _filters?: NoteFilters): Promise<StorageResult<Note[]>> {
+	async searchNotes(
+		query: string,
+		_filters?: NoteFilters
+	): Promise<StorageResult<Note[]>> {
 		try {
-			const items = this.data.items.filter(item =>
-				item.type === 'note' &&
-				!item.deleted_at &&
-				(item.title.toLowerCase().includes(query.toLowerCase()) ||
-				 item.content?.toLowerCase().includes(query.toLowerCase()) ||
-				 item.content_plaintext?.toLowerCase().includes(query.toLowerCase()))
+			const items = this.data.items.filter(
+				(item) =>
+					item.type === "note" &&
+					!item.deleted_at &&
+					(item.title.toLowerCase().includes(query.toLowerCase()) ||
+						item.content?.toLowerCase().includes(query.toLowerCase()) ||
+						item.content_plaintext?.toLowerCase().includes(query.toLowerCase()))
 			);
 
-			const notes: Note[] = items.map(item => this.itemToNote(item));
+			const notes: Note[] = items.map((item) => this.itemToNote(item));
 			return { success: true, data: notes };
 		} catch (error) {
 			return { success: false, error: `Failed to search notes: ${error}` };
 		}
 	}
 
-
-
 	async getTreeData(): Promise<StorageResult<TreeData[]>> {
 		try {
-			const items = this.data.items.filter(item => !item.deleted_at);
+			const items = this.data.items.filter((item) => !item.deleted_at);
 
-						// Build tree structure
+			// Build tree structure
 			const itemsByParent = new Map<string | null, FlexibleItem[]>();
 
 			for (const item of items) {
@@ -464,7 +491,7 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 
 			const buildTree = (parentId: string | null): TreeData[] => {
 				const items = itemsByParent.get(parentId) || [];
-				return items.map(item => {
+				return items.map((item) => {
 					const treeNode: TreeData = {
 						id: item.id,
 						name: item.title,
@@ -477,7 +504,7 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 					};
 
 					// Add children for container types
-					if (item.type === 'book' || item.type === 'section') {
+					if (item.type === "book" || item.type === "section") {
 						const children = buildTree(item.id);
 						if (children.length > 0) {
 							treeNode.children = children;
@@ -500,8 +527,8 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 		return {
 			id: item.id,
 			title: item.title,
-			content: item.content || '',
-			content_type: (item.content_type as any) || 'html',
+			content: item.content || "",
+			content_type: (item.content_type as any) || "html",
 			content_raw: item.content_raw || null,
 			created_at: item.created_at,
 			updated_at: item.updated_at,
@@ -510,14 +537,11 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 			is_archived: item.metadata.is_archived || false,
 			word_count: item.metadata.word_count || 0,
 			character_count: item.metadata.character_count || 0,
-			content_plaintext: item.content_plaintext || '',
+			content_plaintext: item.content_plaintext || "",
 			sort_order: item.sort_order,
 			parent_category_id: item.parent_id,
 		};
 	}
-
-
-
 
 	async moveTreeItem(
 		itemId: string,
@@ -526,7 +550,7 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 		insertIndex?: number
 	): Promise<VoidStorageResult> {
 		try {
-			const itemIndex = this.data.items.findIndex(item => item.id === itemId);
+			const itemIndex = this.data.items.findIndex((item) => item.id === itemId);
 			if (itemIndex === -1) {
 				return { success: false, error: "Item not found" };
 			}
@@ -541,7 +565,7 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 
 			// Calculate new sort order
 			const siblings = this.data.items
-				.filter(i => i.parent_id === newParentId && i.id !== itemId)
+				.filter((i) => i.parent_id === newParentId && i.id !== itemId)
 				.sort((a, b) => a.sort_order - b.sort_order);
 
 			if (insertIndex !== undefined && insertIndex < siblings.length) {
@@ -550,7 +574,10 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 				item.sort_order = targetSortOrder - 0.5;
 			} else {
 				// Append at end
-				const maxSort = siblings.length > 0 ? Math.max(...siblings.map(s => s.sort_order)) : 0;
+				const maxSort =
+					siblings.length > 0
+						? Math.max(...siblings.map((s) => s.sort_order))
+						: 0;
 				item.sort_order = maxSort + 1;
 			}
 
@@ -570,7 +597,7 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 		parentId: string | null
 	): Promise<VoidStorageResult> {
 		try {
-			const itemIndex = this.data.items.findIndex(item => item.id === itemId);
+			const itemIndex = this.data.items.findIndex((item) => item.id === itemId);
 			if (itemIndex === -1) {
 				return { success: false, error: "Item not found" };
 			}
@@ -580,14 +607,17 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 				return { success: false, error: "Item not found" };
 			}
 			const siblings = this.data.items
-				.filter(i => i.parent_id === parentId && i.id !== itemId)
+				.filter((i) => i.parent_id === parentId && i.id !== itemId)
 				.sort((a, b) => a.sort_order - b.sort_order);
 
 			if (newIndex < siblings.length) {
 				const targetSortOrder = siblings[newIndex]?.sort_order || 0;
 				item.sort_order = targetSortOrder - 0.5;
 			} else {
-				const maxSort = siblings.length > 0 ? Math.max(...siblings.map(s => s.sort_order)) : 0;
+				const maxSort =
+					siblings.length > 0
+						? Math.max(...siblings.map((s) => s.sort_order))
+						: 0;
 				item.sort_order = maxSort + 1;
 			}
 
@@ -599,40 +629,91 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 			return { success: false, error: `Failed to reorder item: ${error}` };
 		}
 	}
-	async getTags(): Promise<StorageResult<Tag[]>> { return { success: true, data: this.data.tags }; }
-	async getTag(): Promise<StorageResult<Tag | null>> { throw new Error("Not implemented"); }
-	async createTag(): Promise<StorageResult<Tag>> { throw new Error("Not implemented"); }
-	async updateTag(): Promise<StorageResult<Tag>> { throw new Error("Not implemented"); }
-	async deleteTag(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async getTagNotes(): Promise<StorageResult<Note[]>> { throw new Error("Not implemented"); }
-	async addNoteTag(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async removeNoteTag(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async getNoteRelationships(): Promise<StorageResult<NoteRelationship[]>> { throw new Error("Not implemented"); }
-	async createNoteRelationship(): Promise<StorageResult<NoteRelationship>> { throw new Error("Not implemented"); }
-	async deleteNoteRelationship(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async getNoteAttachments(): Promise<StorageResult<Attachment[]>> { throw new Error("Not implemented"); }
-	async createAttachment(): Promise<StorageResult<Attachment>> { throw new Error("Not implemented"); }
-	async deleteAttachment(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async getNoteVersions(): Promise<StorageResult<NoteVersion[]>> { throw new Error("Not implemented"); }
-	async createNoteVersion(): Promise<StorageResult<NoteVersion>> { throw new Error("Not implemented"); }
-	async restoreNoteVersion(): Promise<StorageResult<Note>> { throw new Error("Not implemented"); }
-	async getSettings(): Promise<StorageResult<Setting[]>> { return { success: true, data: this.data.settings }; }
-	async getSetting(): Promise<StorageResult<Setting | null>> { throw new Error("Not implemented"); }
-	async setSetting(): Promise<StorageResult<Setting>> { throw new Error("Not implemented"); }
-	async deleteSetting(): Promise<VoidStorageResult> { throw new Error("Not implemented"); }
-	async sync(): Promise<VoidStorageResult> { await this.saveData(); return { success: true }; }
+	async getTags(): Promise<StorageResult<Tag[]>> {
+		return { success: true, data: this.data.tags };
+	}
+	async getTag(): Promise<StorageResult<Tag | null>> {
+		throw new Error("Not implemented");
+	}
+	async createTag(): Promise<StorageResult<Tag>> {
+		throw new Error("Not implemented");
+	}
+	async updateTag(): Promise<StorageResult<Tag>> {
+		throw new Error("Not implemented");
+	}
+	async deleteTag(): Promise<VoidStorageResult> {
+		throw new Error("Not implemented");
+	}
+	async getTagNotes(): Promise<StorageResult<Note[]>> {
+		throw new Error("Not implemented");
+	}
+	async addNoteTag(): Promise<VoidStorageResult> {
+		throw new Error("Not implemented");
+	}
+	async removeNoteTag(): Promise<VoidStorageResult> {
+		throw new Error("Not implemented");
+	}
+	async getNoteRelationships(): Promise<StorageResult<NoteRelationship[]>> {
+		throw new Error("Not implemented");
+	}
+	async createNoteRelationship(): Promise<StorageResult<NoteRelationship>> {
+		throw new Error("Not implemented");
+	}
+	async deleteNoteRelationship(): Promise<VoidStorageResult> {
+		throw new Error("Not implemented");
+	}
+	async getNoteAttachments(): Promise<StorageResult<Attachment[]>> {
+		throw new Error("Not implemented");
+	}
+	async createAttachment(): Promise<StorageResult<Attachment>> {
+		throw new Error("Not implemented");
+	}
+	async deleteAttachment(): Promise<VoidStorageResult> {
+		throw new Error("Not implemented");
+	}
+	async getNoteVersions(): Promise<StorageResult<NoteVersion[]>> {
+		throw new Error("Not implemented");
+	}
+	async createNoteVersion(): Promise<StorageResult<NoteVersion>> {
+		throw new Error("Not implemented");
+	}
+	async restoreNoteVersion(): Promise<StorageResult<Note>> {
+		throw new Error("Not implemented");
+	}
+	async getSettings(): Promise<StorageResult<Setting[]>> {
+		return { success: true, data: this.data.settings };
+	}
+	async getSetting(): Promise<StorageResult<Setting | null>> {
+		throw new Error("Not implemented");
+	}
+	async setSetting(): Promise<StorageResult<Setting>> {
+		throw new Error("Not implemented");
+	}
+	async deleteSetting(): Promise<VoidStorageResult> {
+		throw new Error("Not implemented");
+	}
+	async sync(): Promise<VoidStorageResult> {
+		await this.saveData();
+		return { success: true };
+	}
 
-	async getStorageInfo(): Promise<StorageResult<{
-		backend: "sqlite" | "json-single" | "json-hybrid" | "cloud";
-		note_count: number;
-		category_count: number;
-		tag_count: number;
-		attachment_count: number;
-		last_sync?: string;
-		storage_size?: number;
-	}>> {
-		const notes = this.data.items.filter(i => i.type === 'note' && !i.deleted_at);
-		const categories = this.data.items.filter(i => (i.type === 'book' || i.type === 'section') && !i.deleted_at);
+	async getStorageInfo(): Promise<
+		StorageResult<{
+			backend: "sqlite" | "json-single" | "json-hybrid" | "cloud";
+			note_count: number;
+			category_count: number;
+			tag_count: number;
+			attachment_count: number;
+			last_sync?: string;
+			storage_size?: number;
+		}>
+	> {
+		const notes = this.data.items.filter(
+			(i) => i.type === "note" && !i.deleted_at
+		);
+		const categories = this.data.items.filter(
+			(i) => (i.type === "book" || i.type === "section") && !i.deleted_at
+		);
 
 		return {
 			success: true,
@@ -643,7 +724,7 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 				tag_count: this.data.tags.length,
 				attachment_count: 0,
 				last_sync: this.data.last_modified,
-			}
+			},
 		};
 	}
 }
