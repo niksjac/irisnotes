@@ -54,8 +54,8 @@ export function SidebarResizer({
 			}
 		};
 
-		window.addEventListener('resize', handleResize);
-		return () => window.removeEventListener('resize', handleResize);
+		window.addEventListener("resize", handleResize);
+		return () => window.removeEventListener("resize", handleResize);
 	}, [isMobile, height, setHeight]);
 
 	// Initialize dimensions if not set
@@ -77,14 +77,17 @@ export function SidebarResizer({
 	const startHeight = useRef(0);
 	const resizerRef = useRef<HTMLButtonElement | null>(null);
 	const [isFocused, setIsFocused] = useState(false);
-	const hotkeyResizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const hotkeyResizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+		null
+	);
 
 	// Track external dimension changes (hotkey resizing) to disable transitions
 	const prevWidthRef = useRef(width);
 	const prevHeightRef = useRef(height);
 	useEffect(() => {
-		const dimensionChanged = (!isDragging && prevWidthRef.current !== width) ||
-								(!isDragging && prevHeightRef.current !== height);
+		const dimensionChanged =
+			(!isDragging && prevWidthRef.current !== width) ||
+			(!isDragging && prevHeightRef.current !== height);
 
 		if (dimensionChanged) {
 			// Dimension changed externally (hotkey), disable transitions temporarily
@@ -150,7 +153,10 @@ export function SidebarResizer({
 				const newHeight = startHeight.current + deltaY;
 
 				// Apply min/max constraints for mobile
-				const constrainedHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
+				const constrainedHeight = Math.max(
+					minHeight,
+					Math.min(maxHeight, newHeight)
+				);
 				setHeight(constrainedHeight);
 
 				// Auto-collapse if dragged very small (only if enabled)
@@ -163,7 +169,10 @@ export function SidebarResizer({
 				const newWidth = startWidth.current + deltaX;
 
 				// Apply min/max constraints
-				const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+				const constrainedWidth = Math.max(
+					minWidth,
+					Math.min(maxWidth, newWidth)
+				);
 				setWidth(constrainedWidth);
 
 				// Auto-collapse if dragged very small (only if enabled)
@@ -172,7 +181,17 @@ export function SidebarResizer({
 				}
 			}
 		},
-		[isDragging, minWidth, maxWidth, maxHeight, autoCollapseOnResize, onCollapsedChange, isMobile, setHeight, setWidth]
+		[
+			isDragging,
+			minWidth,
+			maxWidth,
+			maxHeight,
+			autoCollapseOnResize,
+			onCollapsedChange,
+			isMobile,
+			setHeight,
+			setWidth,
+		]
 	);
 
 	const handleMouseUp = useCallback(() => {
@@ -253,7 +272,18 @@ export function SidebarResizer({
 				setWidth(newWidth);
 			}
 		},
-		[width, height, minWidth, maxWidth, maxHeight, defaultWidth, isCollapsed, isMobile, setWidth, setHeight]
+		[
+			width,
+			height,
+			minWidth,
+			maxWidth,
+			maxHeight,
+			defaultWidth,
+			isCollapsed,
+			isMobile,
+			setWidth,
+			setHeight,
+		]
 	);
 
 	// Focus handlers
@@ -351,7 +381,9 @@ function MobileLayout({
 		<div
 			className={clsx(
 				"w-full relative bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-600 flex-shrink-0",
-				!isDragging && !isHotkeyResizing && "transition-all duration-200 ease-in-out",
+				!isDragging &&
+					!isHotkeyResizing &&
+					"transition-all duration-200 ease-in-out",
 				!isCollapsed && "hover:border-b-blue-500",
 				(isDragging || isFocused) && "border-b-blue-500",
 				isCollapsed && "border-b-transparent"
@@ -364,7 +396,9 @@ function MobileLayout({
 			<div
 				className={clsx(
 					"w-full flex flex-col",
-					!isDragging && !isHotkeyResizing && "transition-opacity duration-200 ease-in-out",
+					!isDragging &&
+						!isHotkeyResizing &&
+						"transition-opacity duration-200 ease-in-out",
 					isCollapsed ? "opacity-0" : "opacity-100"
 				)}
 				style={{ height: height }}
@@ -430,7 +464,9 @@ function DesktopLayout({
 		<div
 			className={clsx(
 				"h-full relative bg-gray-100 dark:bg-gray-800 border-r border-gray-300 dark:border-gray-600 flex-shrink-0",
-				!isDragging && !isHotkeyResizing && "transition-all duration-200 ease-in-out",
+				!isDragging &&
+					!isHotkeyResizing &&
+					"transition-all duration-200 ease-in-out",
 				!isCollapsed && "hover:border-r-blue-500",
 				(isDragging || isFocused) && "border-r-blue-500",
 				isCollapsed && "border-r-transparent"
@@ -443,7 +479,9 @@ function DesktopLayout({
 			<div
 				className={clsx(
 					"h-full flex flex-col",
-					!isDragging && !isHotkeyResizing && "transition-opacity duration-200 ease-in-out",
+					!isDragging &&
+						!isHotkeyResizing &&
+						"transition-opacity duration-200 ease-in-out",
 					isCollapsed ? "opacity-0" : "opacity-100"
 				)}
 				style={{ width: width }}

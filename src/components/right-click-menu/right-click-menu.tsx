@@ -62,10 +62,17 @@ export function RightClickMenu({ data, onClose }: RightClickMenuProps) {
 		>
 			{data.menuGroups.map((group, groupIndex) => (
 				<div key={group.id}>
-					{groupIndex > 0 && <div className="h-px bg-gray-200 dark:bg-gray-700 my-1" />}
+					{groupIndex > 0 && (
+						<div className="h-px bg-gray-200 dark:bg-gray-700 my-1" />
+					)}
 					{group.items.map((item) => {
 						if (item.separator) {
-							return <div key={item.id} className="h-px bg-gray-200 dark:bg-gray-700 my-1" />;
+							return (
+								<div
+									key={item.id}
+									className="h-px bg-gray-200 dark:bg-gray-700 my-1"
+								/>
+							);
 						}
 
 						return (
@@ -81,7 +88,11 @@ export function RightClickMenu({ data, onClose }: RightClickMenuProps) {
 							>
 								{item.icon && <item.icon className="h-4 w-4" />}
 								<span className="flex-1">{item.label}</span>
-								{item.shortcut && <span className="text-xs text-gray-400 dark:text-gray-500">{item.shortcut}</span>}
+								{item.shortcut && (
+									<span className="text-xs text-gray-400 dark:text-gray-500">
+										{item.shortcut}
+									</span>
+								)}
 							</button>
 						);
 					})}
