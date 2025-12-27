@@ -1,0 +1,431 @@
+import { EditorView } from "prosemirror-view";
+import { toggleMark, setBlockType, wrapIn } from "prosemirror-commands";
+import { undo, redo } from "prosemirror-history";
+import { wrapInList, liftListItem, sinkListItem } from "prosemirror-schema-list";
+import { useState, useEffect, useRef } from "react";
+import type { MarkType, NodeType } from "prosemirror-model";
+import {
+	Bold,
+	Italic,
+	Code,
+	Heading1,
+	Heading2,
+	Heading3,
+	Type,
+	List,
+	ListOrdered,
+	Quote,
+	Undo2,
+	Redo2,
+	ChevronDown,
+	FileCode,
+} from "lucide-react";
+
+interface EditorToolbarProps {
+	editorView: EditorView | null;
+	schema: any;
+}
+
+export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
+	const [showDropdown, setShowDropdown] = useState(false);
+	const [visibleButtons, setVisibleButtons] = useState<number>(0);
+	const [, setUpdateTrigger] = useState(0);
+	const toolbarRef = useRef<HTMLDivElement>(null);
+	const dropdownRef = useRef<HTMLDivElement>(null);
+
+	// Helper to check if a mark is active
+	const isMarkActive = (markType: MarkType) => {
+		if (!editorView) return false;
+		const { from, $from, to, empty } = editorView.state.selection;
+		if (empty) {
+			return !!markType.isInSet(editorView.state.storedMarks || $from.marks());
+		}
+		return editorView.state.doc.rangeHasMark(from, to, markType);
+	};
+
+	// Helper to check if a block type is active
+	const isBlockActive = (nodeType: NodeType, attrs?: Record<string, any>) => {
+		if (!editorView) return false;
+		const { $from, to, $to } = editorView.state.selection;
+		
+		// Check the parent node at the selection start
+		const depth = $from.depth;
+		for (let d = depth; d > 0; d--) {
+			const node = $from.node(d);
+			if (node.type === nodeType) {
+				if (!attrs || Object.keys(attrs).every((key) => node.attrs[key] === attrs[key])) {
+					return true;
+				}
+			}
+		}
+		
+		// If selection spans multiple blocks, also check the end
+		if ($from.pos !== $to.pos) {
+			for (let d = $to.depth; d > 0; d--) {
+				const node = $to.node(d);
+				if (node.type === nodeType) {
+					if (!attrs || Object.keys(attrs).every((key) => node.attrs[key] === attrs[key])) {
+						return true;
+					}
+				}
+			}
+		}
+		
+		return false;
+	};
+
+	const executeCommand = (command: any) => {
+		return () => {
+			if (!editorView) return;
+			const { state } = editorView;
+			
+			// Execute the command
+			const result = command(state, (tr: any) => {
+				editorView.dispatch(tr);
+			});
+			
+			if (result) {
+				editorView.focus();
+			}
+		};
+	};
+
+	// Update toolbar state when editor selection changes
+	useEffect(() => {
+		if (!editorView) return;
+
+		const updateToolbar = () => {
+			setUpdateTrigger((prev) => prev + 1);
+		};
+
+		// Subscribe to editor updates
+		const plugin = editorView.state.plugins.find((p: any) => p.spec?.view);
+		
+		// Use a mutation observer or transaction listener
+		const updateInterval = setInterval(updateToolbar, 100);
+
+		return () => {
+			clearInterval(updateInterval);
+		};
+	}, [editorView]);
+
+	const allButtons = !schema
+		? []
+		: [
+				// Basic formatting
+				{
+					icon: Bold,
+					label: "Bold",
+					shortcut: "Ctrl+B",
+					command: toggleMark(schema.marks.strong),
+					isActive: () => isMarkActive(schema.marks.strong),
+					className: "toolbar-bold",
+				},
+				{
+					icon: Italic,
+					label: "Italic",
+					shortcut: "Ctrl+I",
+					command: toggleMark(schema.marks.em),
+					isActive: () => isMarkActive(schema.marks.em),
+					className: "toolbar-italic",
+				},
+				{
+					icon: Code,
+					label: "Code",
+					shortcut: "Ctrl+`",
+					command: toggleMark(schema.marks.code),
+					isActive: () => isMarkActive(schema.marks.code),
+					className: "toolbar-code",
+				},
+
+				// Block formatting
+				{
+					icon: Heading1,
+					label: "Heading 1",
+					shortcut: "Ctrl+Shift+1",
+					command: (state: any, dispatch: any) => {
+						const isActive = isBlockActive(schema.nodes.heading, { level: 1 });
+						if (isActive) {
+							return setBlockType(schema.nodes.paragraph)(state, dispatch);
+						}
+						return setBlockType(schema.nodes.heading, { level: 1 })(state, dispatch);
+					},
+					isActive: () => isBlockActive(schema.nodes.heading, { level: 1 }),
+					className: "toolbar-h1",
+				},
+				{
+					icon: Heading2,
+					label: "Heading 2",
+					shortcut: "Ctrl+Shift+2",
+					command: (state: any, dispatch: any) => {
+						const isActive = isBlockActive(schema.nodes.heading, { level: 2 });
+						if (isActive) {
+							return setBlockType(schema.nodes.paragraph)(state, dispatch);
+						}
+						return setBlockType(schema.nodes.heading, { level: 2 })(state, dispatch);
+					},
+					isActive: () => isBlockActive(schema.nodes.heading, { level: 2 }),
+					className: "toolbar-h2",
+				},
+				{
+					icon: Heading3,
+					label: "Heading 3",
+					shortcut: "Ctrl+Shift+3",
+					command: (state: any, dispatch: any) => {
+						const isActive = isBlockActive(schema.nodes.heading, { level: 3 });
+						if (isActive) {
+							return setBlockType(schema.nodes.paragraph)(state, dispatch);
+						}
+						return setBlockType(schema.nodes.heading, { level: 3 })(state, dispatch);
+					},
+					isActive: () => isBlockActive(schema.nodes.heading, { level: 3 }),
+					className: "toolbar-h3",
+				},
+				{
+					icon: Type,
+					label: "Paragraph",
+					shortcut: "Ctrl+Shift+0",
+					command: setBlockType(schema.nodes.paragraph),
+					isActive: () => isBlockActive(schema.nodes.paragraph),
+					className: "toolbar-paragraph",
+				},
+
+				// Lists
+				{
+					icon: List,
+					label: "Bullet List",
+					shortcut: "Ctrl+Shift+8",
+					command: wrapInList(schema.nodes.bullet_list),
+					isActive: () => isBlockActive(schema.nodes.bullet_list),
+					className: "toolbar-bullet-list",
+				},
+				{
+					icon: ListOrdered,
+					label: "Ordered List",
+					shortcut: "Ctrl+Shift+9",
+					command: wrapInList(schema.nodes.ordered_list),
+					isActive: () => isBlockActive(schema.nodes.ordered_list),
+					className: "toolbar-ordered-list",
+				},
+				{
+					icon: Quote,
+					label: "Blockquote",
+					shortcut: "Ctrl+Shift+.",
+					command: wrapIn(schema.nodes.blockquote),
+					isActive: () => isBlockActive(schema.nodes.blockquote),
+					className: "toolbar-blockquote",
+				},
+				{
+					icon: FileCode,
+					label: "Code Block",
+					shortcut: "Ctrl+Shift+C",
+					command: setBlockType(schema.nodes.code_block),
+					isActive: () => isBlockActive(schema.nodes.code_block),
+					className: "toolbar-code-block",
+				},
+
+				// Utility
+				{
+					icon: Undo2,
+					label: "Undo",
+					shortcut: "Ctrl+Z",
+					command: undo,
+					isActive: () => false,
+					className: "toolbar-undo",
+				},
+				{
+					icon: Redo2,
+					label: "Redo",
+					shortcut: "Ctrl+Y",
+					command: redo,
+					isActive: () => false,
+					className: "toolbar-redo",
+				},
+		  ];
+
+	// Calculate visible buttons based on actual measurements
+	useEffect(() => {
+		const calculateVisibleButtons = () => {
+			if (!toolbarRef.current || allButtons.length === 0) {
+				setVisibleButtons(allButtons.length);
+				return;
+			}
+
+			const container = toolbarRef.current;
+			const containerWidth = container.offsetWidth;
+
+			// If container is too small (likely not rendered yet), retry after a delay
+			if (containerWidth < 100) {
+				setTimeout(calculateVisibleButtons, 50);
+				setVisibleButtons(allButtons.length); // Show all buttons temporarily
+				return;
+			}
+
+			// Get computed styles for accurate measurements
+			const containerStyles = getComputedStyle(container);
+			const paddingLeft = parseInt(containerStyles.paddingLeft) || 8;
+			const paddingRight = parseInt(containerStyles.paddingRight) || 8;
+			const containerPadding = paddingLeft + paddingRight;
+
+			// Reserve space for the overflow button only if we'll need it
+			const overflowButtonWidth = 40;
+
+			// Button dimensions
+			const buttonWidth = 32;
+			const buttonGap = 4;
+
+			// Calculate maximum buttons that could theoretically fit
+			const maxPossibleButtons = Math.floor(
+				(containerWidth - containerPadding) / (buttonWidth + buttonGap)
+			);
+
+			// If we can fit all buttons, don't reserve space for overflow
+			if (maxPossibleButtons >= allButtons.length) {
+				setVisibleButtons(allButtons.length);
+				return;
+			}
+
+			// Calculate available width for buttons (reserve space for overflow)
+			const availableWidth =
+				containerWidth - containerPadding - overflowButtonWidth;
+
+			// Calculate how many buttons can fit
+			let fittingButtons = 0;
+			let usedWidth = 0;
+
+			for (let i = 0; i < allButtons.length; i++) {
+				const buttonSpaceNeeded = buttonWidth + (i > 0 ? buttonGap : 0);
+
+				if (usedWidth + buttonSpaceNeeded <= availableWidth) {
+					fittingButtons++;
+					usedWidth += buttonSpaceNeeded;
+				} else {
+					break;
+				}
+			}
+
+			// Ensure at least some basic buttons are visible
+			if (fittingButtons < 3 && allButtons.length >= 3) {
+				fittingButtons = 3;
+			}
+
+			setVisibleButtons(fittingButtons);
+		};
+
+		// Small delay to ensure DOM is ready
+		const timer = setTimeout(calculateVisibleButtons, 0);
+
+		// Use ResizeObserver for better performance
+		const resizeObserver = new ResizeObserver(() => {
+			// Debounce calculations
+			setTimeout(calculateVisibleButtons, 10);
+		});
+
+		if (toolbarRef.current) {
+			resizeObserver.observe(toolbarRef.current);
+		}
+
+		return () => {
+			clearTimeout(timer);
+			resizeObserver.disconnect();
+		};
+	}, [allButtons.length]);
+
+	// Close dropdown when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				dropdownRef.current &&
+				!dropdownRef.current.contains(event.target as Node)
+			) {
+				setShowDropdown(false);
+			}
+		};
+
+		if (showDropdown) {
+			document.addEventListener("mousedown", handleClickOutside);
+			return () => document.removeEventListener("mousedown", handleClickOutside);
+		}
+
+		return undefined;
+	}, [showDropdown]);
+
+	// Don't render if required props are missing
+	if (!editorView || !schema) return null;
+
+	const visibleButtonsList = allButtons.slice(0, visibleButtons);
+	const dropdownButtonsList = allButtons.slice(visibleButtons);
+
+	return (
+		<div
+			ref={toolbarRef}
+			className="flex items-center gap-1 px-2 py-1.5 bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700"
+		>
+			<div className="flex items-center gap-1 flex-wrap">
+				{visibleButtonsList.map((button, index) => {
+					const IconComponent = button.icon;
+					const isActive = button.isActive?.() || false;
+					return (
+						<button
+							key={index}
+							type="button"
+							className={`w-8 h-8 flex items-center justify-center rounded transition-colors ${
+								isActive
+									? "bg-blue-500 text-white hover:bg-blue-600"
+									: "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+							}`}
+							onClick={executeCommand(button.command)}
+							title={`${button.label} ${button.shortcut ? `(${button.shortcut})` : ""}`}
+						>
+							<IconComponent size={16} />
+						</button>
+					);
+				})}
+
+				{dropdownButtonsList.length > 0 && (
+					<div className="relative">
+						<button
+							type="button"
+							className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
+							onClick={() => setShowDropdown(!showDropdown)}
+							title={`More formatting options (${dropdownButtonsList.length} more)`}
+						>
+							<ChevronDown size={16} />
+						</button>
+
+						{showDropdown && (
+							<div
+								ref={dropdownRef}
+								className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-lg z-50 min-w-[200px]"
+							>
+								{dropdownButtonsList.map((button, index) => {
+									const IconComponent = button.icon;
+									const isActive = button.isActive?.() || false;
+									return (
+										<button
+											key={index}
+											type="button"
+											className={`w-full flex items-center gap-2 px-3 py-2 transition-colors text-left ${
+												isActive
+													? "bg-blue-500 text-white hover:bg-blue-600"
+													: "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+											}`}
+											onClick={() => {
+												executeCommand(button.command)();
+												setShowDropdown(false);
+											}}
+											title={`${button.label} ${button.shortcut ? `(${button.shortcut})` : ""}`}
+										>
+											<IconComponent size={16} />
+											<span className="text-sm">{button.label}</span>
+										</button>
+									);
+								})}
+							</div>
+						)}
+					</div>
+				)}
+			</div>
+		</div>
+	);
+}
