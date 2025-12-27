@@ -23,14 +23,18 @@ import {
 	focusTab8Atom,
 	focusTab9Atom,
 	focusNextTabAtom,
-	focusPreviousTabAtom
+	focusPreviousTabAtom,
 } from "@/atoms";
+import { useEditorViewToggle } from "./use-editor-view-toggle";
+import { useLineWrapping } from "./use-line-wrapping";
 
 /**
  * Hook that provides all hotkey handler functions
  * Encapsulates all the atom setters for cleaner component code
  */
 export function useHotkeyHandlers() {
+	const { toggleEditorView } = useEditorViewToggle();
+	const { toggleLineWrapping } = useLineWrapping();
 	// Tab actions
 	const closeActiveTab = useSetAtom(closeActiveTabAtom);
 	const newTabInActivePane = useSetAtom(newTabInActivePaneAtom);
@@ -107,5 +111,9 @@ export function useHotkeyHandlers() {
 		// Tab navigation
 		focusNextTab,
 		focusPreviousTab,
+
+		// Editor view toggle
+		toggleEditorView,
+		toggleLineWrapping,
 	};
 }

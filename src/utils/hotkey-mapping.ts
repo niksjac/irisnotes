@@ -32,6 +32,8 @@ export function mapHotkeyHandlers(
 		focusTab9: () => void;
 		focusNextTab: () => void;
 		focusPreviousTab: () => void;
+		toggleEditorView: () => void;
+		toggleLineWrapping: () => void;
 	}
 ): AppHotkeysProps {
 	return {
@@ -66,10 +68,13 @@ export function mapHotkeyHandlers(
 		onFocusTab7: handlers.focusTab7,
 		onFocusTab8: handlers.focusTab8,
 		onFocusTab9: handlers.focusTab9,
-			// Tab navigation hotkeys
-	onFocusNextTab: handlers.focusNextTab,
-	onFocusPreviousTab: handlers.focusPreviousTab,
-	// App hotkeys
-	onRefreshApp: () => window.location.reload(),
-};
+		// Tab navigation hotkeys
+		onFocusNextTab: handlers.focusNextTab,
+		onFocusPreviousTab: handlers.focusPreviousTab,
+		// App hotkeys
+		onRefreshApp: () => window.location.reload(),
+		// Editor hotkeys
+		onToggleEditorView: handlers.toggleEditorView,
+		onToggleLineWrapping: handlers.toggleLineWrapping,
+	};
 }

@@ -50,6 +50,10 @@ export interface HotkeyMapping {
 	paneResizeLeft: HotkeyConfig;
 	paneResizeRight: HotkeyConfig;
 
+	// Editor hotkeys
+	toggleEditorView: HotkeyConfig;
+	toggleLineWrapping: HotkeyConfig;
+
 	// Sidebar resizing hotkeys
 	sidebarResizeLeft: HotkeyConfig;
 	sidebarResizeRight: HotkeyConfig;
@@ -126,6 +130,10 @@ export interface AppHotkeysProps {
 
 	// App hotkeys
 	onRefreshApp?: () => void;
+
+	// Editor hotkeys
+	onToggleEditorView?: () => void;
+	onToggleLineWrapping?: () => void;
 
 	// Editor hotkeys (future)
 	// onSave?: () => void;
@@ -214,12 +222,13 @@ export interface Tab {
 	viewType: ViewType;
 	viewData?: any; // For note IDs, folder IDs, etc.
 	isDirty?: boolean;
+	editorMode?: "rich" | "source"; // Track which editor view to use
 }
 
 export interface PaneState {
 	count: 1 | 2; // 1 or 2 panes
 	activePane: 0 | 1; // 0 or 1
-	splitDirection: 'horizontal'; // Future: could add vertical
+	splitDirection: "horizontal"; // Future: could add vertical
 }
 
 // Test comment for prettier hook

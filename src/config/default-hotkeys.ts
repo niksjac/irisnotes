@@ -52,6 +52,20 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		category: "Panes",
 		global: true,
 	},
+
+	// Editor hotkeys
+	toggleEditorView: {
+		key: "ctrl+e",
+		description: "Toggle Editor View (Rich/Source)",
+		category: "Editor",
+		global: true,
+	},
+	toggleLineWrapping: {
+		key: "alt+z",
+		description: "Toggle Line Wrapping",
+		category: "Editor",
+		global: true,
+	},
 	paneResizeLeft: {
 		key: "alt+left",
 		description: "Resize Pane Left",
@@ -191,7 +205,7 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
  */
 export const getHotkeyCategories = (): string[] => {
 	const categories = new Set<string>();
-	Object.values(DEFAULT_HOTKEYS).forEach(hotkey => {
+	Object.values(DEFAULT_HOTKEYS).forEach((hotkey) => {
 		categories.add(hotkey.category);
 	});
 	return Array.from(categories).sort();
@@ -200,8 +214,13 @@ export const getHotkeyCategories = (): string[] => {
 /**
  * Get hotkeys by category
  */
-export const getHotkeysByCategory = (mapping: HotkeyMapping = DEFAULT_HOTKEYS): Record<string, Array<{ action: string; config: HotkeyConfig }>> => {
-	const byCategory: Record<string, Array<{ action: string; config: HotkeyConfig }>> = {};
+export const getHotkeysByCategory = (
+	mapping: HotkeyMapping = DEFAULT_HOTKEYS
+): Record<string, Array<{ action: string; config: HotkeyConfig }>> => {
+	const byCategory: Record<
+		string,
+		Array<{ action: string; config: HotkeyConfig }>
+	> = {};
 
 	Object.entries(mapping).forEach(([action, config]) => {
 		if (!byCategory[config.category]) {
