@@ -16,7 +16,7 @@ export function HotkeysView() {
 	Object.entries(hotkeysByCategory).forEach(([category, hotkeys]) => {
 		hotkeys.forEach(({ config }) => {
 			configurableHotkeys.push({
-				key: config.key.toUpperCase().replace(/\+/g, '+'),
+				key: config.key.toUpperCase().replace(/\+/g, "+"),
 				description: config.description,
 				category: category,
 			});
@@ -32,7 +32,11 @@ export function HotkeysView() {
 			category: "Application",
 		},
 		{ key: "F5", description: "Reload Note", category: "Application" },
-		{ key: "F2", description: "Rename Selected Tree Item", category: "Application" },
+		{
+			key: "F2",
+			description: "Rename Selected Tree Item",
+			category: "Application",
+		},
 		{
 			key: "Ctrl++",
 			description: "Increase Editor Font Size",
@@ -231,21 +235,30 @@ export function HotkeysView() {
 
 	return (
 		<div className="p-6 h-full overflow-auto bg-white dark:bg-gray-900">
-			<h1 className="text-xl font-semibold mb-6 text-gray-900 dark:text-gray-100">Keyboard Shortcuts</h1>
+			<h1 className="text-xl font-semibold mb-6 text-gray-900 dark:text-gray-100">
+				Keyboard Shortcuts
+			</h1>
 
 			<div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
 				<p className="m-0 text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-2">
-					<strong>Note:</strong> On macOS, use Cmd (⌘) instead of Ctrl for most shortcuts. Hotkey sequences require
-					pressing keys in order (e.g., Ctrl+K, then R).
+					<strong>Note:</strong> On macOS, use Cmd (⌘) instead of Ctrl for most
+					shortcuts. Hotkey sequences require pressing keys in order (e.g.,
+					Ctrl+K, then R).
 				</p>
 				<p className="m-0 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-					<strong>Configuration:</strong> Layout, Tab, Pane, Sidebar, Focus, and Tab Movement hotkeys can be customized
-					by adding a <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">hotkeys</code> section to your config.json file.
+					<strong>Configuration:</strong> Layout, Tab, Pane, Sidebar, Focus, and
+					Tab Movement hotkeys can be customized by adding a{" "}
+					<code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">
+						hotkeys
+					</code>{" "}
+					section to your config.json file.
 				</p>
 			</div>
 
-					{categories.map((category) => {
-			const categoryHotkeys = allHotkeys.filter((h) => h.category === category);
+			{categories.map((category) => {
+				const categoryHotkeys = allHotkeys.filter(
+					(h) => h.category === category
+				);
 				return (
 					<section key={category} className="mb-8">
 						<h2 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -258,7 +271,9 @@ export function HotkeysView() {
 									key={`${category}-${hotkey.key}-${hotkey.description}`}
 									className="flex items-center justify-between p-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded"
 								>
-									<span className="text-gray-900 dark:text-gray-100 text-sm">{hotkey.description}</span>
+									<span className="text-gray-900 dark:text-gray-100 text-sm">
+										{hotkey.description}
+									</span>
 									<code className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-1.5 py-0.5 rounded text-xs font-mono border border-gray-200 dark:border-gray-600">
 										{formatKey(hotkey.key)}
 									</code>
@@ -270,16 +285,23 @@ export function HotkeysView() {
 			})}
 
 			<section className="mt-8 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
-				<h3 className="text-lg font-medium mb-2 text-gray-900 dark:text-gray-100">Tips</h3>
+				<h3 className="text-lg font-medium mb-2 text-gray-900 dark:text-gray-100">
+					Tips
+				</h3>
 				<ul className="m-0 pl-6 text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
 					<li>Most shortcuts work when focus is on the editor</li>
-					<li>Formatting shortcuts apply to selected text or at cursor position</li>
+					<li>
+						Formatting shortcuts apply to selected text or at cursor position
+					</li>
 					<li>List shortcuts work within list items to indent/outdent</li>
 					<li>Color shortcuts can be combined with text selection</li>
 					<li>
-						Sequence shortcuts like "Ctrl+K, R" require releasing the first key combination before pressing the second
+						Sequence shortcuts like "Ctrl+K, R" require releasing the first key
+						combination before pressing the second
 					</li>
-					<li>Some shortcuts may be overridden by your browser or operating system</li>
+					<li>
+						Some shortcuts may be overridden by your browser or operating system
+					</li>
 				</ul>
 			</section>
 		</div>

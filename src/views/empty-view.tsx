@@ -7,7 +7,9 @@ export const EmptyView: FC = () => {
 				<div className="mb-4 text-6xl">📄</div>
 				<p className="text-lg mb-2">Empty Tab</p>
 				<p className="text-sm">This tab is ready for content</p>
-				<p className="text-xs mt-4 text-gray-400 dark:text-gray-500">Press Ctrl+W to close this tab</p>
+				<p className="text-xs mt-4 text-gray-400 dark:text-gray-500">
+					Press Ctrl+W to close this tab
+				</p>
 			</div>
 		</div>
 	);

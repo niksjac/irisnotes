@@ -6,7 +6,9 @@ export function ConfigView() {
 	const { darkMode, toggleDarkMode } = useTheme();
 	const { config, updateConfig } = useConfig();
 
-	const handleStorageBackendChange = async (backend: StorageSettings["backend"]) => {
+	const handleStorageBackendChange = async (
+		backend: StorageSettings["backend"]
+	) => {
 		const newStorageConfig: StorageSettings = {
 			backend,
 		};
@@ -16,15 +18,16 @@ export function ConfigView() {
 			newStorageConfig.sqlite = {
 				database_path: config.storage.sqlite?.database_path || "notes.db",
 			};
-			} else if (backend === "json-single") {
-		newStorageConfig.jsonSingle = {
-			file_path: config.storage.jsonSingle?.file_path || "./dev/storage.json",
-		};
-	} else if (backend === "json-hybrid") {
-		newStorageConfig.jsonHybrid = {
-			structure_file: config.storage.jsonHybrid?.structure_file || "./dev/structure.json",
-			content_dir: config.storage.jsonHybrid?.content_dir || "./dev/content/",
-		};
+		} else if (backend === "json-single") {
+			newStorageConfig.jsonSingle = {
+				file_path: config.storage.jsonSingle?.file_path || "./dev/storage.json",
+			};
+		} else if (backend === "json-hybrid") {
+			newStorageConfig.jsonHybrid = {
+				structure_file:
+					config.storage.jsonHybrid?.structure_file || "./dev/structure.json",
+				content_dir: config.storage.jsonHybrid?.content_dir || "./dev/content/",
+			};
 		} else if (backend === "cloud") {
 			newStorageConfig.cloud = {
 				provider: config.storage.cloud?.provider || "google-drive",
@@ -65,7 +68,8 @@ export function ConfigView() {
 				jsonHybrid: {
 					...config.storage.jsonHybrid,
 					structure_file: path,
-					content_dir: config.storage.jsonHybrid?.content_dir || "./dev/content/",
+					content_dir:
+						config.storage.jsonHybrid?.content_dir || "./dev/content/",
 				},
 			},
 		});
@@ -77,14 +81,17 @@ export function ConfigView() {
 				...config.storage,
 				jsonHybrid: {
 					...config.storage.jsonHybrid,
-					structure_file: config.storage.jsonHybrid?.structure_file || "./dev/structure.json",
+					structure_file:
+						config.storage.jsonHybrid?.structure_file || "./dev/structure.json",
 					content_dir: path,
 				},
 			},
 		});
 	};
 
-	const handleCloudProviderChange = async (provider: "google-drive" | "dropbox" | "onedrive") => {
+	const handleCloudProviderChange = async (
+		provider: "google-drive" | "dropbox" | "onedrive"
+	) => {
 		await updateConfig({
 			storage: {
 				...config.storage,
@@ -138,18 +145,23 @@ export function ConfigView() {
 					<div className="config-card">
 						<div className="config-setting-label">Storage Backend</div>
 						<div className="config-setting-description">
-							Choose how your notes are stored. Changing this will switch to the new storage - notes from other storages
-							won't be visible until you switch back.
+							Choose how your notes are stored. Changing this will switch to the
+							new storage - notes from other storages won't be visible until you
+							switch back.
 						</div>
 						<select
 							className="config-select"
 							value={config.storage.backend}
-							onChange={(e) => handleStorageBackendChange(e.target.value as StorageSettings["backend"])}
+							onChange={(e) =>
+								handleStorageBackendChange(
+									e.target.value as StorageSettings["backend"]
+								)
+							}
 						>
-												<option value="sqlite">SQLite Database</option>
-					<option value="json-single">JSON Single File</option>
-					<option value="json-hybrid">JSON Hybrid</option>
-					<option value="cloud">Cloud Storage</option>
+							<option value="sqlite">SQLite Database</option>
+							<option value="json-single">JSON Single File</option>
+							<option value="json-hybrid">JSON Hybrid</option>
+							<option value="cloud">Cloud Storage</option>
 						</select>
 					</div>
 
@@ -157,7 +169,9 @@ export function ConfigView() {
 					{config.storage.backend === "sqlite" && (
 						<div className="config-card">
 							<div className="config-setting-label">SQLite Database Path</div>
-							<div className="config-setting-description">Path to the SQLite database file</div>
+							<div className="config-setting-description">
+								Path to the SQLite database file
+							</div>
 							<input
 								type="text"
 								className="config-input config-input--path"
@@ -177,7 +191,9 @@ export function ConfigView() {
 							<input
 								type="text"
 								className="config-input config-input--path"
-								value={config.storage.jsonSingle?.file_path || "./dev/storage.json"}
+								value={
+									config.storage.jsonSingle?.file_path || "./dev/storage.json"
+								}
 								onChange={(e) => handleJsonSinglePathChange(e.target.value)}
 							/>
 						</div>
@@ -192,21 +208,34 @@ export function ConfigView() {
 							</div>
 							<div className="space-y-4">
 								<div>
-									<label className="block text-sm font-medium mb-2">Structure File</label>
+									<label className="block text-sm font-medium mb-2">
+										Structure File
+									</label>
 									<input
 										type="text"
 										className="config-input config-input--path"
-										value={config.storage.jsonHybrid?.structure_file || "./dev/structure.json"}
-										onChange={(e) => handleJsonHybridStructureChange(e.target.value)}
+										value={
+											config.storage.jsonHybrid?.structure_file ||
+											"./dev/structure.json"
+										}
+										onChange={(e) =>
+											handleJsonHybridStructureChange(e.target.value)
+										}
 									/>
 								</div>
 								<div>
-									<label className="block text-sm font-medium mb-2">Content Directory</label>
+									<label className="block text-sm font-medium mb-2">
+										Content Directory
+									</label>
 									<input
 										type="text"
 										className="config-input config-input--path"
-										value={config.storage.jsonHybrid?.content_dir || "./dev/content/"}
-										onChange={(e) => handleJsonHybridContentDirChange(e.target.value)}
+										value={
+											config.storage.jsonHybrid?.content_dir || "./dev/content/"
+										}
+										onChange={(e) =>
+											handleJsonHybridContentDirChange(e.target.value)
+										}
 									/>
 								</div>
 							</div>
@@ -217,11 +246,17 @@ export function ConfigView() {
 					{config.storage.backend === "cloud" && (
 						<div className="config-card">
 							<div className="config-setting-label">Cloud Provider</div>
-							<div className="config-setting-description">Choose your cloud storage provider (Not yet implemented)</div>
+							<div className="config-setting-description">
+								Choose your cloud storage provider (Not yet implemented)
+							</div>
 							<select
 								className="config-select"
 								value={config.storage.cloud?.provider || "google-drive"}
-								onChange={(e) => handleCloudProviderChange(e.target.value as "google-drive" | "dropbox" | "onedrive")}
+								onChange={(e) =>
+									handleCloudProviderChange(
+										e.target.value as "google-drive" | "dropbox" | "onedrive"
+									)
+								}
 								disabled
 							>
 								<option value="google-drive">Google Drive</option>
@@ -236,20 +271,29 @@ export function ConfigView() {
 						<div className="config-setting-label">Current Storage Status</div>
 						<div className="config-status">
 							Backend: {config.storage.backend}
-							{config.storage.backend === "sqlite" && <div>Database: {config.storage.sqlite?.database_path}</div>}
-									{config.storage.backend === "json-single" && (
-			<div>File: {config.storage.jsonSingle?.file_path}</div>
-		)}
-		{config.storage.backend === "json-hybrid" && (
-			<div>
-				<div>Structure: {config.storage.jsonHybrid?.structure_file}</div>
-				<div>Content Dir: {config.storage.jsonHybrid?.content_dir}</div>
-			</div>
-		)}
-							{config.storage.backend === "cloud" && <div>Provider: {config.storage.cloud?.provider}</div>}
+							{config.storage.backend === "sqlite" && (
+								<div>Database: {config.storage.sqlite?.database_path}</div>
+							)}
+							{config.storage.backend === "json-single" && (
+								<div>File: {config.storage.jsonSingle?.file_path}</div>
+							)}
+							{config.storage.backend === "json-hybrid" && (
+								<div>
+									<div>
+										Structure: {config.storage.jsonHybrid?.structure_file}
+									</div>
+									<div>
+										Content Dir: {config.storage.jsonHybrid?.content_dir}
+									</div>
+								</div>
+							)}
+							{config.storage.backend === "cloud" && (
+								<div>Provider: {config.storage.cloud?.provider}</div>
+							)}
 						</div>
 						<div className="config-status-warning">
-							⚠️ Note: Changing storage backends will hide notes from other storages until you switch back
+							⚠️ Note: Changing storage backends will hide notes from other
+							storages until you switch back
 						</div>
 					</div>
 				</div>
@@ -262,9 +306,12 @@ export function ConfigView() {
 
 					<div className="config-section-grid">
 						<div className="config-card">
-							<div className="config-setting-label">Custom Config Directory</div>
+							<div className="config-setting-label">
+								Custom Config Directory
+							</div>
 							<div className="config-setting-description">
-								Override the default config directory (default: ~/.config/irisnotes/)
+								Override the default config directory (default:
+								~/.config/irisnotes/)
 							</div>
 							<input
 								type="text"
@@ -277,7 +324,9 @@ export function ConfigView() {
 
 						<div className="config-card">
 							<div className="config-setting-label">Custom Database Path</div>
-							<div className="config-setting-description">Override the default database file location</div>
+							<div className="config-setting-description">
+								Override the default database file location
+							</div>
 							<input
 								type="text"
 								className="config-input config-input--long-path"
@@ -310,7 +359,8 @@ export function ConfigView() {
 					<div className="config-dev-notice">
 						<div className="config-dev-notice-title">Development Mode</div>
 						<div className="config-dev-notice-content">
-							Running in development mode with local config directory: <code>./dev/config/</code>
+							Running in development mode with local config directory:{" "}
+							<code>./dev/config/</code>
 						</div>
 					</div>
 				</section>
@@ -323,9 +373,14 @@ export function ConfigView() {
 				<div className="config-theme-toggle">
 					<div className="config-theme-info">
 						<div className="config-setting-label">Dark Mode</div>
-						<div className="config-setting-description">Toggle between light and dark theme</div>
+						<div className="config-setting-description">
+							Toggle between light and dark theme
+						</div>
 					</div>
-					<button className={`config-button ${darkMode ? "config-button--active" : ""}`} onClick={toggleDarkMode}>
+					<button
+						className={`config-button ${darkMode ? "config-button--active" : ""}`}
+						onClick={toggleDarkMode}
+					>
 						{darkMode ? "Enabled" : "Disabled"}
 					</button>
 				</div>
@@ -338,7 +393,9 @@ export function ConfigView() {
 				<div className="config-section-grid">
 					<div className="config-card">
 						<div className="config-setting-label">Editor Mode</div>
-						<div className="config-setting-description">Choose your preferred editing mode</div>
+						<div className="config-setting-description">
+							Choose your preferred editing mode
+						</div>
 						<select className="config-select">
 							<option value="rich">Rich Text Editor</option>
 							<option value="source">Source Editor</option>
@@ -348,9 +405,15 @@ export function ConfigView() {
 
 					<div className="config-card">
 						<div className="config-setting-label">Auto Save</div>
-						<div className="config-setting-description">Automatically save changes as you type</div>
+						<div className="config-setting-description">
+							Automatically save changes as you type
+						</div>
 						<label className="config-checkbox-label">
-							<input type="checkbox" className="config-checkbox" defaultChecked={true} />
+							<input
+								type="checkbox"
+								className="config-checkbox"
+								defaultChecked={true}
+							/>
 							<span className="config-checkbox-text">Enable auto save</span>
 						</label>
 					</div>
@@ -364,7 +427,9 @@ export function ConfigView() {
 				<div className="config-section-grid">
 					<div className="config-card">
 						<div className="config-setting-label">Default Category</div>
-						<div className="config-setting-description">Default category for new notes</div>
+						<div className="config-setting-description">
+							Default category for new notes
+						</div>
 						<select className="config-select">
 							<option value="general">General</option>
 							<option value="work">Work</option>
@@ -374,9 +439,15 @@ export function ConfigView() {
 
 					<div className="config-card">
 						<div className="config-setting-label">Show Word Count</div>
-						<div className="config-setting-description">Display word count in editor status bar</div>
+						<div className="config-setting-description">
+							Display word count in editor status bar
+						</div>
 						<label className="config-checkbox-label">
-							<input type="checkbox" className="config-checkbox" defaultChecked={true} />
+							<input
+								type="checkbox"
+								className="config-checkbox"
+								defaultChecked={true}
+							/>
 							<span className="config-checkbox-text">Show word count</span>
 						</label>
 					</div>
@@ -388,7 +459,9 @@ export function ConfigView() {
 				<h2>Configuration Information</h2>
 
 				<div className="config-info-display">
-					<pre className="config-info-pre">{JSON.stringify(config, null, 2)}</pre>
+					<pre className="config-info-pre">
+						{JSON.stringify(config, null, 2)}
+					</pre>
 				</div>
 			</section>
 		</div>
