@@ -14,7 +14,11 @@ export { useSidebar } from "./use-sidebar";
 export { useView } from "./use-view";
 // Consolidated layout hook
 export { useLayout } from "./use-layout";
-export { useLayoutPersistence, loadLayoutState } from "./use-layout-persistence";
+export {
+	useLayoutPersistence,
+	loadLayoutState,
+} from "./use-layout-persistence";
+export { useTabPersistence, loadTabState } from "./use-tab-persistence";
 // App-wide hotkeys
 export { useAppHotkeys } from "./use-app-hotkeys";
 export { useHotkeysConfig } from "./use-hotkeys-config";
@@ -26,6 +30,7 @@ export { useHotkeysConfig as useHotkeyConfig } from "./use-hotkeys-config";
 // Editor hooks
 export { useEditorState } from "./use-editor-state";
 export { useLineWrapping } from "./use-line-wrapping";
+export { useEditorViewToggle } from "./use-editor-view-toggle";
 
 // Theme hook
 export { useTheme } from "./use-theme";
@@ -48,7 +53,12 @@ export { useRightClickMenu } from "./use-right-click-menu";
 export { useRightClickMenuActions } from "./use-right-click-menu-actions";
 
 // Responsive design hooks
-export { useMediaQuery, useIsMobile, useIsTablet, useIsDesktop } from "./use-media-query";
+export {
+	useMediaQuery,
+	useIsMobile,
+	useIsTablet,
+	useIsDesktop,
+} from "./use-media-query";
 
 // Debug and development
 export { useAppInfo } from "./use-app-info";
