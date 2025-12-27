@@ -19,8 +19,6 @@ export interface Note {
 	parent_category_id?: string | null; // NEW: Direct parent-child relationship for tree views
 }
 
-
-
 export interface Tag {
 	id: string;
 	name: string;
@@ -87,8 +85,6 @@ export interface NoteWithRelations extends Note {
 	related_notes?: Note[];
 }
 
-
-
 export interface TagWithNotes extends Tag {
 	notes?: Note[];
 }
@@ -141,8 +137,6 @@ export interface UpdateNoteParams {
 	is_pinned?: boolean;
 	is_archived?: boolean;
 }
-
-
 
 export interface CreateTagParams {
 	name: string;

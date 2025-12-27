@@ -1,7 +1,7 @@
 // Core types for the unified items system
 // Pure type definitions - no logic
 
-export type ItemType = 'note' | 'book' | 'section';
+export type ItemType = "note" | "book" | "section";
 
 export interface FlexibleItem {
 	id: string;
@@ -10,7 +10,7 @@ export interface FlexibleItem {
 
 	// Content fields (primarily for notes)
 	content?: string;
-	content_type?: 'html' | 'markdown' | 'plain' | 'custom';
+	content_type?: "html" | "markdown" | "plain" | "custom";
 	content_raw?: string | null;
 	content_plaintext?: string;
 
@@ -44,7 +44,7 @@ export interface ItemMetadata {
 	description?: string;
 	author?: string;
 	tags?: string[];
-	difficulty?: 'beginner' | 'intermediate' | 'advanced';
+	difficulty?: "beginner" | "intermediate" | "advanced";
 	estimated_time?: string;
 	progress?: number;
 
@@ -57,7 +57,7 @@ export interface CreateItemParams {
 	type: ItemType;
 	title: string;
 	content?: string;
-	content_type?: 'html' | 'markdown' | 'plain' | 'custom';
+	content_type?: "html" | "markdown" | "plain" | "custom";
 	content_raw?: string;
 	parent_id?: string | null;
 	sort_order?: number;
@@ -69,7 +69,7 @@ export interface UpdateItemParams {
 	id: string;
 	title?: string;
 	content?: string;
-	content_type?: 'html' | 'markdown' | 'plain' | 'custom';
+	content_type?: "html" | "markdown" | "plain" | "custom";
 	content_raw?: string;
 	parent_id?: string | null;
 	metadata?: Record<string, any>;
