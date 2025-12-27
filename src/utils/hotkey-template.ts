@@ -6,8 +6,9 @@ import { DEFAULT_HOTKEYS } from "@/config/default-hotkeys";
  */
 export function generateHotkeyTemplate(): string {
 	const template = {
-		_comment: "Copy this file to 'hotkeys.json' and customize the key combinations you want to change. Remove any hotkeys you want to keep as defaults.",
-		...DEFAULT_HOTKEYS
+		_comment:
+			"Copy this file to 'hotkeys.json' and customize the key combinations you want to change. Remove any hotkeys you want to keep as defaults.",
+		...DEFAULT_HOTKEYS,
 	};
 
 	return JSON.stringify(template, null, 2);
@@ -40,14 +41,17 @@ export function validateHotkeyConfig(userConfig: any): {
 } {
 	const errors: string[] = [];
 
-	if (typeof userConfig !== 'object' || userConfig === null) {
-		return { valid: false, errors: ['Configuration must be a valid JSON object'] };
+	if (typeof userConfig !== "object" || userConfig === null) {
+		return {
+			valid: false,
+			errors: ["Configuration must be a valid JSON object"],
+		};
 	}
 
 	// Check each hotkey configuration
 	Object.entries(userConfig).forEach(([action, config]: [string, any]) => {
 		// Skip comments
-		if (action.startsWith('_')) return;
+		if (action.startsWith("_")) return;
 
 		// Check if action exists in defaults
 		if (!(action in DEFAULT_HOTKEYS)) {
@@ -56,40 +60,42 @@ export function validateHotkeyConfig(userConfig: any): {
 		}
 
 		// Validate config structure
-		if (typeof config !== 'object' || config === null) {
+		if (typeof config !== "object" || config === null) {
 			errors.push(`Action ${action}: configuration must be an object`);
 			return;
 		}
 
 		// Required fields
-		if (!config.key || typeof config.key !== 'string') {
+		if (!config.key || typeof config.key !== "string") {
 			errors.push(`Action ${action}: missing or invalid 'key' field`);
 		}
 
-		if (!config.description || typeof config.description !== 'string') {
+		if (!config.description || typeof config.description !== "string") {
 			errors.push(`Action ${action}: missing or invalid 'description' field`);
 		}
 
-		if (!config.category || typeof config.category !== 'string') {
+		if (!config.category || typeof config.category !== "string") {
 			errors.push(`Action ${action}: missing or invalid 'category' field`);
 		}
 
 		// Optional but should be boolean if present
-		if (config.global !== undefined && typeof config.global !== 'boolean') {
+		if (config.global !== undefined && typeof config.global !== "boolean") {
 			errors.push(`Action ${action}: 'global' field must be a boolean`);
 		}
 
 		// Basic key format validation
-		if (config.key && typeof config.key === 'string') {
+		if (config.key && typeof config.key === "string") {
 			const keyPattern = /^(ctrl\+|shift\+|alt\+|meta\+)*[a-z0-9]+$/;
 			if (!keyPattern.test(config.key.toLowerCase())) {
-				errors.push(`Action ${action}: invalid key format '${config.key}'. Use lowercase with + separators (e.g., 'ctrl+shift+a')`);
+				errors.push(
+					`Action ${action}: invalid key format '${config.key}'. Use lowercase with + separators (e.g., 'ctrl+shift+a')`
+				);
 			}
 		}
 	});
 
 	return {
 		valid: errors.length === 0,
-		errors
+		errors,
 	};
 }
