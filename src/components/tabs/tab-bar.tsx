@@ -18,7 +18,7 @@ export const TabBar: FC<TabBarProps> = ({
 	onTabSelect,
 	onTabClose,
 	onNewTab,
-	onTabReorder
+	onTabReorder,
 }) => {
 	const [draggedTabId, setDraggedTabId] = useState<string | null>(null);
 
@@ -59,7 +59,7 @@ export const TabBar: FC<TabBarProps> = ({
 					title="New tab"
 				>
 					<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-						<path d="M8 3a1 1 0 011 1v3h3a1 1 0 110 2H9v3a1 1 0 11-2 0V9H4a1 1 0 110-2h3V4a1 1 0 011-1z"/>
+						<path d="M8 3a1 1 0 011 1v3h3a1 1 0 110 2H9v3a1 1 0 11-2 0V9H4a1 1 0 110-2h3V4a1 1 0 011-1z" />
 					</svg>
 				</button>
 			)}

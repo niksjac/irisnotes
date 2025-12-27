@@ -23,9 +23,9 @@ export const Pane: FC<PaneProps> = ({
 	onTabReorder,
 	isActive = false,
 	onPaneClick,
-	isDualPaneMode = false
+	isDualPaneMode = false,
 }) => {
-	const activeTab = tabs.find(tab => tab.id === activeTabId) || null;
+	const activeTab = tabs.find((tab) => tab.id === activeTabId) || null;
 
 	const handlePaneClick = () => {
 		if (onPaneClick) {
@@ -33,12 +33,12 @@ export const Pane: FC<PaneProps> = ({
 		}
 	};
 
-		return (
+	return (
 		<div
 			className={`
 				flex flex-col h-full bg-white dark:bg-gray-900 transition-all duration-200
-				${isDualPaneMode && isActive ? 'border-2 border-blue-400 dark:border-blue-500 shadow-lg shadow-blue-100 dark:shadow-blue-900/20' : ''}
-				${isDualPaneMode && !isActive ? 'border border-gray-200 dark:border-gray-700' : ''}
+				${isDualPaneMode && isActive ? "border-2 border-blue-400 dark:border-blue-500 shadow-lg shadow-blue-100 dark:shadow-blue-900/20" : ""}
+				${isDualPaneMode && !isActive ? "border border-gray-200 dark:border-gray-700" : ""}
 			`}
 			onClick={handlePaneClick}
 		>
