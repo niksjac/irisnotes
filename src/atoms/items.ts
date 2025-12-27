@@ -11,7 +11,7 @@ export const selectedItemIdAtom = atom<string | null>(null);
 export const selectedItemAtom = atom((get) => {
 	const items = get(itemsAtom);
 	const selectedId = get(selectedItemIdAtom);
-	return items.find(item => item.id === selectedId) || null;
+	return items.find((item) => item.id === selectedId) || null;
 });
 
 // Tree data derived atom - builds hierarchical structure
@@ -21,7 +21,7 @@ export const treeDataAtom = atom((get) => {
 	// Group items by parent_id
 	const itemMap = new Map<string | null, FlexibleItem[]>();
 
-	items.forEach(item => {
+	items.forEach((item) => {
 		const parentId = item.parent_id || null;
 		if (!itemMap.has(parentId)) {
 			itemMap.set(parentId, []);
@@ -30,7 +30,7 @@ export const treeDataAtom = atom((get) => {
 	});
 
 	// Sort each group by sort_order
-	itemMap.forEach(children => {
+	itemMap.forEach((children) => {
 		children.sort((a, b) => a.sort_order - b.sort_order);
 	});
 
@@ -40,15 +40,15 @@ export const treeDataAtom = atom((get) => {
 // Helper atoms for different item types
 export const notesAtom = atom((get) => {
 	const items = get(itemsAtom);
-	return items.filter(item => item.type === 'note');
+	return items.filter((item) => item.type === "note");
 });
 
 export const booksAtom = atom((get) => {
 	const items = get(itemsAtom);
-	return items.filter(item => item.type === 'book');
+	return items.filter((item) => item.type === "book");
 });
 
 export const sectionsAtom = atom((get) => {
 	const items = get(itemsAtom);
-	return items.filter(item => item.type === 'section');
+	return items.filter((item) => item.type === "section");
 });

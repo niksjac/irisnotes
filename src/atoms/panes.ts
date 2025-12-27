@@ -6,7 +6,7 @@ import { sidebarWidth, sidebarCollapsed } from "./index";
 export const paneStateAtom = atom<PaneState>({
 	count: 1,
 	activePane: 0,
-	splitDirection: 'horizontal',
+	splitDirection: "horizontal",
 });
 
 // Tab state per pane
@@ -25,14 +25,16 @@ export const activePaneTabsAtom = atom((get) => {
 
 export const activePaneActiveTabAtom = atom((get) => {
 	const paneState = get(paneStateAtom);
-	return paneState.activePane === 0 ? get(pane0ActiveTabAtom) : get(pane1ActiveTabAtom);
+	return paneState.activePane === 0
+		? get(pane0ActiveTabAtom)
+		: get(pane1ActiveTabAtom);
 });
 
 // Get active tab object
 export const activeTabAtom = atom((get) => {
 	const tabs = get(activePaneTabsAtom);
 	const activeTabId = get(activePaneActiveTabAtom);
-	return tabs.find(tab => tab.id === activeTabId) || null;
+	return tabs.find((tab) => tab.id === activeTabId) || null;
 });
 
 // Tab management actions
@@ -42,15 +44,15 @@ export const newTabInActivePaneAtom = atom(null, (get, set) => {
 
 	const newTab: Tab = {
 		id: `empty-tab-${Date.now()}`,
-		title: 'Empty Tab',
-		viewType: 'empty-view',
+		title: "Empty Tab",
+		viewType: "empty-view",
 	};
 
 	if (paneIndex === 0) {
-		set(pane0TabsAtom, prev => [...prev, newTab]);
+		set(pane0TabsAtom, (prev) => [...prev, newTab]);
 		set(pane0ActiveTabAtom, newTab.id);
 	} else {
-		set(pane1TabsAtom, prev => [...prev, newTab]);
+		set(pane1TabsAtom, (prev) => [...prev, newTab]);
 		set(pane1ActiveTabAtom, newTab.id);
 	}
 });
@@ -59,12 +61,13 @@ export const moveActiveTabLeftAtom = atom(null, (get, set) => {
 	const paneState = get(paneStateAtom);
 	const paneIndex = paneState.activePane;
 	const tabs = paneIndex === 0 ? get(pane0TabsAtom) : get(pane1TabsAtom);
-	const activeTabId = paneIndex === 0 ? get(pane0ActiveTabAtom) : get(pane1ActiveTabAtom);
+	const activeTabId =
+		paneIndex === 0 ? get(pane0ActiveTabAtom) : get(pane1ActiveTabAtom);
 	const setTabs = paneIndex === 0 ? pane0TabsAtom : pane1TabsAtom;
 
 	if (!activeTabId || tabs.length <= 1) return;
 
-	const currentIndex = tabs.findIndex(tab => tab.id === activeTabId);
+	const currentIndex = tabs.findIndex((tab) => tab.id === activeTabId);
 	if (currentIndex <= 0) return; // Already at leftmost position
 
 	const newTabs = [...tabs];
@@ -81,12 +84,13 @@ export const moveActiveTabRightAtom = atom(null, (get, set) => {
 	const paneState = get(paneStateAtom);
 	const paneIndex = paneState.activePane;
 	const tabs = paneIndex === 0 ? get(pane0TabsAtom) : get(pane1TabsAtom);
-	const activeTabId = paneIndex === 0 ? get(pane0ActiveTabAtom) : get(pane1ActiveTabAtom);
+	const activeTabId =
+		paneIndex === 0 ? get(pane0ActiveTabAtom) : get(pane1ActiveTabAtom);
 	const setTabs = paneIndex === 0 ? pane0TabsAtom : pane1TabsAtom;
 
 	if (!activeTabId || tabs.length <= 1) return;
 
-	const currentIndex = tabs.findIndex(tab => tab.id === activeTabId);
+	const currentIndex = tabs.findIndex((tab) => tab.id === activeTabId);
 	if (currentIndex >= tabs.length - 1) return; // Already at rightmost position
 
 	const newTabs = [...tabs];
@@ -111,14 +115,25 @@ export const resizePaneLeftAtom = atom(null, (get) => {
 	if (paneState.count !== 2) return; // Only works in dual pane mode
 
 	// Get current widths from CSS custom properties
-	const leftWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pane-left-width')) || 50;
+	const leftWidth =
+		parseFloat(
+			getComputedStyle(document.documentElement).getPropertyValue(
+				"--pane-left-width"
+			)
+		) || 50;
 
 	// Decrease left pane by 5%, increase right pane
 	const newLeftWidth = Math.max(20, leftWidth - 5); // Min 20%
 	const newRightWidth = 100 - newLeftWidth;
 
-	document.documentElement.style.setProperty('--pane-left-width', `${newLeftWidth}%`);
-	document.documentElement.style.setProperty('--pane-right-width', `${newRightWidth}%`);
+	document.documentElement.style.setProperty(
+		"--pane-left-width",
+		`${newLeftWidth}%`
+	);
+	document.documentElement.style.setProperty(
+		"--pane-right-width",
+		`${newRightWidth}%`
+	);
 });
 
 export const resizePaneRightAtom = atom(null, (get) => {
@@ -126,14 +141,25 @@ export const resizePaneRightAtom = atom(null, (get) => {
 	if (paneState.count !== 2) return; // Only works in dual pane mode
 
 	// Get current widths from CSS custom properties
-	const leftWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pane-left-width')) || 50;
+	const leftWidth =
+		parseFloat(
+			getComputedStyle(document.documentElement).getPropertyValue(
+				"--pane-left-width"
+			)
+		) || 50;
 
 	// Increase left pane by 5%, decrease right pane
 	const newLeftWidth = Math.min(80, leftWidth + 5); // Max 80%
 	const newRightWidth = 100 - newLeftWidth;
 
-	document.documentElement.style.setProperty('--pane-left-width', `${newLeftWidth}%`);
-	document.documentElement.style.setProperty('--pane-right-width', `${newRightWidth}%`);
+	document.documentElement.style.setProperty(
+		"--pane-left-width",
+		`${newLeftWidth}%`
+	);
+	document.documentElement.style.setProperty(
+		"--pane-right-width",
+		`${newRightWidth}%`
+	);
 });
 
 // Sidebar resizing actions
@@ -185,11 +211,11 @@ export const moveTabToPaneLeftAtom = atom(null, (get, set) => {
 
 	if (!sourceActiveTab || sourceTabs.length === 0) return;
 
-	const tabToMove = sourceTabs.find(tab => tab.id === sourceActiveTab);
+	const tabToMove = sourceTabs.find((tab) => tab.id === sourceActiveTab);
 	if (!tabToMove) return;
 
 	// Remove from source pane
-	const newSourceTabs = sourceTabs.filter(tab => tab.id !== sourceActiveTab);
+	const newSourceTabs = sourceTabs.filter((tab) => tab.id !== sourceActiveTab);
 	set(pane1TabsAtom, newSourceTabs);
 
 	// Add to target pane
@@ -199,7 +225,10 @@ export const moveTabToPaneLeftAtom = atom(null, (get, set) => {
 
 	// Update source active tab
 	if (newSourceTabs.length > 0) {
-		const newActiveIndex = Math.min(sourceTabs.findIndex(tab => tab.id === sourceActiveTab), newSourceTabs.length - 1);
+		const newActiveIndex = Math.min(
+			sourceTabs.findIndex((tab) => tab.id === sourceActiveTab),
+			newSourceTabs.length - 1
+		);
 		set(pane1ActiveTabAtom, newSourceTabs[newActiveIndex]?.id || null);
 	} else {
 		set(pane1ActiveTabAtom, null);
@@ -223,11 +252,11 @@ export const moveTabToPaneRightAtom = atom(null, (get, set) => {
 
 	if (!sourceActiveTab || sourceTabs.length === 0) return;
 
-	const tabToMove = sourceTabs.find(tab => tab.id === sourceActiveTab);
+	const tabToMove = sourceTabs.find((tab) => tab.id === sourceActiveTab);
 	if (!tabToMove) return;
 
 	// Remove from source pane
-	const newSourceTabs = sourceTabs.filter(tab => tab.id !== sourceActiveTab);
+	const newSourceTabs = sourceTabs.filter((tab) => tab.id !== sourceActiveTab);
 	set(pane0TabsAtom, newSourceTabs);
 
 	// Add to target pane
@@ -237,7 +266,10 @@ export const moveTabToPaneRightAtom = atom(null, (get, set) => {
 
 	// Update source active tab
 	if (newSourceTabs.length > 0) {
-		const newActiveIndex = Math.min(sourceTabs.findIndex(tab => tab.id === sourceActiveTab), newSourceTabs.length - 1);
+		const newActiveIndex = Math.min(
+			sourceTabs.findIndex((tab) => tab.id === sourceActiveTab),
+			newSourceTabs.length - 1
+		);
 		set(pane0ActiveTabAtom, newSourceTabs[newActiveIndex]?.id || null);
 	} else {
 		set(pane0ActiveTabAtom, null);
@@ -248,44 +280,66 @@ export const moveTabToPaneRightAtom = atom(null, (get, set) => {
 });
 
 // Tab focus by number actions
-export const focusTabByNumberAtom = atom(null, (get, set, tabNumber: number) => {
-	const paneState = get(paneStateAtom);
-	const activePane = paneState.activePane;
-	const tabs = activePane === 0 ? get(pane0TabsAtom) : get(pane1TabsAtom);
+export const focusTabByNumberAtom = atom(
+	null,
+	(get, set, tabNumber: number) => {
+		const paneState = get(paneStateAtom);
+		const activePane = paneState.activePane;
+		const tabs = activePane === 0 ? get(pane0TabsAtom) : get(pane1TabsAtom);
 
-	if (tabNumber >= 1 && tabNumber <= tabs.length) {
-		const targetTab = tabs[tabNumber - 1]; // Convert to 0-based index
-		if (targetTab) {
-			if (activePane === 0) {
-				set(pane0ActiveTabAtom, targetTab.id);
-			} else {
-				set(pane1ActiveTabAtom, targetTab.id);
+		if (tabNumber >= 1 && tabNumber <= tabs.length) {
+			const targetTab = tabs[tabNumber - 1]; // Convert to 0-based index
+			if (targetTab) {
+				if (activePane === 0) {
+					set(pane0ActiveTabAtom, targetTab.id);
+				} else {
+					set(pane1ActiveTabAtom, targetTab.id);
+				}
 			}
 		}
 	}
-});
+);
 
 // Individual tab focus atoms for hotkeys
-export const focusTab1Atom = atom(null, (_, set) => set(focusTabByNumberAtom, 1));
-export const focusTab2Atom = atom(null, (_, set) => set(focusTabByNumberAtom, 2));
-export const focusTab3Atom = atom(null, (_, set) => set(focusTabByNumberAtom, 3));
-export const focusTab4Atom = atom(null, (_, set) => set(focusTabByNumberAtom, 4));
-export const focusTab5Atom = atom(null, (_, set) => set(focusTabByNumberAtom, 5));
-export const focusTab6Atom = atom(null, (_, set) => set(focusTabByNumberAtom, 6));
-export const focusTab7Atom = atom(null, (_, set) => set(focusTabByNumberAtom, 7));
-export const focusTab8Atom = atom(null, (_, set) => set(focusTabByNumberAtom, 8));
-export const focusTab9Atom = atom(null, (_, set) => set(focusTabByNumberAtom, 9));
+export const focusTab1Atom = atom(null, (_, set) =>
+	set(focusTabByNumberAtom, 1)
+);
+export const focusTab2Atom = atom(null, (_, set) =>
+	set(focusTabByNumberAtom, 2)
+);
+export const focusTab3Atom = atom(null, (_, set) =>
+	set(focusTabByNumberAtom, 3)
+);
+export const focusTab4Atom = atom(null, (_, set) =>
+	set(focusTabByNumberAtom, 4)
+);
+export const focusTab5Atom = atom(null, (_, set) =>
+	set(focusTabByNumberAtom, 5)
+);
+export const focusTab6Atom = atom(null, (_, set) =>
+	set(focusTabByNumberAtom, 6)
+);
+export const focusTab7Atom = atom(null, (_, set) =>
+	set(focusTabByNumberAtom, 7)
+);
+export const focusTab8Atom = atom(null, (_, set) =>
+	set(focusTabByNumberAtom, 8)
+);
+export const focusTab9Atom = atom(null, (_, set) =>
+	set(focusTabByNumberAtom, 9)
+);
 
 // Tab navigation atoms
 export const focusNextTabAtom = atom(null, (get, set) => {
 	const paneState = get(paneStateAtom);
 	const activePane = paneState.activePane;
 	const tabs = activePane === 0 ? get(pane0TabsAtom) : get(pane1TabsAtom);
-	const currentActiveTabId = activePane === 0 ? get(pane0ActiveTabAtom) : get(pane1ActiveTabAtom);
+	const currentActiveTabId =
+		activePane === 0 ? get(pane0ActiveTabAtom) : get(pane1ActiveTabAtom);
 
 	if (tabs.length <= 1 || !currentActiveTabId) return;
 
-	const currentIndex = tabs.findIndex(tab => tab.id === currentActiveTabId);
+	const currentIndex = tabs.findIndex((tab) => tab.id === currentActiveTabId);
 	if (currentIndex === -1) return;
 
 	// Move to next tab, wrapping around to first if at the end
@@ -305,11 +359,12 @@ export const focusPreviousTabAtom = atom(null, (get, set) => {
 	const paneState = get(paneStateAtom);
 	const activePane = paneState.activePane;
 	const tabs = activePane === 0 ? get(pane0TabsAtom) : get(pane1TabsAtom);
-	const currentActiveTabId = activePane === 0 ? get(pane0ActiveTabAtom) : get(pane1ActiveTabAtom);
+	const currentActiveTabId =
+		activePane === 0 ? get(pane0ActiveTabAtom) : get(pane1ActiveTabAtom);
 
 	if (tabs.length <= 1 || !currentActiveTabId) return;
 
-	const currentIndex = tabs.findIndex(tab => tab.id === currentActiveTabId);
+	const currentIndex = tabs.findIndex((tab) => tab.id === currentActiveTabId);
 	if (currentIndex === -1) return;
 
 	// Move to previous tab, wrapping around to last if at the beginning
@@ -335,8 +390,8 @@ export const closeActiveTabAtom = atom(null, (get, set) => {
 
 		if (activeTabId) {
 			// Find the index of the tab being closed
-			const closingTabIndex = tabs.findIndex(tab => tab.id === activeTabId);
-			const newTabs = tabs.filter(tab => tab.id !== activeTabId);
+			const closingTabIndex = tabs.findIndex((tab) => tab.id === activeTabId);
+			const newTabs = tabs.filter((tab) => tab.id !== activeTabId);
 			set(pane0TabsAtom, newTabs);
 
 			// If we closed the active tab, select the next appropriate tab
@@ -355,8 +410,8 @@ export const closeActiveTabAtom = atom(null, (get, set) => {
 
 		if (activeTabId) {
 			// Find the index of the tab being closed
-			const closingTabIndex = tabs.findIndex(tab => tab.id === activeTabId);
-			const newTabs = tabs.filter(tab => tab.id !== activeTabId);
+			const closingTabIndex = tabs.findIndex((tab) => tab.id === activeTabId);
+			const newTabs = tabs.filter((tab) => tab.id !== activeTabId);
 			set(pane1TabsAtom, newTabs);
 
 			// If we closed the active tab, select the next appropriate tab

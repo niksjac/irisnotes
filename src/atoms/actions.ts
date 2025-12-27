@@ -16,7 +16,11 @@ import {
 // Selection actions
 export const selectItemAtom = atom(
 	null,
-	(_, set, { itemId, itemType }: { itemId: string; itemType: "note" | "category" }) => {
+	(
+		_,
+		set,
+		{ itemId, itemType }: { itemId: string; itemType: "note" | "category" }
+	) => {
 		set(selectedItemAtom, { id: itemId, type: itemType });
 	}
 );
@@ -85,17 +89,24 @@ export const handleNoteClickAtom = atom(null, (_, set, noteId: string) => {
 	set(selectedItemAtom, { id: noteId, type: "note" });
 });
 
-export const handleTitleChangeAtom = atom(null, (get, set, { noteId, title }: { noteId: string; title: string }) => {
-	const notes = get(notesAtom);
-	const updatedNotes = notes.map((note) => (note.id === noteId ? { ...note, title } : note));
-	set(notesAtom, updatedNotes);
-});
+export const handleTitleChangeAtom = atom(
+	null,
+	(get, set, { noteId, title }: { noteId: string; title: string }) => {
+		const notes = get(notesAtom);
+		const updatedNotes = notes.map((note) =>
+			note.id === noteId ? { ...note, title } : note
+		);
+		set(notesAtom, updatedNotes);
+	}
+);
 
 export const handleContentChangeAtom = atom(
 	null,
 	(get, set, { noteId, content }: { noteId: string; content: string }) => {
 		const notes = get(notesAtom);
-		const updatedNotes = notes.map((note) => (note.id === noteId ? { ...note, content } : note));
+		const updatedNotes = notes.map((note) =>
+			note.id === noteId ? { ...note, content } : note
+		);
 		set(notesAtom, updatedNotes);
 	}
 );
@@ -116,13 +127,22 @@ export const removeNoteAtom = atom(null, (get, set, noteId: string) => {
 
 export const handleRenameCategoryAtom = atom(
 	null,
-	(get, set, { categoryId, newName }: { categoryId: string; newName: string }) => {
+	(
+		get,
+		set,
+		{ categoryId, newName }: { categoryId: string; newName: string }
+	) => {
 		const categories = get(categoriesAtom);
-		const updatedCategories = categories.map((cat) => (cat.id === categoryId ? { ...cat, name: newName } : cat));
+		const updatedCategories = categories.map((cat) =>
+			cat.id === categoryId ? { ...cat, name: newName } : cat
+		);
 		set(categoriesAtom, updatedCategories);
 	}
 );
 
-export const handleSidebarCollapsedChangeAtom = atom(null, (_, set, collapsed: boolean) => {
-	set(sidebarCollapsed, collapsed);
-});
+export const handleSidebarCollapsedChangeAtom = atom(
+	null,
+	(_, set, collapsed: boolean) => {
+		set(sidebarCollapsed, collapsed);
+	}
+);

@@ -27,7 +27,7 @@ export const configViewActive = atom<boolean>(false);
 export const hotkeysViewActive = atom<boolean>(false);
 export const databaseStatusVisible = atom<boolean>(false);
 
-export const toolbarVisibleAtom = atom<boolean>(true);
+export const toolbarVisibleAtom = atom<boolean>(false);
 
 // Editor atoms
 export const isWrappingAtom = atom<boolean>(false);
@@ -41,10 +41,8 @@ export const selectedNoteAtom = atom((get) => {
 	const items = get(itemsAtom);
 	const selectedId = get(selectedItemIdAtom);
 	const selectedItem = items.find((item) => item.id === selectedId);
-	return selectedItem?.type === 'note' ? selectedItem : null;
+	return selectedItem?.type === "note" ? selectedItem : null;
 });
-
-
 
 // Helper function to determine view based on current state
 const getDefaultView = (get: any): ViewType => {
