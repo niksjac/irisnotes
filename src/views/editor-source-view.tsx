@@ -1,14 +1,20 @@
 import { useAtomValue } from "jotai";
-import { selectedNoteAtom } from "@/atoms";
+import { itemsAtom } from "@/atoms/items";
 import { EditorContainer } from "@/components";
 import { useItems } from "@/hooks";
 
-export function EditorSourceView() {
-	const selectedNote = useAtomValue(selectedNoteAtom);
+interface EditorSourceViewProps {
+	viewData?: { noteId?: string; cursorPosition?: number };
+}
+
+export function EditorSourceView({ viewData }: EditorSourceViewProps) {
+	const items = useAtomValue(itemsAtom);
 	const { updateItemContent, updateItemTitle } = useItems();
 
-	// Get the selected note
-	const note = selectedNote;
+	// Get the note from viewData or fall back to selectedNote
+	const note = viewData?.noteId
+		? items.find((item) => item.id === viewData.noteId && item.type === "note")
+		: null;
 
 	const handleNoteContentChange = (noteId: string, content: string) => {
 		updateItemContent(noteId, content);
@@ -44,10 +50,9 @@ export function EditorSourceView() {
 				<EditorContainer
 					content={note.content}
 					onChange={(content) => handleNoteContentChange(note.id, content)}
-					placeholder="Start writing your note..."
 					defaultView="source"
-					toolbarVisible={false} // Source view typically doesn't need toolbar
 					noteId={note.id}
+					initialCursorPosition={viewData?.cursorPosition}
 				/>
 			</div>
 		</div>

@@ -1,16 +1,22 @@
 import { useAtomValue } from "jotai";
-import { selectedNoteAtom } from "@/atoms";
+import { itemsAtom } from "@/atoms/items";
 import { EditorContainer } from "@/components";
 import { useItems } from "@/hooks";
 import { useEditorLayout } from "@/hooks/use-editor-layout";
 
-export function EditorRichView() {
-	const selectedNote = useAtomValue(selectedNoteAtom);
+interface EditorRichViewProps {
+	viewData?: { noteId?: string; cursorPosition?: number };
+}
+
+export function EditorRichView({ viewData }: EditorRichViewProps) {
+	const items = useAtomValue(itemsAtom);
 	const { updateItemContent, updateItemTitle } = useItems();
 	const { toolbarVisible } = useEditorLayout();
 
-	// Get the selected note
-	const note = selectedNote;
+	// Get the note from viewData or fall back to selectedNote
+	const note = viewData?.noteId
+		? items.find((item) => item.id === viewData.noteId && item.type === "note")
+		: null;
 
 	const handleNoteContentChange = (noteId: string, content: string) => {
 		updateItemContent(noteId, content);
@@ -46,8 +52,8 @@ export function EditorRichView() {
 				<EditorContainer
 					content={note.content}
 					onChange={(content) => handleNoteContentChange(note.id, content)}
-					placeholder="Start writing your note..."
 					defaultView="rich"
+					initialCursorPosition={viewData?.cursorPosition}
 					toolbarVisible={toolbarVisible}
 				/>
 			</div>

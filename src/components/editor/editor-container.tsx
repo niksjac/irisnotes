@@ -2,6 +2,8 @@ import type React from "react";
 import { useRightClickMenu, useRightClickMenuActions } from "@/hooks";
 import { RightClickMenu } from "../right-click-menu";
 import type { EditorRightClickData } from "@/types/right-click-menu";
+import { CodeMirrorEditor } from "./codemirror-editor";
+import { ProseMirrorEditor } from "./prosemirror-editor";
 
 interface EditorContainerProps {
 	content?: string;
@@ -9,10 +11,10 @@ interface EditorContainerProps {
 	readOnly?: boolean;
 	className?: string;
 	children?: React.ReactNode;
-	placeholder?: string;
 	defaultView?: string;
-	toolbarVisible?: boolean;
 	noteId?: string;
+	initialCursorPosition?: number;
+	toolbarVisible?: boolean;
 }
 
 export const EditorContainer: React.FC<EditorContainerProps> = ({
@@ -21,28 +23,20 @@ export const EditorContainer: React.FC<EditorContainerProps> = ({
 	readOnly = false,
 	className = "",
 	children,
-	placeholder = "Start writing...",
-	defaultView: _defaultView,
-	toolbarVisible: _toolbarVisible,
+	defaultView = "rich",
 	noteId,
+	initialCursorPosition,
+	toolbarVisible = false,
 }) => {
-	const { rightClickMenu, handleRightClickMenu, hideRightClickMenu } = useRightClickMenu();
+	const { rightClickMenu, handleRightClickMenu, hideRightClickMenu } =
+		useRightClickMenu();
 	const { getEditorMenuGroups } = useRightClickMenuActions();
-	const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-		if (onChange && !readOnly) {
-			onChange(e.target.value);
-		}
-	};
 
 	const handleEditorRightClick = (event: React.MouseEvent) => {
-		const target = event.target as HTMLTextAreaElement;
-		const hasSelection = target.selectionStart !== target.selectionEnd;
-		const selectedText = hasSelection ? target.value.substring(target.selectionStart, target.selectionEnd) : undefined;
-
 		const rightClickData: EditorRightClickData = {
 			noteId,
-			selectedText,
-			hasSelection,
+			selectedText: undefined,
+			hasSelection: false,
 		};
 
 		const menuGroups = getEditorMenuGroups(rightClickData);
@@ -55,16 +49,27 @@ export const EditorContainer: React.FC<EditorContainerProps> = ({
 
 	return (
 		<>
-			<div className={`flex flex-col h-full ${className}`}>
+			<div
+				className={`flex flex-col h-full ${className}`}
+				onContextMenu={handleEditorRightClick}
+			>
 				{children}
-				<textarea
-					value={content}
-					onChange={handleChange}
-					onContextMenu={handleEditorRightClick}
-					readOnly={readOnly}
-					className="flex-1 w-full p-4 border-0 resize-none focus:outline-none bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-					placeholder={placeholder}
-				/>
+				{defaultView === "source" ? (
+					<CodeMirrorEditor
+						content={content}
+						onChange={onChange}
+						readOnly={readOnly}
+						initialCursorPosition={initialCursorPosition}
+					/>
+				) : (
+					<ProseMirrorEditor
+						content={content}
+						onChange={onChange}
+						readOnly={readOnly}
+						initialCursorPosition={initialCursorPosition}
+						toolbarVisible={toolbarVisible}
+					/>
+				)}
 			</div>
 			<RightClickMenu data={rightClickMenu} onClose={hideRightClickMenu} />
 		</>
