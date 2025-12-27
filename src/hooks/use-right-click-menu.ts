@@ -1,8 +1,12 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import type { RightClickMenuData, RightClickMenuPosition } from "@/types/right-click-menu";
+import type {
+	RightClickMenuData,
+	RightClickMenuPosition,
+} from "@/types/right-click-menu";
 
 export function useRightClickMenu() {
-	const [rightClickMenu, setRightClickMenu] = useState<RightClickMenuData | null>(null);
+	const [rightClickMenu, setRightClickMenu] =
+		useState<RightClickMenuData | null>(null);
 	const timeoutRef = useRef<number | null>(null);
 
 	const showRightClickMenu = useCallback((data: RightClickMenuData) => {

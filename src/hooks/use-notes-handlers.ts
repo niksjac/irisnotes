@@ -83,13 +83,13 @@ export function useNotesHandlers({
 				// Get item to determine type for proper deletion
 				const items = await storageAdapter.getTreeData();
 				if (items.success) {
-					const item = items.data.find(i => i.id === itemId);
+					const item = items.data.find((i) => i.id === itemId);
 					if (!item) return;
 
-					if (item.type === 'note') {
+					if (item.type === "note") {
 						await storageAdapter.deleteNote(itemId);
 					} else {
-						      await storageAdapter.deleteItem(itemId);
+						await storageAdapter.deleteItem(itemId);
 					}
 
 					await loadAllItems();

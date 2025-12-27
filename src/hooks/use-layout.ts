@@ -2,15 +2,20 @@ import { useCallback, useEffect, useRef } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { sidebarCollapsed, activityBarVisible, sidebarWidth } from "@/atoms";
 import { useAppPersistence } from "./use-app-persistence";
-import { useLayoutPersistence, loadLayoutState } from "./use-layout-persistence";
+import {
+	useLayoutPersistence,
+	loadLayoutState,
+} from "./use-layout-persistence";
 
 export const useLayout = () => {
 	// Sidebar state
-	const [sidebarCollapsedValue, setSidebarCollapsed] = useAtom(sidebarCollapsed);
+	const [sidebarCollapsedValue, setSidebarCollapsed] =
+		useAtom(sidebarCollapsed);
 	const setSidebarWidth = useSetAtom(sidebarWidth);
 
 	// View state
-	const [activityBarVisibleValue, setActivityBarVisible] = useAtom(activityBarVisible);
+	const [activityBarVisibleValue, setActivityBarVisible] =
+		useAtom(activityBarVisible);
 
 	// Track if we've already loaded from localStorage to prevent loops
 	const hasLoadedFromStorage = useRef(false);

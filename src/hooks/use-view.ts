@@ -1,12 +1,22 @@
 import { useAtom } from "jotai";
 import { useCallback } from "react";
-import { activityBarVisible, configViewActive, databaseStatusVisible, hotkeysViewActive } from "@/atoms";
+import {
+	activityBarVisible,
+	configViewActive,
+	databaseStatusVisible,
+	hotkeysViewActive,
+} from "@/atoms";
 
 export const useView = () => {
-	const [configViewActiveValue, setConfigViewActive] = useAtom(configViewActive);
-	const [hotkeysViewActiveValue, setHotkeysViewActive] = useAtom(hotkeysViewActive);
-	const [databaseStatusVisibleValue, setDatabaseStatusVisible] = useAtom(databaseStatusVisible);
-	const [activityBarVisibleValue, setActivityBarVisible] = useAtom(activityBarVisible);
+	const [configViewActiveValue, setConfigViewActive] =
+		useAtom(configViewActive);
+	const [hotkeysViewActiveValue, setHotkeysViewActive] =
+		useAtom(hotkeysViewActive);
+	const [databaseStatusVisibleValue, setDatabaseStatusVisible] = useAtom(
+		databaseStatusVisible
+	);
+	const [activityBarVisibleValue, setActivityBarVisible] =
+		useAtom(activityBarVisible);
 
 	const toggleConfigView = useCallback(() => {
 		const newState = !configViewActiveValue;

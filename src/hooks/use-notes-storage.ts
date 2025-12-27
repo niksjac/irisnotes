@@ -6,7 +6,9 @@ import type { StorageAdapter } from "@/storage";
 
 export const useNotesStorage = () => {
 	const { config, loading: configLoading } = useConfig();
-	const [storageAdapter, setStorageAdapter] = useState<StorageAdapter | null>(null);
+	const [storageAdapter, setStorageAdapter] = useState<StorageAdapter | null>(
+		null
+	);
 	const [isInitialized, setIsInitialized] = useState(false);
 
 	// Initialize storage when config loads or changes

@@ -42,7 +42,7 @@ export const useAppPersistence = () => {
 		const setupTauriCloseHandler = async () => {
 			try {
 				// Check if we're in a Tauri context first
-				if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+				if (typeof window !== "undefined" && (window as any).__TAURI__) {
 					// Dynamically import Tauri API (only available in Tauri context)
 					const { listen } = await import("@tauri-apps/api/event");
 
@@ -56,7 +56,10 @@ export const useAppPersistence = () => {
 				return null;
 			} catch (error) {
 				// Not in Tauri context or Tauri not available
-				console.debug("Tauri APIs not available, skipping native close handler:", error);
+				console.debug(
+					"Tauri APIs not available, skipping native close handler:",
+					error
+				);
 				return null;
 			}
 		};
@@ -75,7 +78,7 @@ export const useAppPersistence = () => {
 		return () => {
 			window.removeEventListener("beforeunload", persistAppState);
 			// Only try to unlisten if we have a valid unlisten function
-			if (tauriUnlisten && typeof tauriUnlisten === 'function') {
+			if (tauriUnlisten && typeof tauriUnlisten === "function") {
 				try {
 					tauriUnlisten();
 				} catch (error) {

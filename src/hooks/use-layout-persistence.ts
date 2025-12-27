@@ -53,14 +53,14 @@ export const useLayoutPersistence = () => {
 	const activityBarVisibleValue = useAtomValue(activityBarVisible);
 	const sidebarCollapsedValue = useAtomValue(sidebarCollapsed);
 
-	const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+	const debounceTimerRef = useRef<number | null>(null);
 	const previousWidthRef = useRef<number>(sidebarWidthValue);
 
 	// Debounced save for sidebar width (during drag operations)
 	useEffect(() => {
 		// Skip if width hasn't changed
 		if (previousWidthRef.current === sidebarWidthValue) return;
-		
+
 		previousWidthRef.current = sidebarWidthValue;
 
 		// Clear existing timer

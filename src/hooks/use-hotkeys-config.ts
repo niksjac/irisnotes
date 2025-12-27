@@ -33,23 +33,26 @@ export function useHotkeysConfig() {
 		}
 	}, []);
 
-	const saveHotkeys = useCallback(async (newHotkeys: Partial<HotkeyMapping>) => {
-		try {
-			await invoke("write_config", {
-				filename: "hotkeys.json",
-				content: JSON.stringify(newHotkeys, null, 2),
-			});
+	const saveHotkeys = useCallback(
+		async (newHotkeys: Partial<HotkeyMapping>) => {
+			try {
+				await invoke("write_config", {
+					filename: "hotkeys.json",
+					content: JSON.stringify(newHotkeys, null, 2),
+				});
 
-			// Merge with defaults for immediate use
-			const mergedHotkeys: HotkeyMapping = {
-				...DEFAULT_HOTKEYS,
-				...newHotkeys,
-			};
-			setHotkeys(mergedHotkeys);
-		} catch (error) {
-			console.error("Failed to save hotkeys:", error);
-		}
-	}, []);
+				// Merge with defaults for immediate use
+				const mergedHotkeys: HotkeyMapping = {
+					...DEFAULT_HOTKEYS,
+					...newHotkeys,
+				};
+				setHotkeys(mergedHotkeys);
+			} catch (error) {
+				console.error("Failed to save hotkeys:", error);
+			}
+		},
+		[]
+	);
 
 	const updateHotkeys = useCallback(
 		async (updates: Partial<HotkeyMapping>) => {

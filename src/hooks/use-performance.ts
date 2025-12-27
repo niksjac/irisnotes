@@ -24,7 +24,8 @@ export const usePerformance = (componentName: string) => {
 	// Memory monitoring (development only)
 	useEffect(() => {
 		// Check if we're in development mode (Vite sets this)
-		const isDevelopment = import.meta.env?.DEV || import.meta.env?.MODE === "development";
+		const isDevelopment =
+			import.meta.env?.DEV || import.meta.env?.MODE === "development";
 
 		if (isDevelopment) {
 			const logMetrics = () => {
@@ -72,7 +73,10 @@ export const usePerformance = (componentName: string) => {
 			() => ({
 				renderCount: renderCount.current,
 				lastRenderTime: lastRenderTime.current,
-				memory: "memory" in performance ? (performance as any).memory?.usedJSHeapSize : undefined,
+				memory:
+					"memory" in performance
+						? (performance as any).memory?.usedJSHeapSize
+						: undefined,
 			}),
 			[]
 		),

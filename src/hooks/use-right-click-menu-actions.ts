@@ -1,6 +1,19 @@
 import { useCallback } from "react";
-import { FileText, Edit3, Trash2, Copy, Scissors, ClipboardPaste, Book, FolderOpen } from "lucide-react";
-import type { MenuGroup, TreeRightClickData, EditorRightClickData } from "@/types/right-click-menu";
+import {
+	FileText,
+	Edit3,
+	Trash2,
+	Copy,
+	Scissors,
+	ClipboardPaste,
+	Book,
+	FolderOpen,
+} from "lucide-react";
+import type {
+	MenuGroup,
+	TreeRightClickData,
+	EditorRightClickData,
+} from "@/types/right-click-menu";
 import { useItems } from "./use-items";
 
 interface UseRightClickMenuActionsProps {
@@ -16,16 +29,22 @@ export function useRightClickMenuActions({
 	onCreateBook,
 	onCreateSection,
 	onDeleteItem,
-	onRenameItem
+	onRenameItem,
 }: UseRightClickMenuActionsProps = {}) {
-	const { createNote, createBook, createSection, deleteItem, updateItemTitle } = useItems();
+	const { createNote, createBook, createSection, deleteItem, updateItemTitle } =
+		useItems();
 
 	const handleDeleteAction = useCallback(
 		(data: TreeRightClickData) => {
 			const itemType = data.nodeType;
-			const itemName = itemType === "note" ? "note" :
-							 itemType === "book" ? "book" :
-							 itemType === "section" ? "section" : "item";
+			const itemName =
+				itemType === "note"
+					? "note"
+					: itemType === "book"
+						? "book"
+						: itemType === "section"
+							? "section"
+							: "item";
 
 			const confirmMessage = `Are you sure you want to delete ${itemName} "${data.nodeName}"${
 				itemType !== "note" ? " and all its contents" : ""
@@ -44,7 +63,10 @@ export function useRightClickMenuActions({
 
 	const handleRenameAction = useCallback(
 		(data: TreeRightClickData) => {
-			const newName = prompt(`Enter new name for ${data.nodeName}:`, data.nodeName);
+			const newName = prompt(
+				`Enter new name for ${data.nodeName}:`,
+				data.nodeName
+			);
 			if (newName && newName !== data.nodeName) {
 				if (onRenameItem) {
 					onRenameItem(data.nodeId, newName);
@@ -61,7 +83,11 @@ export function useRightClickMenuActions({
 			if (onCreateNote) {
 				onCreateNote(parentId);
 			} else {
-				createNote({ title: "Untitled Note", content: "", parent_id: parentId });
+				createNote({
+					title: "Untitled Note",
+					content: "",
+					parent_id: parentId,
+				});
 			}
 		},
 		[onCreateNote, createNote]
@@ -100,7 +126,8 @@ export function useRightClickMenuActions({
 			const groups: MenuGroup[] = [];
 
 			// Create/Add actions - different options based on what can be created inside
-			if (isContainer || !data.nodeId) { // Root level or inside containers
+			if (isContainer || !data.nodeId) {
+				// Root level or inside containers
 				const createItems = [];
 
 				// Notes can be created anywhere
@@ -176,72 +203,81 @@ export function useRightClickMenuActions({
 
 			return groups;
 		},
-		[handleCreateNoteAction, handleCreateBookAction, handleCreateSectionAction, handleRenameAction, handleDeleteAction]
+		[
+			handleCreateNoteAction,
+			handleCreateBookAction,
+			handleCreateSectionAction,
+			handleRenameAction,
+			handleDeleteAction,
+		]
 	);
 
-	const getEditorMenuGroups = useCallback((data: EditorRightClickData): MenuGroup[] => {
-		const groups: MenuGroup[] = [];
+	const getEditorMenuGroups = useCallback(
+		(data: EditorRightClickData): MenuGroup[] => {
+			const groups: MenuGroup[] = [];
 
-		// Text editing actions
-		if (data.hasSelection) {
+			// Text editing actions
+			if (data.hasSelection) {
+				groups.push({
+					id: "edit",
+					items: [
+						{
+							id: "cut",
+							label: "Cut",
+							icon: Scissors,
+							shortcut: "Ctrl+X",
+							action: () => {
+								document.execCommand("cut");
+							},
+						},
+						{
+							id: "copy",
+							label: "Copy",
+							icon: Copy,
+							shortcut: "Ctrl+C",
+							action: () => {
+								document.execCommand("copy");
+							},
+						},
+					],
+				});
+			}
+
+			// Always show paste if clipboard might have content
 			groups.push({
-				id: "edit",
+				id: "clipboard",
 				items: [
 					{
-						id: "cut",
-						label: "Cut",
-						icon: Scissors,
-						shortcut: "Ctrl+X",
+						id: "paste",
+						label: "Paste",
+						icon: ClipboardPaste,
+						shortcut: "Ctrl+V",
 						action: () => {
-							document.execCommand("cut");
-						},
-					},
-					{
-						id: "copy",
-						label: "Copy",
-						icon: Copy,
-						shortcut: "Ctrl+C",
-						action: () => {
-							document.execCommand("copy");
+							document.execCommand("paste");
 						},
 					},
 				],
 			});
-		}
 
-		// Always show paste if clipboard might have content
-		groups.push({
-			id: "clipboard",
-			items: [
-				{
-					id: "paste",
-					label: "Paste",
-					icon: ClipboardPaste,
-					shortcut: "Ctrl+V",
-					action: () => {
-						document.execCommand("paste");
+			// Selection actions
+			groups.push({
+				id: "selection",
+				items: [
+					{
+						id: "select-all",
+						label: "Select All",
+						shortcut: "Ctrl+A",
+						action: () => {
+							document.execCommand("selectAll");
+						},
 					},
-				},
-			],
-		});
+				],
+			});
 
-		// Selection actions
-		groups.push({
-			id: "selection",
-			items: [
-				{
-					id: "select-all",
-					label: "Select All",
-					shortcut: "Ctrl+A",
-					action: () => {
-						document.execCommand("selectAll");
-					},
-				},
-			],
-		});
-
-		return groups;
-	}, []);
+			return groups;
+		},
+		[]
+	);
 
 	return {
 		getTreeNodeMenuGroups,

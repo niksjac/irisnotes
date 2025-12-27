@@ -76,7 +76,6 @@ export const useConfig = () => {
 			const mergedConfig: AppConfig = {
 				...DEFAULT_CONFIG,
 				...parsedConfig,
-				layout: { ...DEFAULT_CONFIG.layout, ...parsedConfig.layout },
 				editor: { ...DEFAULT_CONFIG.editor, ...parsedConfig.editor },
 				debug: { ...DEFAULT_CONFIG.debug, ...parsedConfig.debug },
 				storage: { ...DEFAULT_CONFIG.storage, ...parsedConfig.storage },
@@ -125,16 +124,18 @@ export const useConfig = () => {
 
 	const updateConfig = useCallback(
 		async (updates: Partial<AppConfig>) => {
-					const newConfig = {
-			...config,
-			...updates,
-			editor: { ...config.editor, ...updates.editor },
-			debug: { ...config.debug, ...updates.debug },
-			storage: { ...config.storage, ...updates.storage },
-			hotkeys: updates.hotkeys ? { ...config.hotkeys, ...updates.hotkeys } : config.hotkeys,
-			development: { ...config.development, ...updates.development },
-			production: { ...config.production, ...updates.production },
-		};
+			const newConfig = {
+				...config,
+				...updates,
+				editor: { ...config.editor, ...updates.editor },
+				debug: { ...config.debug, ...updates.debug },
+				storage: { ...config.storage, ...updates.storage },
+				hotkeys: updates.hotkeys
+					? { ...config.hotkeys, ...updates.hotkeys }
+					: config.hotkeys,
+				development: { ...config.development, ...updates.development },
+				production: { ...config.production, ...updates.production },
+			};
 			await saveConfig(newConfig);
 		},
 		[config, saveConfig]
