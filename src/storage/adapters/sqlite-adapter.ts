@@ -610,9 +610,87 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 			return { success: false, error: `Failed to delete item: ${error}` };
 		}
 	}
-	async moveTreeItem(): Promise<VoidStorageResult> {
-		throw new Error("Not implemented");
+
+	async moveTreeItem(
+		itemId: string,
+		_itemType: "note" | "book" | "section",
+		newParentId: string | null,
+		insertIndex?: number
+	): Promise<VoidStorageResult> {
+		if (!this.db) return { success: false, error: "Database not initialized" };
+
+		try {
+			// Step 1: Get item to verify it exists and get its type
+			const items = await this.db.select<FlexibleItem[]>(
+				"SELECT * FROM items WHERE id = ?",
+				[itemId]
+			);
+			if (items.length === 0) {
+				return { success: false, error: "Item not found" };
+			}
+			const item = items[0];
+
+			// Step 2: Validate hierarchy rules
+			let newParentType: "note" | "book" | "section" | null = null;
+			if (newParentId) {
+				const parentItems = await this.db.select<FlexibleItem[]>(
+					"SELECT type FROM items WHERE id = ?",
+					[newParentId]
+				);
+				if (parentItems.length === 0) {
+					return { success: false, error: "Parent item not found" };
+				}
+				newParentType = parentItems[0].type;
+			}
+
+			if (!canBeChildOf(item.type, newParentType)) {
+				return {
+					success: false,
+					error: `Cannot move ${item.type} under ${newParentType || "root"}`,
+				};
+			}
+
+			// Step 3: Get current items at target location for sort order calculation
+			const targetItems = await this.db.select<{ sort_order: number }[]>(
+				`SELECT sort_order FROM items 
+				 WHERE parent_id ${newParentId ? "= ?" : "IS NULL"} 
+				 AND id != ? 
+				 AND deleted_at IS NULL
+				 ORDER BY sort_order ASC`,
+				newParentId ? [newParentId, itemId] : [itemId]
+			);
+
+			// Step 4: Calculate new sort order
+			let newSortOrder: number;
+			if (targetItems.length === 0) {
+				newSortOrder = 1000;
+			} else if (insertIndex === undefined || insertIndex >= targetItems.length) {
+				// Insert at end
+				const maxOrder = Math.max(...targetItems.map((i) => i.sort_order));
+				newSortOrder = maxOrder + 1000;
+			} else if (insertIndex === 0) {
+				// Insert at beginning
+				const minOrder = Math.min(...targetItems.map((i) => i.sort_order));
+				newSortOrder = Math.max(0, minOrder - 1000);
+			} else {
+				// Insert between two items
+				const before = targetItems[insertIndex - 1].sort_order;
+				const after = targetItems[insertIndex].sort_order;
+				newSortOrder = Math.floor((before + after) / 2);
+			}
+
+			// Step 5: Update the item
+			await this.db.execute(
+				`UPDATE items SET parent_id = ?, sort_order = ?, updated_at = datetime('now') WHERE id = ?`,
+				[newParentId, newSortOrder, itemId]
+			);
+
+			return { success: true };
+		} catch (error) {
+			return { success: false, error: `Failed to move item: ${error}` };
+		}
 	}
+
 	async reorderTreeItem(): Promise<VoidStorageResult> {
 		throw new Error("Not implemented");
 	}
