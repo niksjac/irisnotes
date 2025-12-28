@@ -191,6 +191,14 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		global: true,
 	},
 
+	// Focus hotkeys
+	focusTreeView: {
+		key: "ctrl+shift+e",
+		description: "Focus Tree View",
+		category: "Focus",
+		global: true,
+	},
+
 	// App hotkeys
 	refreshApp: {
 		key: "f5",

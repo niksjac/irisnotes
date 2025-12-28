@@ -5,7 +5,7 @@ import type { AppHotkeysProps } from "@/types";
  * This fixes the naming mismatch between handler names and prop names
  */
 export function mapHotkeyHandlers(
-	sidebar: { toggle: () => void },
+	sidebar: { toggle: () => void; collapsed: boolean; setCollapsed: (collapsed: boolean) => void },
 	views: { toggleActivityBar: () => void },
 	handlers: {
 		closeActiveTab: () => void;
@@ -71,6 +71,26 @@ export function mapHotkeyHandlers(
 		// Tab navigation hotkeys
 		onFocusNextTab: handlers.focusNextTab,
 		onFocusPreviousTab: handlers.focusPreviousTab,
+		// Focus hotkeys
+		onFocusTreeView: () => {
+			// Open sidebar if collapsed
+			if (sidebar.collapsed) {
+				sidebar.setCollapsed(false);
+				// Wait for sidebar to open before focusing
+				requestAnimationFrame(() => {
+					const treeContainer = document.querySelector('[data-tree-container="true"]') as HTMLElement | null;
+					if (treeContainer) {
+						treeContainer.focus();
+					}
+				});
+			} else {
+				// Find tree container by data attribute and focus it
+				const treeContainer = document.querySelector('[data-tree-container="true"]') as HTMLElement | null;
+				if (treeContainer) {
+					treeContainer.focus();
+				}
+			}
+		},
 		// App hotkeys
 		onRefreshApp: () => window.location.reload(),
 		// Editor hotkeys

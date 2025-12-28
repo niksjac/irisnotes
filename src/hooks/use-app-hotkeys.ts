@@ -194,6 +194,13 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHotkeyOptions(hotkeyMapping.toggleLineWrapping.global)
 	);
 
+	// Focus hotkeys
+	useHotkeys(
+		hotkeyMapping.focusTreeView.key,
+		createHandler(handlers.onFocusTreeView),
+		createHotkeyOptions(hotkeyMapping.focusTreeView.global)
+	);
+
 	// Future hotkey categories can be added here:
 
 	// Editor hotkeys - Use restrictedHotkeyOptions to avoid conflicts with text editing

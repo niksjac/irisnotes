@@ -154,5 +154,11 @@
     "description": "Focus Previous Tab",
     "category": "Tab Navigation",
     "global": true
+  },
+  "focusTreeView": {
+    "key": "ctrl+shift+e",
+    "description": "Focus Tree View",
+    "category": "Focus",
+    "global": true
   }
 }

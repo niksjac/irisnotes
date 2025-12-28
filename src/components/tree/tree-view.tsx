@@ -6,6 +6,7 @@ import {
 	selectionFeature,
 	dragAndDropFeature,
 	type TreeState,
+	type FeatureImplementation,
 } from "@headless-tree/core";
 import { itemsAtom, selectedItemIdAtom } from "@/atoms/items";
 import type { FlexibleItem } from "@/types/items";
@@ -22,6 +23,69 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { useTabManagement, useItems } from "@/hooks";
 import { canBeChildOf } from "@/storage/hierarchy";
 
+// Custom click behavior: single-click only focuses/selects, double-click opens
+// This overrides the default behavior where single-click calls primaryAction
+const singleClickSelectFeature: FeatureImplementation<FlexibleItem> = {
+	itemInstance: {
+		getProps: ({ tree, item, prev }) => ({
+			...prev?.(),
+			onClick: (e: MouseEvent) => {
+				// Handle selection (Shift/Ctrl modifiers)
+				if (e.shiftKey) {
+					item.selectUpTo(e.ctrlKey || e.metaKey);
+				} else if (e.ctrlKey || e.metaKey) {
+					item.toggleSelect();
+				} else {
+					tree.setSelectedItems([item.getItemMeta().itemId]);
+				}
+
+				// Focus this item
+				item.setFocused();
+
+				// Toggle expand/collapse for folders
+				if (item.isFolder()) {
+					if (item.isExpanded()) {
+						item.collapse();
+					} else {
+						item.expand();
+					}
+				}
+				// NOTE: We intentionally do NOT call item.primaryAction() here
+				// That will be triggered by double-click instead
+			},
+		}),
+	},
+};
+
+// Custom Left Arrow behavior: go to previous visible item instead of parent
+// This overrides the W3C default which jumps to parent when collapsed
+const customArrowLeftFeature: FeatureImplementation<FlexibleItem> = {
+	hotkeys: {
+		collapseOrUp: {
+			hotkey: "ArrowLeft",
+			canRepeat: true,
+			handler: (e, tree) => {
+				const item = tree.getFocusedItem();
+				if (!item) return;
+
+				// If expanded folder, collapse it (same as default)
+				if (item.isFolder() && item.isExpanded()) {
+					item.collapse();
+				} else {
+					// Go to previous visible item instead of parent
+					const visibleItems = tree.getItems();
+					const currentIndex = visibleItems.findIndex(
+						(i) => i.getItemMeta().itemId === item.getItemMeta().itemId,
+					);
+					if (currentIndex > 0) {
+						visibleItems[currentIndex - 1].setFocused();
+						tree.updateDomFocus();
+					}
+				}
+			},
+		},
+	},
+};
 export function TreeView() {
 	const items = useAtomValue(itemsAtom);
 	const setSelectedItemId = useSetAtom(selectedItemIdAtom);
@@ -140,13 +204,13 @@ export function TreeView() {
 		},
 		// Custom hotkeys for cut/paste operations
 		hotkeys: {
-			// Cut selected items (Ctrl+X)
+			// Cut items (Ctrl+X) - uses selected items if any, otherwise focused item
 			customCut: {
 				hotkey: "Control+KeyX",
 				handler: (_e, treeInstance) => {
 					const selectedItems = treeInstance.getSelectedItems();
 					if (selectedItems.length > 0) {
-						// Use multi-selected items
+						// Use multi-selected items (Ctrl+Click selection)
 						const ids = selectedItems.map((item) => item.getId());
 						setClipboardItemIds(ids);
 					} else {
@@ -155,6 +219,28 @@ export function TreeView() {
 						if (focusedId && focusedId !== "root") {
 							setClipboardItemIds([focusedId]);
 						}
+					}
+				},
+			},
+			// Cancel/clear (Escape) - clears clipboard and selection
+			customCancel: {
+				hotkey: "Escape",
+				handler: (_e, treeInstance) => {
+					// Clear clipboard if any
+					if (clipboardItemIds.length > 0) {
+						setClipboardItemIds([]);
+					}
+					// Clear multi-selection
+					treeInstance.setSelectedItems([]);
+				},
+			},
+			// Toggle selection of focused item (Ctrl+Space) - for non-consecutive multi-select
+			toggleFocusedSelection: {
+				hotkey: "Control+Space",
+				handler: (_e, treeInstance) => {
+					const focusedItem = treeInstance.getFocusedItem();
+					if (focusedItem) {
+						focusedItem.toggleSelect();
 					}
 				},
 			},
@@ -188,9 +274,85 @@ export function TreeView() {
 					setClipboardItemIds([]);
 				},
 			},
-			// Move focused item up within its parent (Ctrl+Up)
-			customMoveUp: {
+			// Extend selection up (Shift+Up)
+			extendSelectionUp: {
+				hotkey: "Shift+ArrowUp",
+				canRepeat: true,
+				handler: (_e, treeInstance) => {
+					const focusedItem = treeInstance.getFocusedItem();
+					if (!focusedItem) return;
+
+					const visibleItems = treeInstance.getItems();
+					const currentIndex = visibleItems.findIndex(
+						(i) => i.getItemMeta().itemId === focusedItem.getItemMeta().itemId,
+					);
+					if (currentIndex > 0) {
+						const prevItem = visibleItems[currentIndex - 1];
+						prevItem.setFocused();
+						prevItem.selectUpTo(true); // Extend selection
+						treeInstance.updateDomFocus();
+					}
+				},
+			},
+			// Extend selection down (Shift+Down)
+			extendSelectionDown: {
+				hotkey: "Shift+ArrowDown",
+				canRepeat: true,
+				handler: (_e, treeInstance) => {
+					const focusedItem = treeInstance.getFocusedItem();
+					if (!focusedItem) return;
+
+					const visibleItems = treeInstance.getItems();
+					const currentIndex = visibleItems.findIndex(
+						(i) => i.getItemMeta().itemId === focusedItem.getItemMeta().itemId,
+					);
+					if (currentIndex < visibleItems.length - 1) {
+						const nextItem = visibleItems[currentIndex + 1];
+						nextItem.setFocused();
+						nextItem.selectUpTo(true); // Extend selection
+						treeInstance.updateDomFocus();
+					}
+				},
+			},
+			// Navigate up with Ctrl held (for multi-select workflow)
+			ctrlNavigateUp: {
 				hotkey: "Control+ArrowUp",
+				canRepeat: true,
+				handler: (_e, treeInstance) => {
+					const focusedItem = treeInstance.getFocusedItem();
+					if (!focusedItem) return;
+
+					const visibleItems = treeInstance.getItems();
+					const currentIndex = visibleItems.findIndex(
+						(i) => i.getItemMeta().itemId === focusedItem.getItemMeta().itemId,
+					);
+					if (currentIndex > 0) {
+						visibleItems[currentIndex - 1].setFocused();
+						treeInstance.updateDomFocus();
+					}
+				},
+			},
+			// Navigate down with Ctrl held (for multi-select workflow)
+			ctrlNavigateDown: {
+				hotkey: "Control+ArrowDown",
+				canRepeat: true,
+				handler: (_e, treeInstance) => {
+					const focusedItem = treeInstance.getFocusedItem();
+					if (!focusedItem) return;
+
+					const visibleItems = treeInstance.getItems();
+					const currentIndex = visibleItems.findIndex(
+						(i) => i.getItemMeta().itemId === focusedItem.getItemMeta().itemId,
+					);
+					if (currentIndex < visibleItems.length - 1) {
+						visibleItems[currentIndex + 1].setFocused();
+						treeInstance.updateDomFocus();
+					}
+				},
+			},
+			// Move focused item up within its parent (Ctrl+Shift+Up)
+			customMoveUp: {
+				hotkey: "Control+Shift+ArrowUp",
 				handler: async (_e, treeInstance) => {
 					const focusedId = treeInstance.getState().focusedItem;
 					if (!focusedId || focusedId === "root") return;
@@ -209,9 +371,9 @@ export function TreeView() {
 					await moveItem(focusedId, focusedData.parent_id, currentIndex - 1);
 				},
 			},
-			// Move focused item down within its parent (Ctrl+Down)
+			// Move focused item down within its parent (Ctrl+Shift+Down)
 			customMoveDown: {
-				hotkey: "Control+ArrowDown",
+				hotkey: "Control+Shift+ArrowDown",
 				handler: async (_e, treeInstance) => {
 					const focusedId = treeInstance.getState().focusedItem;
 					if (!focusedId || focusedId === "root") return;
@@ -319,6 +481,8 @@ export function TreeView() {
 			hotkeysCoreFeature,
 			selectionFeature,
 			dragAndDropFeature,
+			singleClickSelectFeature, // Override default click behavior
+			customArrowLeftFeature, // Override Left Arrow to go to previous visible item
 		],
 	});
 
@@ -354,13 +518,6 @@ export function TreeView() {
 					<FileText className="w-3 h-3 text-gray-600 dark:text-gray-400" />
 				);
 		}
-	};
-
-	// Handle single click - just focus/select in tree, don't open note
-	const handleItemClick = (item: any, _itemId: string) => {
-		// Use headless-tree's selection system for tree highlighting only
-		// Do NOT update selectedItemIdAtom - that would trigger opening the note
-		item.select();
 	};
 
 	// Handle double-click or Enter - open the note in editor
@@ -432,7 +589,26 @@ export function TreeView() {
 				>
 					Drop here for root level
 				</div>
-				<div {...tree.getContainerProps()} className="relative font-mono min-h-[100px]">
+				<div 
+					{...tree.getContainerProps()} 
+					data-tree-container="true"
+					tabIndex={0}
+					className="relative font-mono min-h-[100px] focus:ring-2 focus:ring-blue-400/50 focus:ring-inset focus:outline-none focus-within:ring-2 focus-within:ring-blue-400/50 focus-within:ring-inset rounded-sm cursor-default"
+					onClick={(e) => {
+						// If clicking on empty space in container (not on an item), focus the tree
+						if (e.target === e.currentTarget) {
+							e.currentTarget.focus();
+							// Focus first item if nothing is focused
+							const focusedItem = tree.getFocusedItem();
+							if (!focusedItem) {
+								const items = tree.getItems();
+								if (items.length > 0) {
+									items[0].setFocused();
+								}
+							}
+						}
+					}}
+				>
 					{visibleItems.map((item) => {
 						const itemData = item.getItemData();
 						const level = item.getItemMeta().level;
@@ -444,47 +620,44 @@ export function TreeView() {
 						
 						// Drag state for visual feedback (from headless-tree)
 						const isDragTarget = item.isDragTarget?.() ?? false;
+						const isSelected = item.isSelected?.() ?? false;
+						const isFocused = item.isFocused?.() ?? false;
+						const isInClipboard = clipboardItemIds.includes(itemData.id);
 
 						// Get the props from headless-tree (includes ALL handlers: drag, drop, etc.)
 						const itemProps = item.getProps();
-						
-						// Compose onClick handler - call library's handler (handles expand/collapse) then ours
-						const handleClick = (e: React.MouseEvent) => {
-							// Call library's onClick - it handles focus, selection, and expand/collapse
-							itemProps.onClick?.(e);
-							// Update our global selection state
-							handleItemClick(item, itemData.id);
-						};
 
 						return (
 							<button
 								key={itemData.id}
-								// Spread ALL library props (drag handlers, etc.)
+								// Spread ALL library props (drag handlers, click, etc.)
+								// Our singleClickSelectFeature overrides onClick to NOT call primaryAction
 								{...itemProps}
 
 								type="button"
 								className={`
                   w-full flex items-center gap-1 py-0.5 px-1 rounded cursor-pointer transition-colors text-left
+                  ${isInClipboard ? "opacity-50" : ""}
                   ${
 										isDragTarget
 											? "bg-blue-100/70 dark:bg-blue-900/30 border-l-2 border-blue-400"
-											: clipboardItemIds.includes(itemData.id)
-												? "opacity-50 bg-gray-100 dark:bg-gray-800"
-												: item.isFocused?.()
-													? "bg-blue-50 dark:bg-blue-900/30"
-													: "hover:bg-gray-100 dark:hover:bg-gray-800/50"
+											: isFocused
+												? "bg-blue-100 dark:bg-blue-900/40 ring-1 ring-blue-400"
+												: isSelected
+													? "bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-300/50"
+													: isInClipboard
+														? "bg-gray-100 dark:bg-gray-800"
+														: "hover:bg-gray-100 dark:hover:bg-gray-800/50"
 									}
-                  focus:outline-none focus:ring-1 focus:ring-blue-400 focus:bg-blue-50/50 dark:focus:bg-blue-900/20
+                  focus:outline-none
                   select-none
                 `}
 								style={{
 									paddingLeft: `${level * 16 + 4}px`,
 								}}
-								onClick={handleClick}
 								onDoubleClick={() => {
 									handleItemOpen(itemData.id);
 								}}
-
 							>
 								{isFolder && hasChildren ? (
 									<span className="flex-shrink-0 w-3 h-3 flex items-center justify-center">

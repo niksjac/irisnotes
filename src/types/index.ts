@@ -81,6 +81,9 @@ export interface HotkeyMapping {
 	focusNextTab: HotkeyConfig;
 	focusPreviousTab: HotkeyConfig;
 
+	// Focus hotkeys
+	focusTreeView: HotkeyConfig;
+
 	// App hotkeys
 	refreshApp: HotkeyConfig;
 }
@@ -127,6 +130,9 @@ export interface AppHotkeysProps {
 	// Tab navigation hotkeys
 	onFocusNextTab?: () => void;
 	onFocusPreviousTab?: () => void;
+
+	// Focus hotkeys
+	onFocusTreeView?: () => void;
 
 	// App hotkeys
 	onRefreshApp?: () => void;
