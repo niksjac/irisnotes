@@ -201,6 +201,8 @@ export type ViewType =
 	| "hotkeys-view"
 	| "editor-rich-view"
 	| "editor-source-view"
+	| "section-view"
+	| "book-view"
 	| "empty-view";
 
 // Tree view types

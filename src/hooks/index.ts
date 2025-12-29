@@ -41,6 +41,9 @@ export { useItems } from "./use-items";
 // Tree view management
 export { useTreeView } from "./use-tree-view";
 
+// Container views (section/book)
+export { useContainerView } from "./use-container-view";
+
 // Tab management
 export { useTabManagement } from "./use-tab-management";
 
