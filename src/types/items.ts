@@ -16,7 +16,7 @@ export interface FlexibleItem {
 
 	// Hierarchy
 	parent_id?: string | null;
-	sort_order: number;
+	sort_order: string; // Fractional index string for sync-safe ordering
 
 	// Flexible metadata - JSON column for experimentation
 	metadata: Record<string, any>;

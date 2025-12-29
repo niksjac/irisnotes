@@ -1,5 +1,6 @@
 import { atom } from "jotai";
 import type { FlexibleItem } from "@/types/items";
+import { compareSortOrder } from "@/utils/sort-order";
 
 // Core items data atom
 export const itemsAtom = atom<FlexibleItem[]>([]);
@@ -29,9 +30,9 @@ export const treeDataAtom = atom((get) => {
 		itemMap.get(parentId)?.push(item);
 	});
 
-	// Sort each group by sort_order
+	// Sort each group by sort_order (ASCII comparison for fractional indexing)
 	itemMap.forEach((children) => {
-		children.sort((a, b) => a.sort_order - b.sort_order);
+		children.sort((a, b) => compareSortOrder(a.sort_order, b.sort_order));
 	});
 
 	return itemMap;

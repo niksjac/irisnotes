@@ -45,7 +45,7 @@ export const useTabManagement = () => {
 		): string => {
 			const children = items
 				.filter((child) => child.parent_id === parentId)
-				.sort((a, b) => a.sort_order - b.sort_order);
+				.sort((a, b) => (a.sort_order < b.sort_order ? -1 : a.sort_order > b.sort_order ? 1 : 0));
 
 			return children
 				.map((child) => {

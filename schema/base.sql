@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS items (
 
     -- Hierarchy - direct parent-child relationship
     parent_id TEXT NULL, -- references items(id), NULL for root level
-    sort_order INTEGER NOT NULL DEFAULT 0, -- ordering within parent
+    sort_order TEXT NOT NULL DEFAULT 'a0', -- fractional indexing for sync-safe ordering
 
     -- Flexible metadata - JSON column for experimentation
     metadata TEXT DEFAULT '{}', -- JSON object for custom fields

@@ -10,6 +10,7 @@ import {
 } from "@headless-tree/core";
 import { itemsAtom, selectedItemIdAtom } from "@/atoms/items";
 import type { FlexibleItem } from "@/types/items";
+import { compareSortOrder } from "@/utils/sort-order";
 import {
 	ChevronRight,
 	ChevronDown,
@@ -144,12 +145,12 @@ export function TreeView() {
 			}
 		}
 
-		// Sort children by sort_order
+		// Sort children by sort_order (ASCII comparison for fractional indexing)
 		for (const children of map.values()) {
 			children.sort((a, b) => {
 				const itemA = itemMap.get(a);
 				const itemB = itemMap.get(b);
-				return (itemA?.sort_order || 0) - (itemB?.sort_order || 0);
+				return compareSortOrder(itemA?.sort_order || "a0", itemB?.sort_order || "a0");
 			});
 		}
 
@@ -160,7 +161,7 @@ export function TreeView() {
 	const rootItemIds = useMemo(() => {
 		return items
 			.filter((item) => !item.parent_id)
-			.sort((a, b) => a.sort_order - b.sort_order)
+			.sort((a, b) => compareSortOrder(a.sort_order, b.sort_order))
 			.map((item) => item.id);
 	}, [items]);
 
@@ -182,6 +183,59 @@ export function TreeView() {
 			setTreeState((prev) => ({ ...prev, expandedItems: folderIds }));
 		}
 	}, [folderIds, treeState.expandedItems]);
+
+	// ============================================================================
+	// Tree Navigation Helpers
+	// These reduce code duplication in hotkey handlers
+	// ============================================================================
+
+	/** Get the focused item's index in the visible items list */
+	const getFocusedIndex = (treeInstance: ReturnType<typeof useTree<FlexibleItem>>) => {
+		const focusedItem = treeInstance.getFocusedItem();
+		if (!focusedItem) return { focusedItem: null, visibleItems: [] as ReturnType<typeof treeInstance.getItems>, index: -1 };
+		const visibleItems = treeInstance.getItems();
+		const index = visibleItems.findIndex(
+			(i) => i.getItemMeta().itemId === focusedItem.getItemMeta().itemId,
+		);
+		return { focusedItem, visibleItems, index };
+	};
+
+	/** Focus the previous visible item, optionally extending selection */
+	const focusPrev = (treeInstance: ReturnType<typeof useTree<FlexibleItem>>, extendSelection = false) => {
+		const { visibleItems, index } = getFocusedIndex(treeInstance);
+		if (index > 0) {
+			const prevItem = visibleItems[index - 1];
+			prevItem.setFocused();
+			if (extendSelection) prevItem.selectUpTo(true);
+			treeInstance.updateDomFocus();
+			return prevItem;
+		}
+		return null;
+	};
+
+	/** Focus the next visible item, optionally extending selection */
+	const focusNext = (treeInstance: ReturnType<typeof useTree<FlexibleItem>>, extendSelection = false) => {
+		const { visibleItems, index } = getFocusedIndex(treeInstance);
+		if (index >= 0 && index < visibleItems.length - 1) {
+			const nextItem = visibleItems[index + 1];
+			nextItem.setFocused();
+			if (extendSelection) nextItem.selectUpTo(true);
+			treeInstance.updateDomFocus();
+			return nextItem;
+		}
+		return null;
+	};
+
+	/** Get sibling info for reordering within parent */
+	const getSiblingInfo = (focusedId: string) => {
+		if (!focusedId || focusedId === "root") return null;
+		const focusedData = itemMap.get(focusedId);
+		if (!focusedData) return null;
+		const parentId = focusedData.parent_id || "root";
+		const siblings = childrenMap.get(parentId) || [];
+		const currentIndex = siblings.indexOf(focusedId);
+		return { focusedData, parentId, siblings, currentIndex };
+	};
 
 	const tree = useTree<FlexibleItem>({
 		rootItemId: "root",
@@ -279,19 +333,7 @@ export function TreeView() {
 				hotkey: "Shift+ArrowUp",
 				canRepeat: true,
 				handler: (_e, treeInstance) => {
-					const focusedItem = treeInstance.getFocusedItem();
-					if (!focusedItem) return;
-
-					const visibleItems = treeInstance.getItems();
-					const currentIndex = visibleItems.findIndex(
-						(i) => i.getItemMeta().itemId === focusedItem.getItemMeta().itemId,
-					);
-					if (currentIndex > 0) {
-						const prevItem = visibleItems[currentIndex - 1];
-						prevItem.setFocused();
-						prevItem.selectUpTo(true); // Extend selection
-						treeInstance.updateDomFocus();
-					}
+					focusPrev(treeInstance, true);
 				},
 			},
 			// Extend selection down (Shift+Down)
@@ -299,19 +341,7 @@ export function TreeView() {
 				hotkey: "Shift+ArrowDown",
 				canRepeat: true,
 				handler: (_e, treeInstance) => {
-					const focusedItem = treeInstance.getFocusedItem();
-					if (!focusedItem) return;
-
-					const visibleItems = treeInstance.getItems();
-					const currentIndex = visibleItems.findIndex(
-						(i) => i.getItemMeta().itemId === focusedItem.getItemMeta().itemId,
-					);
-					if (currentIndex < visibleItems.length - 1) {
-						const nextItem = visibleItems[currentIndex + 1];
-						nextItem.setFocused();
-						nextItem.selectUpTo(true); // Extend selection
-						treeInstance.updateDomFocus();
-					}
+					focusNext(treeInstance, true);
 				},
 			},
 			// Navigate up with Ctrl held (for multi-select workflow)
@@ -319,17 +349,7 @@ export function TreeView() {
 				hotkey: "Control+ArrowUp",
 				canRepeat: true,
 				handler: (_e, treeInstance) => {
-					const focusedItem = treeInstance.getFocusedItem();
-					if (!focusedItem) return;
-
-					const visibleItems = treeInstance.getItems();
-					const currentIndex = visibleItems.findIndex(
-						(i) => i.getItemMeta().itemId === focusedItem.getItemMeta().itemId,
-					);
-					if (currentIndex > 0) {
-						visibleItems[currentIndex - 1].setFocused();
-						treeInstance.updateDomFocus();
-					}
+					focusPrev(treeInstance);
 				},
 			},
 			// Navigate down with Ctrl held (for multi-select workflow)
@@ -337,59 +357,27 @@ export function TreeView() {
 				hotkey: "Control+ArrowDown",
 				canRepeat: true,
 				handler: (_e, treeInstance) => {
-					const focusedItem = treeInstance.getFocusedItem();
-					if (!focusedItem) return;
-
-					const visibleItems = treeInstance.getItems();
-					const currentIndex = visibleItems.findIndex(
-						(i) => i.getItemMeta().itemId === focusedItem.getItemMeta().itemId,
-					);
-					if (currentIndex < visibleItems.length - 1) {
-						visibleItems[currentIndex + 1].setFocused();
-						treeInstance.updateDomFocus();
-					}
+					focusNext(treeInstance);
 				},
 			},
-			// Move focused item up within its parent (Ctrl+Shift+Up)
+			// Move focused item up within its parent (Alt+Up)
 			customMoveUp: {
-				hotkey: "Control+Shift+ArrowUp",
+				hotkey: "AltLeft+ArrowUp",
 				handler: async (_e, treeInstance) => {
 					const focusedId = treeInstance.getState().focusedItem;
-					if (!focusedId || focusedId === "root") return;
-
-					const focusedData = itemMap.get(focusedId);
-					if (!focusedData) return;
-
-					// Get siblings (items with same parent)
-					const parentId = focusedData.parent_id || "root";
-					const siblings = childrenMap.get(parentId) || [];
-
-					const currentIndex = siblings.indexOf(focusedId);
-					if (currentIndex <= 0) return; // Already at top
-
-					// Move to position above current
-					await moveItem(focusedId, focusedData.parent_id, currentIndex - 1);
+					const info = getSiblingInfo(focusedId ?? "");
+					if (!info || info.currentIndex <= 0) return;
+					await moveItem(focusedId!, info.focusedData.parent_id, info.currentIndex - 1);
 				},
 			},
-			// Move focused item down within its parent (Ctrl+Shift+Down)
+			// Move focused item down within its parent (Alt+Down)
 			customMoveDown: {
-				hotkey: "Control+Shift+ArrowDown",
+				hotkey: "AltLeft+ArrowDown",
 				handler: async (_e, treeInstance) => {
 					const focusedId = treeInstance.getState().focusedItem;
-					if (!focusedId || focusedId === "root") return;
-
-					const focusedData = itemMap.get(focusedId);
-					if (!focusedData) return;
-
-					// Get siblings (items with same parent)
-					const parentId = focusedData.parent_id || "root";
-					const siblings = childrenMap.get(parentId) || [];
-
-					const currentIndex = siblings.indexOf(focusedId);
-					if (currentIndex < 0 || currentIndex >= siblings.length - 1) return; // Already at bottom
-
-					// Move to position below current (need index + 2 because we're inserting after removal)
-					await moveItem(focusedId, focusedData.parent_id, currentIndex + 2);
+					const info = getSiblingInfo(focusedId ?? "");
+					if (!info || info.currentIndex < 0 || info.currentIndex >= info.siblings.length - 1) return;
+					await moveItem(focusedId!, info.focusedData.parent_id, info.currentIndex + 1);
 				},
 			},
 		},
@@ -444,7 +432,7 @@ export function TreeView() {
 						id: "root",
 						type: "book",
 						title: "Root",
-						sort_order: 0,
+						sort_order: "a0",
 						metadata: {},
 						created_at: new Date().toISOString(),
 						updated_at: new Date().toISOString(),
@@ -461,7 +449,7 @@ export function TreeView() {
 						id: itemId,
 						type: "note",
 						title: `[Missing: ${itemId}]`,
-						sort_order: 0,
+						sort_order: "a0",
 						metadata: {},
 						created_at: new Date().toISOString(),
 						updated_at: new Date().toISOString(),

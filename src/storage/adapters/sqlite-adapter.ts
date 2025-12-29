@@ -2,6 +2,7 @@
 // Uses single items table with JSON metadata column
 
 import Database from "@tauri-apps/plugin-sql";
+import { generateKeyBetween, generateNKeysBetween } from "fractional-indexing";
 import type {
 	Attachment,
 	CreateNoteParams,
@@ -173,19 +174,25 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	private async getNextSortOrder(parentId: string | null): Promise<number> {
-		if (!this.db) return 0;
+	private async getNextSortOrder(parentId: string | null): Promise<string> {
+		if (!this.db) return generateKeyBetween(null, null);
 
 		try {
-			const results = await this.db.select<Array<{ max_sort: number }>>(
-				"SELECT MAX(sort_order) as max_sort FROM items WHERE parent_id = ? AND deleted_at IS NULL",
-				[parentId]
+			// Get the last (highest) sort_order in this parent
+			const results = await this.db.select<Array<{ sort_order: string }>>(
+				`SELECT sort_order FROM items 
+				 WHERE ${parentId ? "parent_id = ?" : "parent_id IS NULL"} 
+				 AND deleted_at IS NULL 
+				 ORDER BY sort_order DESC LIMIT 1`,
+				parentId ? [parentId] : []
 			);
 
-			return (results[0]?.max_sort || 0) + 1;
+			const lastKey = results[0]?.sort_order || null;
+			// Generate a key after the last one (null means no upper bound)
+			return generateKeyBetween(lastKey, null);
 		} catch (error) {
 			console.warn("Failed to get next sort order:", error);
-			return 0;
+			return generateKeyBetween(null, null);
 		}
 	}
 
@@ -651,7 +658,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 			}
 
 			// Step 3: Get current items at target location for sort order calculation
-			const targetItems = await this.db.select<{ sort_order: number }[]>(
+			const targetItems = await this.db.select<{ sort_order: string }[]>(
 				`SELECT sort_order FROM items 
 				 WHERE parent_id ${newParentId ? "= ?" : "IS NULL"} 
 				 AND id != ? 
@@ -660,23 +667,24 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 				newParentId ? [newParentId, itemId] : [itemId]
 			);
 
-			// Step 4: Calculate new sort order
-			let newSortOrder: number;
+			// Step 4: Calculate new sort order using fractional indexing
+			let newSortOrder: string;
 			if (targetItems.length === 0) {
-				newSortOrder = 1000;
+				// Empty parent - generate first key
+				newSortOrder = generateKeyBetween(null, null);
 			} else if (insertIndex === undefined || insertIndex >= targetItems.length) {
-				// Insert at end
-				const maxOrder = Math.max(...targetItems.map((i) => i.sort_order));
-				newSortOrder = maxOrder + 1000;
+				// Insert at end - generate key after last item
+				const lastKey = targetItems[targetItems.length - 1].sort_order;
+				newSortOrder = generateKeyBetween(lastKey, null);
 			} else if (insertIndex === 0) {
-				// Insert at beginning
-				const minOrder = Math.min(...targetItems.map((i) => i.sort_order));
-				newSortOrder = Math.max(0, minOrder - 1000);
+				// Insert at beginning - generate key before first item
+				const firstKey = targetItems[0].sort_order;
+				newSortOrder = generateKeyBetween(null, firstKey);
 			} else {
 				// Insert between two items
-				const before = targetItems[insertIndex - 1].sort_order;
-				const after = targetItems[insertIndex].sort_order;
-				newSortOrder = Math.floor((before + after) / 2);
+				const beforeKey = targetItems[insertIndex - 1].sort_order;
+				const afterKey = targetItems[insertIndex].sort_order;
+				newSortOrder = generateKeyBetween(beforeKey, afterKey);
 			}
 
 			// Step 5: Update the item

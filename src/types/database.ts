@@ -15,7 +15,7 @@ export interface Note {
 	word_count: number;
 	character_count: number;
 	content_plaintext: string;
-	sort_order: number;
+	sort_order: string; // Fractional index string for sync-safe ordering
 	parent_category_id?: string | null; // NEW: Direct parent-child relationship for tree views
 }
 

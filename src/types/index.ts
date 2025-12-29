@@ -209,7 +209,7 @@ export interface TreeData {
 	name: string;
 	type: "note" | "book" | "section";
 	parent_id?: string | null;
-	sort_order: number;
+	sort_order: string; // Fractional index string for sync-safe ordering
 	custom_icon?: string | null;
 	custom_text_color?: string | null;
 	is_pinned?: boolean | null;

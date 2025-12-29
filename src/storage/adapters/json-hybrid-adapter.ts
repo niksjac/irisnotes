@@ -1,6 +1,7 @@
 // JSON Hybrid Storage Adapter
 // Structure in JSON file + individual content files for Git-friendly storage
 
+import { generateKeyBetween } from "fractional-indexing";
 import type {
 	Attachment,
 	CreateNoteParams,
@@ -106,7 +107,7 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 			type: "book",
 			title: "Learning Journal",
 			parent_id: null,
-			sort_order: 0,
+			sort_order: "a0",
 			metadata: {
 				custom_icon: "📚",
 				custom_text_color: "#2563eb",
@@ -124,7 +125,7 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 			type: "section",
 			title: "JavaScript Concepts",
 			parent_id: bookId,
-			sort_order: 0,
+			sort_order: "a0",
 			metadata: {
 				custom_icon: "⚡",
 				custom_text_color: "#f59e0b",
@@ -142,7 +143,7 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 			title: "Closures in JavaScript",
 			content_type: "markdown",
 			parent_id: sectionId,
-			sort_order: 0,
+			sort_order: "a0",
 			metadata: {
 				custom_icon: "🔒",
 				custom_text_color: "#10b981",
@@ -210,13 +211,17 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 			.trim();
 	}
 
-	private getNextSortOrder(parentId: string | null): number {
+	private getNextSortOrder(parentId: string | null): string {
 		const siblings = this.structureData.items.filter(
 			(item) => item.parent_id === parentId && !item.deleted_at
 		);
-		return siblings.length > 0
-			? Math.max(...siblings.map((s) => s.sort_order)) + 1
-			: 0;
+		if (siblings.length === 0) {
+			return generateKeyBetween(null, null);
+		}
+		const lastKey = siblings
+			.map((s) => s.sort_order)
+			.sort((a, b) => (a < b ? 1 : a > b ? -1 : 0))[0];
+		return generateKeyBetween(lastKey, null);
 	}
 
 	getConfig(): StorageConfig {
@@ -573,7 +578,7 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 
 			// Sort siblings by sort_order
 			for (const [, siblings] of itemsByParent.entries()) {
-				siblings.sort((a, b) => a.sort_order - b.sort_order);
+				siblings.sort((a, b) => (a.sort_order < b.sort_order ? -1 : a.sort_order > b.sort_order ? 1 : 0));
 			}
 
 			const buildTree = (parentId: string | null): TreeData[] => {
@@ -679,22 +684,27 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 			// Update parent
 			item.parent_id = newParentId;
 
-			// Calculate new sort order
+			// Calculate new sort order using fractional indexing
 			const siblings = this.structureData.items
 				.filter((i) => i.parent_id === newParentId && i.id !== itemId)
-				.sort((a, b) => a.sort_order - b.sort_order);
+				.sort((a, b) => (a.sort_order < b.sort_order ? -1 : a.sort_order > b.sort_order ? 1 : 0));
 
-			if (insertIndex !== undefined && insertIndex < siblings.length) {
-				// Insert at specific position
-				const targetSortOrder = siblings[insertIndex]?.sort_order || 0;
-				item.sort_order = targetSortOrder - 0.5;
+			if (siblings.length === 0) {
+				item.sort_order = generateKeyBetween(null, null);
+			} else if (insertIndex !== undefined && insertIndex < siblings.length) {
+				if (insertIndex === 0) {
+					// Insert before first
+					item.sort_order = generateKeyBetween(null, siblings[0].sort_order);
+				} else {
+					// Insert between
+					const before = siblings[insertIndex - 1].sort_order;
+					const after = siblings[insertIndex].sort_order;
+					item.sort_order = generateKeyBetween(before, after);
+				}
 			} else {
 				// Append at end
-				const maxSort =
-					siblings.length > 0
-						? Math.max(...siblings.map((s) => s.sort_order))
-						: 0;
-				item.sort_order = maxSort + 1;
+				const lastKey = siblings[siblings.length - 1].sort_order;
+				item.sort_order = generateKeyBetween(lastKey, null);
 			}
 
 			item.updated_at = new Date().toISOString();
@@ -725,17 +735,22 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 			}
 			const siblings = this.structureData.items
 				.filter((i) => i.parent_id === parentId && i.id !== itemId)
-				.sort((a, b) => a.sort_order - b.sort_order);
+				.sort((a, b) => (a.sort_order < b.sort_order ? -1 : a.sort_order > b.sort_order ? 1 : 0));
 
-			if (newIndex < siblings.length) {
-				const targetSortOrder = siblings[newIndex]?.sort_order || 0;
-				item.sort_order = targetSortOrder - 0.5;
+			if (siblings.length === 0) {
+				item.sort_order = generateKeyBetween(null, null);
+			} else if (newIndex === 0) {
+				// Insert before first
+				item.sort_order = generateKeyBetween(null, siblings[0].sort_order);
+			} else if (newIndex < siblings.length) {
+				// Insert between
+				const before = siblings[newIndex - 1].sort_order;
+				const after = siblings[newIndex].sort_order;
+				item.sort_order = generateKeyBetween(before, after);
 			} else {
-				const maxSort =
-					siblings.length > 0
-						? Math.max(...siblings.map((s) => s.sort_order))
-						: 0;
-				item.sort_order = maxSort + 1;
+				// Append at end
+				const lastKey = siblings[siblings.length - 1].sort_order;
+				item.sort_order = generateKeyBetween(lastKey, null);
 			}
 
 			item.updated_at = new Date().toISOString();
