@@ -1,7 +1,7 @@
 import { EditorView } from "prosemirror-view";
 import { toggleMark, setBlockType, wrapIn } from "prosemirror-commands";
 import { undo, redo } from "prosemirror-history";
-import { wrapInList, liftListItem, sinkListItem } from "prosemirror-schema-list";
+import { wrapInList } from "prosemirror-schema-list";
 import { useState, useEffect, useRef } from "react";
 import type { MarkType, NodeType } from "prosemirror-model";
 import {
@@ -46,7 +46,7 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 	// Helper to check if a block type is active
 	const isBlockActive = (nodeType: NodeType, attrs?: Record<string, any>) => {
 		if (!editorView) return false;
-		const { $from, to, $to } = editorView.state.selection;
+		const { $from, $to } = editorView.state.selection;
 		
 		// Check the parent node at the selection start
 		const depth = $from.depth;
@@ -99,8 +99,6 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 		};
 
 		// Subscribe to editor updates
-		const plugin = editorView.state.plugins.find((p: any) => p.spec?.view);
-		
 		// Use a mutation observer or transaction listener
 		const updateInterval = setInterval(updateToolbar, 100);
 

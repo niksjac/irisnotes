@@ -1,5 +1,5 @@
 import { EditorView as CodeMirrorView, lineNumbers, highlightActiveLine, highlightActiveLineGutter, keymap } from "@codemirror/view";
-import { EditorState as CodeMirrorState, Compartment } from "@codemirror/state";
+import { EditorState as CodeMirrorState } from "@codemirror/state";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { syntaxHighlighting, defaultHighlightStyle, bracketMatching } from "@codemirror/language";
 import { javascript } from "@codemirror/lang-javascript";
@@ -138,10 +138,15 @@ export class CodeBlockView implements NodeView {
 		if (newText === node.textContent) return;
 
 		this.updating = true;
+		const codeBlockType = this.view.state.schema.nodes.code_block;
+		if (!codeBlockType) {
+			this.updating = false;
+			return;
+		}
 		const tr = this.view.state.tr.replaceWith(
 			pos,
 			pos + node.nodeSize,
-			this.view.state.schema.nodes.code_block.create(
+			codeBlockType.create(
 				node.attrs,
 				newText ? this.view.state.schema.text(newText) : undefined
 			)
@@ -161,7 +166,7 @@ export class CodeBlockView implements NodeView {
 		this.view.dispatch(tr);
 	}
 
-	update(node: ProseMirrorNode, decorations: readonly Decoration[]) {
+	update(node: ProseMirrorNode, _decorations: readonly Decoration[]) {
 		if (node.type !== this.node.type) return false;
 
 		this.node = node;

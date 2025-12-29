@@ -694,17 +694,18 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 			} else if (insertIndex !== undefined && insertIndex < siblings.length) {
 				if (insertIndex === 0) {
 					// Insert before first
-					item.sort_order = generateKeyBetween(null, siblings[0].sort_order);
+					const firstSibling = siblings[0];
+					item.sort_order = generateKeyBetween(null, firstSibling?.sort_order ?? null);
 				} else {
 					// Insert between
-					const before = siblings[insertIndex - 1].sort_order;
-					const after = siblings[insertIndex].sort_order;
-					item.sort_order = generateKeyBetween(before, after);
+					const beforeSibling = siblings[insertIndex - 1];
+					const afterSibling = siblings[insertIndex];
+					item.sort_order = generateKeyBetween(beforeSibling?.sort_order ?? null, afterSibling?.sort_order ?? null);
 				}
 			} else {
 				// Append at end
-				const lastKey = siblings[siblings.length - 1].sort_order;
-				item.sort_order = generateKeyBetween(lastKey, null);
+				const lastSibling = siblings[siblings.length - 1];
+				item.sort_order = generateKeyBetween(lastSibling?.sort_order ?? null, null);
 			}
 
 			item.updated_at = new Date().toISOString();
@@ -741,16 +742,17 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 				item.sort_order = generateKeyBetween(null, null);
 			} else if (newIndex === 0) {
 				// Insert before first
-				item.sort_order = generateKeyBetween(null, siblings[0].sort_order);
+				const firstSibling = siblings[0];
+				item.sort_order = generateKeyBetween(null, firstSibling?.sort_order ?? null);
 			} else if (newIndex < siblings.length) {
 				// Insert between
-				const before = siblings[newIndex - 1].sort_order;
-				const after = siblings[newIndex].sort_order;
-				item.sort_order = generateKeyBetween(before, after);
+				const beforeSibling = siblings[newIndex - 1];
+				const afterSibling = siblings[newIndex];
+				item.sort_order = generateKeyBetween(beforeSibling?.sort_order ?? null, afterSibling?.sort_order ?? null);
 			} else {
 				// Append at end
-				const lastKey = siblings[siblings.length - 1].sort_order;
-				item.sort_order = generateKeyBetween(lastKey, null);
+				const lastSibling = siblings[siblings.length - 1];
+				item.sort_order = generateKeyBetween(lastSibling?.sort_order ?? null, null);
 			}
 
 			item.updated_at = new Date().toISOString();

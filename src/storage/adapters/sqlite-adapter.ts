@@ -2,7 +2,7 @@
 // Uses single items table with JSON metadata column
 
 import Database from "@tauri-apps/plugin-sql";
-import { generateKeyBetween, generateNKeysBetween } from "fractional-indexing";
+import { generateKeyBetween } from "fractional-indexing";
 import type {
 	Attachment,
 	CreateNoteParams,
@@ -647,13 +647,16 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 				if (parentItems.length === 0) {
 					return { success: false, error: "Parent item not found" };
 				}
-				newParentType = parentItems[0].type;
+				const parentItem = parentItems[0];
+				if (parentItem) {
+					newParentType = parentItem.type;
+				}
 			}
 
-			if (!canBeChildOf(item.type, newParentType)) {
+			if (!item || !canBeChildOf(item.type, newParentType)) {
 				return {
 					success: false,
-					error: `Cannot move ${item.type} under ${newParentType || "root"}`,
+					error: `Cannot move ${item?.type ?? "item"} under ${newParentType || "root"}`,
 				};
 			}
 
@@ -674,17 +677,17 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 				newSortOrder = generateKeyBetween(null, null);
 			} else if (insertIndex === undefined || insertIndex >= targetItems.length) {
 				// Insert at end - generate key after last item
-				const lastKey = targetItems[targetItems.length - 1].sort_order;
-				newSortOrder = generateKeyBetween(lastKey, null);
+				const lastItem = targetItems[targetItems.length - 1];
+				newSortOrder = generateKeyBetween(lastItem?.sort_order ?? null, null);
 			} else if (insertIndex === 0) {
 				// Insert at beginning - generate key before first item
-				const firstKey = targetItems[0].sort_order;
-				newSortOrder = generateKeyBetween(null, firstKey);
+				const firstItem = targetItems[0];
+				newSortOrder = generateKeyBetween(null, firstItem?.sort_order ?? null);
 			} else {
 				// Insert between two items
-				const beforeKey = targetItems[insertIndex - 1].sort_order;
-				const afterKey = targetItems[insertIndex].sort_order;
-				newSortOrder = generateKeyBetween(beforeKey, afterKey);
+				const beforeItem = targetItems[insertIndex - 1];
+				const afterItem = targetItems[insertIndex];
+				newSortOrder = generateKeyBetween(beforeItem?.sort_order ?? null, afterItem?.sort_order ?? null);
 			}
 
 			// Step 5: Update the item

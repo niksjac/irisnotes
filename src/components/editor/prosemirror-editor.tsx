@@ -30,7 +30,7 @@ const codeBlockSpec = {
 			}),
 		},
 	],
-	toDOM: (node: any) => [
+	toDOM: (node: any): [string, Record<string, string>, [string, number]] => [
 		"pre",
 		{ "data-language": node.attrs.language },
 		["code", 0],
