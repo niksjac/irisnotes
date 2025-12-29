@@ -8,6 +8,8 @@ import {
 	ClipboardPaste,
 	Book,
 	FolderOpen,
+	PanelLeft,
+	PanelRight,
 } from "lucide-react";
 import type {
 	MenuGroup,
@@ -22,6 +24,12 @@ interface UseRightClickMenuActionsProps {
 	onCreateSection?: (parentId?: string) => void;
 	onDeleteItem?: (itemId: string) => void;
 	onRenameItem?: (itemId: string, newTitle: string) => void;
+	onOpenInPane?: (
+		itemId: string,
+		itemTitle: string,
+		itemType: "note" | "book" | "section",
+		pane: 0 | 1,
+	) => void;
 }
 
 export function useRightClickMenuActions({
@@ -30,6 +38,7 @@ export function useRightClickMenuActions({
 	onCreateSection,
 	onDeleteItem,
 	onRenameItem,
+	onOpenInPane,
 }: UseRightClickMenuActionsProps = {}) {
 	const { createNote, createBook, createSection, deleteItem, updateItemTitle } =
 		useItems();
@@ -125,6 +134,31 @@ export function useRightClickMenuActions({
 
 			const groups: MenuGroup[] = [];
 
+			// Open in pane actions - only if an item is selected and callback provided
+			if (data.nodeId && onOpenInPane) {
+				groups.push({
+					id: "open",
+					items: [
+						{
+							id: "open-pane-1",
+							label: "Open in Pane 1",
+							icon: PanelLeft,
+							shortcut: "Enter",
+							action: () =>
+								onOpenInPane(data.nodeId, data.nodeName, data.nodeType, 0),
+						},
+						{
+							id: "open-pane-2",
+							label: "Open in Pane 2",
+							icon: PanelRight,
+							shortcut: "Ctrl+Enter",
+							action: () =>
+								onOpenInPane(data.nodeId, data.nodeName, data.nodeType, 1),
+						},
+					],
+				});
+			}
+
 			// Create/Add actions - different options based on what can be created inside
 			if (isContainer || !data.nodeId) {
 				// Root level or inside containers
@@ -209,6 +243,7 @@ export function useRightClickMenuActions({
 			handleCreateSectionAction,
 			handleRenameAction,
 			handleDeleteAction,
+			onOpenInPane,
 		]
 	);
 

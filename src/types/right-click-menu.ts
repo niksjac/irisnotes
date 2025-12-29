@@ -21,7 +21,7 @@ export interface RightClickMenuPosition {
 
 export interface RightClickMenuData {
 	targetId?: string;
-	targetType?: "note" | "book" | "section" | "editor" | "general";
+	targetType?: "note" | "book" | "section" | "editor" | "general" | "tree";
 	position: RightClickMenuPosition;
 	menuGroups: MenuGroup[];
 }
