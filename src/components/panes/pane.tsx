@@ -1,5 +1,7 @@
 import type { FC } from "react";
+import { useAtom } from "jotai";
 import type { Tab } from "@/types";
+import { focusAreaAtom } from "@/atoms";
 import { TabBar, TabContent } from "@/components/tabs";
 
 interface PaneProps {
@@ -26,8 +28,13 @@ export const Pane: FC<PaneProps> = ({
 	isDualPaneMode = false,
 }) => {
 	const activeTab = tabs.find((tab) => tab.id === activeTabId) || null;
+	const [focusArea, setFocusArea] = useAtom(focusAreaAtom);
+
+	// Pane shows as focused when: it's the active pane AND focus is on panes (not tree)
+	const showFocused = isActive && focusArea === "pane";
 
 	const handlePaneClick = () => {
+		setFocusArea("pane");
 		if (onPaneClick) {
 			onPaneClick();
 		}
@@ -37,10 +44,12 @@ export const Pane: FC<PaneProps> = ({
 		<div
 			className={`
 				flex flex-col h-full bg-white dark:bg-gray-900 transition-all duration-200
-				${isDualPaneMode && isActive ? "border-2 border-blue-400 dark:border-blue-500 shadow-lg shadow-blue-100 dark:shadow-blue-900/20" : ""}
+				${isDualPaneMode && showFocused ? "ring-2 ring-blue-500 ring-inset" : ""}
+				${isDualPaneMode && isActive && !showFocused ? "border-2 border-blue-400/50 dark:border-blue-500/50" : ""}
 				${isDualPaneMode && !isActive ? "border border-gray-200 dark:border-gray-700" : ""}
 			`}
 			onClick={handlePaneClick}
+			onFocus={() => setFocusArea("pane")}
 		>
 			<TabBar
 				tabs={tabs}

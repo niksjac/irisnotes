@@ -1,4 +1,4 @@
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom, useAtom } from "jotai";
 import { useTree } from "@headless-tree/react";
 import {
 	syncDataLoaderFeature,
@@ -10,6 +10,7 @@ import {
 	type TreeInstance,
 } from "@headless-tree/core";
 import { itemsAtom, selectedItemIdAtom } from "@/atoms/items";
+import { focusAreaAtom } from "@/atoms";
 import type { FlexibleItem } from "@/types/items";
 import { compareSortOrder } from "@/utils/sort-order";
 import {
@@ -188,8 +189,9 @@ export function TreeView() {
 	// Unified controlled state for headless-tree (follows library pattern)
 	const [treeState, setTreeState] = useState<Partial<TreeState<FlexibleItem>>>({});
 
-	// Track if tree container has DOM focus (to only show focus styling when tree is active)
-	const [treeHasFocus, setTreeHasFocus] = useState(false);
+	// Track if tree has focus via global focus area atom (mutually exclusive with pane focus)
+	const [focusArea, setFocusArea] = useAtom(focusAreaAtom);
+	const treeHasFocus = focusArea === "tree";
 
 	// Clipboard state for cut/paste operations
 	const [clipboardItemIds, setClipboardItemIds] = useState<string[]>([]);
@@ -782,8 +784,13 @@ export function TreeView() {
 					data-tree-container="true"
 					tabIndex={0}
 					className="relative font-mono flex-1 min-h-[100px] focus:ring-2 focus:ring-blue-400/50 focus:ring-inset focus:outline-none focus-within:ring-2 focus-within:ring-blue-400/50 focus-within:ring-inset rounded-sm cursor-default"
-					onFocus={() => setTreeHasFocus(true)}
-					onBlur={() => setTreeHasFocus(false)}
+					onFocus={() => setFocusArea("tree")}
+					onBlur={(e) => {
+						// Only clear focus area if focus is leaving the tree entirely
+						if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+							setFocusArea(null);
+						}
+					}}
 					onClick={(e) => {
 						// If clicking on empty space in container (not on an item), clear selection
 						if (e.target === e.currentTarget) {
@@ -825,17 +832,11 @@ export function TreeView() {
 								className={`
                   w-full flex items-center gap-1 py-0.5 px-1 rounded cursor-pointer transition-colors text-left
                   ${isInClipboard ? "opacity-50" : ""}
-                  ${
-										isDragTarget
-											? "bg-blue-100/70 dark:bg-blue-900/30 border-l-2 border-blue-400"
-											: isSelected
-												? "bg-blue-500/20 dark:bg-blue-500/30"
-												: isFocused && treeHasFocus
-													? "ring-1 ring-blue-400/60 dark:ring-blue-400/50"
-													: isInClipboard
-														? "bg-gray-100 dark:bg-gray-800"
-														: "hover:bg-gray-100 dark:hover:bg-gray-800/50"
-									}
+                  ${isDragTarget ? "bg-blue-100/70 dark:bg-blue-900/30 border-l-2 border-blue-400" : ""}
+                  ${!isDragTarget && isSelected ? "bg-blue-500/20 dark:bg-blue-500/30" : ""}
+                  ${!isDragTarget && !isSelected && isInClipboard ? "bg-gray-100 dark:bg-gray-800" : ""}
+                  ${!isDragTarget && !isSelected && !isInClipboard ? "hover:bg-gray-100 dark:hover:bg-gray-800/50" : ""}
+                  ${isFocused && treeHasFocus ? "ring-2 ring-blue-500 ring-inset" : ""}
                   focus:outline-none
                   select-none
                 `}

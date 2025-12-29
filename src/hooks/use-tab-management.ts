@@ -48,13 +48,16 @@ export const useTabManagement = () => {
 	const setPane0ActiveTab = useSetAtom(pane0ActiveTabAtom);
 	const setPane1ActiveTab = useSetAtom(pane1ActiveTabAtom);
 
-	/** Opens any item type in the appropriate view, with tab deduplication within pane */
+	/** Opens any item type in the appropriate view
+	 * - If targetPane is specified: only dedupe within that pane (allows same item in both panes)
+	 * - If targetPane is NOT specified: dedupe across ALL panes (smart behavior for normal open)
+	 */
 	const openItemInTab = (item: OpenItemParams) => {
 		const { viewType, dataKey, prefix } = getViewConfig(item.type);
-		const targetPane = item.targetPane ?? paneState.activePane;
 
-		// Only dedupe within the target pane - allows same item open in both panes
-		if (targetPane === 0) {
+		// If no explicit target pane, check ALL panes for existing tab (smart dedupe)
+		if (item.targetPane === undefined) {
+			// Check pane 0 first
 			const existingInPane0 = pane0Tabs.find((tab) =>
 				tabContainsItem(tab, item.id),
 			);
@@ -63,7 +66,7 @@ export const useTabManagement = () => {
 				setPane0ActiveTab(existingInPane0.id);
 				return;
 			}
-		} else {
+			// Check pane 1
 			const existingInPane1 = pane1Tabs.find((tab) =>
 				tabContainsItem(tab, item.id),
 			);
@@ -72,7 +75,31 @@ export const useTabManagement = () => {
 				setPane1ActiveTab(existingInPane1.id);
 				return;
 			}
+		} else {
+			// Explicit target pane: only dedupe within that specific pane
+			if (item.targetPane === 0) {
+				const existingInPane0 = pane0Tabs.find((tab) =>
+					tabContainsItem(tab, item.id),
+				);
+				if (existingInPane0) {
+					setPaneState((prev) => ({ ...prev, activePane: 0 }));
+					setPane0ActiveTab(existingInPane0.id);
+					return;
+				}
+			} else {
+				const existingInPane1 = pane1Tabs.find((tab) =>
+					tabContainsItem(tab, item.id),
+				);
+				if (existingInPane1) {
+					setPaneState((prev) => ({ ...prev, activePane: 1 }));
+					setPane1ActiveTab(existingInPane1.id);
+					return;
+				}
+			}
 		}
+
+		// Determine target pane (explicit or active)
+		const targetPane = item.targetPane ?? paneState.activePane;
 
 		// Enable dual-pane if targeting pane 1 but only 1 pane is active
 		if (targetPane === 1 && paneState.count === 1) {
