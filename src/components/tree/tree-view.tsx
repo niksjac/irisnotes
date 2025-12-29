@@ -612,8 +612,12 @@ export function TreeView() {
 				}
 			}
 
-			// Perform the move
-			await moveItem(draggedData.id, newParentId);
+			// Check if this is a reorder operation (has insertionIndex)
+			// insertionIndex is provided when canReorder is true and dropping between items
+			const insertIndex = "insertionIndex" in target ? target.insertionIndex : undefined;
+
+			// Perform the move with optional position
+			await moveItem(draggedData.id, newParentId, insertIndex);
 		},
 		dataLoader: {
 			getItem: (itemId: string): FlexibleItem => {

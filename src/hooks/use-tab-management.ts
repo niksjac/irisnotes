@@ -48,12 +48,12 @@ export const useTabManagement = () => {
 	const setPane0ActiveTab = useSetAtom(pane0ActiveTabAtom);
 	const setPane1ActiveTab = useSetAtom(pane1ActiveTabAtom);
 
-	/** Opens any item type in the appropriate view, with tab deduplication */
+	/** Opens any item type in the appropriate view, with tab deduplication within pane */
 	const openItemInTab = (item: OpenItemParams) => {
 		const { viewType, dataKey, prefix } = getViewConfig(item.type);
 		const targetPane = item.targetPane ?? paneState.activePane;
 
-		// Check for existing tab in target pane first (always dedupe within same pane)
+		// Only dedupe within the target pane - allows same item open in both panes
 		if (targetPane === 0) {
 			const existingInPane0 = pane0Tabs.find((tab) =>
 				tabContainsItem(tab, item.id),
@@ -64,27 +64,6 @@ export const useTabManagement = () => {
 				return;
 			}
 		} else {
-			const existingInPane1 = pane1Tabs.find((tab) =>
-				tabContainsItem(tab, item.id),
-			);
-			if (existingInPane1) {
-				setPaneState((prev) => ({ ...prev, activePane: 1 }));
-				setPane1ActiveTab(existingInPane1.id);
-				return;
-			}
-		}
-
-		// If no explicit targetPane, also check the other pane and focus if found
-		// (This prevents duplicates when using Enter, but Ctrl+Enter can open in other pane)
-		if (item.targetPane === undefined) {
-			const existingInPane0 = pane0Tabs.find((tab) =>
-				tabContainsItem(tab, item.id),
-			);
-			if (existingInPane0) {
-				setPaneState((prev) => ({ ...prev, activePane: 0 }));
-				setPane0ActiveTab(existingInPane0.id);
-				return;
-			}
 			const existingInPane1 = pane1Tabs.find((tab) =>
 				tabContainsItem(tab, item.id),
 			);
