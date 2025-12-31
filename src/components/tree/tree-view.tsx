@@ -187,7 +187,10 @@ export function TreeView() {
 	});
 
 	// Unified controlled state for headless-tree (follows library pattern)
-	const [treeState, setTreeState] = useState<Partial<TreeState<FlexibleItem>>>({});
+	// Initialize with focusedItem: null to prevent auto-focus on first item
+	const [treeState, setTreeState] = useState<Partial<TreeState<FlexibleItem>>>({
+		focusedItem: null,
+	});
 
 	// Track if tree has focus via global focus area atom (mutually exclusive with pane focus)
 	const [focusArea, setFocusArea] = useAtom(focusAreaAtom);
@@ -783,14 +786,8 @@ export function TreeView() {
 					{...tree.getContainerProps()} 
 					data-tree-container="true"
 					tabIndex={0}
-					className="relative font-mono flex-1 min-h-[100px] focus:ring-2 focus:ring-blue-400/50 focus:ring-inset focus:outline-none focus-within:ring-2 focus-within:ring-blue-400/50 focus-within:ring-inset rounded-sm cursor-default"
+					className="relative font-mono flex-1 min-h-[100px] focus:outline-none rounded-sm cursor-default"
 					onFocus={() => setFocusArea("tree")}
-					onBlur={(e) => {
-						// Only clear focus area if focus is leaving the tree entirely
-						if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-							setFocusArea(null);
-						}
-					}}
 					onClick={(e) => {
 						// If clicking on empty space in container (not on an item), clear selection
 						if (e.target === e.currentTarget) {

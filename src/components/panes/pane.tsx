@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useAtom } from "jotai";
 import type { Tab } from "@/types";
-import { focusAreaAtom } from "@/atoms";
+import { focusAreaAtom, type FocusArea } from "@/atoms";
 import { TabBar, TabContent } from "@/components/tabs";
 
 interface PaneProps {
@@ -11,9 +11,9 @@ interface PaneProps {
 	onTabClose?: (tabId: string) => void;
 	onNewTab?: () => void;
 	onTabReorder?: (draggedTabId: string, targetTabId: string) => void;
-	isActive?: boolean;
 	onPaneClick?: () => void;
 	isDualPaneMode?: boolean;
+	paneIndex: 0 | 1;
 }
 
 export const Pane: FC<PaneProps> = ({
@@ -23,18 +23,21 @@ export const Pane: FC<PaneProps> = ({
 	onTabClose,
 	onNewTab,
 	onTabReorder,
-	isActive = false,
 	onPaneClick,
 	isDualPaneMode = false,
+	paneIndex,
 }) => {
 	const activeTab = tabs.find((tab) => tab.id === activeTabId) || null;
 	const [focusArea, setFocusArea] = useAtom(focusAreaAtom);
 
-	// Pane shows as focused when: it's the active pane AND focus is on panes (not tree)
-	const showFocused = isActive && focusArea === "pane";
+	// This pane's focus area identifier
+	const myFocusArea: FocusArea = paneIndex === 0 ? "pane-0" : "pane-1";
+	
+	// This pane shows as focused when it specifically has focus
+	const hasFocus = focusArea === myFocusArea;
 
 	const handlePaneClick = () => {
-		setFocusArea("pane");
+		setFocusArea(myFocusArea);
 		if (onPaneClick) {
 			onPaneClick();
 		}
@@ -43,13 +46,13 @@ export const Pane: FC<PaneProps> = ({
 	return (
 		<div
 			className={`
-				flex flex-col h-full bg-white dark:bg-gray-900 transition-all duration-200
-				${isDualPaneMode && showFocused ? "ring-2 ring-blue-500 ring-inset" : ""}
-				${isDualPaneMode && isActive && !showFocused ? "border-2 border-blue-400/50 dark:border-blue-500/50" : ""}
-				${isDualPaneMode && !isActive ? "border border-gray-200 dark:border-gray-700" : ""}
+				flex flex-col h-full bg-white dark:bg-gray-900 transition-all duration-200 focus:outline-none
+				${isDualPaneMode && !hasFocus ? "ring-1 ring-inset ring-gray-300 dark:ring-gray-700" : ""}
 			`}
+			tabIndex={0}
+			data-pane-index={paneIndex}
 			onClick={handlePaneClick}
-			onFocus={() => setFocusArea("pane")}
+			onFocus={() => setFocusArea(myFocusArea)}
 		>
 			<TabBar
 				tabs={tabs}
@@ -58,6 +61,7 @@ export const Pane: FC<PaneProps> = ({
 				onTabClose={onTabClose}
 				onNewTab={onNewTab}
 				onTabReorder={onTabReorder}
+				hasFocus={hasFocus}
 			/>
 			<TabContent tab={activeTab} />
 		</div>

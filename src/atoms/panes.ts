@@ -1,6 +1,6 @@
 import { atom } from "jotai";
 import type { PaneState, Tab } from "@/types";
-import { sidebarWidth, sidebarCollapsed } from "./index";
+import { sidebarWidth, sidebarCollapsed, focusAreaAtom } from "./index";
 
 // Pane configuration
 export const paneStateAtom = atom<PaneState>({
@@ -106,7 +106,32 @@ export const moveActiveTabRightAtom = atom(null, (get, set) => {
 export const toggleDualPaneModeAtom = atom(null, (get, set) => {
 	const paneState = get(paneStateAtom);
 	const newCount = paneState.count === 1 ? 2 : 1;
-	set(paneStateAtom, { ...paneState, count: newCount });
+	
+	// When closing dual pane mode, merge pane1 tabs into pane0
+	if (newCount === 1 && paneState.count === 2) {
+		const pane1Tabs = get(pane1TabsAtom);
+		const pane1ActiveTab = get(pane1ActiveTabAtom);
+		
+		if (pane1Tabs.length > 0) {
+			// Merge tabs from pane1 to pane0
+			set(pane0TabsAtom, (prev) => [...prev, ...pane1Tabs]);
+			// Clear pane1 tabs
+			set(pane1TabsAtom, []);
+			// If pane1 had an active tab, make it active in pane0
+			if (pane1ActiveTab) {
+				set(pane0ActiveTabAtom, pane1ActiveTab);
+			}
+			set(pane1ActiveTabAtom, null);
+		}
+		
+		// Reset focus area to pane-0 when closing dual mode
+		const focusArea = get(focusAreaAtom);
+		if (focusArea === "pane-1") {
+			set(focusAreaAtom, "pane-0");
+		}
+	}
+	
+	set(paneStateAtom, { ...paneState, count: newCount, activePane: 0 });
 });
 
 // Pane resizing actions
@@ -181,11 +206,36 @@ export const resizeSidebarRightAtom = atom(null, (get, set) => {
 	set(sidebarWidth, newWidth);
 });
 
+// Helper to focus the editor inside a pane
+const focusEditorInPane = (paneIndex: 0 | 1) => {
+	const paneElement = document.querySelector(`[data-pane-index="${paneIndex}"]`) as HTMLElement | null;
+	if (!paneElement) return;
+	
+	// Try to find and focus the editor (CodeMirror or ProseMirror)
+	const cmEditor = paneElement.querySelector('.cm-editor .cm-content') as HTMLElement | null;
+	const pmEditor = paneElement.querySelector('.ProseMirror') as HTMLElement | null;
+	const anyFocusable = paneElement.querySelector('[contenteditable="true"], textarea, input') as HTMLElement | null;
+	
+	if (cmEditor) {
+		cmEditor.focus();
+	} else if (pmEditor) {
+		pmEditor.focus();
+	} else if (anyFocusable) {
+		anyFocusable.focus();
+	} else {
+		// Fallback to pane itself
+		paneElement.focus();
+	}
+};
+
 // Pane focus actions
 export const focusPane1Atom = atom(null, (get, set) => {
 	const paneState = get(paneStateAtom);
 	if (paneState.count === 2) {
 		set(paneStateAtom, { ...paneState, activePane: 0 });
+		set(focusAreaAtom, "pane-0");
+		// Focus the editor inside the pane
+		setTimeout(() => focusEditorInPane(0), 0);
 	}
 });
 
@@ -193,6 +243,9 @@ export const focusPane2Atom = atom(null, (get, set) => {
 	const paneState = get(paneStateAtom);
 	if (paneState.count === 2) {
 		set(paneStateAtom, { ...paneState, activePane: 1 });
+		set(focusAreaAtom, "pane-1");
+		// Focus the editor inside the pane
+		setTimeout(() => focusEditorInPane(1), 0);
 	}
 });
 

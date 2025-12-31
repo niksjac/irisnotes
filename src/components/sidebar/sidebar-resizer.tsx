@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAtom } from "jotai";
-import { sidebarWidth, sidebarHeight } from "@/atoms";
+import { sidebarWidth, sidebarHeight, focusAreaAtom } from "@/atoms";
 import { useIsMobile } from "@/hooks/use-media-query";
 
 // ==================== COMPONENT INTERFACE ====================
@@ -32,6 +32,8 @@ export function SidebarResizer({
 
 	const [width, setWidth] = useAtom(sidebarWidth);
 	const [height, setHeight] = useAtom(sidebarHeight);
+	const [focusArea] = useAtom(focusAreaAtom);
+	const treeHasFocus = focusArea === "tree";
 
 	// Mobile constraints: min 150px, max 50% of viewport height
 	const minHeight = 150;
@@ -320,6 +322,7 @@ export function SidebarResizer({
 			isDragging={isDragging}
 			isHotkeyResizing={isHotkeyResizing}
 			isFocused={isFocused}
+			treeHasFocus={treeHasFocus}
 			resizerRef={resizerRef}
 			handleMouseDown={handleMouseDown}
 			handleKeyDown={handleKeyDown}
@@ -335,6 +338,7 @@ export function SidebarResizer({
 			isDragging={isDragging}
 			isHotkeyResizing={isHotkeyResizing}
 			isFocused={isFocused}
+			treeHasFocus={treeHasFocus}
 			resizerRef={resizerRef}
 			handleMouseDown={handleMouseDown}
 			handleKeyDown={handleKeyDown}
@@ -354,6 +358,7 @@ interface MobileLayoutProps {
 	isDragging: boolean;
 	isHotkeyResizing: boolean;
 	isFocused: boolean;
+	treeHasFocus: boolean;
 	resizerRef: React.RefObject<HTMLButtonElement | null>;
 	children: React.ReactNode;
 	handleMouseDown: (e: React.MouseEvent) => void;
@@ -368,6 +373,7 @@ function MobileLayout({
 	isDragging,
 	isHotkeyResizing,
 	isFocused,
+	treeHasFocus,
 	resizerRef,
 	children,
 	handleMouseDown,
@@ -385,7 +391,7 @@ function MobileLayout({
 					!isHotkeyResizing &&
 					"transition-all duration-200 ease-in-out",
 				!isCollapsed && "hover:border-b-blue-500",
-				(isDragging || isFocused) && "border-b-blue-500",
+				(isDragging || isFocused || treeHasFocus) && !isCollapsed && "border-b-blue-500 border-b-2",
 				isCollapsed && "border-b-transparent"
 			)}
 			style={{
@@ -422,7 +428,7 @@ function MobileLayout({
 					onKeyDown={handleKeyDown}
 					onFocus={handleFocus}
 					onBlur={handleBlur}
-					tabIndex={0}
+					tabIndex={-1}
 				/>
 			)}
 		</div>
@@ -437,6 +443,7 @@ interface DesktopLayoutProps {
 	isDragging: boolean;
 	isHotkeyResizing: boolean;
 	isFocused: boolean;
+	treeHasFocus: boolean;
 	resizerRef: React.RefObject<HTMLButtonElement | null>;
 	children: React.ReactNode;
 	handleMouseDown: (e: React.MouseEvent) => void;
@@ -451,6 +458,7 @@ function DesktopLayout({
 	isDragging,
 	isHotkeyResizing,
 	isFocused,
+	treeHasFocus,
 	resizerRef,
 	children,
 	handleMouseDown,
@@ -468,7 +476,7 @@ function DesktopLayout({
 					!isHotkeyResizing &&
 					"transition-all duration-200 ease-in-out",
 				!isCollapsed && "hover:border-r-blue-500",
-				(isDragging || isFocused) && "border-r-blue-500",
+				(isDragging || isFocused || treeHasFocus) && !isCollapsed && "border-r-blue-500 border-r-2",
 				isCollapsed && "border-r-transparent"
 			)}
 			style={{
@@ -505,7 +513,7 @@ function DesktopLayout({
 					onKeyDown={handleKeyDown}
 					onFocus={handleFocus}
 					onBlur={handleBlur}
-					tabIndex={0}
+					tabIndex={-1}
 				/>
 			)}
 		</div>

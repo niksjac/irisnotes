@@ -28,7 +28,7 @@ export const hotkeysViewActive = atom<boolean>(false);
 export const databaseStatusVisible = atom<boolean>(false);
 
 // Focus area: tracks which major UI section has focus (mutually exclusive)
-export type FocusArea = "tree" | "pane" | null;
+export type FocusArea = "activity-bar" | "tree" | "pane-0" | "pane-1" | null;
 export const focusAreaAtom = atom<FocusArea>(null);
 
 export const toolbarVisibleAtom = atom<boolean>(false);

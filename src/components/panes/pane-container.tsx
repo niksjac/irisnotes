@@ -148,6 +148,7 @@ export const PaneContainer: FC = () => {
 	if (paneState.count === 1) {
 		return (
 			<Pane
+				paneIndex={0}
 				tabs={pane0Tabs}
 				activeTabId={pane0ActiveTab}
 				onTabSelect={(tabId) => handleTabSelect(0, tabId)}
@@ -156,7 +157,6 @@ export const PaneContainer: FC = () => {
 				onTabReorder={(draggedTabId, targetTabId) =>
 					handleTabReorder(0, draggedTabId, targetTabId)
 				}
-				isActive={paneState.activePane === 0}
 				onPaneClick={() => handlePaneClick(0)}
 				isDualPaneMode={false}
 			/>
@@ -170,6 +170,7 @@ export const PaneContainer: FC = () => {
 				style={{ width: "var(--pane-left-width, 50%)" }}
 			>
 				<Pane
+					paneIndex={0}
 					tabs={pane0Tabs}
 					activeTabId={pane0ActiveTab}
 					onTabSelect={(tabId) => handleTabSelect(0, tabId)}
@@ -178,7 +179,6 @@ export const PaneContainer: FC = () => {
 					onTabReorder={(draggedTabId, targetTabId) =>
 						handleTabReorder(0, draggedTabId, targetTabId)
 					}
-					isActive={paneState.activePane === 0}
 					onPaneClick={() => handlePaneClick(0)}
 					isDualPaneMode={true}
 				/>
@@ -191,6 +191,7 @@ export const PaneContainer: FC = () => {
 				style={{ width: "var(--pane-right-width, 50%)" }}
 			>
 				<Pane
+					paneIndex={1}
 					tabs={pane1Tabs}
 					activeTabId={pane1ActiveTab}
 					onTabSelect={(tabId) => handleTabSelect(1, tabId)}
@@ -199,7 +200,6 @@ export const PaneContainer: FC = () => {
 					onTabReorder={(draggedTabId, targetTabId) =>
 						handleTabReorder(1, draggedTabId, targetTabId)
 					}
-					isActive={paneState.activePane === 1}
 					onPaneClick={() => handlePaneClick(1)}
 					isDualPaneMode={true}
 				/>
