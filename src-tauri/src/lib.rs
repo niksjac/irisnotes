@@ -112,13 +112,26 @@ async fn open_app_config_folder(app_handle: tauri::AppHandle) -> Result<(), Stri
 #[tauri::command]
 async fn read_config(app_handle: tauri::AppHandle, filename: String) -> Result<String, String> {
     let app_config_dir = get_config_dir(&app_handle)?;
-    let config_path = app_config_dir.join(filename);
-
-    if !config_path.exists() {
-        return Err("Config file does not exist".to_string());
+    
+    // Try TOML first, then fall back to JSON
+    let toml_path = app_config_dir.join("config.toml");
+    let json_path = app_config_dir.join(&filename);
+    
+    if toml_path.exists() {
+        // Read TOML and convert to JSON for frontend
+        let toml_content = std::fs::read_to_string(&toml_path)
+            .map_err(|e| format!("Failed to read config.toml: {}", e))?;
+        let value: toml::Value = toml::from_str(&toml_content)
+            .map_err(|e| format!("Failed to parse TOML: {}", e))?;
+        serde_json::to_string(&value)
+            .map_err(|e| format!("Failed to convert TOML to JSON: {}", e))
+    } else if json_path.exists() {
+        // Fall back to JSON for backward compatibility
+        std::fs::read_to_string(json_path)
+            .map_err(|e| format!("Failed to read config file: {}", e))
+    } else {
+        Err("Config file does not exist".to_string())
     }
-
-    std::fs::read_to_string(config_path).map_err(|e| format!("Failed to read config file: {}", e))
 }
 
 #[tauri::command]
@@ -128,9 +141,27 @@ async fn write_config(
     content: String,
 ) -> Result<(), String> {
     let app_config_dir = get_config_dir(&app_handle)?;
-    let config_path = app_config_dir.join(filename);
-
-    std::fs::write(config_path, content).map_err(|e| format!("Failed to write config file: {}", e))
+    
+    // Check if we should write TOML (if config.toml exists) or JSON
+    let toml_path = app_config_dir.join("config.toml");
+    
+    if toml_path.exists() || filename.ends_with(".toml") {
+        // Parse JSON from frontend and convert to TOML
+        let json_value: serde_json::Value = serde_json::from_str(&content)
+            .map_err(|e| format!("Failed to parse JSON: {}", e))?;
+        let toml_value: toml::Value = serde_json::from_value(
+            serde_json::to_value(&json_value).unwrap()
+        ).map_err(|e| format!("Failed to convert to TOML value: {}", e))?;
+        let toml_string = toml::to_string_pretty(&toml_value)
+            .map_err(|e| format!("Failed to serialize TOML: {}", e))?;
+        std::fs::write(&toml_path, toml_string)
+            .map_err(|e| format!("Failed to write config.toml: {}", e))
+    } else {
+        // Write JSON
+        let config_path = app_config_dir.join(filename);
+        std::fs::write(config_path, content)
+            .map_err(|e| format!("Failed to write config file: {}", e))
+    }
 }
 
 #[tauri::command]
@@ -170,7 +201,10 @@ async fn setup_config_watcher(app_handle: AppHandle) -> Result<(), String> {
 
         for event in rx {
             if let Some(path) = event.paths.first() {
-                if path.file_name() == Some(std::ffi::OsStr::new("config.json")) {
+                let is_config_file = path.file_name() == Some(std::ffi::OsStr::new("config.json"))
+                    || path.file_name() == Some(std::ffi::OsStr::new("config.toml"));
+                
+                if is_config_file {
                     let now = Instant::now();
 
                     // Debounce rapid file events
