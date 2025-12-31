@@ -104,6 +104,7 @@ export const TabComponent: FC<TabProps> = ({
 				className="ml-2 w-4 h-4 flex items-center justify-center rounded text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
 				onClick={handleClose}
 				title="Close tab"
+				tabIndex={-1}
 			>
 				<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
 					<path d="M6 4.586L10.293.293a1 1 0 011.414 1.414L7.414 6l4.293 4.293a1 1 0 01-1.414 1.414L6 7.414l-4.293 4.293a1 1 0 01-1.414-1.414L4.586 6 .293 1.707A1 1 0 011.707.293L6 4.586z" />

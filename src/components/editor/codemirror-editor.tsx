@@ -107,7 +107,7 @@ export function CodeMirrorEditor({
 		});
 
 		viewRef.current = view;
-		view.focus();
+		// Note: Don't auto-focus - let user click or use Ctrl+Alt+1/2 to focus pane
 
 		// Restore cursor position if provided
 		if (initialCursorPosition !== undefined && initialCursorPosition > 0) {
