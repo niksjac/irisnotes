@@ -94,6 +94,7 @@ export function StorageAdapterButton() {
 					setIsActive(!isOpen);
 				}}
 				title={`Storage Adapter: ${getBackendLabel(currentBackend)}`}
+				tabIndex={-1}
 			>
 				<Icons.HardDrive size={18} className="md:w-5 md:h-5" />
 			</button>
