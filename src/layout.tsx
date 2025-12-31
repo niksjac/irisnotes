@@ -15,6 +15,7 @@ import {
 	useLayoutPersistence,
 	useTabPersistence,
 	loadTabState,
+	useTheme,
 } from "@/hooks";
 import { mapHotkeyHandlers } from "@/utils/hotkey-mapping";
 import {
@@ -27,6 +28,9 @@ import {
 export const Layout: React.FC = () => {
 	const { sidebar, views } = useLayout();
 	const hotkeyHandlers = useHotkeyHandlers();
+
+	// Apply theme (adds .dark class to document)
+	useTheme();
 
 	// Persist app state
 	useAppPersistence();

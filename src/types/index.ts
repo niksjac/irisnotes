@@ -175,6 +175,7 @@ export interface StorageSettings {
 }
 
 export interface AppConfig {
+	theme?: "light" | "dark" | "system"; // Theme mode setting
 	editor: {
 		lineWrapping: boolean;
 		toolbarVisible: boolean;
@@ -184,6 +185,11 @@ export interface AppConfig {
 	};
 	storage: StorageSettings;
 	hotkeys?: HotkeyMapping; // Optional hotkey configuration
+	layout?: {
+		sidebarWidth?: number;
+		activityBarVisible?: boolean;
+		sidebarCollapsed?: boolean;
+	};
 	development: {
 		useLocalConfig: boolean;
 		configPath: string;
