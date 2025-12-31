@@ -1,0 +1,32 @@
+theme = "light"
+
+[debug]
+enableExampleNote = false
+
+[development]
+configPath = "./dev/config/"
+useLocalConfig = true
+
+[editor]
+lineWrapping = false
+toolbarVisible = false
+
+[layout]
+activityBarVisible = false
+sidebarCollapsed = true
+sidebarWidth = 520
+
+[production]
+
+[storage]
+backend = "sqlite"
+
+[storage.jsonHybrid]
+content_dir = "./dev/content/"
+structure_file = "./dev/structure.json"
+
+[storage.jsonSingle]
+file_path = "./dev/storage.json"
+
+[storage.sqlite]
+database_path = "./dev/notes.db"

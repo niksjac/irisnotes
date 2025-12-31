@@ -1,7 +1,7 @@
 {
   "editor": {
     "lineWrapping": false,
-    "toolbarVisible": true
+    "toolbarVisible": false
   },
   "debug": {
     "enableExampleNote": false
@@ -24,6 +24,7 @@
     "configPath": "./dev/config/"
   },
   "production": {},
+  "theme": "dark",
   "layout": {
     "sidebarWidth": 520,
     "activityBarVisible": false,
