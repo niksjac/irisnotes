@@ -4,14 +4,14 @@ import { useConfig } from "./use-config";
 /**
  * Theme hook - VS Code style implementation
  *
- * Source of truth: config.json (theme field)
+ * Source of truth: config.toml (theme field)
  * localStorage: Used only as a hint for flash prevention on initial load
  *
  * Flow:
  * 1. index.html reads localStorage hint to set initial .dark class (prevents flash)
- * 2. React loads, useConfig reads config.json
+ * 2. React loads, useConfig reads config.toml (converted to JSON by Rust)
  * 3. useTheme applies config theme and syncs localStorage hint
- * 4. Toggle writes to config.json via updateConfig
+ * 4. Toggle writes to config.toml via updateConfig
  * 5. File watcher triggers reload, UI updates
  */
 export function useTheme() {
