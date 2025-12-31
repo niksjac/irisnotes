@@ -1,10 +1,26 @@
 <!doctype html>
-<html lang="en" class="h-full overflow-hidden">
+<html lang="en" class="h-full overflow-hidden dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tauri + React + Typescript</title>
+    <title>IrisNotes</title>
+    <!-- Critical CSS to prevent flash before Tailwind loads -->
+    <style>
+      html.dark { background-color: #111827; color: #f9fafb; }
+      html:not(.dark) { background-color: #f9fafb; color: #111827; }
+    </style>
+    <!-- Prevent flash of wrong theme by setting .dark class before React loads -->
+    <script>
+      (function() {
+        // Check localStorage for user's saved preference
+        var saved = localStorage.getItem('darkMode');
+        if (saved === 'false') {
+          document.documentElement.classList.remove('dark');
+        }
+        // If saved is 'true' or null, keep the default 'dark' class
+      })();
+    </script>
   </head>
 
   <body class="m-0 p-0 h-full overflow-hidden">

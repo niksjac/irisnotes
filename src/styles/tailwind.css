@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* Enable dark mode via class (for manual toggle) instead of media query */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Streamlined Tailwind CSS v4 Configuration for IrisNotes */
 @theme {
   /* Essential layout dimensions */
@@ -7,16 +10,18 @@
   --sidebar-collapsed-width: 0px;
   --activity-bar-width: 48px;
 
+  /* Focus indicator colors - solid colors to avoid opacity blending issues */
+  --color-focus-light: #dbeafe;  /* blue-100 */
+  --color-focus-dark: #132247;   /* blue-900/30 over gray-900, pre-computed */
+
   /* Editor-specific variables that change dynamically */
   --editor-font-size: 14px;
   --editor-bg: #f9fafb;
 }
 
 /* Dark mode configuration */
-@media (prefers-color-scheme: dark) {
-  @theme {
-    --editor-bg: #111827;
-  }
+.dark {
+  --editor-bg: #111827;
 }
 
 /* Custom utility classes for application-specific functionality */
