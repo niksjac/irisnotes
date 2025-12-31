@@ -1,4 +1,5 @@
 import type React from "react";
+import { useCallback } from "react";
 import { useItems, useNotesStorage } from "@/hooks";
 import { TreeView } from "../tree";
 import { StorageIndicator } from "./storage-indicator";
@@ -6,6 +7,17 @@ import { StorageIndicator } from "./storage-indicator";
 export const Sidebar: React.FC = () => {
 	const { isInitialized } = useNotesStorage();
 	const { isLoading } = useItems();
+
+	// Focus the tree container when clicking anywhere in the sidebar
+	const handleSidebarClick = useCallback((e: React.MouseEvent) => {
+		// Find the tree container and focus it
+		const treeContainer = (e.currentTarget as HTMLElement).querySelector(
+			'[data-tree-container="true"]',
+		) as HTMLElement | null;
+		if (treeContainer) {
+			treeContainer.focus();
+		}
+	}, []);
 
 	if (!isInitialized || isLoading) {
 		return (
@@ -19,7 +31,10 @@ export const Sidebar: React.FC = () => {
 	}
 
 	return (
-		<div className="flex flex-col h-full bg-white dark:bg-gray-900">
+		<div
+			className="flex flex-col h-full bg-white dark:bg-gray-900 cursor-default"
+			onClick={handleSidebarClick}
+		>
 			<StorageIndicator />
 			<div className="flex-1 overflow-hidden">
 				<TreeView />
