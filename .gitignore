@@ -35,3 +35,6 @@ storybook-static
 
 # Development database
 dev/notes.db
+
+# Local config
+dev/config.toml
