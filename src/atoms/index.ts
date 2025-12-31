@@ -1,23 +1,6 @@
 import { atom } from "jotai";
 import type { ViewType } from "@/types";
 
-// Legacy atoms for backward compatibility during migration
-export const selectedNoteIdAtom = atom<string | null>(null);
-
-// Legacy data atoms (to be removed once all components are migrated)
-export const notesAtom = atom<any[]>([]);
-export const categoriesAtom = atom<any[]>([]);
-export const noteCategoriesAtom = atom<any[]>([]);
-
-// Legacy selection atom for backward compatibility
-export const selectedItemAtom = atom<{
-	id: string | null;
-	type: "note" | "category" | null;
-}>({
-	id: null,
-	type: null,
-});
-
 // Layout atoms
 export const sidebarCollapsed = atom<boolean>(false);
 export const sidebarWidth = atom<number>(300); // Default width
