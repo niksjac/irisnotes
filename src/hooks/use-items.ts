@@ -327,12 +327,14 @@ export const useItems = () => {
 	);
 
 	const updateItemContent = useCallback(
-		(
+		async (
 			id: string,
 			content: string,
 			contentType?: "html" | "markdown" | "plain" | "custom",
 			contentRaw?: string
 		) => {
+			console.log("[updateItemContent] Called with id:", id, "content length:", content.length);
+			
 			// Optimistically update local state immediately
 			setItems((prevItems) =>
 				prevItems.map((item) =>
@@ -347,13 +349,29 @@ export const useItems = () => {
 				)
 			);
 
-			// Then persist to database
-			const updates: Partial<FlexibleItem> = { content };
-			if (contentType !== undefined) updates.content_type = contentType;
-			if (contentRaw !== undefined) updates.content_raw = contentRaw;
-			return updateItem(id, updates);
+			// Persist to database without reloading all items
+			// (optimistic update already handles local state, avoid race conditions)
+			if (!storageAdapter) {
+				console.error("[updateItemContent] Storage adapter not initialized");
+				return { success: false, error: "Storage not initialized" };
+			}
+
+			const item = items.find((i) => i.id === id);
+			if (!item || item.type !== "note") {
+				console.error("[updateItemContent] Note not found:", id);
+				return { success: false, error: "Note not found" };
+			}
+
+			const noteParams: UpdateNoteParams = { id, content };
+			if (contentType !== undefined) noteParams.content_type = contentType;
+			if (contentRaw !== undefined) noteParams.content_raw = contentRaw;
+
+			console.log("[updateItemContent] Calling storageAdapter.updateNote with params:", noteParams);
+			const result = await storageAdapter.updateNote(noteParams);
+			console.log("[updateItemContent] Result:", result);
+			return result;
 		},
-		[updateItem, setItems]
+		[storageAdapter, items, setItems]
 	);
 
 	const moveItem = useCallback(
