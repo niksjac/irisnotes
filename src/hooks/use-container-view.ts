@@ -14,11 +14,22 @@ export interface ContainerItem {
 }
 
 /**
- * Calculates word count from plaintext content
+ * Calculates word count from content
+ * Tries plaintext first, falls back to raw content with basic cleanup
  */
-const calculateWordCount = (content?: string | null): number => {
+const calculateWordCount = (
+	plaintext?: string | null,
+	rawContent?: string | null,
+): number => {
+	// Prefer plaintext if available
+	const content = plaintext || rawContent || "";
 	if (!content) return 0;
-	return content.trim().split(/\s+/).filter(Boolean).length;
+	// Strip common HTML tags and markdown syntax for rough word count
+	const cleaned = content
+		.replace(/<[^>]*>/g, " ") // Remove HTML tags
+		.replace(/[#*_`[\]()]/g, "") // Remove markdown syntax
+		.trim();
+	return cleaned.split(/\s+/).filter(Boolean).length;
 };
 
 /**
@@ -61,7 +72,7 @@ export const useContainerView = (containerId: string | undefined) => {
 				type: item.type,
 				created_at: item.created_at,
 				updated_at: item.updated_at,
-				wordCount: calculateWordCount(item.content_plaintext),
+				wordCount: calculateWordCount(item.content_plaintext, item.content),
 			}));
 	}, [items, containerId]);
 
@@ -85,7 +96,7 @@ export const useContainerView = (containerId: string | undefined) => {
 					type: child.type,
 					created_at: child.created_at,
 					updated_at: child.updated_at,
-					wordCount: calculateWordCount(child.content_plaintext),
+					wordCount: calculateWordCount(child.content_plaintext, child.content),
 				});
 
 				// Recursively collect children of sections
@@ -124,7 +135,7 @@ export const useContainerView = (containerId: string | undefined) => {
 					type: child.type,
 					created_at: child.created_at,
 					updated_at: child.updated_at,
-					wordCount: calculateWordCount(child.content_plaintext),
+					wordCount: calculateWordCount(child.content_plaintext, child.content),
 				});
 			}
 		}
@@ -144,7 +155,7 @@ export const useContainerView = (containerId: string | undefined) => {
 					type: item.type,
 					created_at: item.created_at,
 					updated_at: item.updated_at,
-					wordCount: calculateWordCount(item.content_plaintext),
+					wordCount: calculateWordCount(item.content_plaintext, item.content),
 				}));
 
 			grouped.set(section.id, sectionItems);

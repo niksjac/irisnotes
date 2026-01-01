@@ -80,11 +80,11 @@ export const BookView: FC<BookViewProps> = ({ viewData }) => {
 			</div>
 
 			{/* Content */}
-			<div className="flex-1 overflow-auto p-4 space-y-6">
+			<div className="flex-1 overflow-auto px-4 py-2 space-y-2">
 				{/* Root items (directly under book) */}
 				{rootItems.length > 0 && (
 					<div>
-						<h2 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+						<h2 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 px-1">
 							Direct Items
 						</h2>
 						<ItemsTable
@@ -107,33 +107,32 @@ export const BookView: FC<BookViewProps> = ({ viewData }) => {
 					return (
 						<div
 							key={section.id}
-							className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
+							className="border border-gray-200 dark:border-gray-700 rounded overflow-hidden"
 						>
 							{/* Section header */}
 							<button
 								type="button"
+								tabIndex={-1}
 								onClick={() => toggleSection(section.id)}
-								className="w-full flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+								className="w-full flex items-center gap-1.5 px-2 py-1 bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
 							>
 								{isCollapsed ? (
-									<ChevronRight className="w-4 h-4 text-gray-500" />
+									<ChevronRight className="w-3.5 h-3.5 text-gray-400" />
 								) : (
-									<ChevronDown className="w-4 h-4 text-gray-500" />
+									<ChevronDown className="w-3.5 h-3.5 text-gray-400" />
 								)}
-								<Folder className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-								<span className="font-medium text-gray-900 dark:text-gray-100">
+								<Folder className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+								<span className="text-sm font-medium text-gray-900 dark:text-gray-100">
 									{section.title}
 								</span>
-								<span className="text-sm text-gray-500 dark:text-gray-400 ml-auto">
-									{sectionItems.length}{" "}
-									{sectionItems.length === 1 ? "item" : "items"} •{" "}
-									{sectionWords.toLocaleString()} words
+								<span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">
+									{sectionItems.length} • {sectionWords.toLocaleString()}w
 								</span>
 							</button>
 
 							{/* Section content */}
 							{!isCollapsed && (
-								<div className="p-3">
+								<div className="px-1 py-1">
 									{sectionItems.length > 0 ? (
 										<ItemsTable
 											items={sectionItems}
@@ -141,8 +140,8 @@ export const BookView: FC<BookViewProps> = ({ viewData }) => {
 											showTypeColumn={true}
 										/>
 									) : (
-										<div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
-											No items in this section
+										<div className="text-center py-2 text-gray-500 dark:text-gray-400 text-xs">
+											Empty section
 										</div>
 									)}
 								</div>
