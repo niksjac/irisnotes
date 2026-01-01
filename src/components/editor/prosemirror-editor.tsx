@@ -463,7 +463,7 @@ export function ProseMirrorEditor({
 			)}
 			<div
 				ref={editorRef}
-				className="flex-1 prose dark:prose-invert max-w-none"
+				className="flex-1 prose dark:prose-invert max-w-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-inset"
 				style={{
 					fontSize: "16px",
 					lineHeight: "1.6",

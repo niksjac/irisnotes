@@ -71,6 +71,7 @@ export const TabComponent: FC<TabProps> = ({
 			className={`
 				flex items-center px-3 py-2 border-r border-gray-300 dark:border-gray-600 cursor-pointer
 				min-w-0 max-w-xs relative group transition-all duration-200
+				focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset
 				${
 					isActive
 						? "bg-white dark:bg-gray-900 border-b-2 border-b-blue-500"
@@ -81,6 +82,13 @@ export const TabComponent: FC<TabProps> = ({
 			`}
 			onClick={handleClick}
 			draggable
+			tabIndex={0}
+			onKeyDown={(e) => {
+				if (e.key === "Enter" || e.key === " ") {
+					e.preventDefault();
+					handleClick();
+				}
+			}}
 			onDragStart={handleDragStart}
 			onDragOver={handleDragOver}
 			onDragLeave={handleDragLeave}

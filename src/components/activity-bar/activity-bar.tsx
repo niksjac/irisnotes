@@ -93,7 +93,7 @@ export function ActivityBar() {
 			onFocus={() => setFocusArea("activity-bar")}
 			onBlur={() => setFocusArea(null)}
 			className={clsx(
-				"flex-shrink-0 flex items-center focus:outline-none",
+				"flex-shrink-0 flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
 				hasFocus ? "bg-blue-100 dark:bg-[#132247]" : "bg-gray-50 dark:bg-gray-800",
 				// Mobile: horizontal top bar with bottom border
 				"w-full h-12 flex-row justify-between px-4 py-2 gap-4 border-b border-gray-300 dark:border-gray-600",

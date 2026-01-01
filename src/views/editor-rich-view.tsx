@@ -39,7 +39,7 @@ export function EditorRichView({ viewData }: EditorRichViewProps) {
 			{/* Note Title */}
 			<div className="flex-shrink-0 p-4 border-b border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">
 				<input
-					className="w-full bg-transparent border-none text-lg font-semibold text-gray-900 dark:text-gray-100 py-2 focus:outline-none focus:border-b-2 focus:border-blue-500"
+					className="w-full bg-transparent border-none text-lg font-semibold text-gray-900 dark:text-gray-100 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-sm"
 					type="text"
 					value={note.title}
 					onChange={(e) => handleNoteTitleChange(note.id, e.target.value)}

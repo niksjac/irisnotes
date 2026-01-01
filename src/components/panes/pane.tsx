@@ -46,13 +46,12 @@ export const Pane: FC<PaneProps> = ({
 	return (
 		<div
 			className={`
-				flex flex-col h-full bg-white dark:bg-gray-900 transition-all duration-200 focus:outline-none
+				flex flex-col h-full bg-white dark:bg-gray-900 transition-all duration-200
 				${isDualPaneMode && !hasFocus ? "ring-1 ring-inset ring-gray-300 dark:ring-gray-700" : ""}
 			`}
-			tabIndex={0}
 			data-pane-index={paneIndex}
 			onClick={handlePaneClick}
-			onFocus={() => setFocusArea(myFocusArea)}
+			onFocusCapture={() => setFocusArea(myFocusArea)}
 		>
 			<TabBar
 				tabs={tabs}

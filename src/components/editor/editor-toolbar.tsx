@@ -367,6 +367,7 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 						<button
 							key={index}
 							type="button"
+							tabIndex={-1}
 							className={`w-8 h-8 flex items-center justify-center rounded transition-colors ${
 								isActive
 									? "bg-blue-500 text-white hover:bg-blue-600"
@@ -384,6 +385,7 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					<div className="relative">
 						<button
 							type="button"
+							tabIndex={-1}
 							className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
 							onClick={() => setShowDropdown(!showDropdown)}
 							title={`More formatting options (${dropdownButtonsList.length} more)`}
@@ -403,6 +405,7 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 										<button
 											key={index}
 											type="button"
+											tabIndex={-1}
 											className={`w-full flex items-center gap-2 px-3 py-2 transition-colors text-left ${
 												isActive
 													? "bg-blue-500 text-white hover:bg-blue-600"
