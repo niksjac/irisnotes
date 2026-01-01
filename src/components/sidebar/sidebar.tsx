@@ -8,14 +8,18 @@ export const Sidebar: React.FC = () => {
 	const { isInitialized } = useNotesStorage();
 	const { isLoading } = useItems();
 
-	// Focus the tree container when clicking anywhere in the sidebar
+	// Focus the first tree item when clicking anywhere in the sidebar
 	const handleSidebarClick = useCallback((e: React.MouseEvent) => {
-		// Find the tree container and focus it
+		// Find the first focusable tree item button and focus it
 		const treeContainer = (e.currentTarget as HTMLElement).querySelector(
 			'[data-tree-container="true"]',
 		) as HTMLElement | null;
 		if (treeContainer) {
-			treeContainer.focus();
+			// Find the first button (tree item) inside the container
+			const firstItem = treeContainer.querySelector('button[role="treeitem"]') as HTMLElement | null;
+			if (firstItem) {
+				firstItem.focus();
+			}
 		}
 	}, []);
 

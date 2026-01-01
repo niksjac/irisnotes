@@ -39,35 +39,46 @@ type TreeHotkeyHandler = (
 	tree: TreeInstance<FlexibleItem>,
 ) => void;
 
-// Custom click behavior: single-click only focuses/selects, double-click opens
-// This overrides the default behavior where single-click calls primaryAction
+// Custom click behavior based on item type:
+// Notes: single-click = focus only, double-click = open in editor
+// Books/Sections: single-click = open in view, double-click = toggle expand/collapse
+// Selection only happens with Ctrl/Shift modifiers
 const singleClickSelectFeature: FeatureImplementation<FlexibleItem> = {
 	itemInstance: {
 		getProps: ({ tree, item, prev }) => ({
 			...prev?.(),
 			onClick: (e: MouseEvent) => {
-				// Handle selection (Shift/Ctrl modifiers)
+				// Handle selection only with modifiers (Shift/Ctrl)
 				if (e.shiftKey) {
 					item.selectUpTo(e.ctrlKey || e.metaKey);
 				} else if (e.ctrlKey || e.metaKey) {
 					item.toggleSelect();
-				} else {
-					tree.setSelectedItems([item.getItemMeta().itemId]);
 				}
+				// Plain click only focuses, does NOT select
 
 				// Focus this item
 				item.setFocused();
 
-				// Toggle expand/collapse for folders
+				// For folders (books/sections): open in view on single click
 				if (item.isFolder()) {
+					item.primaryAction();
+				}
+				// For notes: single click only focuses, don't open
+			},
+			onDoubleClick: (e: MouseEvent) => {
+				const itemData = item.getItemData();
+				if (item.isFolder()) {
+					// Double-click toggles expand/collapse for folders
+					e.preventDefault();
 					if (item.isExpanded()) {
 						item.collapse();
 					} else {
 						item.expand();
 					}
+				} else {
+					// Double-click opens notes in editor
+					item.primaryAction();
 				}
-				// NOTE: We intentionally do NOT call item.primaryAction() here
-				// That will be triggered by double-click instead
 			},
 		}),
 	},
@@ -187,9 +198,9 @@ export function TreeView() {
 	});
 
 	// Unified controlled state for headless-tree (follows library pattern)
-	// Initialize with focusedItem: null to prevent auto-focus on first item
+	// Initialize with empty selectedItems so nothing is selected by default
 	const [treeState, setTreeState] = useState<Partial<TreeState<FlexibleItem>>>({
-		focusedItem: null,
+		selectedItems: [],
 	});
 
 	// Track if tree has focus via global focus area atom (mutually exclusive with pane focus)
@@ -423,38 +434,46 @@ export function TreeView() {
 					setSelectedItemId(null);
 				}) as TreeHotkeyHandler,
 			},
-			// Focus first item when nothing is focused (Up arrow)
+			// Up arrow navigation - focus first item if nothing focused, else move up
 			customFocusOnUp: {
 				hotkey: "ArrowUp",
 				canRepeat: true,
 				handler: ((_e, treeInstance) => {
 					const item = treeInstance.getFocusedItem();
 					if (!item) {
+						// Nothing focused - focus first item
 						const visibleItems = treeInstance.getItems();
 						const firstItem = visibleItems[0];
 						if (firstItem) {
 							firstItem.setFocused();
 							treeInstance.updateDomFocus();
 						}
+					} else {
+						// Already focused - navigate to previous item
+						treeInstance.focusPreviousItem();
+						treeInstance.updateDomFocus();
 					}
-					// Default behavior handles normal navigation when item is focused
 				}) as TreeHotkeyHandler,
 			},
-			// Focus first item when nothing is focused (Down arrow)
+			// Down arrow navigation - focus first item if nothing focused, else move down
 			customFocusOnDown: {
 				hotkey: "ArrowDown",
 				canRepeat: true,
 				handler: ((_e, treeInstance) => {
 					const item = treeInstance.getFocusedItem();
 					if (!item) {
+						// Nothing focused - focus first item
 						const visibleItems = treeInstance.getItems();
 						const firstItem = visibleItems[0];
 						if (firstItem) {
 							firstItem.setFocused();
 							treeInstance.updateDomFocus();
 						}
+					} else {
+						// Already focused - navigate to next item
+						treeInstance.focusNextItem();
+						treeInstance.updateDomFocus();
 					}
-					// Default behavior handles normal navigation when item is focused
 				}) as TreeHotkeyHandler,
 			},
 			// Toggle selection of focused item (Ctrl+Space) - for non-consecutive multi-select
@@ -464,6 +483,16 @@ export function TreeView() {
 					const focusedItem = treeInstance.getFocusedItem();
 					if (focusedItem) {
 						focusedItem.toggleSelect();
+					}
+				}) as TreeHotkeyHandler,
+			},
+			// Select focused item (Space) - single selection, clears others
+			customSelectItem: {
+				hotkey: "Space",
+				handler: ((_e, treeInstance) => {
+					const focusedItem = treeInstance.getFocusedItem();
+					if (focusedItem) {
+						treeInstance.setSelectedItems([focusedItem.getId()]);
 					}
 				}) as TreeHotkeyHandler,
 			},
@@ -785,16 +814,19 @@ export function TreeView() {
 				<div 
 					{...tree.getContainerProps()} 
 					data-tree-container="true"
-					tabIndex={0}
 					className="relative font-mono flex-1 min-h-[100px] focus:outline-none rounded-sm cursor-default"
 					onFocus={() => setFocusArea("tree")}
 					onClick={(e) => {
 						// If clicking on empty space in container (not on an item), clear selection
 						if (e.target === e.currentTarget) {
-							e.currentTarget.focus();
-							// Clear selection and focus
+							// Focus the first item instead of the container
+							const firstItem = tree.getItems()[0];
+							if (firstItem) {
+								firstItem.setFocused();
+								tree.updateDomFocus();
+							}
+							// Clear selection
 							tree.setSelectedItems([]);
-							setTreeState((prev) => ({ ...prev, focusedItem: null }));
 							setSelectedItemId(null);
 						}
 					}}
@@ -811,8 +843,8 @@ export function TreeView() {
 						// Drag state for visual feedback (from headless-tree)
 						const isDragTarget = item.isDragTarget?.() ?? false;
 						const isSelected = item.isSelected?.() ?? false;
-						// Check both library state and our controlled state for focus
-						const isFocused = (item.isFocused?.() ?? false) && treeState.focusedItem != null;
+						// Use library's isFocused which falls back to first item when focusedItem is null
+						const isFocused = item.isFocused?.() ?? false;
 						const isInClipboard = clipboardItemIds.includes(itemData.id);
 
 						// Get the props from headless-tree (includes ALL handlers: drag, drop, etc.)
@@ -840,9 +872,6 @@ export function TreeView() {
 								style={{
 									paddingLeft: `${level * 16 + 4}px`,
 								}}
-								onDoubleClick={() => {
-									handleItemOpen(itemData.id);
-								}}
 								onContextMenu={(e) => {
 									e.preventDefault();
 									const rightClickData: TreeRightClickData = {
@@ -859,7 +888,17 @@ export function TreeView() {
 								}}
 							>
 								{isFolder && hasChildren ? (
-									<span className="flex-shrink-0 w-3 h-3 flex items-center justify-center">
+									<span
+										className="flex-shrink-0 w-4 h-4 -ml-0.5 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+										onClick={(e) => {
+											e.stopPropagation();
+											if (item.isExpanded()) {
+												item.collapse();
+											} else {
+												item.expand();
+											}
+										}}
+									>
 										{item.isExpanded() ? (
 											<ChevronDown className="w-2.5 h-2.5 text-gray-400" />
 										) : (
@@ -867,7 +906,7 @@ export function TreeView() {
 										)}
 									</span>
 								) : (
-									<span className="w-3" />
+									<span className="w-4 -ml-0.5" />
 								)}
 								<span className="flex-shrink-0">
 									{getItemIcon(itemData, item.isExpanded())}
