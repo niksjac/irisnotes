@@ -419,7 +419,7 @@ export function TreeView() {
 					}
 				}) as TreeHotkeyHandler,
 			},
-			// Cancel/clear (Escape) - clears clipboard, selection, and focus
+			// Cancel/clear (Escape) - clears clipboard and selection, keeps focus
 			customCancel: {
 				hotkey: "Escape",
 				handler: ((_e, treeInstance) => {
@@ -427,9 +427,8 @@ export function TreeView() {
 					if (clipboardItemIds.length > 0) {
 						setClipboardItemIds([]);
 					}
-					// Clear multi-selection and focused item
+					// Clear multi-selection but keep focus where it is
 					treeInstance.setSelectedItems([]);
-					setTreeState((prev) => ({ ...prev, focusedItem: null }));
 					// Clear the selectedItemId atom
 					setSelectedItemId(null);
 				}) as TreeHotkeyHandler,
@@ -486,13 +485,20 @@ export function TreeView() {
 					}
 				}) as TreeHotkeyHandler,
 			},
-			// Select focused item (Space) - single selection, clears others
+			// Toggle select focused item (Space) - single selection mode
 			customSelectItem: {
 				hotkey: "Space",
+				preventDefault: true,
 				handler: ((_e, treeInstance) => {
 					const focusedItem = treeInstance.getFocusedItem();
 					if (focusedItem) {
-						treeInstance.setSelectedItems([focusedItem.getId()]);
+						if (focusedItem.isSelected()) {
+							// Already selected - deselect it
+							treeInstance.setSelectedItems([]);
+						} else {
+							// Not selected - select it (clears others)
+							treeInstance.setSelectedItems([focusedItem.getId()]);
+						}
 					}
 				}) as TreeHotkeyHandler,
 			},
@@ -817,17 +823,20 @@ export function TreeView() {
 					className="relative font-mono flex-1 min-h-[100px] focus:outline-none rounded-sm cursor-default"
 					onFocus={() => setFocusArea("tree")}
 					onClick={(e) => {
-						// If clicking on empty space in container (not on an item), clear selection
+						// If clicking on empty space in container (not on an item)
 						if (e.target === e.currentTarget) {
-							// Focus the first item instead of the container
-							const firstItem = tree.getItems()[0];
-							if (firstItem) {
-								firstItem.setFocused();
+							// Restore focus to previously focused item, or first item as fallback
+							const focusedItem = tree.getFocusedItem();
+							if (focusedItem) {
 								tree.updateDomFocus();
+							} else {
+								const firstItem = tree.getItems()[0];
+								if (firstItem) {
+									firstItem.setFocused();
+									tree.updateDomFocus();
+								}
 							}
-							// Clear selection
-							tree.setSelectedItems([]);
-							setSelectedItemId(null);
+							// Don't clear selection - just refocus
 						}
 					}}
 				>
@@ -862,10 +871,12 @@ export function TreeView() {
                   w-full flex items-center gap-1 py-0.5 px-1 rounded cursor-pointer transition-colors text-left
                   ${isInClipboard ? "opacity-50" : ""}
                   ${isDragTarget ? "bg-blue-100/70 dark:bg-blue-900/30 border-l-2 border-blue-400" : ""}
-                  ${!isDragTarget && isSelected ? "bg-blue-500/20 dark:bg-blue-500/30" : ""}
+                  ${!isDragTarget && isSelected && treeHasFocus ? "bg-blue-500/20 dark:bg-blue-500/30" : ""}
+                  ${!isDragTarget && isSelected && !treeHasFocus ? "bg-blue-500/10 dark:bg-blue-500/15" : ""}
                   ${!isDragTarget && !isSelected && isInClipboard ? "bg-gray-100 dark:bg-gray-800" : ""}
                   ${!isDragTarget && !isSelected && !isInClipboard ? "hover:bg-gray-100 dark:hover:bg-gray-800/50" : ""}
                   ${isFocused && treeHasFocus ? "ring-2 ring-blue-500 ring-inset" : ""}
+                  ${isFocused && !treeHasFocus ? "ring-1 ring-gray-400 dark:ring-gray-600 ring-inset" : ""}
                   focus:outline-none
                   select-none
                 `}

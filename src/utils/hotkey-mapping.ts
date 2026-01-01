@@ -78,16 +78,31 @@ export function mapHotkeyHandlers(
 				sidebar.setCollapsed(false);
 				// Wait for sidebar to open before focusing
 				requestAnimationFrame(() => {
-					const treeContainer = document.querySelector('[data-tree-container="true"]') as HTMLElement | null;
-					if (treeContainer) {
-						treeContainer.focus();
+					const treeContainer = document.querySelector('[data-tree-container="true"]');
+					if (!treeContainer) return;
+					// Try previously focused item first (roving tabindex pattern)
+					const previouslyFocused = treeContainer.querySelector('button[role="treeitem"][tabindex="0"]') as HTMLElement | null;
+					if (previouslyFocused) {
+						previouslyFocused.focus();
+					} else {
+						const firstItem = treeContainer.querySelector('button[role="treeitem"]') as HTMLElement | null;
+						if (firstItem) {
+							firstItem.focus();
+						}
 					}
 				});
 			} else {
-				// Find tree container by data attribute and focus it
-				const treeContainer = document.querySelector('[data-tree-container="true"]') as HTMLElement | null;
-				if (treeContainer) {
-					treeContainer.focus();
+				const treeContainer = document.querySelector('[data-tree-container="true"]');
+				if (!treeContainer) return;
+				// Try previously focused item first (roving tabindex pattern)
+				const previouslyFocused = treeContainer.querySelector('button[role="treeitem"][tabindex="0"]') as HTMLElement | null;
+				if (previouslyFocused) {
+					previouslyFocused.focus();
+				} else {
+					const firstItem = treeContainer.querySelector('button[role="treeitem"]') as HTMLElement | null;
+					if (firstItem) {
+						firstItem.focus();
+					}
 				}
 			}
 		},

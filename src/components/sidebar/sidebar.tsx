@@ -8,14 +8,28 @@ export const Sidebar: React.FC = () => {
 	const { isInitialized } = useNotesStorage();
 	const { isLoading } = useItems();
 
-	// Focus the first tree item when clicking anywhere in the sidebar
+	// Focus tree when clicking on sidebar empty space
+	// If a tree item was previously focused, restore focus to it; otherwise focus first item
 	const handleSidebarClick = useCallback((e: React.MouseEvent) => {
-		// Find the first focusable tree item button and focus it
+		const target = e.target as HTMLElement;
+		
+		// Don't interfere if clicking directly on a tree item (it handles its own focus)
+		if (target.closest('button[role="treeitem"]')) {
+			return;
+		}
+		
 		const treeContainer = (e.currentTarget as HTMLElement).querySelector(
 			'[data-tree-container="true"]',
 		) as HTMLElement | null;
-		if (treeContainer) {
-			// Find the first button (tree item) inside the container
+		if (!treeContainer) return;
+
+		// Try to find the item that was previously focused (has tabindex="0" in roving tabindex)
+		// The headless-tree library sets tabindex="0" on the focused item
+		const previouslyFocused = treeContainer.querySelector('button[role="treeitem"][tabindex="0"]') as HTMLElement | null;
+		if (previouslyFocused) {
+			previouslyFocused.focus();
+		} else {
+			// Fall back to first item if no previous focus
 			const firstItem = treeContainer.querySelector('button[role="treeitem"]') as HTMLElement | null;
 			if (firstItem) {
 				firstItem.focus();
