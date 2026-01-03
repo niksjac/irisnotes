@@ -45,7 +45,7 @@ type TreeHotkeyHandler = (
 // Selection only happens with Ctrl/Shift modifiers
 const singleClickSelectFeature: FeatureImplementation<FlexibleItem> = {
 	itemInstance: {
-		getProps: ({ tree, item, prev }) => ({
+		getProps: ({ item, prev }) => ({
 			...prev?.(),
 			onClick: (e: MouseEvent) => {
 				// Handle selection only with modifiers (Shift/Ctrl)
@@ -66,7 +66,6 @@ const singleClickSelectFeature: FeatureImplementation<FlexibleItem> = {
 				// For notes: single click only focuses, don't open
 			},
 			onDoubleClick: (e: MouseEvent) => {
-				const itemData = item.getItemData();
 				if (item.isFolder()) {
 					// Double-click toggles expand/collapse for folders
 					e.preventDefault();
@@ -740,19 +739,6 @@ export function TreeView() {
 				return (
 					<FileText className="w-3 h-3 text-gray-600 dark:text-gray-400" />
 				);
-		}
-	};
-
-	// Handle double-click - open item in appropriate view
-	const handleItemOpen = (itemId: string) => {
-		const itemData = itemMap.get(itemId);
-		if (itemData) {
-			setSelectedItemId(itemId);
-			openItemInTab({
-				id: itemData.id,
-				title: itemData.title,
-				type: itemData.type,
-			});
 		}
 	};
 

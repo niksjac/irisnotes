@@ -15,6 +15,7 @@ interface EditorContainerProps {
 	noteId?: string;
 	initialCursorPosition?: number;
 	toolbarVisible?: boolean;
+	autoFocus?: boolean;
 }
 
 export const EditorContainer: React.FC<EditorContainerProps> = ({
@@ -27,6 +28,7 @@ export const EditorContainer: React.FC<EditorContainerProps> = ({
 	noteId,
 	initialCursorPosition,
 	toolbarVisible = false,
+	autoFocus = false,
 }) => {
 	const { rightClickMenu, handleRightClickMenu, hideRightClickMenu } =
 		useRightClickMenu();
@@ -60,6 +62,7 @@ export const EditorContainer: React.FC<EditorContainerProps> = ({
 						onChange={onChange}
 						readOnly={readOnly}
 						initialCursorPosition={initialCursorPosition}
+						autoFocus={autoFocus}
 					/>
 				) : (
 					<ProseMirrorEditor
@@ -68,6 +71,7 @@ export const EditorContainer: React.FC<EditorContainerProps> = ({
 						readOnly={readOnly}
 						initialCursorPosition={initialCursorPosition}
 						toolbarVisible={toolbarVisible}
+						autoFocus={autoFocus}
 					/>
 				)}
 			</div>

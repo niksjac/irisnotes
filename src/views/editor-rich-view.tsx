@@ -55,6 +55,7 @@ export function EditorRichView({ viewData }: EditorRichViewProps) {
 					defaultView="rich"
 					initialCursorPosition={viewData?.cursorPosition}
 					toolbarVisible={toolbarVisible}
+					autoFocus={viewData?.cursorPosition !== undefined}
 				/>
 			</div>
 		</div>

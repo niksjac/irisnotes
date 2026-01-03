@@ -6,7 +6,7 @@ import {
 	highlightActiveLine,
 	highlightActiveLineGutter,
 } from "@codemirror/view";
-import { EditorState, StateEffect, type Extension } from "@codemirror/state";
+import { EditorState, StateEffect, EditorSelection, type Extension } from "@codemirror/state";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { bracketMatching } from "@codemirror/language";
 import { searchKeymap, highlightSelectionMatches } from "@codemirror/search";
@@ -27,6 +27,7 @@ interface CodeMirrorEditorProps {
 	onChange?: (content: string) => void;
 	readOnly?: boolean;
 	initialCursorPosition?: number;
+	autoFocus?: boolean;
 }
 
 export function CodeMirrorEditor({
@@ -34,6 +35,7 @@ export function CodeMirrorEditor({
 	onChange,
 	readOnly = false,
 	initialCursorPosition,
+	autoFocus = false,
 }: CodeMirrorEditorProps) {
 	const editorRef = useRef<HTMLDivElement>(null);
 	const viewRef = useRef<EditorView | null>(null);
@@ -87,6 +89,10 @@ export function CodeMirrorEditor({
 			".cm-content": {
 				padding: "16px",
 			},
+			// Hide cursor when editor is not focused
+			"&:not(.cm-focused) .cm-cursor": {
+				display: "none",
+			},
 		}),
 		darkMode ? oneDark : [],
 		isWrapping ? EditorView.lineWrapping : [],
@@ -96,9 +102,18 @@ export function CodeMirrorEditor({
 	useEffect(() => {
 		if (!editorRef.current || viewRef.current) return;
 
+		// Determine initial cursor position:
+		// - If initialCursorPosition is a number, restore that exact position
+		// - If undefined (first time opening), place cursor at end of document
+		const docLength = content.length;
+		const targetPos = initialCursorPosition !== undefined
+			? Math.min(initialCursorPosition, docLength)
+			: docLength;
+
 		const startState = EditorState.create({
 			doc: content,
 			extensions: buildExtensions(),
+			selection: EditorSelection.cursor(targetPos),
 		});
 
 		const view = new EditorView({
@@ -108,13 +123,11 @@ export function CodeMirrorEditor({
 
 		viewRef.current = view;
 		// Note: Don't auto-focus - let user click or use Ctrl+Alt+1/2 to focus pane
+		// Initial cursor position is set in EditorState.create() above
 
-		// Restore cursor position if provided
-		if (initialCursorPosition !== undefined && initialCursorPosition > 0) {
-			const pos = Math.min(initialCursorPosition, view.state.doc.length);
-			view.dispatch({
-				selection: { anchor: pos, head: pos },
-			});
+		// Auto-focus if requested (e.g., when toggling editor view)
+		if (autoFocus) {
+			setTimeout(() => view.focus(), 0);
 		}
 
 		return () => {
@@ -145,26 +158,21 @@ export function CodeMirrorEditor({
 
 		const currentContent = view.state.doc.toString();
 		if (currentContent !== content) {
+			// Replace content and put cursor at end
+			const newLength = content.length;
 			view.dispatch({
 				changes: {
 					from: 0,
 					to: view.state.doc.length,
 					insert: content,
 				},
+				selection: EditorSelection.cursor(newLength),
 			});
 		}
 	}, [content]);
 
-	// Focus editor when it becomes visible (e.g., after view toggle)
-	useEffect(() => {
-		const view = viewRef.current;
-		if (view && !readOnly) {
-			// Small delay to ensure DOM is ready
-			setTimeout(() => {
-				view.focus();
-			}, 10);
-		}
-	}, [readOnly]);
+	// Note: Editor focus is controlled by user actions (click, Ctrl+Alt+1/2)
+	// We intentionally don't auto-focus to prevent stealing focus from tree
 
 	return (
 		<div

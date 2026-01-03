@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { FileText, Folder, Book, Calendar, Clock, Hash } from "lucide-react";
+import { FileText, Folder, Book } from "lucide-react";
 import type { ContainerItem } from "@/hooks/use-container-view";
 import { formatDate } from "@/hooks/use-container-view";
 

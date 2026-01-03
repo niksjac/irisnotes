@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { EditorState, TextSelection } from "prosemirror-state";
+import { EditorState, TextSelection, Selection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { Schema, DOMParser, DOMSerializer } from "prosemirror-model";
 import { schema } from "prosemirror-schema-basic";
@@ -52,6 +52,7 @@ interface ProseMirrorEditorProps {
 	readOnly?: boolean;
 	toolbarVisible?: boolean;
 	initialCursorPosition?: number;
+	autoFocus?: boolean;
 }
 
 export function ProseMirrorEditor({
@@ -60,6 +61,7 @@ export function ProseMirrorEditor({
 	readOnly = false,
 	toolbarVisible = false,
 	initialCursorPosition,
+	autoFocus = false,
 }: ProseMirrorEditorProps) {
 	const editorRef = useRef<HTMLDivElement>(null);
 	const viewRef = useRef<EditorView | null>(null);
@@ -101,9 +103,17 @@ export function ProseMirrorEditor({
 			],
 		});
 
+		// Determine initial selection:
+		// - If initialCursorPosition is a number, restore that exact position
+		// - If undefined (first time opening), place cursor at end of document
+		const initialSelection = initialCursorPosition !== undefined
+			? TextSelection.create(doc, Math.min(initialCursorPosition, doc.content.size))
+			: Selection.atEnd(doc);
+
 		const state = EditorState.create({
 			doc,
 			plugins,
+			selection: initialSelection,
 		});
 
 		const view = new EditorView(editorRef.current, {
@@ -159,6 +169,12 @@ export function ProseMirrorEditor({
 				white-space: ${isWrapping ? "pre-wrap" : "pre"};
 				word-wrap: break-word;
 				overflow-x: ${isWrapping ? "hidden" : "auto"};
+				caret-color: #22c55e;
+			}
+			
+			/* Hide cursor/caret when editor is not focused */
+			.ProseMirror:not(.ProseMirror-focused) {
+				caret-color: transparent;
 			}
 			
 			/* Heading styles */
@@ -263,14 +279,11 @@ export function ProseMirrorEditor({
 
 		viewRef.current = view;
 		// Note: Don't auto-focus - let user click or use Ctrl+Alt+1/2 to focus pane
+		// Initial cursor position is set in EditorState.create() above
 
-		// Restore cursor position if provided
-		if (initialCursorPosition !== undefined && initialCursorPosition > 0) {
-			const pos = Math.min(initialCursorPosition, view.state.doc.content.size);
-			const tr = view.state.tr.setSelection(
-				TextSelection.create(view.state.doc, pos)
-			);
-			view.dispatch(tr);
+		// Auto-focus if requested (e.g., when toggling editor view)
+		if (autoFocus) {
+			setTimeout(() => view.focus(), 0);
 		}
 
 		return () => {
@@ -302,6 +315,12 @@ export function ProseMirrorEditor({
 				white-space: ${isWrapping ? "pre-wrap" : "pre"};
 				word-wrap: break-word;
 				overflow-x: ${isWrapping ? "hidden" : "auto"};
+				caret-color: #22c55e;
+			}
+			
+			/* Hide cursor/caret when editor is not focused */
+			.ProseMirror:not(.ProseMirror-focused) {
+				caret-color: transparent;
 			}
 			
 			/* Heading styles */
@@ -434,25 +453,19 @@ export function ProseMirrorEditor({
 			contentDiv.innerHTML = htmlContent;
 			const doc = DOMParser.fromSchema(mySchema).parse(contentDiv);
 
+			// Preserve cursor at end of document when content updates externally
 			const newState = EditorState.create({
 				doc,
 				plugins: view.state.plugins,
+				selection: Selection.atEnd(doc),
 			});
 
 			view.updateState(newState);
 		}
 	}, [content]);
 
-	// Focus editor when it becomes visible (e.g., after view toggle)
-	useEffect(() => {
-		const view = viewRef.current;
-		if (view && !readOnly) {
-			// Small delay to ensure DOM is ready
-			setTimeout(() => {
-				view.focus();
-			}, 10);
-		}
-	}, [readOnly]);
+	// Note: Editor focus is controlled by user actions (click, Ctrl+Alt+1/2)
+	// We intentionally don't auto-focus to prevent stealing focus from tree
 
 	return (
 		<div

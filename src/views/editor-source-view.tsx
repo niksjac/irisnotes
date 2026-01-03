@@ -53,6 +53,7 @@ export function EditorSourceView({ viewData }: EditorSourceViewProps) {
 					defaultView="source"
 					noteId={note.id}
 					initialCursorPosition={viewData?.cursorPosition}
+					autoFocus={viewData?.cursorPosition !== undefined}
 				/>
 			</div>
 		</div>
