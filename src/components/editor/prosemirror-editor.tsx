@@ -1,50 +1,18 @@
 import { useEffect, useRef } from "react";
 import { EditorState, TextSelection, Selection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
-import { Schema, DOMParser, DOMSerializer } from "prosemirror-model";
-import { schema } from "prosemirror-schema-basic";
-import { addListNodes } from "prosemirror-schema-list";
+import { DOMParser, DOMSerializer } from "prosemirror-model";
 import { useLineWrapping } from "@/hooks";
 import { editorCursorPositionStore } from "@/hooks/use-editor-view-toggle";
 import { customSetup } from "./prosemirror-setup";
 import { EditorToolbar } from "./editor-toolbar";
 import { CodeBlockView } from "./codemirror-nodeview";
+import { editorSchema } from "./schema";
 import "prosemirror-view/style/prosemirror.css";
+import "@/styles/prosemirror.css";
 
-// Extend basic schema with list nodes and code_block
-const codeBlockSpec = {
-	content: "text*",
-	marks: "",
-	group: "block",
-	code: true,
-	defining: true,
-	attrs: {
-		language: { default: "javascript" },
-	},
-	parseDOM: [
-		{
-			tag: "pre",
-			preserveWhitespace: "full" as const,
-			getAttrs: (node: HTMLElement) => ({
-				language: node.getAttribute("data-language") || "javascript",
-			}),
-		},
-	],
-	toDOM: (node: any): [string, Record<string, string>, [string, number]] => [
-		"pre",
-		{ "data-language": node.attrs.language },
-		["code", 0],
-	],
-};
-
-const mySchema = new Schema({
-	nodes: addListNodes(
-		schema.spec.nodes,
-		"paragraph block*",
-		"block"
-	).append({ code_block: codeBlockSpec }),
-	marks: schema.spec.marks,
-});
+// Use the extended schema from schema.ts
+const mySchema = editorSchema;
 
 interface ProseMirrorEditorProps {
 	content: string;
@@ -67,7 +35,6 @@ export function ProseMirrorEditor({
 	const viewRef = useRef<EditorView | null>(null);
 	const onChangeRef = useRef(onChange);
 	const initialContentRef = useRef(content);
-	const styleRef = useRef<HTMLStyleElement | null>(null);
 	const { isWrapping } = useLineWrapping();
 
 	// Keep refs up to date
@@ -158,124 +125,8 @@ export function ProseMirrorEditor({
 			},
 		});
 
-		// Add CSS to make editor fill container
-		const style = document.createElement("style");
-		style.textContent = `
-			.ProseMirror {
-				height: 100%;
-				min-height: 100%;
-				padding: 1rem;
-				outline: none;
-				white-space: ${isWrapping ? "pre-wrap" : "pre"};
-				word-wrap: break-word;
-				overflow-x: ${isWrapping ? "hidden" : "auto"};
-				caret-color: #22c55e;
-			}
-			
-			/* Hide cursor/caret when editor is not focused */
-			.ProseMirror:not(.ProseMirror-focused) {
-				caret-color: transparent;
-			}
-			
-			/* Heading styles */
-			.ProseMirror h1 {
-				font-size: 2em;
-				font-weight: bold;
-				margin: 0.67em 0;
-				line-height: 1.2;
-			}
-			
-			.ProseMirror h2 {
-				font-size: 1.5em;
-				font-weight: bold;
-				margin: 0.75em 0;
-				line-height: 1.3;
-			}
-			
-			.ProseMirror h3 {
-				font-size: 1.17em;
-				font-weight: bold;
-				margin: 0.83em 0;
-				line-height: 1.4;
-			}
-			
-			/* List styles */
-			.ProseMirror ul {
-				margin: 0.5em 0;
-				padding-left: 1.5em;
-				list-style-type: disc;
-			}
-			
-			.ProseMirror ol {
-				margin: 0.5em 0;
-				padding-left: 1.5em;
-				list-style-type: decimal;
-			}
-			
-			.ProseMirror li {
-				margin: 0.25em 0;
-				display: list-item;
-			}
-			
-			/* Blockquote styles */
-			.ProseMirror blockquote {
-				border-left: 3px solid #ccc;
-				margin: 0.5em 0;
-				padding: 0.25em 0 0.25em 1em;
-				color: #666;
-				font-style: italic;
-			}
-			
-			/* Dark mode blockquote */
-			.dark .ProseMirror blockquote {
-				border-left-color: #555;
-				color: #aaa;
-			}
-			
-			/* Paragraph spacing */
-			.ProseMirror p {
-				margin: 0.5em 0;
-			}
-			
-			/* Code mark */
-			.ProseMirror code {
-				background-color: rgba(175, 184, 193, 0.2);
-				padding: 0.2em 0.4em;
-				border-radius: 3px;
-				font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
-				font-size: 0.85em;
-				color: #e01e5a;
-			}
-			
-			.dark .ProseMirror code {
-				background-color: rgba(110, 118, 129, 0.4);
-				color: #ff6b9d;
-			}
-			
-			/* Code block container */
-			.ProseMirror .code-block-container {
-				overflow: hidden;
-			}
-			
-			.ProseMirror .code-block-container .cm-editor {
-				background: transparent !important;
-			}
-			
-			.ProseMirror .code-block-container .cm-gutters {
-				background: rgba(0, 0, 0, 0.05);
-			}
-			
-			.dark .ProseMirror .code-block-container .cm-gutters {
-				background: rgba(255, 255, 255, 0.05);
-			}
-			
-			.ProseMirror-selectednode .code-block-container {
-				outline: 2px solid #3b82f6;
-			}
-		`;
-
-		editorRef.current.appendChild(style);
-		styleRef.current = style;
+		// Apply initial line-wrapping class
+		view.dom.classList.add(isWrapping ? "wrap-enabled" : "wrap-disabled");
 
 		viewRef.current = view;
 		// Note: Don't auto-focus - let user click or use Ctrl+Alt+1/2 to focus pane
@@ -295,130 +146,21 @@ export function ProseMirrorEditor({
 			}
 			view.destroy();
 			viewRef.current = null;
-			if (styleRef.current && styleRef.current.parentNode) {
-				styleRef.current.parentNode.removeChild(styleRef.current);
-			}
-			styleRef.current = null;
 		};
 	}, []);
 
-	// Update line wrapping styles dynamically (preserves cursor!)
+	// Update line wrapping class dynamically (preserves cursor!)
 	useEffect(() => {
-		if (!styleRef.current) return;
+		if (!viewRef.current) return;
 
-		styleRef.current.textContent = `
-			.ProseMirror {
-				height: 100%;
-				min-height: 100%;
-				padding: 1rem;
-				outline: none;
-				white-space: ${isWrapping ? "pre-wrap" : "pre"};
-				word-wrap: break-word;
-				overflow-x: ${isWrapping ? "hidden" : "auto"};
-				caret-color: #22c55e;
-			}
-			
-			/* Hide cursor/caret when editor is not focused */
-			.ProseMirror:not(.ProseMirror-focused) {
-				caret-color: transparent;
-			}
-			
-			/* Heading styles */
-			.ProseMirror h1 {
-				font-size: 2em;
-				font-weight: bold;
-				margin: 0.67em 0;
-				line-height: 1.2;
-			}
-			
-			.ProseMirror h2 {
-				font-size: 1.5em;
-				font-weight: bold;
-				margin: 0.75em 0;
-				line-height: 1.3;
-			}
-			
-			.ProseMirror h3 {
-				font-size: 1.17em;
-				font-weight: bold;
-				margin: 0.83em 0;
-				line-height: 1.4;
-			}
-			
-			/* List styles */
-			.ProseMirror ul {
-				margin: 0.5em 0;
-				padding-left: 1.5em;
-				list-style-type: disc;
-			}
-			
-			.ProseMirror ol {
-				margin: 0.5em 0;
-				padding-left: 1.5em;
-				list-style-type: decimal;
-			}
-			
-			.ProseMirror li {
-				margin: 0.25em 0;
-				display: list-item;
-			}
-			
-			/* Blockquote styles */
-			.ProseMirror blockquote {
-				border-left: 3px solid #ccc;
-				margin: 0.5em 0;
-				padding: 0.25em 0 0.25em 1em;
-				color: #666;
-				font-style: italic;
-			}
-			
-			/* Dark mode blockquote */
-			.dark .ProseMirror blockquote {
-				border-left-color: #555;
-				color: #aaa;
-			}
-			
-			/* Paragraph spacing */
-			.ProseMirror p {
-				margin: 0.5em 0;
-			}
-			
-			/* Code mark */
-			.ProseMirror code {
-				background-color: rgba(175, 184, 193, 0.2);
-				padding: 0.2em 0.4em;
-				border-radius: 3px;
-				font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
-				font-size: 0.85em;
-				color: #e01e5a;
-			}
-			
-			.dark .ProseMirror code {
-				background-color: rgba(110, 118, 129, 0.4);
-				color: #ff6b9d;
-			}
-			
-			/* Code block container */
-			.ProseMirror .code-block-container {
-				overflow: hidden;
-			}
-			
-			.ProseMirror .code-block-container .cm-editor {
-				background: transparent !important;
-			}
-			
-			.ProseMirror .code-block-container .cm-gutters {
-				background: rgba(0, 0, 0, 0.05);
-			}
-			
-			.dark .ProseMirror .code-block-container .cm-gutters {
-				background: rgba(255, 255, 255, 0.05);
-			}
-			
-			.ProseMirror-selectednode .code-block-container {
-				outline: 2px solid #3b82f6;
-			}
-		`;
+		const dom = viewRef.current.dom;
+		if (isWrapping) {
+			dom.classList.remove("wrap-disabled");
+			dom.classList.add("wrap-enabled");
+		} else {
+			dom.classList.remove("wrap-enabled");
+			dom.classList.add("wrap-disabled");
+		}
 	}, [isWrapping]);
 
 	// Update content when it changes externally

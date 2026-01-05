@@ -19,6 +19,11 @@ import {
 	Redo2,
 	ChevronDown,
 	FileCode,
+	Underline,
+	Strikethrough,
+	Palette,
+	Highlighter,
+	ALargeSmall,
 } from "lucide-react";
 
 interface EditorToolbarProps {
@@ -26,12 +31,35 @@ interface EditorToolbarProps {
 	schema: any;
 }
 
+// Preset colors for color pickers
+const PRESET_COLORS = [
+	"#000000", "#374151", "#6b7280", "#9ca3af",
+	"#ef4444", "#f97316", "#eab308", "#22c55e",
+	"#3b82f6", "#8b5cf6", "#ec4899", "#14b8a6",
+];
+
+const HIGHLIGHT_COLORS = [
+	"#fef08a", "#fde047", "#fbbf24", "#fb923c",
+	"#fca5a5", "#f9a8d4", "#c4b5fd", "#a5b4fc",
+	"#99f6e4", "#86efac", "#d9f99d", "#ffffff",
+];
+
+const FONT_SIZES = [
+	{ label: "Small", value: "12px" },
+	{ label: "Normal", value: "16px" },
+	{ label: "Large", value: "20px" },
+	{ label: "XL", value: "24px" },
+	{ label: "2XL", value: "32px" },
+];
+
 export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 	const [showDropdown, setShowDropdown] = useState(false);
+	const [showColorPicker, setShowColorPicker] = useState<"text" | "highlight" | "fontSize" | null>(null);
 	const [visibleButtons, setVisibleButtons] = useState<number>(0);
 	const [, setUpdateTrigger] = useState(0);
 	const toolbarRef = useRef<HTMLDivElement>(null);
 	const dropdownRef = useRef<HTMLDivElement>(null);
+	const colorPickerRef = useRef<HTMLDivElement>(null);
 
 	// Helper to check if a mark is active
 	const isMarkActive = (markType: MarkType) => {
@@ -90,6 +118,38 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 		};
 	};
 
+	// Apply a mark with attributes to the selection
+	const applyMarkWithAttrs = (markType: MarkType, attrs: Record<string, any>) => {
+		if (!editorView) return;
+		const { state, dispatch } = editorView;
+		const { from, to, empty } = state.selection;
+
+		if (empty) {
+			// For empty selection, set stored marks
+			const mark = markType.create(attrs);
+			dispatch(state.tr.addStoredMark(mark));
+		} else {
+			// For non-empty selection, apply mark to range
+			const mark = markType.create(attrs);
+			dispatch(state.tr.addMark(from, to, mark));
+		}
+		editorView.focus();
+	};
+
+	// Remove a mark from selection
+	const removeMark = (markType: MarkType) => {
+		if (!editorView) return;
+		const { state, dispatch } = editorView;
+		const { from, to, empty } = state.selection;
+
+		if (empty) {
+			dispatch(state.tr.removeStoredMark(markType));
+		} else {
+			dispatch(state.tr.removeMark(from, to, markType));
+		}
+		editorView.focus();
+	};
+
 	// Update toolbar state when editor selection changes
 	useEffect(() => {
 		if (!editorView) return;
@@ -134,6 +194,22 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					command: toggleMark(schema.marks.code),
 					isActive: () => isMarkActive(schema.marks.code),
 					className: "toolbar-code",
+				},
+				{
+					icon: Underline,
+					label: "Underline",
+					shortcut: "Ctrl+U",
+					command: toggleMark(schema.marks.underline),
+					isActive: () => isMarkActive(schema.marks.underline),
+					className: "toolbar-underline",
+				},
+				{
+					icon: Strikethrough,
+					label: "Strikethrough",
+					shortcut: "Ctrl+Shift+S",
+					command: toggleMark(schema.marks.strikethrough),
+					isActive: () => isMarkActive(schema.marks.strikethrough),
+					className: "toolbar-strikethrough",
 				},
 
 				// Block formatting
@@ -338,15 +414,21 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 			) {
 				setShowDropdown(false);
 			}
+			if (
+				colorPickerRef.current &&
+				!colorPickerRef.current.contains(event.target as Node)
+			) {
+				setShowColorPicker(null);
+			}
 		};
 
-		if (showDropdown) {
+		if (showDropdown || showColorPicker) {
 			document.addEventListener("mousedown", handleClickOutside);
 			return () => document.removeEventListener("mousedown", handleClickOutside);
 		}
 
 		return undefined;
-	}, [showDropdown]);
+	}, [showDropdown, showColorPicker]);
 
 	// Don't render if required props are missing
 	if (!editorView || !schema) return null;
@@ -426,6 +508,146 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 						)}
 					</div>
 				)}
+
+				{/* Separator */}
+				<div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+
+				{/* Text Color Picker */}
+				<div className="relative" ref={showColorPicker === "text" ? colorPickerRef : undefined}>
+					<button
+						type="button"
+						tabIndex={-1}
+						className={`w-8 h-8 flex items-center justify-center rounded transition-colors ${
+							isMarkActive(schema.marks.textColor)
+								? "bg-blue-500 text-white hover:bg-blue-600"
+								: "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+						}`}
+						onClick={() => setShowColorPicker(showColorPicker === "text" ? null : "text")}
+						title="Text Color"
+					>
+						<Palette size={16} />
+					</button>
+					{showColorPicker === "text" && (
+						<div className="absolute top-full left-0 mt-1 p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-lg z-50">
+							<div className="grid grid-cols-4 gap-1 mb-2">
+								{PRESET_COLORS.map((color) => (
+									<button
+										key={color}
+										type="button"
+										className="w-6 h-6 rounded border border-gray-300 dark:border-gray-600 hover:scale-110 transition-transform"
+										style={{ backgroundColor: color }}
+										onClick={() => {
+											applyMarkWithAttrs(schema.marks.textColor, { color });
+											setShowColorPicker(null);
+										}}
+										title={color}
+									/>
+								))}
+							</div>
+							<button
+								type="button"
+								className="w-full text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 py-1"
+								onClick={() => {
+									removeMark(schema.marks.textColor);
+									setShowColorPicker(null);
+								}}
+							>
+								Remove color
+							</button>
+						</div>
+					)}
+				</div>
+
+				{/* Highlight Color Picker */}
+				<div className="relative" ref={showColorPicker === "highlight" ? colorPickerRef : undefined}>
+					<button
+						type="button"
+						tabIndex={-1}
+						className={`w-8 h-8 flex items-center justify-center rounded transition-colors ${
+							isMarkActive(schema.marks.highlight)
+								? "bg-blue-500 text-white hover:bg-blue-600"
+								: "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+						}`}
+						onClick={() => setShowColorPicker(showColorPicker === "highlight" ? null : "highlight")}
+						title="Highlight"
+					>
+						<Highlighter size={16} />
+					</button>
+					{showColorPicker === "highlight" && (
+						<div className="absolute top-full left-0 mt-1 p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-lg z-50">
+							<div className="grid grid-cols-4 gap-1 mb-2">
+								{HIGHLIGHT_COLORS.map((color) => (
+									<button
+										key={color}
+										type="button"
+										className="w-6 h-6 rounded border border-gray-300 dark:border-gray-600 hover:scale-110 transition-transform"
+										style={{ backgroundColor: color }}
+										onClick={() => {
+											applyMarkWithAttrs(schema.marks.highlight, { color });
+											setShowColorPicker(null);
+										}}
+										title={color}
+									/>
+								))}
+							</div>
+							<button
+								type="button"
+								className="w-full text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 py-1"
+								onClick={() => {
+									removeMark(schema.marks.highlight);
+									setShowColorPicker(null);
+								}}
+							>
+								Remove highlight
+							</button>
+						</div>
+					)}
+				</div>
+
+				{/* Font Size Picker */}
+				<div className="relative" ref={showColorPicker === "fontSize" ? colorPickerRef : undefined}>
+					<button
+						type="button"
+						tabIndex={-1}
+						className={`w-8 h-8 flex items-center justify-center rounded transition-colors ${
+							isMarkActive(schema.marks.fontSize)
+								? "bg-blue-500 text-white hover:bg-blue-600"
+								: "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+						}`}
+						onClick={() => setShowColorPicker(showColorPicker === "fontSize" ? null : "fontSize")}
+						title="Font Size"
+					>
+						<ALargeSmall size={16} />
+					</button>
+					{showColorPicker === "fontSize" && (
+						<div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-lg z-50 min-w-[120px]">
+							{FONT_SIZES.map((size) => (
+								<button
+									key={size.value}
+									type="button"
+									className="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+									onClick={() => {
+										applyMarkWithAttrs(schema.marks.fontSize, { size: size.value });
+										setShowColorPicker(null);
+									}}
+								>
+									<span>{size.label}</span>
+									<span className="text-gray-400 text-xs">{size.value}</span>
+								</button>
+							))}
+							<button
+								type="button"
+								className="w-full text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 py-2 border-t border-gray-200 dark:border-gray-700"
+								onClick={() => {
+									removeMark(schema.marks.fontSize);
+									setShowColorPicker(null);
+								}}
+							>
+								Reset to default
+							</button>
+						</div>
+					)}
+				</div>
 			</div>
 		</div>
 	);

@@ -2,11 +2,14 @@ import type { Schema } from "prosemirror-model";
 import type { Plugin } from "prosemirror-state";
 import { keymap } from "prosemirror-keymap";
 import { history } from "prosemirror-history";
-import { baseKeymap } from "prosemirror-commands";
+import { baseKeymap, toggleMark } from "prosemirror-commands";
 import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
 import { buildInputRules } from "prosemirror-example-setup";
 import { buildKeymap } from "prosemirror-example-setup";
+import { autolinkPlugin, linkifySelection } from "./plugins/autolink";
+import { tightSelectionPlugin } from "./plugins/tight-selection";
+import { customCursorPlugin } from "./plugins/custom-cursor";
 
 interface SetupOptions {
 	schema: Schema;
@@ -65,6 +68,35 @@ export function customSetup(options: SetupOptions): Plugin[] {
 
 	// Gap cursor (allows cursor in hard-to-reach places like between blocks)
 	plugins.push(gapCursor());
+
+	// Tight selection (VS Code / Notion style - only highlights actual text)
+	plugins.push(tightSelectionPlugin());
+
+	// Custom cursor (VS Code style - configurable width, color, animation)
+	plugins.push(customCursorPlugin());
+
+	// Auto-link URLs as you type + Ctrl+Click/Ctrl+Enter to open
+	plugins.push(...autolinkPlugin(options.schema));
+
+	// Custom keybindings for extended marks
+	const customKeybindings: { [key: string]: any } = {
+		// Linkify URL at cursor
+		"Mod-Shift-l": linkifySelection(options.schema),
+	};
+
+	// Add underline shortcut if mark exists
+	if (options.schema.marks.underline) {
+		customKeybindings["Mod-u"] = toggleMark(options.schema.marks.underline);
+	}
+
+	// Add strikethrough shortcut if mark exists
+	if (options.schema.marks.strikethrough) {
+		customKeybindings["Mod-Shift-s"] = toggleMark(
+			options.schema.marks.strikethrough
+		);
+	}
+
+	plugins.push(keymap(customKeybindings));
 
 	return plugins;
 }
