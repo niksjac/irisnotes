@@ -1,14 +1,11 @@
 import { atom } from "jotai";
-import type { ViewType } from "@/types";
 
 // Layout atoms
 export const sidebarCollapsed = atom<boolean>(false);
 export const sidebarWidth = atom<number>(300); // Default width
 export const sidebarHeight = atom<number>(200); // Default height for mobile
 export const activityBarVisible = atom<boolean>(true);
-export const configViewActive = atom<boolean>(false);
-export const hotkeysViewActive = atom<boolean>(false);
-export const databaseStatusVisible = atom<boolean>(false);
+export const activityBarExpanded = atom<boolean>(false); // Expanded shows labels
 
 // Focus area: tracks which major UI section has focus (mutually exclusive)
 export type FocusArea = "activity-bar" | "tree" | "pane-0" | "pane-1" | null;
@@ -31,24 +28,6 @@ export const selectedNoteAtom = atom((get) => {
 	return selectedItem?.type === "note" ? selectedItem : null;
 });
 
-// Helper function to determine view based on current state
-const getDefaultView = (get: any): ViewType => {
-	const configViewActiveValue = get(configViewActive);
-	const hotkeysViewActiveValue = get(hotkeysViewActive);
-	const selectedNote = get(selectedNoteAtom);
-
-	if (configViewActiveValue) return "config-view";
-	if (hotkeysViewActiveValue) return "hotkeys-view";
-	if (selectedNote) {
-		// Default to rich editor view when a note is selected
-		// TODO: Add logic to determine between rich/source based on user preference
-		return "editor-rich-view";
-	}
-
-	// Default fallback - show empty view when nothing is selected
-	return "empty-view";
-};
-
 // Import pane atoms
 export * from "./panes";
 
@@ -57,6 +36,3 @@ export * from "./items";
 
 // Import tree view atoms
 export * from "./tree";
-
-// Current view state derived atom (for single-pane mode or when no pane specified)
-export const currentViewAtom = atom<ViewType>((get) => getDefaultView(get));

@@ -1,10 +1,7 @@
 import { atom } from "jotai";
 import {
 	activityBarVisible,
-	configViewActive,
-	databaseStatusVisible,
 	fontSizeAtom,
-	hotkeysViewActive,
 	sidebarCollapsed,
 	toolbarVisibleAtom,
 } from "./index";
@@ -18,27 +15,6 @@ export const toggleSidebarAtom = atom(null, (get, set) => {
 export const toggleActivityBarAtom = atom(null, (get, set) => {
 	const current = get(activityBarVisible);
 	set(activityBarVisible, !current);
-});
-
-export const toggleConfigViewAtom = atom(null, (get, set) => {
-	const current = get(configViewActive);
-	set(configViewActive, !current);
-	if (!current) {
-		set(hotkeysViewActive, false);
-	}
-});
-
-export const toggleHotkeysViewAtom = atom(null, (get, set) => {
-	const current = get(hotkeysViewActive);
-	set(hotkeysViewActive, !current);
-	if (!current) {
-		set(configViewActive, false);
-	}
-});
-
-export const toggleDatabaseStatusAtom = atom(null, (get, set) => {
-	const current = get(databaseStatusVisible);
-	set(databaseStatusVisible, !current);
 });
 
 export const toggleToolbarAtom = atom(null, (get, set) => {

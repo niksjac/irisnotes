@@ -1,63 +1,34 @@
 import { useAtom } from "jotai";
 import { useCallback } from "react";
-import {
-	activityBarVisible,
-	configViewActive,
-	databaseStatusVisible,
-	hotkeysViewActive,
-} from "@/atoms";
+import { activityBarVisible, activityBarExpanded } from "@/atoms";
 
+/**
+ * Hook for activity bar visibility and expansion state.
+ * Note: View management (Settings, Hotkeys, etc.) is now handled
+ * through the tab system via openSettingsTabAtom and openHotkeysTabAtom.
+ */
 export const useView = () => {
-	const [configViewActiveValue, setConfigViewActive] =
-		useAtom(configViewActive);
-	const [hotkeysViewActiveValue, setHotkeysViewActive] =
-		useAtom(hotkeysViewActive);
-	const [databaseStatusVisibleValue, setDatabaseStatusVisible] = useAtom(
-		databaseStatusVisible
-	);
 	const [activityBarVisibleValue, setActivityBarVisible] =
 		useAtom(activityBarVisible);
-
-	const toggleConfigView = useCallback(() => {
-		const newState = !configViewActiveValue;
-		setConfigViewActive(newState);
-		if (newState) {
-			// Deactivate other views when activating config
-			setHotkeysViewActive(false);
-		}
-	}, [configViewActiveValue, setConfigViewActive, setHotkeysViewActive]);
-
-	const toggleHotkeysView = useCallback(() => {
-		const newState = !hotkeysViewActiveValue;
-		setHotkeysViewActive(newState);
-		if (newState) {
-			// Deactivate other views when activating hotkeys
-			setConfigViewActive(false);
-		}
-	}, [hotkeysViewActiveValue, setHotkeysViewActive, setConfigViewActive]);
-
-	const toggleDatabaseStatus = useCallback(() => {
-		setDatabaseStatusVisible(!databaseStatusVisibleValue);
-	}, [databaseStatusVisibleValue, setDatabaseStatusVisible]);
+	const [activityBarExpandedValue, setActivityBarExpanded] =
+		useAtom(activityBarExpanded);
 
 	const toggleActivityBar = useCallback(() => {
 		setActivityBarVisible(!activityBarVisibleValue);
 	}, [activityBarVisibleValue, setActivityBarVisible]);
 
+	const toggleActivityBarExpanded = useCallback(() => {
+		setActivityBarExpanded(!activityBarExpandedValue);
+	}, [activityBarExpandedValue, setActivityBarExpanded]);
+
 	return {
 		// State
-		configViewActive: configViewActiveValue,
-		setConfigViewActive,
-		hotkeysViewActive: hotkeysViewActiveValue,
-		setHotkeysViewActive,
-		databaseStatusVisible: databaseStatusVisibleValue,
-		setDatabaseStatusVisible,
 		activityBarVisible: activityBarVisibleValue,
 		setActivityBarVisible,
+		activityBarExpanded: activityBarExpandedValue,
+		setActivityBarExpanded,
 		// Actions
-		toggleConfigView,
-		toggleHotkeysView,
-		toggleDatabaseStatus,
 		toggleActivityBar,
+		toggleActivityBarExpanded,
 	};
 };

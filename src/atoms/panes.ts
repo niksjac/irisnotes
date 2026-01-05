@@ -57,6 +57,92 @@ export const newTabInActivePaneAtom = atom(null, (get, set) => {
 	}
 });
 
+// Open or focus a special view tab (Settings, Hotkeys, etc.)
+// If tab already exists, switch to it. Otherwise create a new one.
+export const openSettingsTabAtom = atom(null, (get, set) => {
+	const pane0Tabs = get(pane0TabsAtom);
+	const pane1Tabs = get(pane1TabsAtom);
+
+	// Check if settings tab already exists in either pane
+	const existingInPane0 = pane0Tabs.find((tab) => tab.viewType === "config-view");
+	const existingInPane1 = pane1Tabs.find((tab) => tab.viewType === "config-view");
+
+	if (existingInPane0) {
+		// Switch to existing tab in pane 0
+		set(pane0ActiveTabAtom, existingInPane0.id);
+		set(paneStateAtom, (prev) => ({ ...prev, activePane: 0 }));
+		set(focusAreaAtom, "pane-0");
+		return;
+	}
+
+	if (existingInPane1) {
+		// Switch to existing tab in pane 1
+		set(pane1ActiveTabAtom, existingInPane1.id);
+		set(paneStateAtom, (prev) => ({ ...prev, activePane: 1 }));
+		set(focusAreaAtom, "pane-1");
+		return;
+	}
+
+	// Create new settings tab in active pane
+	const paneState = get(paneStateAtom);
+	const newTab: Tab = {
+		id: "settings-tab",
+		title: "Settings",
+		viewType: "config-view",
+	};
+
+	if (paneState.activePane === 0) {
+		set(pane0TabsAtom, (prev) => [...prev, newTab]);
+		set(pane0ActiveTabAtom, newTab.id);
+		set(focusAreaAtom, "pane-0");
+	} else {
+		set(pane1TabsAtom, (prev) => [...prev, newTab]);
+		set(pane1ActiveTabAtom, newTab.id);
+		set(focusAreaAtom, "pane-1");
+	}
+});
+
+export const openHotkeysTabAtom = atom(null, (get, set) => {
+	const pane0Tabs = get(pane0TabsAtom);
+	const pane1Tabs = get(pane1TabsAtom);
+
+	// Check if hotkeys tab already exists in either pane
+	const existingInPane0 = pane0Tabs.find((tab) => tab.viewType === "hotkeys-view");
+	const existingInPane1 = pane1Tabs.find((tab) => tab.viewType === "hotkeys-view");
+
+	if (existingInPane0) {
+		set(pane0ActiveTabAtom, existingInPane0.id);
+		set(paneStateAtom, (prev) => ({ ...prev, activePane: 0 }));
+		set(focusAreaAtom, "pane-0");
+		return;
+	}
+
+	if (existingInPane1) {
+		set(pane1ActiveTabAtom, existingInPane1.id);
+		set(paneStateAtom, (prev) => ({ ...prev, activePane: 1 }));
+		set(focusAreaAtom, "pane-1");
+		return;
+	}
+
+	// Create new hotkeys tab in active pane
+	const paneState = get(paneStateAtom);
+	const newTab: Tab = {
+		id: "hotkeys-tab",
+		title: "Keyboard Shortcuts",
+		viewType: "hotkeys-view",
+	};
+
+	if (paneState.activePane === 0) {
+		set(pane0TabsAtom, (prev) => [...prev, newTab]);
+		set(pane0ActiveTabAtom, newTab.id);
+		set(focusAreaAtom, "pane-0");
+	} else {
+		set(pane1TabsAtom, (prev) => [...prev, newTab]);
+		set(pane1ActiveTabAtom, newTab.id);
+		set(focusAreaAtom, "pane-1");
+	}
+});
+
 export const moveActiveTabLeftAtom = atom(null, (get, set) => {
 	const paneState = get(paneStateAtom);
 	const paneIndex = paneState.activePane;

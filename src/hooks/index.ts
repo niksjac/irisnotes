@@ -31,6 +31,13 @@ export { useHotkeysConfig as useHotkeyConfig } from "./use-hotkeys-config";
 export { useEditorState } from "./use-editor-state";
 export { useLineWrapping } from "./use-line-wrapping";
 export { useEditorViewToggle } from "./use-editor-view-toggle";
+export {
+	useEditorSettings,
+	useEditorFontSize,
+	useEditorFontFamily,
+	useEditorLineHeight,
+	useEditorLineWrapping,
+} from "./use-editor-settings";
 
 // Theme hook
 export { useTheme } from "./use-theme";

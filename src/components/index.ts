@@ -2,7 +2,6 @@
 export {
 	ActivityBar,
 	ActivityBarButton,
-	StorageAdapterButton,
 } from "./activity-bar";
 export { RightClickMenu } from "./right-click-menu";
 export { EditorContainer } from "./editor";

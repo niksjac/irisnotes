@@ -3,6 +3,21 @@ import { listen } from "@tauri-apps/api/event";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AppConfig } from "../types";
 
+/**
+ * Configuration Hook
+ *
+ * The Rust backend handles config file format transparently:
+ * - Primary: config.toml (human-readable, preferred)
+ * - Fallback: config.json (only if TOML doesn't exist)
+ *
+ * The backend automatically:
+ * - Reads TOML and converts to JSON for the frontend
+ * - Converts JSON back to TOML when writing
+ *
+ * So while this hook uses JSON for data exchange, the actual
+ * config file on disk is TOML (dev/config.toml in development).
+ */
+
 const DEFAULT_CONFIG: AppConfig = {
 	editor: {
 		lineWrapping: false,
@@ -35,15 +50,18 @@ export const useConfig = () => {
 
 	const loadConfig = useCallback(async () => {
 		try {
-			// Check if we're in development mode by checking for local config
 			const isDevelopment = import.meta.env.DEV;
+			
+			// Note: The filename is just a hint for the backend.
+			// The Rust backend prioritizes config.toml over config.json.
+			// If config.toml exists, it reads that and converts to JSON.
 			const configPath = "config.json";
 
 			if (isDevelopment) {
-				// Try to use local config first in dev mode
+				// In dev mode, config is at ./dev/config.toml
 				try {
 					const localConfigString = await invoke<string>("read_config", {
-						filename: "config.json",
+						filename: "config.json", // Backend converts TOML→JSON transparently
 					});
 					const parsedConfig = JSON.parse(localConfigString) as AppConfig;
 
@@ -125,8 +143,10 @@ export const useConfig = () => {
 				clearTimeout(writeTimeoutRef.current);
 			}
 			
+			// Note: We send JSON, but the backend converts to TOML if config.toml exists.
+			// This keeps the config file human-readable on disk.
 			await invoke("write_config", {
-				filename: "config.json",
+				filename: "config.json", // Backend converts JSON→TOML transparently
 				content: JSON.stringify(newConfig, null, 2),
 			});
 			
