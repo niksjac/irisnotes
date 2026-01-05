@@ -1,309 +1,147 @@
-import { useHotkeyConfig } from "@/hooks";
-import { getHotkeysByCategory } from "@/config/default-hotkeys";
+import * as Icons from "lucide-react";
 
-interface HotkeyItem {
-	key: string;
-	description: string;
-	category: string;
+interface HotkeyGroup {
+	title: string;
+	icon: React.ReactNode;
+	shortcuts: { keys: string; description: string }[];
 }
 
 export function HotkeysView() {
-	const { hotkeys: userHotkeys } = useHotkeyConfig();
-	const hotkeysByCategory = getHotkeysByCategory(userHotkeys);
-
-	// Convert user hotkeys to the display format
-	const configurableHotkeys: HotkeyItem[] = [];
-	Object.entries(hotkeysByCategory).forEach(([category, hotkeys]) => {
-		hotkeys.forEach(({ config }) => {
-			configurableHotkeys.push({
-				key: config.key.toUpperCase().replace(/\+/g, "+"),
-				description: config.description,
-				category: category,
-			});
-		});
-	});
-
-	// Static hotkeys that aren't configurable yet (editor shortcuts, etc.)
-	const staticHotkeys: HotkeyItem[] = [
-		// Application shortcuts (non-configurable)
+	const hotkeyGroups: HotkeyGroup[] = [
 		{
-			key: "Alt+Z",
-			description: "Toggle Line Wrapping",
-			category: "Application",
-		},
-		{ key: "F5", description: "Reload Note", category: "Application" },
-		{
-			key: "F2",
-			description: "Rename Selected Tree Item",
-			category: "Application",
+			title: "General",
+			icon: <Icons.Layout className="w-5 h-5" />,
+			shortcuts: [
+				{ keys: "Ctrl+B", description: "Toggle sidebar" },
+				{ keys: "Ctrl+J", description: "Toggle activity bar" },
+				{ keys: "Ctrl+D", description: "Toggle dual pane" },
+				{ keys: "Alt+Z", description: "Toggle line wrapping" },
+			],
 		},
 		{
-			key: "Ctrl++",
-			description: "Increase Editor Font Size",
-			category: "Application",
+			title: "Tabs",
+			icon: <Icons.LayoutGrid className="w-5 h-5" />,
+			shortcuts: [
+				{ keys: "Ctrl+T", description: "New tab" },
+				{ keys: "Ctrl+W", description: "Close tab" },
+				{ keys: "Ctrl+Tab", description: "Next tab" },
+				{ keys: "Ctrl+Shift+Tab", description: "Previous tab" },
+				{ keys: "Ctrl+1-9", description: "Switch to tab 1-9" },
+			],
 		},
 		{
-			key: "Ctrl+-",
-			description: "Decrease Editor Font Size",
-			category: "Application",
-		},
-
-		// Editor formatting
-		{ key: "Ctrl+B", description: "Bold", category: "Editor - Formatting" },
-		{ key: "Ctrl+I", description: "Italic", category: "Editor - Formatting" },
-		{ key: "Ctrl+`", description: "Code", category: "Editor - Formatting" },
-
-		// Editor headings
-		{
-			key: "Ctrl+Shift+1",
-			description: "Heading 1",
-			category: "Editor - Headings",
+			title: "Panes",
+			icon: <Icons.Columns2 className="w-5 h-5" />,
+			shortcuts: [
+				{ keys: "Ctrl+1", description: "Focus pane 1" },
+				{ keys: "Ctrl+2", description: "Focus pane 2" },
+				{ keys: "Alt+←/→", description: "Resize pane" },
+				{ keys: "Ctrl+Shift+←", description: "Move tab to left pane" },
+				{ keys: "Ctrl+Shift+→", description: "Move tab to right pane" },
+			],
 		},
 		{
-			key: "Ctrl+Shift+2",
-			description: "Heading 2",
-			category: "Editor - Headings",
+			title: "Editor - Formatting",
+			icon: <Icons.Type className="w-5 h-5" />,
+			shortcuts: [
+				{ keys: "Ctrl+B", description: "Bold" },
+				{ keys: "Ctrl+I", description: "Italic" },
+				{ keys: "Ctrl+`", description: "Code" },
+				{ keys: "Ctrl+Shift+X", description: "Strikethrough" },
+			],
 		},
 		{
-			key: "Ctrl+Shift+3",
-			description: "Heading 3",
-			category: "Editor - Headings",
+			title: "Editor - Headings",
+			icon: <Icons.Heading className="w-5 h-5" />,
+			shortcuts: [
+				{ keys: "Ctrl+Shift+1", description: "Heading 1" },
+				{ keys: "Ctrl+Shift+2", description: "Heading 2" },
+				{ keys: "Ctrl+Shift+3", description: "Heading 3" },
+				{ keys: "Ctrl+Shift+0", description: "Paragraph" },
+			],
 		},
 		{
-			key: "Ctrl+Shift+4",
-			description: "Heading 4",
-			category: "Editor - Headings",
+			title: "Editor - Lists",
+			icon: <Icons.List className="w-5 h-5" />,
+			shortcuts: [
+				{ keys: "Ctrl+Shift+8", description: "Bullet list" },
+				{ keys: "Ctrl+Shift+9", description: "Numbered list" },
+				{ keys: "Tab", description: "Indent list item" },
+				{ keys: "Shift+Tab", description: "Outdent list item" },
+			],
 		},
 		{
-			key: "Ctrl+Shift+5",
-			description: "Heading 5",
-			category: "Editor - Headings",
-		},
-		{
-			key: "Ctrl+Shift+6",
-			description: "Heading 6",
-			category: "Editor - Headings",
-		},
-		{
-			key: "Ctrl+Shift+0",
-			description: "Paragraph",
-			category: "Editor - Headings",
-		},
-
-		// Editor lists
-		{
-			key: "Ctrl+Shift+8",
-			description: "Bullet List",
-			category: "Editor - Lists",
-		},
-		{
-			key: "Ctrl+Shift+9",
-			description: "Ordered List",
-			category: "Editor - Lists",
-		},
-		{
-			key: "Ctrl+[",
-			description: "Outdent List Item",
-			category: "Editor - Lists",
-		},
-		{
-			key: "Ctrl+]",
-			description: "Indent List Item",
-			category: "Editor - Lists",
-		},
-
-		// Editor colors
-		{
-			key: "Ctrl+Shift+R",
-			description: "Red Color",
-			category: "Editor - Colors",
-		},
-		{
-			key: "Ctrl+Shift+G",
-			description: "Green Color",
-			category: "Editor - Colors",
-		},
-		{
-			key: "Ctrl+Shift+L",
-			description: "Blue Color",
-			category: "Editor - Colors",
-		},
-		{
-			key: "Ctrl+Shift+Y",
-			description: "Yellow Color",
-			category: "Editor - Colors",
-		},
-		{
-			key: "Ctrl+Shift+P",
-			description: "Purple Color",
-			category: "Editor - Colors",
-		},
-		{
-			key: "Ctrl+Shift+C",
-			description: "Clear Color",
-			category: "Editor - Colors",
-		},
-
-		// Editor structure
-		{
-			key: "Ctrl+Shift+.",
-			description: "Blockquote",
-			category: "Editor - Structure",
-		},
-		{
-			key: "Enter",
-			description: "New Paragraph",
-			category: "Editor - Structure",
-		},
-		{
-			key: "Shift+Enter",
-			description: "Line Break",
-			category: "Editor - Structure",
-		},
-
-		// Hotkey sequences (special multi-key shortcuts)
-		{
-			key: "Ctrl+K, N",
-			description: "Create New Note",
-			category: "Hotkey Sequences",
-		},
-		{
-			key: "Ctrl+K, F",
-			description: "Create New Folder",
-			category: "Hotkey Sequences",
-		},
-		{
-			key: "Ctrl+K, S",
-			description: "Focus Search",
-			category: "Hotkey Sequences",
-		},
-		{
-			key: "Ctrl+K, R",
-			description: "Rename Current Note",
-			category: "Hotkey Sequences",
-		},
-		{
-			key: "Ctrl+K, D",
-			description: "Delete Current Note",
-			category: "Hotkey Sequences",
-		},
-		{
-			key: "Ctrl+K, C",
-			description: "Show Configuration",
-			category: "Hotkey Sequences",
-		},
-		{
-			key: "Ctrl+K, H",
-			description: "Show Keyboard Shortcuts",
-			category: "Hotkey Sequences",
-		},
-		{
-			key: "Ctrl+K, T",
-			description: "Toggle Toolbar Visibility",
-			category: "Hotkey Sequences",
-		},
-
-		// Navigation
-		{ key: "↑/↓", description: "Navigate Notes Tree", category: "Navigation" },
-		{ key: "Enter", description: "Open Selected Note", category: "Navigation" },
-		{ key: "Tab", description: "Focus Next Element", category: "Navigation" },
-		{
-			key: "Shift+Tab",
-			description: "Focus Previous Element",
-			category: "Navigation",
-		},
-		{
-			key: "Escape",
-			description: "Close Modal/Cancel",
-			category: "Navigation",
+			title: "Navigation",
+			icon: <Icons.Navigation className="w-5 h-5" />,
+			shortcuts: [
+				{ keys: "↑/↓", description: "Navigate tree" },
+				{ keys: "Enter", description: "Open selected item" },
+				{ keys: "F2", description: "Rename selected item" },
+				{ keys: "Delete", description: "Delete selected item" },
+				{ keys: "Escape", description: "Close modal / Cancel" },
+			],
 		},
 	];
 
-	// Combine configurable and static hotkeys
-	const allHotkeys = [...configurableHotkeys, ...staticHotkeys];
-	const categories = Array.from(new Set(allHotkeys.map((h) => h.category)));
-
-	const formatKey = (key: string) => {
-		return key
-			.replace(/Ctrl/g, "Ctrl")
-			.replace(/Shift/g, "Shift")
-			.replace(/Alt/g, "Alt")
-			.replace(/Cmd/g, "⌘")
-			.replace(/↑/g, "↑")
-			.replace(/↓/g, "↓");
-	};
-
 	return (
-		<div className="p-6 h-full overflow-auto bg-white dark:bg-gray-900">
-			<h1 className="text-xl font-semibold mb-6 text-gray-900 dark:text-gray-100">
-				Keyboard Shortcuts
-			</h1>
+		<div className="h-full overflow-auto bg-white dark:bg-gray-900">
+			<div className="max-w-4xl mx-auto p-6 space-y-6">
+				{/* Header */}
+				<div className="border-b border-gray-200 dark:border-gray-700 pb-4">
+					<h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+						<Icons.Keyboard className="w-7 h-7" />
+						Keyboard Shortcuts
+					</h1>
+					<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+						Quick reference for all available keyboard shortcuts
+					</p>
+				</div>
 
-			<div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
-				<p className="m-0 text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-2">
-					<strong>Note:</strong> On macOS, use Cmd (⌘) instead of Ctrl for most
-					shortcuts. Hotkey sequences require pressing keys in order (e.g.,
-					Ctrl+K, then R).
-				</p>
-				<p className="m-0 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-					<strong>Configuration:</strong> Layout, Tab, Pane, Sidebar, Focus, and
-					Tab Movement hotkeys can be customized by adding a{" "}
-					<code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">
-						hotkeys
-					</code>{" "}
-					section to your config.json file.
-				</p>
-			</div>
-
-			{categories.map((category) => {
-				const categoryHotkeys = allHotkeys.filter(
-					(h) => h.category === category
-				);
-				return (
-					<section key={category} className="mb-8">
-						<h2 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
-							{category}
-						</h2>
-
-						<div className="grid gap-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md p-4">
-							{categoryHotkeys.map((hotkey) => (
-								<div
-									key={`${category}-${hotkey.key}-${hotkey.description}`}
-									className="flex items-center justify-between p-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded"
-								>
-									<span className="text-gray-900 dark:text-gray-100 text-sm">
-										{hotkey.description}
-									</span>
-									<code className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-1.5 py-0.5 rounded text-xs font-mono border border-gray-200 dark:border-gray-600">
-										{formatKey(hotkey.key)}
-									</code>
-								</div>
-							))}
+				{/* Tip */}
+				<div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+					<div className="flex items-start gap-3">
+						<Icons.Lightbulb className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+						<div className="text-sm text-blue-800 dark:text-blue-200">
+							<strong>Tip:</strong> On macOS, use <kbd className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-800 rounded text-xs font-mono">⌘</kbd> (Command) instead of <kbd className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-800 rounded text-xs font-mono">Ctrl</kbd>
 						</div>
-					</section>
-				);
-			})}
+					</div>
+				</div>
 
-			<section className="mt-8 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
-				<h3 className="text-lg font-medium mb-2 text-gray-900 dark:text-gray-100">
-					Tips
-				</h3>
-				<ul className="m-0 pl-6 text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-					<li>Most shortcuts work when focus is on the editor</li>
-					<li>
-						Formatting shortcuts apply to selected text or at cursor position
-					</li>
-					<li>List shortcuts work within list items to indent/outdent</li>
-					<li>Color shortcuts can be combined with text selection</li>
-					<li>
-						Sequence shortcuts like "Ctrl+K, R" require releasing the first key
-						combination before pressing the second
-					</li>
-					<li>
-						Some shortcuts may be overridden by your browser or operating system
-					</li>
-				</ul>
-			</section>
+				{/* Shortcut Groups */}
+				<div className="grid gap-6 md:grid-cols-2">
+					{hotkeyGroups.map((group) => (
+						<div
+							key={group.title}
+							className="bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden"
+						>
+							{/* Group Header */}
+							<div className="px-4 py-3 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+								<h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+									{group.icon}
+									{group.title}
+								</h2>
+							</div>
+
+							{/* Shortcuts */}
+							<div className="divide-y divide-gray-200 dark:divide-gray-700">
+								{group.shortcuts.map((shortcut) => (
+									<div
+										key={shortcut.keys}
+										className="px-4 py-2.5 flex items-center justify-between"
+									>
+										<span className="text-sm text-gray-700 dark:text-gray-300">
+											{shortcut.description}
+										</span>
+										<kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded text-xs font-mono whitespace-nowrap">
+											{shortcut.keys}
+										</kbd>
+									</div>
+								))}
+							</div>
+						</div>
+					))}
+				</div>
+			</div>
 		</div>
 	);
 }
