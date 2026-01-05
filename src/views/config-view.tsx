@@ -1,469 +1,622 @@
+import { useState } from "react";
 import { useTheme } from "@/hooks";
 import { useConfig } from "@/hooks/use-config";
-import type { StorageSettings } from "@/types";
+import { useEditorSettings } from "@/hooks/use-editor-settings";
+import { useAtomValue } from "jotai";
+import { itemsAtom, notesAtom, booksAtom, sectionsAtom } from "@/atoms/items";
+import { getAvailableBackends } from "@/storage/factory";
+import { exportSettings, importSettings } from "@/storage/settings";
+import type { StorageBackend } from "@/storage/types";
+import type {
+	EditorFontFamily,
+	CursorWidth,
+	CursorBlinkStyle,
+} from "@/types/editor-settings";
+import * as Icons from "lucide-react";
 
 export function ConfigView() {
 	const { darkMode, toggleDarkMode } = useTheme();
 	const { config, updateConfig } = useConfig();
+	const { settings: editorSettings, updateSetting, resetSettings, constraints } = useEditorSettings();
 
-	const handleStorageBackendChange = async (
-		backend: StorageSettings["backend"]
-	) => {
-		const newStorageConfig: StorageSettings = {
-			backend,
-		};
+	// Export/Import state
+	const [isExporting, setIsExporting] = useState(false);
+	const [isImporting, setIsImporting] = useState(false);
 
-		// Only add the relevant storage config for the selected backend
-		if (backend === "sqlite") {
-			newStorageConfig.sqlite = {
-				database_path: config.storage.sqlite?.database_path || "notes.db",
-			};
-		} else if (backend === "json-single") {
-			newStorageConfig.jsonSingle = {
-				file_path: config.storage.jsonSingle?.file_path || "./dev/storage.json",
-			};
-		} else if (backend === "json-hybrid") {
-			newStorageConfig.jsonHybrid = {
-				structure_file:
-					config.storage.jsonHybrid?.structure_file || "./dev/structure.json",
-				content_dir: config.storage.jsonHybrid?.content_dir || "./dev/content/",
-			};
-		} else if (backend === "cloud") {
-			newStorageConfig.cloud = {
-				provider: config.storage.cloud?.provider || "google-drive",
-			};
+	// Database stats
+	const items = useAtomValue(itemsAtom);
+	const notes = useAtomValue(notesAtom);
+	const books = useAtomValue(booksAtom);
+	const sections = useAtomValue(sectionsAtom);
+
+	// Storage backend switching
+	const availableBackends = getAvailableBackends() as StorageBackend[];
+	const currentBackend = config.storage.backend;
+
+	const handleBackendChange = async (backend: StorageBackend) => {
+		if (backend === currentBackend) return;
+		try {
+			await updateConfig({
+				storage: {
+					...config.storage,
+					backend,
+				},
+			});
+		} catch (error) {
+			console.error("Failed to change storage backend:", error);
 		}
-
-		await updateConfig({
-			storage: newStorageConfig,
-		});
 	};
 
-	const handleSQLitePathChange = async (path: string) => {
-		await updateConfig({
-			storage: {
-				...config.storage,
-				sqlite: {
-					database_path: path,
-				},
-			},
-		});
-	};
-
-	const handleJsonSinglePathChange = async (path: string) => {
-		await updateConfig({
-			storage: {
-				...config.storage,
-				jsonSingle: {
-					file_path: path,
-				},
-			},
-		});
-	};
-
-	const handleJsonHybridStructureChange = async (path: string) => {
-		await updateConfig({
-			storage: {
-				...config.storage,
-				jsonHybrid: {
-					...config.storage.jsonHybrid,
-					structure_file: path,
-					content_dir:
-						config.storage.jsonHybrid?.content_dir || "./dev/content/",
-				},
-			},
-		});
-	};
-
-	const handleJsonHybridContentDirChange = async (path: string) => {
-		await updateConfig({
-			storage: {
-				...config.storage,
-				jsonHybrid: {
-					...config.storage.jsonHybrid,
-					structure_file:
-						config.storage.jsonHybrid?.structure_file || "./dev/structure.json",
-					content_dir: path,
-				},
-			},
-		});
-	};
-
-	const handleCloudProviderChange = async (
-		provider: "google-drive" | "dropbox" | "onedrive"
-	) => {
-		await updateConfig({
-			storage: {
-				...config.storage,
-				cloud: {
-					provider,
-				},
-			},
-		});
-	};
-
-	const handleCustomConfigPathChange = async (path: string) => {
-		const newProduction = { ...config.production };
-		if (path) {
-			newProduction.customConfigPath = path;
-		} else {
-			delete newProduction.customConfigPath;
+	const getBackendIcon = (backend: StorageBackend) => {
+		switch (backend) {
+			case "sqlite":
+				return Icons.Database;
+			case "json-single":
+				return Icons.FileText;
+			case "json-hybrid":
+				return Icons.FolderOpen;
+			case "cloud":
+				return Icons.Cloud;
+			default:
+				return Icons.HardDrive;
 		}
-		await updateConfig({ production: newProduction });
 	};
 
-	const handleCustomDatabasePathChange = async (path: string) => {
-		const newProduction = { ...config.production };
-		if (path) {
-			newProduction.customDatabasePath = path;
-		} else {
-			delete newProduction.customDatabasePath;
+	const getBackendLabel = (backend: StorageBackend) => {
+		switch (backend) {
+			case "sqlite":
+				return "SQLite Database";
+			case "json-single":
+				return "Single JSON File";
+			case "json-hybrid":
+				return "JSON + Files";
+			case "cloud":
+				return "Cloud Storage";
+			default:
+				return backend;
 		}
-		await updateConfig({ production: newProduction });
 	};
 
-	const handleCustomNotesPathChange = async (path: string) => {
-		const newProduction = { ...config.production };
-		if (path) {
-			newProduction.customNotesPath = path;
-		} else {
-			delete newProduction.customNotesPath;
+	const handleExportSettings = async () => {
+		setIsExporting(true);
+		try {
+			await exportSettings();
+		} finally {
+			setIsExporting(false);
 		}
-		await updateConfig({ production: newProduction });
+	};
+
+	const handleImportSettings = async () => {
+		setIsImporting(true);
+		try {
+			const success = await importSettings();
+			if (success) {
+				window.location.reload();
+			}
+		} finally {
+			setIsImporting(false);
+		}
 	};
 
 	return (
-		<div className="config-view">
-			<h1>Configuration</h1>
+		<div className="h-full overflow-auto bg-white dark:bg-gray-900">
+			<div className="max-w-4xl mx-auto p-6 space-y-8">
+				{/* Header */}
+				<div className="border-b border-gray-200 dark:border-gray-700 pb-4">
+					<h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+						<Icons.Settings className="w-7 h-7" />
+						Settings
+					</h1>
+					<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+						Configure your IrisNotes experience
+					</p>
+				</div>
 
-			{/* Storage Settings */}
-			<section className="config-section">
-				<h2>Storage Settings</h2>
+				{/* Appearance Section */}
+				<section className="space-y-4">
+					<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+						<Icons.Palette className="w-5 h-5" />
+						Appearance
+					</h2>
 
-				<div className="config-section-grid">
-					{/* Storage Backend Selection */}
-					<div className="config-card">
-						<div className="config-setting-label">Storage Backend</div>
-						<div className="config-setting-description">
-							Choose how your notes are stored. Changing this will switch to the
-							new storage - notes from other storages won't be visible until you
-							switch back.
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
+						{/* Theme Toggle */}
+						<div className="flex items-center justify-between">
+							<div>
+								<div className="font-medium text-gray-900 dark:text-gray-100">
+									Theme
+								</div>
+								<div className="text-sm text-gray-500 dark:text-gray-400">
+									Switch between light and dark mode
+								</div>
+							</div>
+							<button
+								onClick={toggleDarkMode}
+								className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+							>
+								{darkMode ? (
+									<>
+										<Icons.Moon className="w-4 h-4" />
+										<span>Dark</span>
+									</>
+								) : (
+									<>
+										<Icons.Sun className="w-4 h-4" />
+										<span>Light</span>
+									</>
+								)}
+							</button>
 						</div>
-						<select
-							className="config-select"
-							value={config.storage.backend}
-							onChange={(e) =>
-								handleStorageBackendChange(
-									e.target.value as StorageSettings["backend"]
-								)
-							}
-						>
-							<option value="sqlite">SQLite Database</option>
-							<option value="json-single">JSON Single File</option>
-							<option value="json-hybrid">JSON Hybrid</option>
-							<option value="cloud">Cloud Storage</option>
-						</select>
 					</div>
+				</section>
 
-					{/* SQLite Configuration */}
-					{config.storage.backend === "sqlite" && (
-						<div className="config-card">
-							<div className="config-setting-label">SQLite Database Path</div>
-							<div className="config-setting-description">
-								Path to the SQLite database file
-							</div>
-							<input
-								type="text"
-								className="config-input config-input--path"
-								value={config.storage.sqlite?.database_path || "notes.db"}
-								onChange={(e) => handleSQLitePathChange(e.target.value)}
-							/>
-						</div>
-					)}
+				{/* Database Section */}
+				<section className="space-y-4">
+					<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+						<Icons.Database className="w-5 h-5" />
+						Database
+					</h2>
 
-					{/* JSON Single File Configuration */}
-					{config.storage.backend === "json-single" && (
-						<div className="config-card">
-							<div className="config-setting-label">Storage File Path</div>
-							<div className="config-setting-description">
-								Path to the JSON file where all data will be stored
-							</div>
-							<input
-								type="text"
-								className="config-input config-input--path"
-								value={
-									config.storage.jsonSingle?.file_path || "./dev/storage.json"
-								}
-								onChange={(e) => handleJsonSinglePathChange(e.target.value)}
-							/>
-						</div>
-					)}
-
-					{/* JSON Hybrid Configuration */}
-					{config.storage.backend === "json-hybrid" && (
-						<div className="config-card">
-							<div className="config-setting-label">JSON Hybrid Storage</div>
-							<div className="config-setting-description">
-								Structure in JSON file, content in separate files
-							</div>
-							<div className="space-y-4">
-								<div>
-									<label className="block text-sm font-medium mb-2">
-										Structure File
-									</label>
-									<input
-										type="text"
-										className="config-input config-input--path"
-										value={
-											config.storage.jsonHybrid?.structure_file ||
-											"./dev/structure.json"
-										}
-										onChange={(e) =>
-											handleJsonHybridStructureChange(e.target.value)
-										}
-									/>
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
+						{/* Connection Status */}
+						<div className="flex items-center justify-between">
+							<div>
+								<div className="font-medium text-gray-900 dark:text-gray-100">
+									Status
 								</div>
-								<div>
-									<label className="block text-sm font-medium mb-2">
-										Content Directory
-									</label>
-									<input
-										type="text"
-										className="config-input config-input--path"
-										value={
-											config.storage.jsonHybrid?.content_dir || "./dev/content/"
-										}
-										onChange={(e) =>
-											handleJsonHybridContentDirChange(e.target.value)
-										}
-									/>
+								<div className="text-sm text-gray-500 dark:text-gray-400">
+									Database connection
+								</div>
+							</div>
+							<div className="flex items-center gap-2">
+								<span className="w-2 h-2 rounded-full bg-green-500" />
+								<span className="text-sm font-medium text-green-600 dark:text-green-400">
+									Connected
+								</span>
+							</div>
+						</div>
+
+						{/* Item Counts */}
+						<div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+							<div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+								Content Statistics
+							</div>
+							<div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+								<div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center">
+									<div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+										{items.length}
+									</div>
+									<div className="text-xs text-gray-500 dark:text-gray-400">
+										Total Items
+									</div>
+								</div>
+								<div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center">
+									<div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+										{notes.length}
+									</div>
+									<div className="text-xs text-gray-500 dark:text-gray-400">
+										Notes
+									</div>
+								</div>
+								<div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center">
+									<div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+										{books.length}
+									</div>
+									<div className="text-xs text-gray-500 dark:text-gray-400">
+										Books
+									</div>
+								</div>
+								<div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center">
+									<div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+										{sections.length}
+									</div>
+									<div className="text-xs text-gray-500 dark:text-gray-400">
+										Sections
+									</div>
 								</div>
 							</div>
 						</div>
-					)}
+					</div>
+				</section>
 
-					{/* Cloud Storage Configuration */}
-					{config.storage.backend === "cloud" && (
-						<div className="config-card">
-							<div className="config-setting-label">Cloud Provider</div>
-							<div className="config-setting-description">
-								Choose your cloud storage provider (Not yet implemented)
+				{/* Storage Section */}
+				<section className="space-y-4">
+					<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+						<Icons.HardDrive className="w-5 h-5" />
+						Storage Backend
+					</h2>
+
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
+						{/* Backend Selector */}
+						<div className="flex items-center justify-between">
+							<div>
+								<div className="font-medium text-gray-900 dark:text-gray-100">
+									Backend Type
+								</div>
+								<div className="text-sm text-gray-500 dark:text-gray-400">
+									Where your data is stored
+								</div>
 							</div>
 							<select
-								className="config-select"
-								value={config.storage.cloud?.provider || "google-drive"}
+								value={currentBackend}
 								onChange={(e) =>
-									handleCloudProviderChange(
-										e.target.value as "google-drive" | "dropbox" | "onedrive"
-									)
+									handleBackendChange(e.target.value as StorageBackend)
 								}
-								disabled
+								className="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 text-sm cursor-pointer hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M6%208L1%203h10z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_0.75rem_center] bg-no-repeat pr-8"
 							>
-								<option value="google-drive">Google Drive</option>
-								<option value="dropbox">Dropbox</option>
-								<option value="onedrive">OneDrive</option>
+								{availableBackends.map((backend) => (
+									<option key={backend} value={backend} className="bg-gray-100 dark:bg-gray-700">
+										{getBackendLabel(backend)}
+									</option>
+								))}
 							</select>
 						</div>
-					)}
 
-					{/* Storage Status */}
-					<div className="config-card">
-						<div className="config-setting-label">Current Storage Status</div>
-						<div className="config-status">
-							Backend: {config.storage.backend}
-							{config.storage.backend === "sqlite" && (
-								<div>Database: {config.storage.sqlite?.database_path}</div>
-							)}
-							{config.storage.backend === "json-single" && (
-								<div>File: {config.storage.jsonSingle?.file_path}</div>
-							)}
-							{config.storage.backend === "json-hybrid" && (
+						{/* Backend Info */}
+						<div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+							<div className="flex items-start gap-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+								{(() => {
+									const Icon = getBackendIcon(currentBackend);
+									return <Icon className="w-5 h-5 text-blue-500 mt-0.5" />;
+								})()}
 								<div>
-									<div>
-										Structure: {config.storage.jsonHybrid?.structure_file}
+									<div className="font-medium text-gray-900 dark:text-gray-100">
+										{getBackendLabel(currentBackend)}
 									</div>
-									<div>
-										Content Dir: {config.storage.jsonHybrid?.content_dir}
+									<div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+										{currentBackend === "sqlite" && (
+											<>
+												Fast, reliable local database. Recommended for most users.
+												{config.storage.sqlite?.database_path && (
+													<div className="mt-2">
+														<span className="text-gray-600 dark:text-gray-400">
+															Path:{" "}
+														</span>
+														<code className="text-xs bg-gray-100 dark:bg-gray-600 px-1.5 py-0.5 rounded">
+															{config.storage.sqlite.database_path}
+														</code>
+													</div>
+												)}
+											</>
+										)}
+										{currentBackend === "json-single" &&
+											"All data stored in a single JSON file. Good for portability and debugging."}
+										{currentBackend === "json-hybrid" &&
+											"Notes stored as individual files. Best for version control and external editing."}
+										{currentBackend === "cloud" &&
+											"Sync your notes across devices. Coming soon!"}
 									</div>
 								</div>
-							)}
-							{config.storage.backend === "cloud" && (
-								<div>Provider: {config.storage.cloud?.provider}</div>
-							)}
-						</div>
-						<div className="config-status-warning">
-							⚠️ Note: Changing storage backends will hide notes from other
-							storages until you switch back
-						</div>
-					</div>
-				</div>
-			</section>
-
-			{/* Production Path Settings */}
-			{!import.meta.env.DEV && (
-				<section className="config-section">
-					<h2>Custom Paths</h2>
-
-					<div className="config-section-grid">
-						<div className="config-card">
-							<div className="config-setting-label">
-								Custom Config Directory
 							</div>
-							<div className="config-setting-description">
-								Override the default config directory (default:
-								~/.config/irisnotes/)
-							</div>
-							<input
-								type="text"
-								className="config-input config-input--long-path"
-								value={config.production.customConfigPath || ""}
-								onChange={(e) => handleCustomConfigPathChange(e.target.value)}
-								placeholder="~/.config/irisnotes/"
-							/>
 						</div>
 
-						<div className="config-card">
-							<div className="config-setting-label">Custom Database Path</div>
-							<div className="config-setting-description">
-								Override the default database file location
+						{/* Warning for backend changes */}
+						<div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+							<Icons.AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+							<div className="text-sm text-amber-800 dark:text-amber-200">
+								Changing storage backend requires app restart. Data is not
+								automatically migrated between backends.
 							</div>
-							<input
-								type="text"
-								className="config-input config-input--long-path"
-								value={config.production.customDatabasePath || ""}
-								onChange={(e) => handleCustomDatabasePathChange(e.target.value)}
-								placeholder="~/.config/irisnotes/notes.db"
-							/>
-						</div>
-
-						<div className="config-card">
-							<div className="config-setting-label">Custom Notes Directory</div>
-							<div className="config-setting-description">
-								Override the default notes directory for file-system backend
-							</div>
-							<input
-								type="text"
-								className="config-input config-input--long-path"
-								value={config.production.customNotesPath || ""}
-								onChange={(e) => handleCustomNotesPathChange(e.target.value)}
-								placeholder="~/.config/irisnotes/notes/"
-							/>
 						</div>
 					</div>
 				</section>
-			)}
 
-			{/* Development Mode Notice */}
-			{import.meta.env.DEV && (
-				<section className="config-section">
-					<div className="config-dev-notice">
-						<div className="config-dev-notice-title">Development Mode</div>
-						<div className="config-dev-notice-content">
-							Running in development mode with local config directory:{" "}
-							<code>./dev/config/</code>
+				{/* Editor Section */}
+				<section className="space-y-4">
+					<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+						<Icons.Edit3 className="w-5 h-5" />
+						Editor
+					</h2>
+
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
+						{/* Font Size */}
+						<div className="space-y-2">
+							<div className="flex items-center justify-between">
+								<div className="font-medium text-gray-900 dark:text-gray-100">
+									Font Size
+								</div>
+								<div className="text-sm text-gray-600 dark:text-gray-300">
+									{editorSettings.fontSize}px
+								</div>
+							</div>
+							<input
+								type="range"
+								min={constraints.fontSize.min}
+								max={constraints.fontSize.max}
+								step={constraints.fontSize.step}
+								value={editorSettings.fontSize}
+								onChange={(e) => updateSetting("fontSize", Number(e.target.value))}
+								className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer"
+							/>
+						</div>
+
+						{/* Font Family */}
+						<div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
+							<div>
+								<div className="font-medium text-gray-900 dark:text-gray-100">
+									Font Family
+								</div>
+								<div className="text-sm text-gray-500 dark:text-gray-400">
+									Editor text font
+								</div>
+							</div>
+							<select
+								value={editorSettings.fontFamily}
+								onChange={(e) => updateSetting("fontFamily", e.target.value as EditorFontFamily)}
+								className="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 text-sm cursor-pointer hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M6%208L1%203h10z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_0.75rem_center] bg-no-repeat pr-8"
+							>
+								<option value="system" className="bg-gray-100 dark:bg-gray-700">System Default</option>
+								<option value="serif" className="bg-gray-100 dark:bg-gray-700">Serif (Georgia)</option>
+								<option value="mono" className="bg-gray-100 dark:bg-gray-700">Monospace</option>
+								<option value="inter" className="bg-gray-100 dark:bg-gray-700">Inter</option>
+							</select>
+						</div>
+
+						{/* Line Height */}
+						<div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+							<div className="flex items-center justify-between">
+								<div className="font-medium text-gray-900 dark:text-gray-100">
+									Line Height
+								</div>
+								<div className="text-sm text-gray-600 dark:text-gray-300">
+									{editorSettings.lineHeight.toFixed(1)}
+								</div>
+							</div>
+							<input
+								type="range"
+								min={constraints.lineHeight.min}
+								max={constraints.lineHeight.max}
+								step={constraints.lineHeight.step}
+								value={editorSettings.lineHeight}
+								onChange={(e) => updateSetting("lineHeight", Number(e.target.value))}
+								className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer"
+							/>
+						</div>
+
+						{/* Paragraph Spacing */}
+						<div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+							<div className="flex items-center justify-between">
+								<div className="font-medium text-gray-900 dark:text-gray-100">
+									Paragraph Spacing
+								</div>
+								<div className="text-sm text-gray-600 dark:text-gray-300">
+									{editorSettings.paragraphSpacing.toFixed(1)}em
+								</div>
+							</div>
+							<input
+								type="range"
+								min={constraints.paragraphSpacing.min}
+								max={constraints.paragraphSpacing.max}
+								step={constraints.paragraphSpacing.step}
+								value={editorSettings.paragraphSpacing}
+								onChange={(e) => updateSetting("paragraphSpacing", Number(e.target.value))}
+								className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer"
+							/>
+						</div>
+
+						{/* Editor Padding */}
+						<div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+							<div className="flex items-center justify-between">
+								<div className="font-medium text-gray-900 dark:text-gray-100">
+									Editor Padding
+								</div>
+								<div className="text-sm text-gray-600 dark:text-gray-300">
+									{editorSettings.editorPadding}px
+								</div>
+							</div>
+							<input
+								type="range"
+								min={constraints.editorPadding.min}
+								max={constraints.editorPadding.max}
+								step={constraints.editorPadding.step}
+								value={editorSettings.editorPadding}
+								onChange={(e) => updateSetting("editorPadding", Number(e.target.value))}
+								className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer"
+							/>
+						</div>
+
+						{/* Line Wrapping */}
+						<div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
+							<div>
+								<div className="font-medium text-gray-900 dark:text-gray-100">
+									Line Wrapping
+								</div>
+								<div className="text-sm text-gray-500 dark:text-gray-400">
+									Wrap long lines in the editor
+								</div>
+							</div>
+							<button
+								onClick={() => updateSetting("lineWrapping", !editorSettings.lineWrapping)}
+								className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+									editorSettings.lineWrapping ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-600"
+								}`}
+							>
+								<span
+									className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+										editorSettings.lineWrapping ? "translate-x-6" : "translate-x-1"
+									}`}
+								/>
+							</button>
+						</div>
+
+						{/* Cursor Settings Subsection */}
+						<div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+							<h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+								<Icons.Type className="w-4 h-4" />
+								Cursor
+							</h3>
+
+							{/* Cursor Width */}
+							<div className="flex items-center justify-between mb-3">
+								<div>
+									<div className="font-medium text-gray-900 dark:text-gray-100">
+										Cursor Width
+									</div>
+									<div className="text-sm text-gray-500 dark:text-gray-400">
+										Width of the text cursor
+									</div>
+								</div>
+								<select
+									value={editorSettings.cursorWidth}
+									onChange={(e) => {
+										const val = e.target.value;
+										updateSetting("cursorWidth", val === "block" ? "block" : Number(val) as CursorWidth);
+									}}
+									className="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 text-sm cursor-pointer hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M6%208L1%203h10z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_0.75rem_center] bg-no-repeat pr-8"
+								>
+									<option value={1} className="bg-gray-100 dark:bg-gray-700">Thin (1px)</option>
+									<option value={2} className="bg-gray-100 dark:bg-gray-700">Normal (2px)</option>
+									<option value={3} className="bg-gray-100 dark:bg-gray-700">Thick (3px)</option>
+									<option value="block" className="bg-gray-100 dark:bg-gray-700">Block</option>
+								</select>
+							</div>
+
+							{/* Cursor Animation */}
+							<div className="flex items-center justify-between mb-3">
+								<div>
+									<div className="font-medium text-gray-900 dark:text-gray-100">
+										Cursor Animation
+									</div>
+									<div className="text-sm text-gray-500 dark:text-gray-400">
+										Cursor blink style
+									</div>
+								</div>
+								<select
+									value={editorSettings.cursorBlinkStyle}
+									onChange={(e) => updateSetting("cursorBlinkStyle", e.target.value as CursorBlinkStyle)}
+									className="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 text-sm cursor-pointer hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M6%208L1%203h10z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_0.75rem_center] bg-no-repeat pr-8"
+								>
+									<option value="blink" className="bg-gray-100 dark:bg-gray-700">Blink</option>
+									<option value="smooth" className="bg-gray-100 dark:bg-gray-700">Smooth</option>
+									<option value="expand" className="bg-gray-100 dark:bg-gray-700">Expand</option>
+									<option value="solid" className="bg-gray-100 dark:bg-gray-700">Solid (No animation)</option>
+								</select>
+							</div>
+
+							{/* Smooth Cursor Movement */}
+							<div className="flex items-center justify-between">
+								<div>
+									<div className="font-medium text-gray-900 dark:text-gray-100">
+										Smooth Cursor Movement
+									</div>
+									<div className="text-sm text-gray-500 dark:text-gray-400">
+										Animate cursor position changes
+									</div>
+								</div>
+								<button
+									onClick={() => updateSetting("cursorSmoothMovement", !editorSettings.cursorSmoothMovement)}
+									className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+										editorSettings.cursorSmoothMovement ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-600"
+									}`}
+								>
+									<span
+										className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+											editorSettings.cursorSmoothMovement ? "translate-x-6" : "translate-x-1"
+										}`}
+									/>
+								</button>
+							</div>
+						</div>
+
+						{/* Reset Button */}
+						<div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+							<button
+								onClick={resetSettings}
+								className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+							>
+								Reset to Defaults
+							</button>
 						</div>
 					</div>
 				</section>
-			)}
 
-			{/* Theme Settings */}
-			<section className="config-section">
-				<h2>Theme Settings</h2>
+				{/* Backup & Restore Section */}
+				<section className="space-y-4">
+					<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+						<Icons.Save className="w-5 h-5" />
+						Backup & Restore
+					</h2>
 
-				<div className="config-theme-toggle">
-					<div className="config-theme-info">
-						<div className="config-setting-label">Dark Mode</div>
-						<div className="config-setting-description">
-							Toggle between light and dark theme
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
+						<div>
+							<div className="font-medium text-gray-900 dark:text-gray-100 mb-1">
+								Settings Backup
+							</div>
+							<div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+								Export your settings to a JSON file or import from a backup
+							</div>
+							<div className="flex gap-3">
+								<button
+									onClick={handleExportSettings}
+									disabled={isExporting}
+									className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors"
+								>
+									<Icons.Download className="w-4 h-4" />
+									{isExporting ? "Exporting..." : "Export Settings"}
+								</button>
+								<button
+									onClick={handleImportSettings}
+									disabled={isImporting}
+									className="flex items-center gap-2 px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
+								>
+									<Icons.Upload className="w-4 h-4" />
+									{isImporting ? "Importing..." : "Import Settings"}
+								</button>
+							</div>
+						</div>
+
+						<div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+							<Icons.Info className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+							<div className="text-sm text-blue-800 dark:text-blue-200">
+								Settings are automatically saved in your notes database and will persist across app reinstalls.
+							</div>
 						</div>
 					</div>
-					<button
-						className={`config-button ${darkMode ? "config-button--active" : ""}`}
-						onClick={toggleDarkMode}
-					>
-						{darkMode ? "Enabled" : "Disabled"}
-					</button>
-				</div>
-			</section>
+				</section>
 
-			{/* Editor Settings */}
-			<section className="config-section">
-				<h2>Editor Settings</h2>
+				{/* About Section */}
+				<section className="space-y-4">
+					<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+						<Icons.Info className="w-5 h-5" />
+						About
+					</h2>
 
-				<div className="config-section-grid">
-					<div className="config-card">
-						<div className="config-setting-label">Editor Mode</div>
-						<div className="config-setting-description">
-							Choose your preferred editing mode
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3">
+						<div className="flex items-center justify-between">
+							<span className="text-gray-600 dark:text-gray-400">
+								Application
+							</span>
+							<span className="font-medium text-gray-900 dark:text-gray-100">
+								IrisNotes
+							</span>
 						</div>
-						<select className="config-select">
-							<option value="rich">Rich Text Editor</option>
-							<option value="source">Source Editor</option>
-							<option value="split">Split View</option>
-						</select>
-					</div>
-
-					<div className="config-card">
-						<div className="config-setting-label">Auto Save</div>
-						<div className="config-setting-description">
-							Automatically save changes as you type
+						<div className="flex items-center justify-between">
+							<span className="text-gray-600 dark:text-gray-400">
+								Environment
+							</span>
+							<span className="font-medium text-gray-900 dark:text-gray-100">
+								{import.meta.env.DEV ? "Development" : "Production"}
+							</span>
 						</div>
-						<label className="config-checkbox-label">
-							<input
-								type="checkbox"
-								className="config-checkbox"
-								defaultChecked={true}
-							/>
-							<span className="config-checkbox-text">Enable auto save</span>
-						</label>
 					</div>
-				</div>
-			</section>
+				</section>
 
-			{/* Application Settings */}
-			<section className="config-section">
-				<h2>Application Settings</h2>
+				{/* Debug Section (Dev Only) */}
+				{import.meta.env.DEV && (
+					<section className="space-y-4">
+						<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+							<Icons.Bug className="w-5 h-5" />
+							Debug Info
+						</h2>
 
-				<div className="config-section-grid">
-					<div className="config-card">
-						<div className="config-setting-label">Default Category</div>
-						<div className="config-setting-description">
-							Default category for new notes
+						<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+							<pre className="text-xs text-gray-600 dark:text-gray-400 overflow-auto max-h-64">
+								{JSON.stringify(config, null, 2)}
+							</pre>
 						</div>
-						<select className="config-select">
-							<option value="general">General</option>
-							<option value="work">Work</option>
-							<option value="personal">Personal</option>
-						</select>
-					</div>
-
-					<div className="config-card">
-						<div className="config-setting-label">Show Word Count</div>
-						<div className="config-setting-description">
-							Display word count in editor status bar
-						</div>
-						<label className="config-checkbox-label">
-							<input
-								type="checkbox"
-								className="config-checkbox"
-								defaultChecked={true}
-							/>
-							<span className="config-checkbox-text">Show word count</span>
-						</label>
-					</div>
-				</div>
-			</section>
-
-			{/* Configuration Info */}
-			<section>
-				<h2>Configuration Information</h2>
-
-				<div className="config-info-display">
-					<pre className="config-info-pre">
-						{JSON.stringify(config, null, 2)}
-					</pre>
-				</div>
-			</section>
+					</section>
+				)}
+			</div>
 		</div>
 	);
 }
