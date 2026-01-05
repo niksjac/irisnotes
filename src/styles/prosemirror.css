@@ -1,0 +1,437 @@
+/**
+ * ProseMirror Editor Styles
+ * 
+ * This file contains all styling for the ProseMirror rich text editor.
+ * Styles are organized by category and support both light and dark modes.
+ * 
+ * CSS Custom Properties (defined in theme.css) can be used for user-configurable values.
+ */
+
+/* ==========================================================================
+   CSS Custom Properties for Editor Customization
+   ========================================================================== */
+
+:root {
+  /* Editor Layout */
+  --pm-padding: 0.5rem;
+  --pm-line-height: 1;
+  
+  /* Typography */
+  --pm-font-family: consolas;
+  --pm-font-size: 0.8rem;
+  --pm-heading-font-family: inherit;
+  
+  /* Spacing */
+  --pm-paragraph-spacing: 0.08em;
+  --pm-block-spacing: 0.08em;
+  
+  /* Cursor */
+  --pm-cursor-width: 2px;
+  
+  /* Colors - Light Mode */
+  --pm-text-color: inherit;
+  --pm-caret-color: #22c55e;
+  --pm-link-color: #3b82f6;
+  --pm-link-hover-color: #2563eb;
+  --pm-code-bg: rgba(175, 184, 193, 0.2);
+  --pm-code-color: #e01e5a;
+  --pm-blockquote-border: #ccc;
+  --pm-blockquote-text: #666;
+  --pm-selection-bg: #b4d5fe;
+}
+
+.dark {
+  /* Colors - Dark Mode */
+  --pm-link-color: #60a5fa;
+  --pm-link-hover-color: #93c5fd;
+  --pm-code-bg: rgba(110, 118, 129, 0.4);
+  --pm-code-color: #ff6b9d;
+  --pm-blockquote-border: #555;
+  --pm-blockquote-text: #aaa;
+  --pm-selection-bg: #264f78;
+}
+
+/* ==========================================================================
+   Base Editor Styles
+   ========================================================================== */
+
+.ProseMirror {
+  height: 100%;
+  min-height: 100%;
+  padding: var(--pm-padding);
+  outline: none;
+  font-family: var(--pm-font-family);
+  font-size: var(--pm-font-size);
+  line-height: var(--pm-line-height);
+  color: var(--pm-text-color);
+  caret-color: var(--pm-caret-color);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Line wrapping variants - applied dynamically */
+.ProseMirror.wrap-enabled {
+  white-space: pre-wrap;
+  overflow-x: hidden;
+}
+
+.ProseMirror.wrap-disabled {
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* Hide cursor when editor is not focused */
+.ProseMirror:not(.ProseMirror-focused) {
+  caret-color: transparent;
+}
+
+/* Selection styling */
+.ProseMirror ::selection {
+  background: var(--pm-selection-bg);
+}
+
+/* Tight selection - hides native selection and uses decorations instead */
+.ProseMirror.tight-selection-enabled ::selection {
+  background: transparent !important;
+}
+
+.ProseMirror.tight-selection-enabled ::-moz-selection {
+  background: transparent !important;
+}
+
+/* Custom tight selection decoration */
+.pm-tight-selection {
+  background-color: var(--pm-selection-bg);
+  border-radius: 2px;
+}
+
+/* Selected inline nodes (images, etc) */
+.pm-tight-selection-node {
+  outline: 2px solid var(--pm-selection-bg);
+  outline-offset: 1px;
+}
+
+/* ==========================================================================
+   Custom Cursor
+   ========================================================================== */
+
+/* Hide native caret when custom cursor is enabled */
+.ProseMirror.custom-cursor-enabled {
+  caret-color: transparent !important;
+}
+
+/* Custom cursor base styles - absolutely positioned to avoid layout issues */
+.pm-custom-cursor {
+  position: absolute;
+  width: var(--pm-cursor-width);
+  background-color: var(--pm-caret-color);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Block cursor style - applied when :root has .pm-cursor-block-mode */
+:root.pm-cursor-block-mode .pm-custom-cursor {
+  width: 0.6em;
+  opacity: 0.5;
+}
+
+/* Animation classes - applied to :root based on settings */
+
+/* Blink animation - classic on/off */
+:root.pm-cursor-blink .pm-custom-cursor {
+  animation: cursor-blink 1s steps(1) infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+/* Smooth blink animation - fade in/out */
+:root.pm-cursor-smooth .pm-custom-cursor {
+  animation: cursor-smooth 1s ease-in-out infinite;
+}
+
+@keyframes cursor-smooth {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+/* Expand animation - grows and shrinks */
+:root.pm-cursor-expand .pm-custom-cursor {
+  animation: cursor-expand 1s ease-in-out infinite;
+}
+
+@keyframes cursor-expand {
+  0%, 100% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scaleY(0.7);
+    opacity: 0.5;
+  }
+}
+
+/* Solid - no animation */
+:root.pm-cursor-solid .pm-custom-cursor {
+  animation: none;
+  opacity: 1;
+}
+
+/* Smooth cursor movement transition */
+:root.pm-cursor-smooth-movement .pm-custom-cursor {
+  transition: left 80ms ease-out, top 80ms ease-out;
+}
+
+/* Hide cursor when editor loses focus */
+.ProseMirror:not(.ProseMirror-focused) .pm-custom-cursor {
+  opacity: 0 !important;
+  animation: none !important;
+}
+
+/* ==========================================================================
+   Block Elements
+   ========================================================================== */
+
+/* Paragraphs */
+.ProseMirror p {
+  margin: var(--pm-paragraph-spacing) 0;
+}
+
+/* Headings */
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+  font-family: var(--pm-heading-font-family);
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+.ProseMirror h1 {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+
+.ProseMirror h2 {
+  font-size: 1.5em;
+  margin: 0.75em 0;
+  line-height: 1.3;
+}
+
+.ProseMirror h3 {
+  font-size: 1.17em;
+  margin: 0.83em 0;
+  line-height: 1.4;
+}
+
+.ProseMirror h4 {
+  font-size: 1em;
+  margin: 1em 0;
+}
+
+.ProseMirror h5 {
+  font-size: 0.83em;
+  margin: 1.17em 0;
+}
+
+.ProseMirror h6 {
+  font-size: 0.67em;
+  margin: 1.33em 0;
+}
+
+/* Lists */
+.ProseMirror ul {
+  margin: var(--pm-block-spacing) 0;
+  padding-left: 1.5em;
+  list-style-type: disc;
+}
+
+.ProseMirror ol {
+  margin: var(--pm-block-spacing) 0;
+  padding-left: 1.5em;
+  list-style-type: decimal;
+}
+
+.ProseMirror li {
+  margin: 0.25em 0;
+  display: list-item;
+}
+
+/* Nested lists */
+.ProseMirror ul ul,
+.ProseMirror ol ul {
+  list-style-type: circle;
+}
+
+.ProseMirror ul ul ul,
+.ProseMirror ol ul ul,
+.ProseMirror ul ol ul,
+.ProseMirror ol ol ul {
+  list-style-type: square;
+}
+
+/* Blockquotes */
+.ProseMirror blockquote {
+  border-left: 3px solid var(--pm-blockquote-border);
+  margin: var(--pm-block-spacing) 0;
+  padding: 0.25em 0 0.25em 1em;
+  color: var(--pm-blockquote-text);
+  font-style: italic;
+}
+
+/* Horizontal rules */
+.ProseMirror hr {
+  border: none;
+  border-top: 2px solid var(--pm-blockquote-border);
+  margin: 1.5em 0;
+}
+
+/* ==========================================================================
+   Inline Marks
+   ========================================================================== */
+
+/* Bold */
+.ProseMirror strong {
+  font-weight: bold;
+}
+
+/* Italic */
+.ProseMirror em {
+  font-style: italic;
+}
+
+/* Underline (custom mark) */
+.ProseMirror u,
+.ProseMirror .underline {
+  text-decoration: underline;
+}
+
+/* Strikethrough (custom mark) */
+.ProseMirror s,
+.ProseMirror del,
+.ProseMirror .strikethrough {
+  text-decoration: line-through;
+}
+
+/* Inline code */
+.ProseMirror code {
+  background-color: var(--pm-code-bg);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 0.85em;
+  color: var(--pm-code-color);
+}
+
+/* Links */
+.ProseMirror a {
+  color: var(--pm-link-color);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.ProseMirror a:hover {
+  color: var(--pm-link-hover-color);
+  text-decoration-thickness: 2px;
+}
+
+/* Text color marks (for future implementation) */
+.ProseMirror .text-color {
+  /* Color applied via inline style */
+}
+
+/* Highlight/background color marks (for future implementation) */
+.ProseMirror .highlight {
+  /* Background applied via inline style */
+  padding: 0.1em 0;
+  border-radius: 2px;
+}
+
+/* ==========================================================================
+   Code Blocks
+   ========================================================================== */
+
+.ProseMirror .code-block-container {
+  overflow: hidden;
+  margin: var(--pm-block-spacing) 0;
+  border-radius: 6px;
+}
+
+.ProseMirror .code-block-container .cm-editor {
+  background: transparent !important;
+}
+
+.ProseMirror .code-block-container .cm-gutters {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.dark .ProseMirror .code-block-container .cm-gutters {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Selected code block */
+.ProseMirror-selectednode .code-block-container {
+  outline: 2px solid #3b82f6;
+}
+
+/* ==========================================================================
+   ProseMirror UI Elements
+   ========================================================================== */
+
+/* Gap cursor (cursor between nodes) */
+.ProseMirror-gapcursor {
+  display: none;
+  pointer-events: none;
+  position: absolute;
+}
+
+.ProseMirror-gapcursor:after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: -2px;
+  width: 20px;
+  border-top: 1px solid var(--pm-caret-color);
+  animation: ProseMirror-cursor-blink 1.1s steps(2, start) infinite;
+}
+
+@keyframes ProseMirror-cursor-blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+.ProseMirror-focused .ProseMirror-gapcursor {
+  display: block;
+}
+
+/* Hide native browser spell-check squiggles on selection */
+.ProseMirror [contenteditable]:focus {
+  outline: none;
+}
+
+/* Placeholder text (for empty documents) */
+.ProseMirror p.is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+}
+
+.dark .ProseMirror p.is-empty::before {
+  color: #6c757d;
+}
