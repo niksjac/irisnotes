@@ -38,3 +38,4 @@ dev/notes.db
 
 # Local config
 dev/config.toml
+docs/__ACCIDENTALLY*
