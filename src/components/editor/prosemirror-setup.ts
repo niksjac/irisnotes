@@ -2,7 +2,8 @@ import type { Schema } from "prosemirror-model";
 import type { Plugin } from "prosemirror-state";
 import { keymap } from "prosemirror-keymap";
 import { history } from "prosemirror-history";
-import { baseKeymap, toggleMark } from "prosemirror-commands";
+import { baseKeymap, toggleMark, setBlockType, wrapIn } from "prosemirror-commands";
+import { wrapInList, liftListItem, sinkListItem } from "prosemirror-schema-list";
 import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
 import { buildInputRules } from "prosemirror-example-setup";
@@ -10,6 +11,7 @@ import { buildKeymap } from "prosemirror-example-setup";
 import { autolinkPlugin, linkifySelection } from "./plugins/autolink";
 import { tightSelectionPlugin } from "./plugins/tight-selection";
 import { customCursorPlugin } from "./plugins/custom-cursor";
+import { lineCommandsKeymap } from "./plugins/line-commands";
 
 interface SetupOptions {
 	schema: Schema;
@@ -96,7 +98,49 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		);
 	}
 
+	// Block formatting shortcuts
+	const { nodes } = options.schema;
+
+	// Headings: Ctrl+Shift+1/2/3
+	if (nodes.heading) {
+		customKeybindings["Mod-Shift-1"] = setBlockType(nodes.heading, { level: 1 });
+		customKeybindings["Mod-Shift-2"] = setBlockType(nodes.heading, { level: 2 });
+		customKeybindings["Mod-Shift-3"] = setBlockType(nodes.heading, { level: 3 });
+	}
+
+	// Paragraph: Ctrl+Shift+0
+	if (nodes.paragraph) {
+		customKeybindings["Mod-Shift-0"] = setBlockType(nodes.paragraph);
+	}
+
+	// Lists: Ctrl+Shift+8 (bullet), Ctrl+Shift+9 (ordered)
+	if (nodes.bullet_list) {
+		customKeybindings["Mod-Shift-8"] = wrapInList(nodes.bullet_list);
+	}
+	if (nodes.ordered_list) {
+		customKeybindings["Mod-Shift-9"] = wrapInList(nodes.ordered_list);
+	}
+
+	// List indent/outdent: Ctrl+] / Ctrl+[
+	if (nodes.list_item) {
+		customKeybindings["Mod-]"] = sinkListItem(nodes.list_item);
+		customKeybindings["Mod-["] = liftListItem(nodes.list_item);
+	}
+
+	// Blockquote: Ctrl+Shift+.
+	if (nodes.blockquote) {
+		customKeybindings["Mod-Shift-."] = wrapIn(nodes.blockquote);
+	}
+
+	// Code block: Ctrl+Shift+C
+	if (nodes.code_block) {
+		customKeybindings["Mod-Shift-c"] = setBlockType(nodes.code_block);
+	}
+
 	plugins.push(keymap(customKeybindings));
+
+	// Line commands (Alt+Up/Down to move lines, Alt+Shift+Up/Down to copy, etc.)
+	plugins.push(keymap(lineCommandsKeymap));
 
 	return plugins;
 }
