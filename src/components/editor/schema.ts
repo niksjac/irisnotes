@@ -102,6 +102,23 @@ const fontSizeMarkSpec = {
 		["span", { style: `font-size: ${mark.attrs.size}` }, 0] as const,
 };
 
+/**
+ * Font family mark (inline font override)
+ */
+const fontFamilyMarkSpec = {
+	attrs: {
+		family: {},
+	},
+	parseDOM: [
+		{
+			style: "font-family",
+			getAttrs: (value: string) => ({ family: value }),
+		},
+	],
+	toDOM: (mark: Mark) =>
+		["span", { style: `font-family: ${mark.attrs.family}` }, 0] as const,
+};
+
 // ============ Code Block Node Spec ============
 
 const codeBlockSpec = {
@@ -139,6 +156,7 @@ const extendedMarks = basicSchema.spec.marks.append({
 	textColor: textColorMarkSpec,
 	highlight: highlightMarkSpec,
 	fontSize: fontSizeMarkSpec,
+	fontFamily: fontFamilyMarkSpec,
 });
 
 // Extend nodes with lists and code_block

@@ -24,6 +24,7 @@ import {
 	Palette,
 	Highlighter,
 	ALargeSmall,
+	CaseSensitive,
 } from "lucide-react";
 
 interface EditorToolbarProps {
@@ -52,9 +53,18 @@ const FONT_SIZES = [
 	{ label: "2XL", value: "32px" },
 ];
 
+const FONT_FAMILIES = [
+	{ label: "System Default", value: "system-ui, -apple-system, sans-serif" },
+	{ label: "Sans Serif", value: "Arial, Helvetica, sans-serif" },
+	{ label: "Serif", value: "Georgia, 'Times New Roman', serif" },
+	{ label: "Monospace", value: "'Courier New', Consolas, monospace" },
+	{ label: "Inter", value: "Inter, system-ui, sans-serif" },
+	{ label: "Comic Sans", value: "'Comic Sans MS', cursive" },
+];
+
 export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 	const [showDropdown, setShowDropdown] = useState(false);
-	const [showColorPicker, setShowColorPicker] = useState<"text" | "highlight" | "fontSize" | null>(null);
+	const [showColorPicker, setShowColorPicker] = useState<"text" | "highlight" | "fontSize" | "fontFamily" | null>(null);
 	const [visibleButtons, setVisibleButtons] = useState<number>(0);
 	const [, setUpdateTrigger] = useState(0);
 	const toolbarRef = useRef<HTMLDivElement>(null);
@@ -640,6 +650,51 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 								className="w-full text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 py-2 border-t border-gray-200 dark:border-gray-700"
 								onClick={() => {
 									removeMark(schema.marks.fontSize);
+									setShowColorPicker(null);
+								}}
+							>
+								Reset to default
+							</button>
+						</div>
+					)}
+				</div>
+
+				{/* Font Family Picker */}
+				<div className="relative" ref={showColorPicker === "fontFamily" ? colorPickerRef : undefined}>
+					<button
+						type="button"
+						tabIndex={-1}
+						className={`w-8 h-8 flex items-center justify-center rounded transition-colors ${
+							isMarkActive(schema.marks.fontFamily)
+								? "bg-blue-500 text-white hover:bg-blue-600"
+								: "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+						}`}
+						onClick={() => setShowColorPicker(showColorPicker === "fontFamily" ? null : "fontFamily")}
+						title="Font Family"
+					>
+						<CaseSensitive size={16} />
+					</button>
+					{showColorPicker === "fontFamily" && (
+						<div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-lg z-50 min-w-[160px]">
+							{FONT_FAMILIES.map((font) => (
+								<button
+									key={font.value}
+									type="button"
+									className="w-full flex items-center px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+									style={{ fontFamily: font.value }}
+									onClick={() => {
+										applyMarkWithAttrs(schema.marks.fontFamily, { family: font.value });
+										setShowColorPicker(null);
+									}}
+								>
+									{font.label}
+								</button>
+							))}
+							<button
+								type="button"
+								className="w-full text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 py-2 border-t border-gray-200 dark:border-gray-700"
+								onClick={() => {
+									removeMark(schema.marks.fontFamily);
 									setShowColorPicker(null);
 								}}
 							>
