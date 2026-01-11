@@ -333,7 +333,6 @@ export const useItems = () => {
 			contentType?: "html" | "markdown" | "plain" | "custom",
 			contentRaw?: string
 		) => {
-			console.log("[updateItemContent] Called with id:", id, "content length:", content.length);
 			
 			// Optimistically update local state immediately
 			setItems((prevItems) =>
@@ -350,28 +349,21 @@ export const useItems = () => {
 			);
 
 			// Persist to database without reloading all items
-			// (optimistic update already handles local state, avoid race conditions)
 			if (!storageAdapter) {
 				console.error("[updateItemContent] Storage adapter not initialized");
 				return { success: false, error: "Storage not initialized" };
 			}
 
-			const item = items.find((i) => i.id === id);
-			if (!item || item.type !== "note") {
-				console.error("[updateItemContent] Note not found:", id);
-				return { success: false, error: "Note not found" };
-			}
-
+			// Note: We don't validate the item exists here because:
+			// 1. For newly created notes, `items` in the closure may be stale
+			// 2. The database will return an error if the note doesn't exist
 			const noteParams: UpdateNoteParams = { id, content };
 			if (contentType !== undefined) noteParams.content_type = contentType;
 			if (contentRaw !== undefined) noteParams.content_raw = contentRaw;
 
-			console.log("[updateItemContent] Calling storageAdapter.updateNote with params:", noteParams);
-			const result = await storageAdapter.updateNote(noteParams);
-			console.log("[updateItemContent] Result:", result);
-			return result;
+			return await storageAdapter.updateNote(noteParams);
 		},
-		[storageAdapter, items, setItems]
+		[storageAdapter, setItems]
 	);
 
 	const moveItem = useCallback(
