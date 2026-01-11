@@ -53,6 +53,7 @@ export interface HotkeyMapping {
 	// Editor hotkeys
 	toggleEditorView: HotkeyConfig;
 	toggleLineWrapping: HotkeyConfig;
+	toggleToolbar: HotkeyConfig;
 
 	// Sidebar resizing hotkeys
 	sidebarResizeLeft: HotkeyConfig;
@@ -86,6 +87,14 @@ export interface HotkeyMapping {
 
 	// App hotkeys
 	refreshApp: HotkeyConfig;
+
+	// Views hotkeys
+	openSettings: HotkeyConfig;
+	openHotkeys: HotkeyConfig;
+
+	// Notes hotkeys
+	newNote: HotkeyConfig;
+	newNoteWithLocation: HotkeyConfig;
 }
 
 export interface AppHotkeysProps {
@@ -140,6 +149,7 @@ export interface AppHotkeysProps {
 	// Editor hotkeys
 	onToggleEditorView?: () => void;
 	onToggleLineWrapping?: () => void;
+	onToggleToolbar?: () => void;
 
 	// Editor hotkeys (future)
 	// onSave?: () => void;
@@ -150,9 +160,13 @@ export interface AppHotkeysProps {
 	// onFocusEditor?: () => void;
 	// onFocusSidebar?: () => void;
 
-	// Notes hotkeys (future)
-	// onNewNote?: () => void;
-	// onDeleteNote?: () => void;
+	// Notes hotkeys
+	onNewNote?: () => void;
+	onNewNoteWithLocation?: () => void;
+
+	// Views hotkeys
+	onOpenSettings?: () => void;
+	onOpenHotkeys?: () => void;
 }
 
 // Storage configuration types

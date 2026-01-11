@@ -193,6 +193,11 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHandler(handlers.onToggleLineWrapping),
 		createHotkeyOptions(hotkeyMapping.toggleLineWrapping.global)
 	);
+	useHotkeys(
+		hotkeyMapping.toggleToolbar.key,
+		createHandler(handlers.onToggleToolbar),
+		createHotkeyOptions(hotkeyMapping.toggleToolbar.global)
+	);
 
 	// Focus hotkeys
 	useHotkeys(
@@ -201,18 +206,27 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHotkeyOptions(hotkeyMapping.focusTreeView.global)
 	);
 
-	// Future hotkey categories can be added here:
+	// Notes hotkeys
+	useHotkeys(
+		hotkeyMapping.newNote.key,
+		createHandler(handlers.onNewNote),
+		createHotkeyOptions(hotkeyMapping.newNote.global)
+	);
+	useHotkeys(
+		hotkeyMapping.newNoteWithLocation.key,
+		createHandler(handlers.onNewNoteWithLocation),
+		createHotkeyOptions(hotkeyMapping.newNoteWithLocation.global)
+	);
 
-	// Editor hotkeys - Use restrictedHotkeyOptions to avoid conflicts with text editing
-	// useHotkeys('ctrl+s', () => onSave?.(), restrictedHotkeyOptions);
-	// useHotkeys('ctrl+z', () => onUndo?.(), restrictedHotkeyOptions);
-	// useHotkeys('ctrl+y', () => onRedo?.(), restrictedHotkeyOptions);
-
-	// Navigation hotkeys - Can be global since they're not text-editing related
-	// useHotkeys('ctrl+1', () => onFocusEditor?.(), globalHotkeyOptions);
-	// useHotkeys('ctrl+shift+e', () => onFocusSidebar?.(), globalHotkeyOptions);
-
-	// Notes hotkeys - Usually safe to be global
-	// useHotkeys('ctrl+n', () => onNewNote?.(), globalHotkeyOptions);
-	// useHotkeys('delete', () => onDeleteNote?.(), restrictedHotkeyOptions); // Avoid accidental deletions while typing
+	// Views hotkeys
+	useHotkeys(
+		hotkeyMapping.openSettings.key,
+		createHandler(handlers.onOpenSettings),
+		createHotkeyOptions(hotkeyMapping.openSettings.global)
+	);
+	useHotkeys(
+		hotkeyMapping.openHotkeys.key,
+		createHandler(handlers.onOpenHotkeys),
+		createHotkeyOptions(hotkeyMapping.openHotkeys.global)
+	);
 }

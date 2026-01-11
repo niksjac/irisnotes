@@ -34,6 +34,11 @@ export function mapHotkeyHandlers(
 		focusPreviousTab: () => void;
 		toggleEditorView: () => void;
 		toggleLineWrapping: () => void;
+		toggleToolbar: () => void;
+		createNoteInRoot: () => void;
+		openLocationDialog: () => void;
+		openSettings: () => void;
+		openHotkeys: () => void;
 	}
 ): AppHotkeysProps {
 	return {
@@ -106,10 +111,17 @@ export function mapHotkeyHandlers(
 				}
 			}
 		},
+		// Notes hotkeys
+		onNewNote: handlers.createNoteInRoot,
+		onNewNoteWithLocation: handlers.openLocationDialog,
 		// App hotkeys
 		onRefreshApp: () => window.location.reload(),
 		// Editor hotkeys
 		onToggleEditorView: handlers.toggleEditorView,
 		onToggleLineWrapping: handlers.toggleLineWrapping,
+		onToggleToolbar: handlers.toggleToolbar,
+		// Views hotkeys
+		onOpenSettings: handlers.openSettings,
+		onOpenHotkeys: handlers.openHotkeys,
 	};
 }

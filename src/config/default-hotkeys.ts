@@ -66,14 +66,20 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		category: "Editor",
 		global: true,
 	},
+	toggleToolbar: {
+		key: "ctrl+shift+t",
+		description: "Toggle Editor Toolbar",
+		category: "Editor",
+		global: true,
+	},
 	paneResizeLeft: {
-		key: "alt+left",
+		key: "alt+comma",
 		description: "Resize Pane Left",
 		category: "Panes",
 		global: true,
 	},
 	paneResizeRight: {
-		key: "alt+right",
+		key: "alt+period",
 		description: "Resize Pane Right",
 		category: "Panes",
 		global: true,
@@ -81,13 +87,13 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 
 	// Sidebar resizing hotkeys
 	sidebarResizeLeft: {
-		key: "ctrl+left",
+		key: "ctrl+comma",
 		description: "Resize Sidebar Left",
 		category: "Sidebar",
 		global: true,
 	},
 	sidebarResizeRight: {
-		key: "ctrl+right",
+		key: "ctrl+period",
 		description: "Resize Sidebar Right",
 		category: "Sidebar",
 		global: true,
@@ -204,6 +210,34 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		key: "f5",
 		description: "Refresh Application",
 		category: "App",
+		global: true,
+	},
+
+	// Views hotkeys
+	openSettings: {
+		key: "ctrl+shift+comma",
+		description: "Open Settings",
+		category: "Views",
+		global: true,
+	},
+	openHotkeys: {
+		key: "ctrl+shift+period",
+		description: "Open Keyboard Shortcuts",
+		category: "Views",
+		global: true,
+	},
+
+	// Notes hotkeys
+	newNote: {
+		key: "ctrl+n",
+		description: "Create New Note",
+		category: "Notes",
+		global: true,
+	},
+	newNoteWithLocation: {
+		key: "ctrl+shift+n",
+		description: "Create New Note (Pick Location)",
+		category: "Notes",
 		global: true,
 	},
 };
