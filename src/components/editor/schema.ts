@@ -160,8 +160,10 @@ const extendedMarks = basicSchema.spec.marks.append({
 });
 
 // Extend nodes with lists and code_block
+// Remove hard_break to enforce line-based model (no soft line breaks within blocks)
+const nodesWithoutHardBreak = basicSchema.spec.nodes.remove("hard_break");
 const extendedNodes = addListNodes(
-	basicSchema.spec.nodes,
+	nodesWithoutHardBreak,
 	"paragraph block*",
 	"block"
 ).append({

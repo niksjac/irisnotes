@@ -7,7 +7,7 @@ import type { HotkeyMapping, HotkeyConfig } from "@/types";
 export const DEFAULT_HOTKEYS: HotkeyMapping = {
 	// Layout hotkeys
 	toggleSidebar: {
-		key: "ctrl+b",
+		key: "ctrl+g",
 		description: "Toggle Notes Sidebar",
 		category: "Layout",
 		global: true,

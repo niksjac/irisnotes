@@ -1,6 +1,6 @@
 {
   "toggleSidebar": {
-    "key": "ctrl+b",
+    "key": "ctrl+g",
     "description": "Toggle Notes Sidebar",
     "category": "Layout",
     "global": true

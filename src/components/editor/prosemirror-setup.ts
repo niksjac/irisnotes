@@ -2,7 +2,16 @@ import type { Schema } from "prosemirror-model";
 import type { Plugin } from "prosemirror-state";
 import { keymap } from "prosemirror-keymap";
 import { history } from "prosemirror-history";
-import { baseKeymap, toggleMark, setBlockType, wrapIn } from "prosemirror-commands";
+import {
+	baseKeymap,
+	toggleMark,
+	setBlockType,
+	wrapIn,
+	chainCommands,
+	createParagraphNear,
+	liftEmptyBlock,
+	splitBlock,
+} from "prosemirror-commands";
 import { wrapInList, liftListItem, sinkListItem } from "prosemirror-schema-list";
 import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
@@ -28,7 +37,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 
 	// App-aware keymap (must come first to intercept app shortcuts)
 	const appShortcuts = options.appShortcuts || [
-		"Mod-b", // Toggle sidebar
+		"Mod-g", // Toggle sidebar (changed from Mod-b to free up bold)
 		"Mod-j", // Toggle activity bar
 		"Mod-w", // Close tab
 		"Mod-t", // New tab
@@ -141,6 +150,17 @@ export function customSetup(options: SetupOptions): Plugin[] {
 
 	// Line commands (Alt+Up/Down to move lines, Alt+Shift+Up/Down to copy, etc.)
 	plugins.push(keymap(lineCommandsKeymap));
+
+	// Line-based model: Shift+Enter creates new block (like Enter), not <br>
+	// This enforces the concept that each "paragraph" is really a "line"
+	const shiftEnterKeymap = {
+		"Shift-Enter": chainCommands(
+			liftEmptyBlock,
+			createParagraphNear,
+			splitBlock
+		),
+	};
+	plugins.push(keymap(shiftEnterKeymap));
 
 	return plugins;
 }
