@@ -6,6 +6,7 @@ import {
 	SidebarResizer,
 	Sidebar,
 	PaneContainer,
+	NoteLocationDialog,
 } from "@/components";
 import {
 	useLayout,
@@ -16,6 +17,7 @@ import {
 	useTabPersistence,
 	loadTabState,
 	useTheme,
+	useNoteActions,
 } from "@/hooks";
 import { mapHotkeyHandlers } from "@/utils/hotkey-mapping";
 import {
@@ -28,6 +30,11 @@ import {
 export const Layout: React.FC = () => {
 	const { sidebar, views } = useLayout();
 	const hotkeyHandlers = useHotkeyHandlers();
+	const {
+		isLocationDialogOpen,
+		closeLocationDialog,
+		createNoteInLocation,
+	} = useNoteActions();
 
 	// Apply theme (adds .dark class to document)
 	useTheme();
@@ -82,6 +89,13 @@ export const Layout: React.FC = () => {
 					</div>
 				</div>
 			</div>
+
+			{/* Note Location Dialog */}
+			<NoteLocationDialog
+				isOpen={isLocationDialogOpen}
+				onClose={closeLocationDialog}
+				onCreateNote={createNoteInLocation}
+			/>
 		</div>
 	);
 };

@@ -23,6 +23,7 @@ export { useTabPersistence, loadTabState } from "./use-tab-persistence";
 export { useAppHotkeys } from "./use-app-hotkeys";
 export { useHotkeysConfig } from "./use-hotkeys-config";
 export { useHotkeyHandlers } from "./use-hotkey-handlers";
+export { useNoteActions } from "./use-note-actions";
 
 // Re-export useHotkeyConfig for backward compatibility
 export { useHotkeysConfig as useHotkeyConfig } from "./use-hotkeys-config";
