@@ -7,8 +7,8 @@ IrisNotes is a **Tauri-based desktop notes app** with a React frontend. The app 
 ### Core Technology Stack
 - **Frontend**: React 19 + TypeScript + Tailwind CSS + Jotai (state management)
 - **Backend**: Tauri v2 (Rust) + SQLite
-- **Editor**: CodeMirror 6 + ProseMirror for rich text
-- **Build**: Vite + Biome (linting/formatting)
+- **Editor**: ProseMirror (rich text) + CodeMirror 6 (source view)
+- **Build**: Vite
 
 ## Critical Development Workflows
 
@@ -24,19 +24,18 @@ IrisNotes is a **Tauri-based desktop notes app** with a React frontend. The app 
 ```bash
 pnpm tauri dev          # Start Tauri dev server (backend + frontend)
 pnpm run type-check     # TypeScript validation
-pnpm run biome:fix      # Auto-fix linting/formatting
 ```
 
 ## Key Architecture Patterns
 
 ### 1. Unified Items Model
-The app migrated from separate `notes`/`categories` tables to a **single `items` table**:
+Single `items` table for all content types:
 ```sql
 -- items table supports: type IN ('note', 'book', 'section')
 -- Hierarchy: parent_id references items(id)
 -- Books: always at root (parent_id IS NULL)
 -- Sections: always under a book
--- Notes: can be at root, under books, OR under sections (flexible placement)
+-- Notes: can be at root, under books, OR under sections
 -- Notes CANNOT be inside other notes (enforced by trigger)
 ```
 
@@ -45,7 +44,7 @@ State is organized in `/src/atoms/`:
 - `atoms/items.ts` - Main data atoms for the unified items system
 - `atoms/panes.ts` - Multi-pane layout state
 - `atoms/tree.ts` - Tree view state
-- Legacy atoms in `atoms/index.ts` for backward compatibility during migration
+- `atoms/settings.ts` - App settings
 
 ### 3. Storage Abstraction
 `/src/storage/` provides adapters:
@@ -58,13 +57,26 @@ Views in `/src/views/` are switched based on selection:
 - `editor-rich-view.tsx` - ProseMirror rich text editor
 - `editor-source-view.tsx` - CodeMirror source editor
 - `config-view.tsx` - App settings
-- `hotkeys-view.tsx` - Keyboard shortcuts
+- `hotkeys-view.tsx` - Keyboard shortcuts (dynamic, pulls from all sources)
 - `empty-view.tsx` - No selection state
 
-### 5. Component Architecture
-- `/src/components/` organized by UI areas: `sidebar/`, `editor/`, `panes/`, `tree/`
-- Components use custom hooks from `/src/hooks/` for business logic
-- Tailwind + CSS custom properties in `/src/styles/theme.css`
+### 5. Editor Architecture
+
+**Line-Based Model**: The ProseMirror editor treats each paragraph as a "line":
+- No soft line breaks (`hard_break` removed from schema)
+- Enter and Shift+Enter both create new blocks
+- Empty lines create visual separation
+
+**Extended Schema** (`/src/components/editor/schema.ts`):
+- Marks: bold, italic, code, underline, strikethrough, textColor, highlight, fontSize, fontFamily
+- Nodes: paragraph, heading, lists, blockquote, code_block (no hard_break)
+
+**Line Commands** (`/src/components/editor/plugins/line-commands.ts`):
+- `Alt+↑/↓` - Move line up/down
+- `Alt+Shift+↑/↓` - Duplicate line up/down
+- `Ctrl+D` - Select word / next occurrence
+- `Ctrl+Shift+K` - Delete line
+- `Ctrl+A` - Smart select all (progressive: line → paragraph → all)
 
 ## Project-Specific Conventions
 
@@ -73,6 +85,13 @@ Views in `/src/views/` are switched based on selection:
 src/
 ├── atoms/          # Jotai state atoms
 ├── components/     # React components by UI area
+│   ├── dialogs/    # Modal dialogs (NoteLocationDialog)
+│   ├── editor/     # ProseMirror/CodeMirror components
+│   ├── panes/      # Multi-pane layout
+│   ├── sidebar/    # Sidebar components
+│   ├── tree/       # Tree view
+│   └── tabs/       # Tab management
+├── config/         # Configuration (default-hotkeys.ts, editor-hotkeys.ts)
 ├── hooks/          # Custom React hooks
 ├── storage/        # Storage adapters & types
 ├── types/          # TypeScript definitions
@@ -85,19 +104,24 @@ src/
 - Strict type checking enabled
 - Use `type` imports: `import type { SomeType } from "..."`
 - Components in `.tsx`, utilities in `.ts`
-- Biome enforces consistent formatting (80 char line width, double quotes)
 
 ### Hotkeys System
-The app has extensive keyboard shortcuts managed through:
+Hotkeys are managed through multiple layers:
+- `/src/config/default-hotkeys.ts` - Default app hotkey definitions
+- `/dev/hotkeys.json` - Runtime hotkey overrides
+- `/src/config/editor-hotkeys.ts` - Editor-specific hotkeys for display
 - `/src/hooks/use-app-hotkeys.ts` - Central hotkey registration
-- `/dev/hotkeys.json` - Hotkey configuration
-- Global shortcuts work across all editor states
+- `/src/hooks/use-hotkey-handlers.ts` - Handler implementations
 
-### Migration Notes
-The codebase is **migrating from legacy structure** to unified items:
-- Legacy `selectedNoteIdAtom` → `selectedItemIdAtom`
-- Legacy `categoriesAtom` → items with `type: 'book'|'section'`
-- Some components may still reference legacy atoms during transition
+**Key App Shortcuts**:
+- `Ctrl+G` - Toggle sidebar
+- `Ctrl+J` - Toggle activity bar
+- `Ctrl+N` - New note (root)
+- `Ctrl+Shift+N` - New note (pick location)
+- `Ctrl+Shift+,` - Open settings
+- `Ctrl+Shift+.` - Open keyboard shortcuts
+- `Ctrl+,`/`Ctrl+.` - Resize sidebar
+- `Alt+,`/`Alt+.` - Resize panes
 
 ## Integration Points
 
@@ -107,9 +131,10 @@ The codebase is **migrating from legacy structure** to unified items:
 - Global shortcuts via `@tauri-apps/plugin-global-shortcut`
 
 ### Editor Integration
-- **Rich editor**: ProseMirror with custom schema
+- **Rich editor**: ProseMirror with extended schema and line-based commands
 - **Source editor**: CodeMirror 6 with markdown/HTML support
 - Content synced between editors via Jotai atoms
+- Toggle with `Ctrl+E`
 
 ### Development Database
 - SQLite database at `/dev/notes.db`
@@ -119,7 +144,7 @@ The codebase is **migrating from legacy structure** to unified items:
 ## Common Gotchas
 
 1. **Database Schema**: Only modify `/schema/base.sql` - not generated files
-2. **State Migration**: Check both new (`itemsAtom`) and legacy atoms during transition
-3. **Biome Config**: Line width is 80 chars, not 120 - format accordingly
+2. **Hotkey Key Names**: react-hotkeys-hook uses `comma`, `period` not `,`, `.`
+3. **Line-Based Model**: No `<br>` soft breaks - each "line" is a block
 4. **Tauri Dev**: Frontend runs on port 1420, backend managed by Tauri
 5. **React 19**: Use `useRef<T | null>(null)` pattern for DOM refs
