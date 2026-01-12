@@ -22,6 +22,82 @@ import type { ViewUpdate } from "@codemirror/view";
 import { useTheme, useLineWrapping } from "@/hooks";
 import { editorCursorPositionStore } from "@/hooks/use-editor-view-toggle";
 
+// Smart select state - tracks progressive selection level
+let smartSelectLevel = 0;
+let lastSmartSelectTime = 0;
+let lastSmartSelectRange: { from: number; to: number } | null = null;
+
+/**
+ * Smart Select All command for CodeMirror
+ * Progressive selection: line → paragraph → all
+ */
+function smartSelectAll(view: EditorView): boolean {
+	const state = view.state;
+	const { from, to } = state.selection.main;
+	const doc = state.doc;
+	const now = Date.now();
+
+	// Reset if too much time passed or selection changed externally
+	if (
+		now - lastSmartSelectTime > 2000 ||
+		(lastSmartSelectRange &&
+			(from !== lastSmartSelectRange.from || to !== lastSmartSelectRange.to))
+	) {
+		smartSelectLevel = 0;
+	}
+
+	// Increment level
+	smartSelectLevel = Math.min(smartSelectLevel + 1, 3);
+	lastSmartSelectTime = now;
+
+	let newFrom: number;
+	let newTo: number;
+
+	if (smartSelectLevel === 1) {
+		// Level 1: Select current line
+		const line = doc.lineAt(from);
+		newFrom = line.from;
+		newTo = line.to;
+	} else if (smartSelectLevel === 2) {
+		// Level 2: Select paragraph (connected non-empty lines)
+		const currentLine = doc.lineAt(from);
+
+		// Find start of paragraph (first non-empty line going backwards)
+		let startLine = currentLine.number;
+		while (startLine > 1) {
+			const prevLine = doc.line(startLine - 1);
+			if (prevLine.text.trim() === "") break;
+			startLine--;
+		}
+
+		// Find end of paragraph (last non-empty line going forwards)
+		let endLine = currentLine.number;
+		while (endLine < doc.lines) {
+			const nextLine = doc.line(endLine + 1);
+			if (nextLine.text.trim() === "") break;
+			endLine++;
+		}
+
+		newFrom = doc.line(startLine).from;
+		newTo = doc.line(endLine).to;
+	} else {
+		// Level 3: Select entire document
+		newFrom = 0;
+		newTo = doc.length;
+	}
+
+	// Update selection
+	view.dispatch({
+		selection: EditorSelection.single(newFrom, newTo),
+		scrollIntoView: true,
+	});
+
+	// Track the new selection
+	lastSmartSelectRange = { from: newFrom, to: newTo };
+
+	return true;
+}
+
 interface CodeMirrorEditorProps {
 	content: string;
 	onChange?: (content: string) => void;
@@ -59,6 +135,10 @@ export function CodeMirrorEditor({
 		autocompletion(),
 		highlightSelectionMatches(),
 		markdown(),
+		// Smart select keymap FIRST - overrides default selectAll
+		keymap.of([
+			{ key: "Mod-a", run: smartSelectAll, preventDefault: true },
+		]),
 		keymap.of([
 			...closeBracketsKeymap,
 			...defaultKeymap,

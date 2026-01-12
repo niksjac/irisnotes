@@ -41,7 +41,6 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		"Mod-j", // Toggle activity bar
 		"Mod-w", // Close tab
 		"Mod-t", // New tab
-		"Mod-d", // Toggle dual pane
 		"Mod-e", // Toggle editor view
 	];
 
@@ -53,6 +52,10 @@ export function customSetup(options: SetupOptions): Plugin[] {
 
 	// Input rules (markdown-style shortcuts)
 	plugins.push(buildInputRules(options.schema));
+
+	// Line commands FIRST - must come before base keymap to override Mod-a
+	// (Alt+Up/Down to move lines, Alt+Shift+Up/Down to copy, Ctrl+A smart select, etc.)
+	plugins.push(keymap(lineCommandsKeymap));
 
 	// Editor keybindings (but excluding app shortcuts)
 	const editorKeymap = buildKeymap(options.schema, {});
@@ -147,9 +150,6 @@ export function customSetup(options: SetupOptions): Plugin[] {
 	}
 
 	plugins.push(keymap(customKeybindings));
-
-	// Line commands (Alt+Up/Down to move lines, Alt+Shift+Up/Down to copy, etc.)
-	plugins.push(keymap(lineCommandsKeymap));
 
 	// Line-based model: Shift+Enter creates new block (like Enter), not <br>
 	// This enforces the concept that each "paragraph" is really a "line"

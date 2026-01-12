@@ -10,7 +10,8 @@
  * - copyLineUp: Duplicate current line(s)/block(s) above (Alt+Shift+ArrowUp)
  * - copyLineDown: Duplicate current line(s)/block(s) below (Alt+Shift+ArrowDown)
  * - selectWord: Select word at cursor, then select next occurrence (Ctrl+D)
- * - deleteLine: Delete the current line(s) (Ctrl+Shift+K)
+ * - selectPreviousOccurrence: Select previous occurrence of selected text (Ctrl+Shift+D)
+ * - deleteLine: Delete the current line(s) (Shift+Delete)
  * - smartSelectAll: Progressive selection like OneNote (Ctrl+A)
  *
  * All move/copy commands support multi-line selections.
@@ -279,6 +280,77 @@ export const copyLineDown: Command = (state, dispatch) => {
 };
 
 /**
+ * Helper: Find word boundaries at a given position
+ * Returns {from, to} of the word, or null if cursor is not on a word
+ */
+function getWordAt(
+	doc: PMNode,
+	pos: number
+): { from: number; to: number } | null {
+	const $pos = doc.resolve(pos);
+
+	// Get text content around the position
+	const parent = $pos.parent;
+	if (!parent.isTextblock) return null;
+
+	const parentOffset = $pos.parentOffset;
+	const text = parent.textContent;
+
+	// Find word boundaries using regex
+	const wordRegex = /[\w]/;
+
+	// Find start of word (scan backwards)
+	let wordStart = parentOffset;
+	while (wordStart > 0 && wordRegex.test(text[wordStart - 1] || "")) {
+		wordStart--;
+	}
+
+	// Find end of word (scan forwards)
+	let wordEnd = parentOffset;
+	while (wordEnd < text.length && wordRegex.test(text[wordEnd] || "")) {
+		wordEnd++;
+	}
+
+	// If we're not on a word character, return null
+	if (wordStart === wordEnd) return null;
+
+	// Convert parent-relative offsets to document positions
+	const startOfParent = $pos.start();
+	return {
+		from: startOfParent + wordStart,
+		to: startOfParent + wordEnd,
+	};
+}
+
+/**
+ * Helper: Find text occurrences in document
+ * Returns array of {from, to} positions
+ */
+function findTextOccurrences(
+	doc: PMNode,
+	searchText: string
+): Array<{ from: number; to: number }> {
+	const results: Array<{ from: number; to: number }> = [];
+
+	doc.descendants((node, pos) => {
+		if (node.isText && node.text) {
+			const text = node.text;
+			let index = 0;
+			while ((index = text.indexOf(searchText, index)) !== -1) {
+				results.push({
+					from: pos + index,
+					to: pos + index + searchText.length,
+				});
+				index += 1; // Move past this match to find overlapping matches
+			}
+		}
+		return true;
+	});
+
+	return results;
+}
+
+/**
  * Select the word at cursor. If a word is already selected, select the next occurrence.
  * Similar to Ctrl+D in VS Code / CodeMirror.
  */
@@ -288,100 +360,112 @@ export const selectWord: Command = (state, dispatch) => {
 
 	if (empty) {
 		// No selection: select the word at cursor
-		const pos = $from.pos;
-		const textBefore = doc.textBetween(Math.max(0, pos - 50), pos, "");
-		const textAfter = doc.textBetween(
-			pos,
-			Math.min(doc.content.size, pos + 50),
-			""
-		);
+		const word = getWordAt(doc, $from.pos);
+		if (!word) return false;
 
-		// Find word boundaries (letters, numbers, underscore)
-		const wordRegex = /[\w]/;
-
-		let wordStart = pos;
-		for (let i = textBefore.length - 1; i >= 0; i--) {
-			const char = textBefore[i];
-			if (char && wordRegex.test(char)) {
-				wordStart = pos - (textBefore.length - i);
-			} else {
-				break;
-			}
-		}
-
-		let wordEnd = pos;
-		for (let i = 0; i < textAfter.length; i++) {
-			const char = textAfter[i];
-			if (char && wordRegex.test(char)) {
-				wordEnd = pos + i + 1;
-			} else {
-				break;
-			}
-		}
-
-		if (wordStart < wordEnd && dispatch) {
+		if (dispatch) {
 			const tr = state.tr.setSelection(
-				TextSelection.create(doc, wordStart, wordEnd)
+				TextSelection.create(doc, word.from, word.to)
 			);
 			dispatch(tr.scrollIntoView());
-			return true;
 		}
-
-		return false;
+		return true;
 	} else {
 		// Already have a selection: find and select next occurrence
 		const selectedText = doc.textBetween($from.pos, $to.pos, "");
 		if (!selectedText) return false;
 
-		// Search for next occurrence after current selection
-		const docText = doc.textContent;
-		const currentEnd = $to.pos;
+		const occurrences = findTextOccurrences(doc, selectedText);
+		if (occurrences.length === 0) return false;
 
-		// Convert document position to text position (approximate)
-		let textPos = 0;
-		doc.descendants((node, pos) => {
-			if (node.isText) {
-				if (pos < currentEnd) {
-					textPos += node.text?.length || 0;
-				}
-			}
-			return true;
-		});
+		// Find the current selection in occurrences
+		const currentFrom = $from.pos;
+		const currentTo = $to.pos;
 
-		// Find next occurrence in document text
-		const nextIndex = docText.indexOf(selectedText, textPos);
+		// Find next occurrence after current selection
+		let nextOccurrence = occurrences.find((occ) => occ.from > currentFrom);
 
-		if (nextIndex !== -1) {
-			// Convert text position back to document position
-			// This is a simplified approach - may need refinement for complex docs
-			let targetDocPos = 0;
-			let currentTextPos = 0;
+		// If no occurrence after, wrap to first occurrence
+		if (!nextOccurrence) {
+			nextOccurrence = occurrences[0];
+		}
 
-			doc.descendants((node, pos) => {
-				if (node.isText && currentTextPos <= nextIndex) {
-					const nodeText = node.text || "";
-					const localIndex = nextIndex - currentTextPos;
-
-					if (localIndex >= 0 && localIndex < nodeText.length) {
-						targetDocPos = pos + localIndex;
-						return false;
-					}
-					currentTextPos += nodeText.length;
-				}
-				return true;
-			});
-
-			if (targetDocPos > 0 && dispatch) {
+		// Don't select if it's the same as current
+		if (
+			nextOccurrence &&
+			(nextOccurrence.from !== currentFrom || nextOccurrence.to !== currentTo)
+		) {
+			if (dispatch) {
 				const tr = state.tr.setSelection(
-					TextSelection.create(
-						doc,
-						targetDocPos,
-						targetDocPos + selectedText.length
-					)
+					TextSelection.create(doc, nextOccurrence.from, nextOccurrence.to)
 				);
 				dispatch(tr.scrollIntoView());
-				return true;
 			}
+			return true;
+		}
+
+		return false;
+	}
+};
+
+/**
+ * Select the previous occurrence of the selected text.
+ * Similar to Ctrl+Shift+D behavior.
+ */
+export const selectPreviousOccurrence: Command = (state, dispatch) => {
+	const { selection, doc } = state;
+	const { $from, $to, empty } = selection;
+
+	if (empty) {
+		// No selection: select the word at cursor first
+		const word = getWordAt(doc, $from.pos);
+		if (!word) return false;
+
+		if (dispatch) {
+			const tr = state.tr.setSelection(
+				TextSelection.create(doc, word.from, word.to)
+			);
+			dispatch(tr.scrollIntoView());
+		}
+		return true;
+	} else {
+		// Already have a selection: find and select previous occurrence
+		const selectedText = doc.textBetween($from.pos, $to.pos, "");
+		if (!selectedText) return false;
+
+		const occurrences = findTextOccurrences(doc, selectedText);
+		if (occurrences.length === 0) return false;
+
+		// Find the current selection in occurrences
+		const currentFrom = $from.pos;
+		const currentTo = $to.pos;
+
+		// Find previous occurrence before current selection
+		let prevOccurrence: { from: number; to: number } | undefined;
+		for (let i = occurrences.length - 1; i >= 0; i--) {
+			if (occurrences[i].from < currentFrom) {
+				prevOccurrence = occurrences[i];
+				break;
+			}
+		}
+
+		// If no occurrence before, wrap to last occurrence
+		if (!prevOccurrence) {
+			prevOccurrence = occurrences[occurrences.length - 1];
+		}
+
+		// Don't select if it's the same as current
+		if (
+			prevOccurrence &&
+			(prevOccurrence.from !== currentFrom || prevOccurrence.to !== currentTo)
+		) {
+			if (dispatch) {
+				const tr = state.tr.setSelection(
+					TextSelection.create(doc, prevOccurrence.from, prevOccurrence.to)
+				);
+				dispatch(tr.scrollIntoView());
+			}
+			return true;
 		}
 
 		return false;
@@ -390,7 +474,7 @@ export const selectWord: Command = (state, dispatch) => {
 
 /**
  * Delete the current line(s) (block(s))
- * Similar to Ctrl+Shift+K in VS Code
+ * Shift+Delete to delete current line(s)
  */
 export const deleteLine: Command = (state, dispatch) => {
 	const range = getSelectedBlockRange(state);
@@ -539,6 +623,7 @@ export const lineCommandsKeymap = {
 	"Shift-Alt-ArrowUp": copyLineUp,
 	"Shift-Alt-ArrowDown": copyLineDown,
 	"Mod-d": selectWord,
-	"Mod-Shift-k": deleteLine,
+	"Mod-Shift-d": selectPreviousOccurrence,
+	"Shift-Delete": deleteLine,
 	"Mod-a": smartSelectAll,
 };

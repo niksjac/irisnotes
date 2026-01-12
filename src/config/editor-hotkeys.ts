@@ -51,13 +51,18 @@ export const PROSEMIRROR_HOTKEYS: EditorHotkeyConfig[] = [
 		category: "Line Operations",
 	},
 	{
-		key: "Ctrl+Shift+K",
+		key: "Shift+Delete",
 		description: "Delete Line",
 		category: "Line Operations",
 	},
 	{
 		key: "Ctrl+D",
 		description: "Select Word / Next Occurrence",
+		category: "Line Operations",
+	},
+	{
+		key: "Ctrl+Shift+D",
+		description: "Select Previous Occurrence",
 		category: "Line Operations",
 	},
 	{
@@ -133,7 +138,11 @@ export const SYSTEM_HOTKEYS: EditorHotkeyConfig[] = [
 		description: "Paste Without Formatting",
 		category: "Clipboard",
 	},
-	{ key: "Ctrl+A", description: "Select All", category: "Selection" },
+	{
+		key: "Ctrl+A",
+		description: "Smart Select All (line → paragraph → all)",
+		category: "Selection",
+	},
 	{
 		key: "Escape",
 		description: "Close Modal / Cancel",
