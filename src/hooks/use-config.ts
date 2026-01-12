@@ -51,17 +51,13 @@ export const useConfig = () => {
 	const loadConfig = useCallback(async () => {
 		try {
 			const isDevelopment = import.meta.env.DEV;
-			
-			// Note: The filename is just a hint for the backend.
-			// The Rust backend prioritizes config.toml over config.json.
-			// If config.toml exists, it reads that and converts to JSON.
-			const configPath = "config.json";
 
 			if (isDevelopment) {
 				// In dev mode, config is at ./dev/config.toml
+				// Backend handles .toml/.json extension - just pass base name
 				try {
 					const localConfigString = await invoke<string>("read_config", {
-						filename: "config.json", // Backend converts TOML→JSON transparently
+						filename: "config",
 					});
 					const parsedConfig = JSON.parse(localConfigString) as AppConfig;
 
@@ -143,10 +139,9 @@ export const useConfig = () => {
 				clearTimeout(writeTimeoutRef.current);
 			}
 			
-			// Note: We send JSON, but the backend converts to TOML if config.toml exists.
-			// This keeps the config file human-readable on disk.
+			// Backend converts JSON to TOML and saves as config.toml
 			await invoke("write_config", {
-				filename: "config.json", // Backend converts JSON→TOML transparently
+				filename: "config",
 				content: JSON.stringify(newConfig, null, 2),
 			});
 			

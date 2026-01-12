@@ -5,7 +5,7 @@ import { DEFAULT_HOTKEYS } from "@/config/default-hotkeys";
 import type { HotkeyMapping } from "@/types";
 
 /**
- * Hook for loading hotkeys from separate hotkeys.json file
+ * Hook for loading hotkeys from hotkeys.toml config file
  */
 export function useHotkeysConfig() {
 	const [hotkeys, setHotkeys] = useState<HotkeyMapping>(DEFAULT_HOTKEYS);
@@ -13,8 +13,9 @@ export function useHotkeysConfig() {
 
 	const loadHotkeys = useCallback(async () => {
 		try {
+			// Backend handles .toml/.json extension - just pass base name
 			const hotkeyString = await invoke<string>("read_config", {
-				filename: "hotkeys.json",
+				filename: "hotkeys",
 			});
 			const parsedHotkeys = JSON.parse(hotkeyString) as Partial<HotkeyMapping>;
 
@@ -26,7 +27,7 @@ export function useHotkeysConfig() {
 
 			setHotkeys(mergedHotkeys);
 		} catch {
-			// Failed to load hotkeys.json - use defaults
+			// Failed to load hotkeys.toml - use defaults
 			setHotkeys(DEFAULT_HOTKEYS);
 		} finally {
 			setLoading(false);
@@ -36,8 +37,9 @@ export function useHotkeysConfig() {
 	const saveHotkeys = useCallback(
 		async (newHotkeys: Partial<HotkeyMapping>) => {
 			try {
+				// Backend converts JSON to TOML and saves as hotkeys.toml
 				await invoke("write_config", {
-					filename: "hotkeys.json",
+					filename: "hotkeys",
 					content: JSON.stringify(newHotkeys, null, 2),
 				});
 
@@ -80,14 +82,18 @@ export function useHotkeysConfig() {
 	useEffect(() => {
 		loadHotkeys();
 
-		// Set up file watcher for hotkeys.json
+		// Set up file watcher for hotkeys.toml
 		const setupWatcher = async () => {
 			try {
 				// Listen for hotkey file changes
 				const unlisten = await listen("config-file-changed", (event) => {
-					// Check if the changed file is hotkeys.json
+					// Check if the changed file is hotkeys.toml (or hotkeys.json for backwards compat)
 					const payload = event.payload as any;
-					if (payload?.filename === "hotkeys.json" || !payload?.filename) {
+					if (
+						payload?.filename === "hotkeys.toml" ||
+						payload?.filename === "hotkeys.json" ||
+						!payload?.filename
+					) {
 						loadHotkeys();
 					}
 				});

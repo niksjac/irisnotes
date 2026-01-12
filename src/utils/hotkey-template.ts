@@ -2,12 +2,12 @@ import { DEFAULT_HOTKEYS } from "@/config/default-hotkeys";
 
 /**
  * Generate a complete hotkeys template with all available actions
- * Users can copy this to hotkeys.json and modify only what they want to change
+ * Users can copy this to hotkeys.toml and modify only what they want to change
  */
 export function generateHotkeyTemplate(): string {
 	const template = {
 		_comment:
-			"Copy this file to 'hotkeys.json' and customize the key combinations you want to change. Remove any hotkeys you want to keep as defaults.",
+			"Copy this file to 'hotkeys.toml' and customize the key combinations you want to change. Remove any hotkeys you want to keep as defaults.",
 		...DEFAULT_HOTKEYS,
 	};
 

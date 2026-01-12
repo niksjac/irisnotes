@@ -42,15 +42,23 @@ fn get_config_dir(app_handle: &AppHandle) -> Result<PathBuf, String> {
 
         Ok(dev_config)
     } else {
-        // In production mode, use platform-specific config directory
-        app_handle
-            .path()
-            .app_config_dir()
-            .map_err(|e| format!("Failed to get app config dir: {}", e))
+        // In production mode, use ~/.config/irisnotes/ (Linux) or platform equivalent
+        let config_dir = dirs::config_dir()
+            .ok_or("Failed to get system config directory")?
+            .join("irisnotes");
+        
+        std::fs::create_dir_all(&config_dir)
+            .map_err(|e| format!("Failed to create config directory: {}", e))?;
+        
+        Ok(config_dir)
     }
 }
 
 // Helper function to get the appropriate data directory for databases
+// NOTE: Currently using the same directory as config (~/.config/irisnotes/) to keep
+// everything in one place, matching the dev layout. If we want to follow XDG standards
+// in the future, change dirs::config_dir() to dirs::data_dir() which would put the
+// database in ~/.local/share/irisnotes/ on Linux instead.
 fn get_data_dir(app_handle: &AppHandle) -> Result<PathBuf, String> {
     if is_development_mode() {
         // In development mode, use ./dev relative to project root
@@ -81,11 +89,15 @@ fn get_data_dir(app_handle: &AppHandle) -> Result<PathBuf, String> {
 
         Ok(dev_data)
     } else {
-        // In production mode, use platform-specific data directory
-        app_handle
-            .path()
-            .app_data_dir()
-            .map_err(|e| format!("Failed to get app data dir: {}", e))
+        // In production mode, use ~/.config/irisnotes/ (same as config dir for simplicity)
+        let data_dir = dirs::config_dir()
+            .ok_or("Failed to get system config directory")?
+            .join("irisnotes");
+        
+        std::fs::create_dir_all(&data_dir)
+            .map_err(|e| format!("Failed to create data directory: {}", e))?;
+        
+        Ok(data_dir)
     }
 }
 
@@ -113,24 +125,29 @@ async fn open_app_config_folder(app_handle: tauri::AppHandle) -> Result<(), Stri
 async fn read_config(app_handle: tauri::AppHandle, filename: String) -> Result<String, String> {
     let app_config_dir = get_config_dir(&app_handle)?;
     
-    // Try TOML first, then fall back to JSON
-    let toml_path = app_config_dir.join("config.toml");
-    let json_path = app_config_dir.join(&filename);
+    // Determine the base name (without extension) and try TOML first, then JSON
+    let base_name = filename
+        .strip_suffix(".json")
+        .or_else(|| filename.strip_suffix(".toml"))
+        .unwrap_or(&filename);
+    
+    let toml_path = app_config_dir.join(format!("{}.toml", base_name));
+    let json_path = app_config_dir.join(format!("{}.json", base_name));
     
     if toml_path.exists() {
         // Read TOML and convert to JSON for frontend
         let toml_content = std::fs::read_to_string(&toml_path)
-            .map_err(|e| format!("Failed to read config.toml: {}", e))?;
+            .map_err(|e| format!("Failed to read {}.toml: {}", base_name, e))?;
         let value: toml::Value = toml::from_str(&toml_content)
             .map_err(|e| format!("Failed to parse TOML: {}", e))?;
         serde_json::to_string(&value)
             .map_err(|e| format!("Failed to convert TOML to JSON: {}", e))
     } else if json_path.exists() {
         // Fall back to JSON for backward compatibility
-        std::fs::read_to_string(json_path)
+        std::fs::read_to_string(&json_path)
             .map_err(|e| format!("Failed to read config file: {}", e))
     } else {
-        Err("Config file does not exist".to_string())
+        Err(format!("Config file {}.toml does not exist", base_name))
     }
 }
 
@@ -142,26 +159,24 @@ async fn write_config(
 ) -> Result<(), String> {
     let app_config_dir = get_config_dir(&app_handle)?;
     
-    // Check if we should write TOML (if config.toml exists) or JSON
-    let toml_path = app_config_dir.join("config.toml");
+    // Determine the base name and always write as TOML
+    let base_name = filename
+        .strip_suffix(".json")
+        .or_else(|| filename.strip_suffix(".toml"))
+        .unwrap_or(&filename);
     
-    if toml_path.exists() || filename.ends_with(".toml") {
-        // Parse JSON from frontend and convert to TOML
-        let json_value: serde_json::Value = serde_json::from_str(&content)
-            .map_err(|e| format!("Failed to parse JSON: {}", e))?;
-        let toml_value: toml::Value = serde_json::from_value(
-            serde_json::to_value(&json_value).unwrap()
-        ).map_err(|e| format!("Failed to convert to TOML value: {}", e))?;
-        let toml_string = toml::to_string_pretty(&toml_value)
-            .map_err(|e| format!("Failed to serialize TOML: {}", e))?;
-        std::fs::write(&toml_path, toml_string)
-            .map_err(|e| format!("Failed to write config.toml: {}", e))
-    } else {
-        // Write JSON
-        let config_path = app_config_dir.join(filename);
-        std::fs::write(config_path, content)
-            .map_err(|e| format!("Failed to write config file: {}", e))
-    }
+    let toml_path = app_config_dir.join(format!("{}.toml", base_name));
+    
+    // Parse JSON from frontend and convert to TOML
+    let json_value: serde_json::Value = serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse JSON: {}", e))?;
+    let toml_value: toml::Value = serde_json::from_value(
+        serde_json::to_value(&json_value).unwrap()
+    ).map_err(|e| format!("Failed to convert to TOML value: {}", e))?;
+    let toml_string = toml::to_string_pretty(&toml_value)
+        .map_err(|e| format!("Failed to serialize TOML: {}", e))?;
+    std::fs::write(&toml_path, toml_string)
+        .map_err(|e| format!("Failed to write {}.toml: {}", base_name, e))
 }
 
 #[tauri::command]
