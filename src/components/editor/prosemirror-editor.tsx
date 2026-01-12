@@ -61,11 +61,10 @@ export function ProseMirrorEditor({
 			schema: mySchema,
 			history: true,
 			appShortcuts: [
-				"Mod-b", // Toggle sidebar
+				"Mod-g", // Toggle sidebar
 				"Mod-j", // Toggle activity bar
 				"Mod-w", // Close tab
 				"Mod-t", // New tab
-				"Mod-d", // Toggle dual pane
 				"Mod-e", // Toggle editor view
 			],
 		});

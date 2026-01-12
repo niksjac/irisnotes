@@ -47,7 +47,7 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 
 	// Pane hotkeys
 	toggleDualPane: {
-		key: "ctrl+d",
+		key: "ctrl+alt+d",
 		description: "Toggle Dual Pane Mode",
 		category: "Panes",
 		global: true,
