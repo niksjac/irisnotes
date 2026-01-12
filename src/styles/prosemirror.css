@@ -111,6 +111,24 @@
   outline-offset: 1px;
 }
 
+/* Empty lines within selection - shows a visual indicator */
+.pm-tight-selection-empty-line {
+  position: relative;
+}
+
+.pm-tight-selection-empty-line::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0.5em;
+  height: 100%;
+  min-height: 1em;
+  background-color: var(--pm-selection-bg);
+  border-radius: 2px;
+  opacity: 0.7;
+}
+
 /* ==========================================================================
    Custom Cursor
    ========================================================================== */
