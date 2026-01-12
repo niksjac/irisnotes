@@ -18,6 +18,7 @@ import {
 	loadTabState,
 	useTheme,
 	useNoteActions,
+	useEditorSettings,
 } from "@/hooks";
 import { mapHotkeyHandlers } from "@/utils/hotkey-mapping";
 import {
@@ -38,6 +39,9 @@ export const Layout: React.FC = () => {
 
 	// Apply theme (adds .dark class to document)
 	useTheme();
+
+	// Apply editor settings (cursor, fonts, etc.) at startup
+	useEditorSettings();
 
 	// Persist app state
 	useAppPersistence();
