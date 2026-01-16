@@ -168,7 +168,7 @@ export function TreeView() {
 	const items = useAtomValue(itemsAtom);
 	const setSelectedItemId = useSetAtom(selectedItemIdAtom);
 	const { openItemInTab } = useTabManagement();
-	const { moveItem } = useItems();
+	const { moveItem, updateItemTitle, deleteItem } = useItems();
 
 	// Right-click menu handling
 	const { rightClickMenu, handleRightClickMenu, hideRightClickMenu } =
@@ -501,6 +501,82 @@ export function TreeView() {
 					}
 				}) as TreeHotkeyHandler,
 			},
+			// Rename focused item (F2)
+			customRename: {
+				hotkey: "F2",
+				preventDefault: true,
+				handler: ((_e, treeInstance) => {
+					const focusedItem = treeInstance.getFocusedItem();
+					if (focusedItem) {
+						const itemData = focusedItem.getItemData();
+						const newName = prompt(
+							`Enter new name for "${itemData.title}":`,
+							itemData.title,
+						);
+						if (newName && newName !== itemData.title) {
+							updateItemTitle(itemData.id, newName);
+						}
+					}
+				}) as TreeHotkeyHandler,
+			},
+			// Delete focused item (Shift+Delete)
+			customDelete: {
+				hotkey: "Shift+Delete",
+				preventDefault: true,
+				handler: (async (_e, treeInstance) => {
+					const focusedItem = treeInstance.getFocusedItem();
+					if (focusedItem) {
+						const itemData = focusedItem.getItemData();
+						const itemType = itemData.type;
+						const itemName =
+							itemType === "note"
+								? "note"
+								: itemType === "book"
+									? "book"
+									: itemType === "section"
+										? "section"
+										: "item";
+
+						const confirmMessage = `Are you sure you want to delete ${itemName} "${itemData.title}"${
+							itemType !== "note" ? " and all its contents" : ""
+						}?`;
+
+						if (confirm(confirmMessage)) {
+							// Find the item to focus after deletion
+							const parentId = itemData.parent_id || "root";
+							const siblings = childrenMap.get(parentId) || [];
+							const currentIndex = siblings.indexOf(itemData.id);
+
+							let nextFocusId: string | null = null;
+							if (currentIndex > 0) {
+								// Focus previous sibling
+								nextFocusId = siblings[currentIndex - 1] ?? null;
+							} else if (siblings.length > 1) {
+								// Focus next sibling (will be at index 0 after deletion)
+								nextFocusId = siblings[currentIndex + 1] ?? null;
+							} else if (parentId !== "root") {
+								// No siblings left, focus parent
+								nextFocusId = parentId;
+							}
+
+							// Set focus via state BEFORE deletion so it persists through re-render
+							if (nextFocusId) {
+								setTreeState((prev) => ({
+									...prev,
+									focusedItem: nextFocusId,
+								}));
+							}
+
+							await deleteItem(itemData.id);
+
+							// Restore DOM focus after React re-renders
+							requestAnimationFrame(() => {
+								treeInstance.updateDomFocus();
+							});
+						}
+					}
+				}) as TreeHotkeyHandler,
+			},
 			// Paste cut items (Ctrl+V)
 			// If focused on a folder: paste inside
 			// If focused on a note: paste as sibling at same level
@@ -749,7 +825,7 @@ export function TreeView() {
 	if (items.length === 0) {
 		return (
 			<div className="w-full h-full flex flex-col">
-				<div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+				<div className="flex items-center justify-between px-3 min-h-[40px] border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
 					<h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
 						Notes Tree
 					</h2>
@@ -763,8 +839,8 @@ export function TreeView() {
 
 	return (
 		<div className="w-full h-full flex flex-col">
-			{/* Tree Header */}
-			<div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+			{/* Tree Header - matches tab bar height */}
+			<div className="flex items-center justify-between px-3 min-h-[40px] border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
 				<h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
 					Notes Tree
 				</h2>
