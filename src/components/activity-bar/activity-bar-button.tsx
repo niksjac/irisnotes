@@ -9,7 +9,8 @@ interface ActivityBarButtonProps {
 	label?: string;
 	expanded?: boolean;
 	iconSize?: number;
-	shortcutKey?: string;
+	keyTip?: string;
+	showKeyTip?: boolean;
 }
 
 export function ActivityBarButton({
@@ -20,7 +21,8 @@ export function ActivityBarButton({
 	label,
 	expanded = false,
 	iconSize = 18,
-	shortcutKey,
+	keyTip,
+	showKeyTip = false,
 }: ActivityBarButtonProps) {
 	// Component-level color constants
 	const COLORS = {
@@ -59,26 +61,11 @@ export function ActivityBarButton({
 			{expanded && label && (
 				<span className="hidden md:inline text-xs truncate">{label}</span>
 			)}
-			{shortcutKey && !expanded && (
-				<svg
-					className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4"
-					width="12"
-					height="12"
-					viewBox="0 0 12 12"
-				>
-					<circle cx="6" cy="6" r="6" fill="#3b82f6" />
-					<text
-						x="6"
-						y="6"
-						textAnchor="middle"
-						dominantBaseline="central"
-						fill="white"
-						fontSize="8"
-						fontWeight="bold"
-					>
-						{shortcutKey}
-					</text>
-				</svg>
+			{/* KeyTip badge - shown when Alt is held */}
+			{showKeyTip && keyTip && (
+				<span className="absolute -top-1 -right-1 md:-top-0.5 md:-right-0.5 min-w-[14px] h-[14px] flex items-center justify-center bg-amber-400 text-gray-900 text-[9px] font-bold rounded shadow-sm border border-amber-500 px-0.5 z-50">
+					{keyTip}
+				</span>
 			)}
 		</button>
 	);

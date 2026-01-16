@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import * as Icons from "lucide-react";
-import { useEditorLayout, useSidebar, useView, useTheme } from "@/hooks";
+import { useEditorLayout, useSidebar, useView, useTheme, useKeyTipActions } from "@/hooks";
 import { useEditorState, useLineWrapping } from "@/hooks";
 import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import {
@@ -70,8 +70,8 @@ export function ActivityBar() {
 		}));
 	}, [setPaneState]);
 
-	// Define actions with their keyboard shortcuts
-	const actions = [
+	// Define actions with their keyboard shortcuts (Alt+key)
+	const keyTipActions = useMemo(() => [
 		{ key: "1", action: toggleSidebar, label: "Toggle Sidebar" },
 		{ key: "2", action: openSettingsTab, label: "Settings" },
 		{ key: "3", action: openHotkeysTab, label: "Hotkeys" },
@@ -79,8 +79,14 @@ export function ActivityBar() {
 		{ key: "5", action: toggleToolbar, label: "Toolbar" },
 		{ key: "6", action: toggleLineWrapping, label: "Wrap" },
 		{ key: "7", action: toggleDarkMode, label: "Theme" },
-		{ key: "e", action: toggleActivityBarExpanded, label: "Expand" },
-	];
+		{ key: "e", action: toggleActivityBarExpanded, label: "Expand/Collapse" },
+	], [toggleSidebar, openSettingsTab, openHotkeysTab, togglePaneMode, toggleToolbar, toggleLineWrapping, toggleDarkMode, toggleActivityBarExpanded]);
+
+	// Use the KeyTip system for Alt+key shortcuts
+	const { altKeyHeld } = useKeyTipActions(keyTipActions);
+
+	// Legacy keyboard handler when activity bar is focused (without Alt)
+	const actions = keyTipActions;
 
 	// Keyboard handler when activity bar is focused
 	useEffect(() => {
@@ -125,21 +131,28 @@ export function ActivityBar() {
 			)}
 		>
 			{/* Expand/Collapse toggle - desktop only */}
-			<div className="hidden md:flex md:justify-end md:w-full md:mb-1">
+			<div className={clsx("hidden md:flex md:w-full", activityBarExpanded ? "md:justify-end md:mb-1" : "md:justify-center md:mb-2")}>
 				<button
 					className={clsx(
-						"flex items-center justify-center border-none rounded bg-transparent cursor-pointer transition-all duration-200",
-						"w-6 h-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200",
-						"hover:bg-gray-200 dark:hover:bg-gray-700"
+						"relative flex items-center justify-center border-none bg-transparent cursor-pointer transition-all duration-200",
+						"text-gray-400 hover:text-gray-600 dark:hover:text-gray-200",
+						activityBarExpanded
+							? "w-6 h-5 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+							: "w-6 h-6 hover:scale-110"
 					)}
 					onClick={toggleActivityBarExpanded}
-					title={activityBarExpanded ? "Collapse activity bar" : "Expand activity bar"}
+					title={activityBarExpanded ? "Collapse activity bar (Alt+E)" : "Expand activity bar (Alt+E)"}
 					tabIndex={-1}
 				>
 					{activityBarExpanded ? (
 						<Icons.PanelLeftClose size={14} />
 					) : (
-						<Icons.PanelLeftOpen size={14} />
+						<Icons.PanelLeftOpen size={18} />
+					)}
+					{altKeyHeld && (
+						<span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center bg-amber-400 text-[9px] font-bold text-amber-900 rounded shadow-sm">
+							E
+						</span>
 					)}
 				</button>
 			</div>
@@ -150,33 +163,35 @@ export function ActivityBar() {
 					icon={Icons.FileText}
 					isActive={!sidebarCollapsed}
 					onClick={toggleSidebar}
-					title="Toggle Notes Sidebar"
+					title="Toggle Notes Sidebar (Alt+1)"
 					label="Notes"
 					expanded={activityBarExpanded}
-					shortcutKey={hasFocus ? "1" : undefined}
+					keyTip="1"
+					showKeyTip={altKeyHeld}
 				/>
 
 				<ActivityBarButton
 					icon={Icons.Settings}
 					isActive={isSettingsActive}
 					onClick={openSettingsTab}
-					title="Settings"
+					title="Settings (Alt+2)"
 					label="Settings"
 					expanded={activityBarExpanded}
-					shortcutKey={hasFocus ? "2" : undefined}
+					keyTip="2"
+					showKeyTip={altKeyHeld}
 				/>
 
 				<ActivityBarButton
 					icon={Icons.Keyboard}
 					isActive={isHotkeysActive}
 					onClick={openHotkeysTab}
-					title="Keyboard Shortcuts"
+					title="Keyboard Shortcuts (Alt+3)"
 					label="Hotkeys"
 					expanded={activityBarExpanded}
-					shortcutKey={hasFocus ? "3" : undefined}
+					keyTip="3"
+					showKeyTip={altKeyHeld}
 				/>
 
-				{/* Dual pane button - hidden on mobile */}
 				<div className="hidden md:block">
 					<ActivityBarButton
 						icon={paneState.count === 1 ? Icons.Columns2 : Icons.Minus}
@@ -184,12 +199,13 @@ export function ActivityBar() {
 						onClick={togglePaneMode}
 						title={
 							paneState.count === 1
-								? "Split into two panes"
-								: "Merge to single pane"
+								? "Split into two panes (Alt+4)"
+								: "Merge to single pane (Alt+4)"
 						}
 						label={paneState.count === 1 ? "Split Pane" : "Single Pane"}
 						expanded={activityBarExpanded}
-						shortcutKey={hasFocus ? "4" : undefined}
+						keyTip="4"
+						showKeyTip={altKeyHeld}
 					/>
 				</div>
 			</div>
@@ -207,51 +223,51 @@ export function ActivityBar() {
 				{/* Font Size Indicator */}
 				<div
 					className={clsx(
-						"flex items-center gap-0.5 cursor-default text-gray-700 dark:text-gray-300 text-xs font-medium p-0.5",
-						// Mobile: always compact
-						"flex-col justify-center h-6",
+						"flex items-center justify-center cursor-default text-gray-700 dark:text-gray-300 font-medium tabular-nums",
+						// Mobile: compact
+						"text-xs h-6 w-8",
 						// Desktop: depends on expanded state
 						activityBarExpanded
-							? "md:justify-start md:w-full md:px-2 md:h-7 md:flex-row"
-							: "md:flex-col md:justify-center md:h-8"
+							? "md:justify-start md:w-full md:px-2 md:h-7 md:text-xs"
+							: "md:w-6 md:h-6 md:text-[11px]"
 					)}
-					title={`Editor font size: ${fontSize}px (Ctrl+Plus/Minus to adjust)`}
+					title={`Base font size: ${fontSize}px (Ctrl+Alt+Up/Down to adjust)`}
 				>
-					<Icons.Type size={10} className="md:w-3 md:h-3 flex-shrink-0" />
-					{/* Font size text: hidden on mobile, shown on desktop */}
-					<span className={clsx("hidden", activityBarExpanded ? "md:inline" : "md:inline")}>
-						{fontSize}px
-					</span>
+					<span>{fontSize}</span>
+					{activityBarExpanded && <span className="hidden md:inline ml-1">px</span>}
 				</div>
 
 				<ActivityBarButton
-					icon={Icons.Wrench}
+					icon={toolbarVisible ? Icons.PanelTop : Icons.PanelTopDashed}
 					isActive={toolbarVisible}
 					onClick={toggleToolbar}
-					title={`${toolbarVisible ? "Hide" : "Show"} editor toolbar`}
+					title={`${toolbarVisible ? "Hide" : "Show"} editor toolbar (Alt+5)`}
 					label="Toolbar"
 					expanded={activityBarExpanded}
-					shortcutKey={hasFocus ? "5" : undefined}
+					keyTip="5"
+					showKeyTip={altKeyHeld}
 				/>
 
 				<ActivityBarButton
 					icon={isWrapping ? Icons.WrapText : Icons.ArrowRight}
 					isActive={isWrapping}
 					onClick={toggleLineWrapping}
-					title={`${isWrapping ? "Disable" : "Enable"} line wrapping (Alt+Z)`}
+					title={`${isWrapping ? "Disable" : "Enable"} line wrapping (Alt+6)`}
 					label="Wrap Text"
 					expanded={activityBarExpanded}
-					shortcutKey={hasFocus ? "6" : undefined}
+					keyTip="6"
+					showKeyTip={altKeyHeld}
 				/>
 
 				<ActivityBarButton
 					icon={darkMode ? Icons.Sun : Icons.Moon}
 					isActive={false}
 					onClick={toggleDarkMode}
-					title={`Switch to ${darkMode ? "light" : "dark"} mode`}
+					title={`Switch to ${darkMode ? "light" : "dark"} mode (Alt+7)`}
 					label={darkMode ? "Light Mode" : "Dark Mode"}
 					expanded={activityBarExpanded}
-					shortcutKey={hasFocus ? "7" : undefined}
+					keyTip="7"
+					showKeyTip={altKeyHeld}
 				/>
 			</div>
 		</div>
