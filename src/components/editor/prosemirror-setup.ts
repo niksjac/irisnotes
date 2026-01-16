@@ -1,5 +1,5 @@
-import type { Schema } from "prosemirror-model";
-import type { Plugin } from "prosemirror-state";
+import type { Schema, NodeType } from "prosemirror-model";
+import type { Plugin, Command } from "prosemirror-state";
 import { keymap } from "prosemirror-keymap";
 import { history } from "prosemirror-history";
 import {
@@ -10,9 +10,9 @@ import {
 	chainCommands,
 	createParagraphNear,
 	liftEmptyBlock,
-	splitBlock,
+	lift,
 } from "prosemirror-commands";
-import { wrapInList, liftListItem, sinkListItem } from "prosemirror-schema-list";
+import { wrapInList, liftListItem, sinkListItem, splitListItem } from "prosemirror-schema-list";
 import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
 import { buildInputRules } from "prosemirror-example-setup";
@@ -20,7 +20,129 @@ import { buildKeymap } from "prosemirror-example-setup";
 import { autolinkPlugin, linkifySelection } from "./plugins/autolink";
 import { tightSelectionPlugin } from "./plugins/tight-selection";
 import { customCursorPlugin } from "./plugins/custom-cursor";
+import { activeLinePlugin } from "./plugins/active-line";
 import { lineCommandsKeymap } from "./plugins/line-commands";
+
+/**
+ * Toggle list command - wraps in list if not in one, or lifts out if already in one
+ */
+function toggleList(listType: NodeType, itemType: NodeType): Command {
+	return (state, dispatch) => {
+		const { $from, $to } = state.selection;
+		const range = $from.blockRange($to);
+		
+		if (!range) return false;
+		
+		// Check if we're already in this type of list
+		for (let d = range.depth; d >= 0; d--) {
+			const node = $from.node(d);
+			if (node.type === listType) {
+				// We're in this list type - lift out of it
+				return liftListItem(itemType)(state, dispatch);
+			}
+		}
+		
+		// Not in this list type - wrap in it
+		return wrapInList(listType)(state, dispatch);
+	};
+}
+
+/**
+ * Toggle blockquote - wraps in blockquote if not in one, or lifts out if already in one
+ */
+function toggleBlockquote(quoteType: NodeType): Command {
+	return (state, dispatch) => {
+		const { $from, $to } = state.selection;
+		const range = $from.blockRange($to);
+		
+		if (!range) return false;
+		
+		// Check if we're already in a blockquote
+		for (let d = range.depth; d >= 0; d--) {
+			const node = $from.node(d);
+			if (node.type === quoteType) {
+				// We're in a blockquote - lift out of it
+				return lift(state, dispatch);
+			}
+		}
+		
+		// Not in blockquote - wrap in it
+		return wrapIn(quoteType)(state, dispatch);
+	};
+}
+
+/**
+ * Split block while preserving marks from the current position.
+ * This makes formatting persist to new lines when pressing Enter.
+ */
+const splitBlockPreserveMarks: Command = (state, dispatch) => {
+	const { $from } = state.selection;
+	
+	// Get the marks at the current cursor position
+	// Priority: stored marks > marks from text node before/at cursor
+	let marks = state.storedMarks;
+	
+	if (!marks || marks.length === 0) {
+		// Method 1: Check nodeBefore (the node immediately before cursor)
+		const nodeBefore = $from.nodeBefore;
+		if (nodeBefore?.isText && nodeBefore.marks.length > 0) {
+			marks = nodeBefore.marks;
+		}
+	}
+	
+	if (!marks || marks.length === 0) {
+		// Method 2: Walk through parent content to find marks at cursor position
+		const parent = $from.parent;
+		const offsetInParent = $from.parentOffset;
+		
+		if (offsetInParent > 0) {
+			let currentOffset = 0;
+			parent.forEach((node) => {
+				// Check if cursor is within or at the end of this node
+				if (currentOffset < offsetInParent && currentOffset + node.nodeSize >= offsetInParent) {
+					if (node.isText && node.marks.length > 0) {
+						marks = node.marks;
+					}
+				}
+				currentOffset += node.nodeSize;
+			});
+		}
+	}
+	
+	if (!marks || marks.length === 0) {
+		// Method 3: Use $from.marks() as final fallback
+		const fromMarks = $from.marks();
+		if (fromMarks.length > 0) {
+			marks = fromMarks;
+		}
+	}
+	
+	// Create our own transaction that does both split and mark preservation
+	if (dispatch) {
+		const tr = state.tr;
+		
+		// Delete selection if not empty
+		if (!state.selection.empty) {
+			tr.deleteSelection();
+		}
+		
+		// Get the position to split at (after potential deletion)
+		const pos = tr.selection.$from.pos;
+		
+		// Split the block
+		tr.split(pos);
+		
+		// Set stored marks for the new position AFTER split
+		if (marks && marks.length > 0) {
+			tr.setStoredMarks(marks);
+		}
+		
+		dispatch(tr.scrollIntoView());
+		return true;
+	}
+	
+	return true;
+};
 
 interface SetupOptions {
 	schema: Schema;
@@ -57,13 +179,44 @@ export function customSetup(options: SetupOptions): Plugin[] {
 	// (Alt+Up/Down to move lines, Alt+Shift+Up/Down to copy, Ctrl+A smart select, etc.)
 	plugins.push(keymap(lineCommandsKeymap));
 
-	// Editor keybindings (but excluding app shortcuts)
+	// Line-based model: Both Enter and Shift+Enter create new blocks with preserved formatting
+	// This enforces the concept that each "paragraph" is really a "line"
+	// MUST come before baseKeymap to override default Enter behavior
+	// splitListItem comes first to handle Enter in lists (creates next numbered/bulleted item)
+	const { nodes } = options.schema;
+	const enterKeymap = {
+		"Enter": chainCommands(
+			splitListItem(nodes.list_item),
+			liftEmptyBlock,
+			createParagraphNear,
+			splitBlockPreserveMarks
+		),
+		"Shift-Enter": chainCommands(
+			splitListItem(nodes.list_item),
+			liftEmptyBlock,
+			createParagraphNear,
+			splitBlockPreserveMarks
+		),
+	};
+	plugins.push(keymap(enterKeymap));
+
+	// Editor keybindings (but excluding app shortcuts and list shortcuts we override)
 	const editorKeymap = buildKeymap(options.schema, {});
 
-	// Remove app shortcuts from editor keymap
+	// Shortcuts to exclude from the example-setup keymap
+	// - App shortcuts are handled by the app, not the editor
+	// - List shortcuts are overridden with our toggle behavior (exclude all variants)
+	const excludedShortcuts = [
+		...appShortcuts,
+		"Shift-Ctrl-7",
+		"Shift-Ctrl-8",
+		"Shift-Ctrl-9",
+	];
+
+	// Remove excluded shortcuts from editor keymap
 	const filteredKeymap: { [key: string]: any } = {};
 	Object.keys(editorKeymap).forEach((key) => {
-		if (!appShortcuts.includes(key)) {
+		if (!excludedShortcuts.includes(key)) {
 			filteredKeymap[key] = editorKeymap[key];
 		}
 	});
@@ -82,6 +235,9 @@ export function customSetup(options: SetupOptions): Plugin[] {
 
 	// Gap cursor (allows cursor in hard-to-reach places like between blocks)
 	plugins.push(gapCursor());
+
+	// Active line highlight (subtle background on the line containing cursor)
+	plugins.push(activeLinePlugin());
 
 	// Tight selection (VS Code / Notion style - only highlights actual text)
 	plugins.push(tightSelectionPlugin());
@@ -111,7 +267,6 @@ export function customSetup(options: SetupOptions): Plugin[] {
 	}
 
 	// Block formatting shortcuts
-	const { nodes } = options.schema;
 
 	// Headings: Ctrl+Shift+1/2/3
 	if (nodes.heading) {
@@ -125,23 +280,180 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		customKeybindings["Mod-Shift-0"] = setBlockType(nodes.paragraph);
 	}
 
-	// Lists: Ctrl+Shift+8 (bullet), Ctrl+Shift+9 (ordered)
-	if (nodes.bullet_list) {
-		customKeybindings["Mod-Shift-8"] = wrapInList(nodes.bullet_list);
+	// Lists: Alt+L (bullet), Alt+O (ordered) - layout-independent shortcuts
+	// Note: Ctrl+Shift+number keys don't work reliably on non-US keyboards
+	if (nodes.ordered_list && nodes.list_item) {
+		customKeybindings["Alt-o"] = toggleList(nodes.ordered_list, nodes.list_item);
 	}
-	if (nodes.ordered_list) {
-		customKeybindings["Mod-Shift-9"] = wrapInList(nodes.ordered_list);
+	if (nodes.bullet_list && nodes.list_item) {
+		customKeybindings["Alt-l"] = toggleList(nodes.bullet_list, nodes.list_item);
 	}
 
-	// List indent/outdent: Ctrl+] / Ctrl+[
+	// List indent/outdent: Ctrl+] / Ctrl+[ AND Tab / Shift+Tab
 	if (nodes.list_item) {
 		customKeybindings["Mod-]"] = sinkListItem(nodes.list_item);
 		customKeybindings["Mod-["] = liftListItem(nodes.list_item);
+		
+		// Tab in list = indent, Shift+Tab = outdent
+		// For non-list context with selection: indent/outdent all lines
+		// For non-list context without selection: insert/remove spaces
+		const tabInList = sinkListItem(nodes.list_item);
+		const shiftTabInList = liftListItem(nodes.list_item);
+		
+		customKeybindings["Tab"] = (state, dispatch) => {
+			// Try to indent list item first
+			if (tabInList(state, dispatch)) {
+				return true;
+			}
+			
+			if (dispatch) {
+				const { from, to, empty } = state.selection;
+				
+				if (empty) {
+					// No selection - just insert spaces at cursor
+					dispatch(state.tr.insertText("  ").scrollIntoView());
+				} else {
+					// Selection exists - indent all lines in selection
+					const tr = state.tr;
+					const doc = state.doc;
+					
+					// Find all block positions that overlap with selection
+					const positions: number[] = [];
+					doc.nodesBetween(from, to, (node, pos) => {
+						if (node.isTextblock) {
+							positions.push(pos + 1); // +1 to get inside the block
+						}
+					});
+					
+					// Insert spaces at the start of each line (reverse order to maintain positions)
+					let offset = 0;
+					for (const pos of positions) {
+						tr.insertText("  ", pos + offset);
+						offset += 2;
+					}
+					
+					dispatch(tr.scrollIntoView());
+				}
+			}
+			return true;
+		};
+		
+		customKeybindings["Shift-Tab"] = (state, dispatch) => {
+			// Try to outdent list item first
+			if (shiftTabInList(state, dispatch)) {
+				return true;
+			}
+			
+			if (dispatch) {
+				const { from, to, empty } = state.selection;
+				
+				if (empty) {
+					// No selection - remove leading spaces from current line
+					const { $from } = state.selection;
+					const lineStart = $from.start();
+					const lineText = $from.parent.textContent;
+					const match = lineText.match(/^( {1,2})/);
+					if (match) {
+						const spacesToRemove = match[1].length;
+						dispatch(state.tr.delete(lineStart, lineStart + spacesToRemove).scrollIntoView());
+					}
+				} else {
+					// Selection exists - outdent all lines in selection
+					const tr = state.tr;
+					const doc = state.doc;
+					
+					// Collect blocks and their leading spaces
+					const edits: { pos: number; remove: number }[] = [];
+					doc.nodesBetween(from, to, (node, pos) => {
+						if (node.isTextblock && node.textContent) {
+							const match = node.textContent.match(/^( {1,2})/);
+							if (match) {
+								edits.push({ pos: pos + 1, remove: match[1].length });
+							}
+						}
+					});
+					
+					// Remove spaces (reverse order to maintain positions)
+					for (let i = edits.length - 1; i >= 0; i--) {
+						const edit = edits[i];
+						tr.delete(edit.pos, edit.pos + edit.remove);
+					}
+					
+					if (edits.length > 0) {
+						dispatch(tr.scrollIntoView());
+					}
+				}
+			}
+			return true; // Still consume the event to prevent focus change
+		};
+	} else {
+		// No list support, just handle tab characters
+		customKeybindings["Tab"] = (state, dispatch) => {
+			if (dispatch) {
+				const { from, to, empty } = state.selection;
+				
+				if (empty) {
+					dispatch(state.tr.insertText("  ").scrollIntoView());
+				} else {
+					const tr = state.tr;
+					const doc = state.doc;
+					const positions: number[] = [];
+					doc.nodesBetween(from, to, (node, pos) => {
+						if (node.isTextblock) {
+							positions.push(pos + 1);
+						}
+					});
+					let offset = 0;
+					for (const pos of positions) {
+						tr.insertText("  ", pos + offset);
+						offset += 2;
+					}
+					dispatch(tr.scrollIntoView());
+				}
+			}
+			return true;
+		};
+		customKeybindings["Shift-Tab"] = (state, dispatch) => {
+			if (dispatch) {
+				const { from, to, empty } = state.selection;
+				
+				if (empty) {
+					const { $from } = state.selection;
+					const lineStart = $from.start();
+					const lineText = $from.parent.textContent;
+					const match = lineText.match(/^( {1,2})/);
+					if (match) {
+						const spacesToRemove = match[1].length;
+						dispatch(state.tr.delete(lineStart, lineStart + spacesToRemove).scrollIntoView());
+					}
+				} else {
+					const tr = state.tr;
+					const doc = state.doc;
+					const edits: { pos: number; remove: number }[] = [];
+					doc.nodesBetween(from, to, (node, pos) => {
+						if (node.isTextblock && node.textContent) {
+							const match = node.textContent.match(/^( {1,2})/);
+							if (match) {
+								edits.push({ pos: pos + 1, remove: match[1].length });
+							}
+						}
+					});
+					for (let i = edits.length - 1; i >= 0; i--) {
+						const edit = edits[i];
+						tr.delete(edit.pos, edit.pos + edit.remove);
+					}
+					if (edits.length > 0) {
+						dispatch(tr.scrollIntoView());
+					}
+				}
+			}
+			return true;
+		};
 	}
 
-	// Blockquote: Ctrl+Shift+.
+	// Blockquote: Ctrl+Shift+. - now toggleable
 	if (nodes.blockquote) {
-		customKeybindings["Mod-Shift-."] = wrapIn(nodes.blockquote);
+		customKeybindings["Mod-Shift-."] = toggleBlockquote(nodes.blockquote);
 	}
 
 	// Code block: Ctrl+Shift+C
@@ -150,17 +462,6 @@ export function customSetup(options: SetupOptions): Plugin[] {
 	}
 
 	plugins.push(keymap(customKeybindings));
-
-	// Line-based model: Shift+Enter creates new block (like Enter), not <br>
-	// This enforces the concept that each "paragraph" is really a "line"
-	const shiftEnterKeymap = {
-		"Shift-Enter": chainCommands(
-			liftEmptyBlock,
-			createParagraphNear,
-			splitBlock
-		),
-	};
-	plugins.push(keymap(shiftEnterKeymap));
 
 	return plugins;
 }

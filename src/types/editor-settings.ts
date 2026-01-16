@@ -30,8 +30,11 @@ export type CursorWidth = 1 | 2 | 3 | "block";
  * All numeric values are in the units specified
  */
 export interface EditorSettings {
-	/** Font size in pixels (12-24) */
+	/** Base font size in pixels (12-24) */
 	fontSize: number;
+
+	/** Zoom level for proportional scaling (0.5-2.0) */
+	zoom: number;
 
 	/** Font family preset or custom string */
 	fontFamily: EditorFontFamily;
@@ -59,13 +62,20 @@ export interface EditorSettings {
 
 	/** Enable line wrapping */
 	lineWrapping: boolean;
+
+	/** Enable active line highlight */
+	activeLineHighlight: boolean;
+
+	/** Active line highlight color (hex or rgba) */
+	activeLineColor: string;
 }
 
 /**
  * Default editor settings - sensible starting point
  */
 export const DEFAULT_EDITOR_SETTINGS: EditorSettings = {
-	fontSize: 16,
+	fontSize: 14,
+	zoom: 1,
 	fontFamily: "system",
 	lineHeight: 1.6,
 	paragraphSpacing: 0.5,
@@ -75,6 +85,8 @@ export const DEFAULT_EDITOR_SETTINGS: EditorSettings = {
 	cursorBlinkStyle: "blink",
 	cursorSmoothMovement: true,
 	lineWrapping: false,
+	activeLineHighlight: true,
+	activeLineColor: "", // Empty = use theme default
 };
 
 /**
@@ -91,7 +103,8 @@ export const FONT_FAMILY_MAP: Record<string, string> = {
  * Setting constraints for UI controls
  */
 export const EDITOR_SETTINGS_CONSTRAINTS = {
-	fontSize: { min: 12, max: 24, step: 1 },
+	fontSize: { min: 8, max: 72, step: 1 },
+	zoom: { min: 0.5, max: 3, step: 0.1 },
 	lineHeight: { min: 1.2, max: 2.5, step: 0.1 },
 	paragraphSpacing: { min: 0, max: 2, step: 0.1 },
 	editorPadding: { min: 8, max: 64, step: 4 },
@@ -120,6 +133,7 @@ export function applyEditorSettings(settings: EditorSettings): void {
 		FONT_FAMILY_MAP[settings.fontFamily] || settings.fontFamily;
 
 	root.style.setProperty("--pm-font-size", `${settings.fontSize}px`);
+	root.style.setProperty("--pm-zoom", String(settings.zoom));
 	root.style.setProperty("--pm-font-family", fontFamily);
 	root.style.setProperty("--pm-line-height", String(settings.lineHeight));
 	root.style.setProperty(
@@ -158,6 +172,24 @@ export function applyEditorSettings(settings: EditorSettings): void {
 	} else {
 		root.classList.remove("pm-cursor-smooth-movement");
 	}
+
+	// Active line highlight
+	if (settings.activeLineHighlight) {
+		root.classList.add("pm-active-line-enabled");
+	} else {
+		root.classList.remove("pm-active-line-enabled");
+	}
+
+	// Active line color (if custom color is set)
+	if (settings.activeLineColor) {
+		root.style.setProperty("--pm-active-line-bg", settings.activeLineColor);
+	} else {
+		// Reset to theme default
+		root.style.removeProperty("--pm-active-line-bg");
+	}
+
+	// Dispatch event so editors can recalculate cursor position, etc.
+	window.dispatchEvent(new CustomEvent("editor-settings-changed"));
 }
 
 /**

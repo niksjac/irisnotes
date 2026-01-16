@@ -18,7 +18,8 @@
   
   /* Typography */
   --pm-font-family: consolas;
-  --pm-font-size: 0.8rem;
+  --pm-font-size: 14px;
+  --pm-zoom: 1;
   --pm-heading-font-family: inherit;
   
   /* Spacing */
@@ -38,6 +39,7 @@
   --pm-blockquote-border: #ccc;
   --pm-blockquote-text: #666;
   --pm-selection-bg: #b4d5fe;
+  --pm-active-line-bg: rgba(0, 0, 0, 0.04);
 }
 
 .dark {
@@ -49,6 +51,7 @@
   --pm-blockquote-border: #555;
   --pm-blockquote-text: #aaa;
   --pm-selection-bg: #264f78;
+  --pm-active-line-bg: rgba(255, 255, 255, 0.04);
 }
 
 /* ==========================================================================
@@ -67,6 +70,7 @@
   caret-color: var(--pm-caret-color);
   word-wrap: break-word;
   overflow-wrap: break-word;
+  /* Note: zoom is applied to parent container so cursor scales too */
 }
 
 /* Line wrapping variants - applied dynamically */
@@ -91,18 +95,37 @@
 }
 
 /* Tight selection - hides native selection and uses decorations instead */
-.ProseMirror.tight-selection-enabled ::selection {
+/* Must target both the element itself AND descendants to catch all selection areas */
+.ProseMirror.tight-selection-enabled::selection,
+.ProseMirror.tight-selection-enabled ::selection,
+.ProseMirror.tight-selection-enabled *::selection {
   background: transparent !important;
 }
 
-.ProseMirror.tight-selection-enabled ::-moz-selection {
+.ProseMirror.tight-selection-enabled::-moz-selection,
+.ProseMirror.tight-selection-enabled ::-moz-selection,
+.ProseMirror.tight-selection-enabled *::-moz-selection {
   background: transparent !important;
 }
 
 /* Custom tight selection decoration */
+/* Uses box-shadow for full line-height extension */
+/* With line-height: 1 and typical font metrics, text is ~0.7em tall centered in 1em line */
 .pm-tight-selection {
   background-color: var(--pm-selection-bg);
-  border-radius: 2px;
+  border-radius: 0;
+  position: relative;
+  /* Define shared selection extension values - increased to close gaps */
+  --selection-extend-top: calc(0.2em + 0.5 * var(--pm-paragraph-spacing, 0.08em));
+  --selection-extend-bottom: calc(0.25em + 0.5 * var(--pm-paragraph-spacing, 0.08em));
+  box-shadow: 
+    0 calc(-1 * var(--selection-extend-top)) 0 var(--pm-selection-bg),
+    0 var(--selection-extend-bottom) 0 var(--pm-selection-bg);
+}
+
+/* Full-height selection - used for non-list paragraphs to ensure proper height */
+.pm-tight-selection-line {
+  position: relative;
 }
 
 /* Selected inline nodes (images, etc) */
@@ -111,7 +134,8 @@
   outline-offset: 1px;
 }
 
-/* Empty lines within selection - shows a visual indicator */
+/* Empty lines within selection - shows a thin vertical bar indicator */
+/* Extended vertically to connect with adjacent selected lines */
 .pm-tight-selection-empty-line {
   position: relative;
 }
@@ -120,13 +144,65 @@
   content: "";
   position: absolute;
   left: 0;
-  top: 0;
-  width: 0.5em;
-  height: 100%;
-  min-height: 1em;
+  /* Extend vertically to match text selection extension */
+  top: calc(-1 * (0.2em + 0.5 * var(--pm-paragraph-spacing, 0.08em)));
+  bottom: calc(-1 * (0.25em + 0.5 * var(--pm-paragraph-spacing, 0.08em)));
+  width: 2px;
   background-color: var(--pm-selection-bg);
-  border-radius: 2px;
-  opacity: 0.7;
+  border-radius: 1px;
+}
+
+/* List items with selected content - extend selection to cover bullet markers */
+/* Create stacking context on li so z-index works relative to it */
+li.pm-tight-selection-list-item {
+  isolation: isolate;
+}
+
+/* Use ::before pseudo-element on first selected text to extend into bullet area */
+/* This sits behind the ::marker due to z-index: -1 */
+li.pm-tight-selection-list-item .pm-tight-selection:first-child::before {
+  content: "";
+  position: absolute;
+  top: calc(-1 * var(--selection-extend-top, 0.24em));
+  bottom: calc(-1 * var(--selection-extend-bottom, 0.29em));
+  left: -1.5em;
+  width: 1.5em;
+  background-color: var(--pm-selection-bg);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ==========================================================================
+   Active Line Highlight
+   ========================================================================== */
+
+/* Highlight the block containing the cursor */
+.pm-active-line {
+  position: relative;
+  /* Create stacking context so z-index: -1 works relative to this element */
+  isolation: isolate;
+}
+
+/* Use pseudo-element to extend highlight beyond content without affecting layout */
+/* Only show when active line highlight is enabled via .pm-active-line-enabled on :root */
+:root.pm-active-line-enabled .pm-active-line::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  /* Use viewport width centered, clipped by parent overflow */
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  background-color: var(--pm-active-line-bg);
+  border-radius: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Don't show active line when editor is not focused */
+.ProseMirror:not(.ProseMirror-focused) .pm-active-line::before {
+  background-color: transparent;
 }
 
 /* ==========================================================================
@@ -271,23 +347,39 @@
 
 /* Lists */
 .ProseMirror ul {
-  margin: var(--pm-block-spacing) 0;
+  margin: 0;
   padding-left: 1.5em;
   list-style-type: disc;
 }
 
 .ProseMirror ol {
-  margin: var(--pm-block-spacing) 0;
+  margin: 0;
   padding-left: 1.5em;
   list-style-type: decimal;
 }
 
 .ProseMirror li {
-  margin: 0.25em 0;
+  margin: 0;
+  padding: 0;
   display: list-item;
 }
 
-/* Nested lists */
+/* Smaller, more subtle bullet markers */
+.ProseMirror li::marker {
+  font-size: 0.8em;
+  color: var(--pm-text-color);
+}
+
+/* When list item has a specific font-size mark on its content,
+   the marker should follow. This works because li inherits from its content. */
+/* Keep same spacing as regular paragraphs */
+.ProseMirror li > p,
+.ProseMirror li > * {
+  margin: var(--pm-paragraph-spacing) 0;
+}
+
+/* Nested unordered lists - cycle through different bullet styles */
+/* Level 1: disc (default), Level 2: circle, Level 3: square, then repeat */
 .ProseMirror ul ul,
 .ProseMirror ol ul {
   list-style-type: circle;
@@ -298,6 +390,42 @@
 .ProseMirror ul ol ul,
 .ProseMirror ol ol ul {
   list-style-type: square;
+}
+
+.ProseMirror ul ul ul ul,
+.ProseMirror ol ul ul ul,
+.ProseMirror ul ol ul ul,
+.ProseMirror ol ol ul ul,
+.ProseMirror ul ul ol ul,
+.ProseMirror ol ul ol ul,
+.ProseMirror ul ol ol ul,
+.ProseMirror ol ol ol ul {
+  list-style-type: disc;
+}
+
+/* Nested ordered lists - cycle through: numbers, letters, roman numerals */
+/* Level 1: decimal (1, 2, 3), Level 2: lower-alpha (a, b, c), Level 3: lower-roman (i, ii, iii) */
+.ProseMirror ol ol,
+.ProseMirror ul ol {
+  list-style-type: lower-alpha;
+}
+
+.ProseMirror ol ol ol,
+.ProseMirror ul ol ol,
+.ProseMirror ol ul ol,
+.ProseMirror ul ul ol {
+  list-style-type: lower-roman;
+}
+
+.ProseMirror ol ol ol ol,
+.ProseMirror ul ol ol ol,
+.ProseMirror ol ul ol ol,
+.ProseMirror ul ul ol ol,
+.ProseMirror ol ol ul ol,
+.ProseMirror ul ol ul ol,
+.ProseMirror ol ul ul ol,
+.ProseMirror ul ul ul ol {
+  list-style-type: decimal;
 }
 
 /* Blockquotes */
@@ -330,17 +458,19 @@
   font-style: italic;
 }
 
-/* Underline (custom mark) */
+/* Underline (custom mark) - inherit color for decoration line */
 .ProseMirror u,
 .ProseMirror .underline {
   text-decoration: underline;
+  color: inherit;
 }
 
-/* Strikethrough (custom mark) */
+/* Strikethrough (custom mark) - inherit color for decoration line */
 .ProseMirror s,
 .ProseMirror del,
 .ProseMirror .strikethrough {
   text-decoration: line-through;
+  color: inherit;
 }
 
 /* Inline code */
@@ -371,7 +501,16 @@
   /* Color applied via inline style */
 }
 
-/* Highlight/background color marks (for future implementation) */
+/* Highlight/background color marks */
+.ProseMirror mark {
+  /* Ensure mark inherits text color from parent (for text color + highlight combo) */
+  color: inherit;
+  /* Background applied via inline style */
+  padding: 0.1em 0;
+  border-radius: 2px;
+}
+
+/* Legacy class-based highlight (for future implementation) */
 .ProseMirror .highlight {
   /* Background applied via inline style */
   padding: 0.1em 0;
