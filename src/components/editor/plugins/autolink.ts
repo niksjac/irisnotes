@@ -261,6 +261,11 @@ export function autolinkPlugin(schema: Schema): Plugin[] {
 				return null;
 			}
 
+			// Preserve stored marks from the new state (important for mark preservation on Enter)
+			if (newState.storedMarks) {
+				tr.setStoredMarks(newState.storedMarks);
+			}
+
 			// Add scrollIntoView for better UX
 			return tr.scrollIntoView();
 		},
