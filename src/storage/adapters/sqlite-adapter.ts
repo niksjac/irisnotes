@@ -607,11 +607,35 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		if (!this.db) return { success: false, error: "Database not initialized" };
 
 		try {
-			// Soft delete by setting deleted_at timestamp
-			await this.db.execute("UPDATE items SET deleted_at = ? WHERE id = ?", [
-				new Date().toISOString(),
-				id,
-			]);
+			const now = new Date().toISOString();
+
+			// Recursively collect all descendant IDs
+			const collectDescendants = async (parentId: string): Promise<string[]> => {
+				const children = await this.db!.select<{ id: string }[]>(
+					"SELECT id FROM items WHERE parent_id = ? AND deleted_at IS NULL",
+					[parentId]
+				);
+				const childIds = children.map((c) => c.id);
+				const grandchildIds: string[] = [];
+				for (const childId of childIds) {
+					const descendants = await collectDescendants(childId);
+					grandchildIds.push(...descendants);
+				}
+				return [...childIds, ...grandchildIds];
+			};
+
+			// Get all descendants
+			const descendantIds = await collectDescendants(id);
+
+			// Soft delete the item and all its descendants
+			const allIds = [id, ...descendantIds];
+			for (const itemId of allIds) {
+				await this.db.execute("UPDATE items SET deleted_at = ? WHERE id = ?", [
+					now,
+					itemId,
+				]);
+			}
+
 			return { success: true };
 		} catch (error) {
 			return { success: false, error: `Failed to delete item: ${error}` };
