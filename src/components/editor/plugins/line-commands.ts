@@ -296,8 +296,9 @@ function getWordAt(
 	const parentOffset = $pos.parentOffset;
 	const text = parent.textContent;
 
-	// Find word boundaries using regex
-	const wordRegex = /[\w]/;
+	// Find word boundaries using Unicode-aware regex
+	// \p{L} matches any Unicode letter, \p{N} matches any Unicode number
+	const wordRegex = /[\p{L}\p{N}_]/u;
 
 	// Find start of word (scan backwards)
 	let wordStart = parentOffset;
@@ -443,8 +444,9 @@ export const selectPreviousOccurrence: Command = (state, dispatch) => {
 		// Find previous occurrence before current selection
 		let prevOccurrence: { from: number; to: number } | undefined;
 		for (let i = occurrences.length - 1; i >= 0; i--) {
-			if (occurrences[i].from < currentFrom) {
-				prevOccurrence = occurrences[i];
+			const occ = occurrences[i];
+			if (occ && occ.from < currentFrom) {
+				prevOccurrence = occ;
 				break;
 			}
 		}
@@ -454,9 +456,9 @@ export const selectPreviousOccurrence: Command = (state, dispatch) => {
 			prevOccurrence = occurrences[occurrences.length - 1];
 		}
 
-		// Don't select if it's the same as current
+		// Don't select if it's the same as current or undefined
 		if (
-			prevOccurrence &&
+			prevOccurrence !== undefined &&
 			(prevOccurrence.from !== currentFrom || prevOccurrence.to !== currentTo)
 		) {
 			if (dispatch) {
@@ -516,16 +518,14 @@ function isBlockEmpty(block: PMNode): boolean {
 
 /**
  * Smart Select All - OneNote 2013 style progressive selection
- * First press: Select current line
- * Second press: Select connected lines (paragraph - no empty lines between)
- * Third press: Select entire document
+ * Continuously rotates: line -> paragraph -> all -> line
  */
 export const smartSelectAll: Command = (state, dispatch) => {
 	const { doc, selection } = state;
 	const { $from } = selection;
 	const now = Date.now();
 
-	// Reset level if too much time has passed or selection has changed
+	// Reset level if too much time has passed or cursor moved to different position
 	if (
 		now - lastSmartSelectTime > 2000 ||
 		(lastSmartSelectRange &&
@@ -546,27 +546,34 @@ export const smartSelectAll: Command = (state, dispatch) => {
 	const parent = $from.node(parentDepth);
 	const currentBlockIndex = $from.index(parentDepth);
 
-	// Increment level
-	smartSelectLevel = Math.min(smartSelectLevel + 1, 3);
+	// Increment level and wrap around (1 -> 2 -> 3 -> 1)
+	smartSelectLevel = (smartSelectLevel % 3) + 1;
 	lastSmartSelectTime = now;
 
 	if (dispatch) {
 		let newSelection: TextSelection | AllSelection;
 
 		if (smartSelectLevel === 1) {
-			// Level 1: Select current line
+			// Level 1: Select current line (entire block including boundaries for visibility)
 			const blockStart = $from.before(blockDepth);
 			const block = $from.node(blockDepth);
 			const blockEnd = blockStart + block.nodeSize;
 
-			// Select the content inside the block (not the block boundaries)
-			const contentStart = blockStart + 1;
-			const contentEnd = blockEnd - 1;
-			newSelection = TextSelection.create(
-				doc,
-				contentStart,
-				Math.max(contentStart, contentEnd)
-			);
+			// For empty blocks, select the whole block to make selection visible
+			// For non-empty blocks, select the content inside
+			if (block.content.size === 0) {
+				// Empty block - use block boundaries so selection is visible
+				newSelection = TextSelection.create(doc, blockStart, blockEnd);
+			} else {
+				// Non-empty block - select content inside
+				const contentStart = blockStart + 1;
+				const contentEnd = blockEnd - 1;
+				newSelection = TextSelection.create(
+					doc,
+					contentStart,
+					Math.max(contentStart, contentEnd)
+				);
+			}
 		} else if (smartSelectLevel === 2) {
 			// Level 2: Select paragraph (connected non-empty lines)
 			// Find the first non-empty line going backwards
