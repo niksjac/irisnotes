@@ -210,18 +210,15 @@ export function ProseMirrorEditor({
 
 	return (
 		<div
-			className="h-full w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col"
+			className="h-full w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col overflow-visible"
 		>
 			{toolbarVisible && (
 				<EditorToolbar editorView={viewRef.current} schema={mySchema} />
 			)}
 			<div
 				ref={editorRef}
-				className="flex-1 prose dark:prose-invert max-w-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-inset"
-				style={{
-					fontSize: "16px",
-					lineHeight: "1.6",
-				}}
+				className="editor-content-zoom flex-1 prose dark:prose-invert max-w-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-inset overflow-auto"
+
 			/>
 		</div>
 	);

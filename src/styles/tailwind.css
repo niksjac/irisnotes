@@ -106,7 +106,15 @@ select option {
 
   /* Editor utilities */
   .editor-container {
-    @apply h-full w-full overflow-auto;
+    @apply h-full w-full;
+    /* Use overflow-y auto for vertical scrolling, clip horizontal to contain active line highlight */
+    overflow-y: auto;
+    overflow-x: clip;
+  }
+
+  /* Zoom wrapper for editor content only (excludes toolbar) */
+  .editor-content-zoom {
+    zoom: var(--pm-zoom, 1);
   }
 
   .editor-scrollbar::-webkit-scrollbar {

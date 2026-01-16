@@ -73,3 +73,9 @@ export {
 
 // Debug and development
 export { useAppInfo } from "./use-app-info";
+
+// KeyTips (Access Keys) - Alt+key shortcuts
+export { useKeyTips, useKeyTipActions, altKeyHeldAtom } from "./use-key-tips";
+
+// Editor zoom (Ctrl+scroll wheel)
+export { useEditorZoom, useEditorZoomRef } from "./use-editor-zoom";

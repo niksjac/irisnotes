@@ -1,9 +1,11 @@
 import type React from "react";
-import { useRightClickMenu, useRightClickMenuActions } from "@/hooks";
+import { useRef } from "react";
+import { useRightClickMenu, useRightClickMenuActions, useEditorZoom } from "@/hooks";
 import { RightClickMenu } from "../right-click-menu";
 import type { EditorRightClickData } from "@/types/right-click-menu";
 import { CodeMirrorEditor } from "./codemirror-editor";
 import { ProseMirrorEditor } from "./prosemirror-editor";
+import { ZoomIndicator } from "./zoom-indicator";
 
 interface EditorContainerProps {
 	content?: string;
@@ -30,9 +32,13 @@ export const EditorContainer: React.FC<EditorContainerProps> = ({
 	toolbarVisible = false,
 	autoFocus = false,
 }) => {
+	const containerRef = useRef<HTMLDivElement>(null);
 	const { rightClickMenu, handleRightClickMenu, hideRightClickMenu } =
 		useRightClickMenu();
 	const { getEditorMenuGroups } = useRightClickMenuActions();
+	
+	// Enable Ctrl+scroll wheel zoom
+	useEditorZoom(containerRef);
 
 	const handleEditorRightClick = (event: React.MouseEvent) => {
 		const rightClickData: EditorRightClickData = {
@@ -52,7 +58,8 @@ export const EditorContainer: React.FC<EditorContainerProps> = ({
 	return (
 		<>
 			<div
-				className={`flex flex-col h-full ${className}`}
+				ref={containerRef}
+				className={`editor-container relative flex flex-col h-full ${className}`}
 				onContextMenu={handleEditorRightClick}
 			>
 				{children}
@@ -74,6 +81,7 @@ export const EditorContainer: React.FC<EditorContainerProps> = ({
 						autoFocus={autoFocus}
 					/>
 				)}
+				<ZoomIndicator />
 			</div>
 			<RightClickMenu data={rightClickMenu} onClose={hideRightClickMenu} />
 		</>
