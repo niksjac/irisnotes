@@ -52,11 +52,14 @@ export function customCursorPlugin(): Plugin {
 
 		// Get coordinates at cursor position
 		const coords = view.coordsAtPos(head);
-		const editorRect = view.dom.getBoundingClientRect();
-
-		// Position cursor relative to editor
-		const left = coords.left - editorRect.left;
-		const top = coords.top - editorRect.top;
+		
+		const wrapper = view.dom.parentElement;
+		if (!wrapper) return;
+		const wrapperRect = wrapper.getBoundingClientRect();
+		
+		// Position cursor relative to wrapper
+		const left = coords.left - wrapperRect.left;
+		const top = coords.top - wrapperRect.top;
 		const height = coords.bottom - coords.top;
 
 		cursorElement.style.display = "block";
@@ -86,14 +89,27 @@ export function customCursorPlugin(): Plugin {
 			},
 			handleDOMEvents: {
 				focus: (view) => {
-					// Small delay to ensure focus state is updated
-					setTimeout(() => updateCursorPosition(view), 0);
+					// Delay to ensure focus state and selection are updated
+					requestAnimationFrame(() => {
+						if (view.hasFocus()) {
+							updateCursorPosition(view);
+						}
+					});
 					return false;
 				},
 				blur: () => {
 					if (cursorElement) {
 						cursorElement.style.display = "none";
 					}
+					return false;
+				},
+				// Update cursor on click to ensure it shows immediately when clicking to focus
+				mouseup: (view) => {
+					requestAnimationFrame(() => {
+						if (view.hasFocus()) {
+							updateCursorPosition(view);
+						}
+					});
 					return false;
 				},
 			},
@@ -105,10 +121,10 @@ export function customCursorPlugin(): Plugin {
 			// Create cursor element
 			cursorElement = createCursor();
 
-			// Append to editor's DOM parent (so it's positioned relative to editor)
+			// Append to editor's DOM parent wrapper (outside the zoomed .ProseMirror)
+			// We'll handle zoom by scaling the cursor position/size from screen coords
 			const wrapper = editorView.dom.parentElement;
 			if (wrapper) {
-				// Ensure wrapper has relative positioning for absolute cursor
 				wrapper.style.position = "relative";
 				wrapper.appendChild(cursorElement);
 			}
@@ -117,10 +133,28 @@ export function customCursorPlugin(): Plugin {
 			editorView.dom.addEventListener("focus", handleFocus);
 			editorView.dom.addEventListener("blur", handleBlur);
 
-			// Initial position (if already focused)
-			if (editorView.hasFocus()) {
-				updateCursorPosition(editorView);
+			// Listen for editor settings changes (font size, etc.) to recalculate cursor
+			function handleSettingsChange(): void {
+				if (currentView) {
+					// Use requestAnimationFrame to ensure CSS has been applied
+					requestAnimationFrame(() => {
+						if (currentView) {
+							updateCursorPosition(currentView);
+						}
+					});
+				}
 			}
+			window.addEventListener("editor-settings-changed", handleSettingsChange);
+
+			// Initial position - use multiple frames to ensure layout is complete
+			// This handles the case where editor has focus on app startup
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					if (currentView && currentView.hasFocus()) {
+						updateCursorPosition(currentView);
+					}
+				});
+			});
 
 			return {
 				update(view) {
@@ -130,6 +164,7 @@ export function customCursorPlugin(): Plugin {
 				destroy() {
 					editorView.dom.removeEventListener("focus", handleFocus);
 					editorView.dom.removeEventListener("blur", handleBlur);
+					window.removeEventListener("editor-settings-changed", handleSettingsChange);
 					cursorElement?.remove();
 					cursorElement = null;
 					currentView = null;
