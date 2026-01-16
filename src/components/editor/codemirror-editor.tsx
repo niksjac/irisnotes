@@ -6,7 +6,7 @@ import {
 	highlightActiveLine,
 	highlightActiveLineGutter,
 } from "@codemirror/view";
-import { EditorState, StateEffect, EditorSelection, type Extension } from "@codemirror/state";
+import { EditorState, Compartment, EditorSelection, type Extension } from "@codemirror/state";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { bracketMatching } from "@codemirror/language";
 import { searchKeymap, highlightSelectionMatches } from "@codemirror/search";
@@ -21,6 +21,11 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import type { ViewUpdate } from "@codemirror/view";
 import { useTheme, useLineWrapping } from "@/hooks";
 import { editorCursorPositionStore } from "@/hooks/use-editor-view-toggle";
+
+// Compartments for dynamic configuration (allows efficient partial reconfiguration)
+const readOnlyCompartment = new Compartment();
+const themeCompartment = new Compartment();
+const lineWrappingCompartment = new Compartment();
 
 // Smart select state - tracks progressive selection level
 let smartSelectLevel = 0;
@@ -124,8 +129,8 @@ export function CodeMirrorEditor({
 		onChangeRef.current = onChange;
 	}, [onChange]);
 
-	// Helper to build extensions
-	const buildExtensions = (): Extension[] => [
+	// Build static extensions (don't change during editor lifetime)
+	const buildStaticExtensions = (): Extension[] => [
 		lineNumbers(),
 		highlightActiveLineGutter(),
 		highlightActiveLine(),
@@ -146,7 +151,6 @@ export function CodeMirrorEditor({
 			...historyKeymap,
 			...completionKeymap,
 		]),
-		EditorView.editable.of(!readOnly),
 		EditorView.updateListener.of((update: ViewUpdate) => {
 			if (update.docChanged && onChangeRef.current) {
 				const newContent = update.state.doc.toString();
@@ -160,11 +164,11 @@ export function CodeMirrorEditor({
 		EditorView.theme({
 			"&": {
 				height: "100%",
-				fontSize: "14px",
+				fontSize: "var(--pm-font-size)",
 			},
 			".cm-scroller": {
 				overflow: "auto",
-				fontFamily: "monospace",
+				fontFamily: "var(--pm-font-family)",
 			},
 			".cm-content": {
 				padding: "16px",
@@ -174,8 +178,10 @@ export function CodeMirrorEditor({
 				display: "none",
 			},
 		}),
-		darkMode ? oneDark : [],
-		isWrapping ? EditorView.lineWrapping : [],
+		// Compartmentalized extensions for dynamic updates
+		readOnlyCompartment.of(EditorView.editable.of(!readOnly)),
+		themeCompartment.of(darkMode ? oneDark : []),
+		lineWrappingCompartment.of(isWrapping ? EditorView.lineWrapping : []),
 	];
 
 	// Create editor only once on mount
@@ -192,7 +198,7 @@ export function CodeMirrorEditor({
 
 		const startState = EditorState.create({
 			doc: content,
-			extensions: buildExtensions(),
+			extensions: buildStaticExtensions(),
 			selection: EditorSelection.cursor(targetPos),
 		});
 
@@ -222,14 +228,29 @@ export function CodeMirrorEditor({
 		};
 	}, []);
 
-	// Update configuration dynamically when options change (preserves cursor!)
+	// Update readOnly state dynamically (uses compartment for efficiency)
 	useEffect(() => {
 		if (!viewRef.current) return;
-
 		viewRef.current.dispatch({
-			effects: StateEffect.reconfigure.of(buildExtensions()),
+			effects: readOnlyCompartment.reconfigure(EditorView.editable.of(!readOnly)),
 		});
-	}, [readOnly, darkMode, isWrapping]);
+	}, [readOnly]);
+
+	// Update theme dynamically (uses compartment for efficiency)
+	useEffect(() => {
+		if (!viewRef.current) return;
+		viewRef.current.dispatch({
+			effects: themeCompartment.reconfigure(darkMode ? oneDark : []),
+		});
+	}, [darkMode]);
+
+	// Update line wrapping dynamically (uses compartment for efficiency)
+	useEffect(() => {
+		if (!viewRef.current) return;
+		viewRef.current.dispatch({
+			effects: lineWrappingCompartment.reconfigure(isWrapping ? EditorView.lineWrapping : []),
+		});
+	}, [isWrapping]);
 
 	// Update content when it changes externally
 	useEffect(() => {

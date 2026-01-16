@@ -51,15 +51,23 @@ export class CodeBlockView implements NodeView {
 		this.view = view;
 		this.getPos = getPos;
 
+		// Check dark mode once for all styling
+		const isDark = document.documentElement.classList.contains("dark");
+
 		// Create outer container
 		this.dom = document.createElement("div");
-		this.dom.className =
-			"code-block-container relative my-2 rounded border border-gray-300 dark:border-gray-700";
+		this.dom.className = "code-block-container relative my-2 rounded border";
+		this.dom.style.borderColor = isDark ? "#374151" : "#d1d5db";
+		this.dom.style.backgroundColor = isDark ? "#111827" : "#f9fafb";
 
 		// Create language selector
 		const langSelector = document.createElement("select");
 		langSelector.className =
-			"absolute top-2 right-2 z-10 text-xs bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-2 py-1";
+			"absolute top-2 right-2 z-10 text-xs rounded px-2 py-1 border";
+		// Apply styles directly since Tailwind dark: classes don't work in vanilla JS DOM creation
+		langSelector.style.backgroundColor = isDark ? "#1f2937" : "#f3f4f6";
+		langSelector.style.borderColor = isDark ? "#374151" : "#d1d5db";
+		langSelector.style.color = isDark ? "#e5e7eb" : "#374151";
 		const languages = [
 			"javascript",
 			"typescript",
@@ -94,8 +102,7 @@ export class CodeBlockView implements NodeView {
 		const language = node.attrs.language || "javascript";
 		const langExtension = languageExtensions[language] || [];
 
-		// Detect dark mode
-		const isDark = document.documentElement.classList.contains("dark");
+		// Create CodeMirror instance (reuse isDark from above)
 
 		// Create CodeMirror instance
 		const startState = CodeMirrorState.create({
@@ -122,10 +129,10 @@ export class CodeBlockView implements NodeView {
 			parent: cmContainer,
 		});
 
-		// Style the CodeMirror editor
+		// Style the CodeMirror editor - use CSS variables for consistency
 		const cmElement = this.codeMirror.dom;
-		cmElement.style.fontSize = "14px";
-		cmElement.style.fontFamily = "'Monaco', 'Menlo', 'Consolas', monospace";
+		cmElement.style.fontSize = "var(--pm-font-size)";
+		cmElement.style.fontFamily = "var(--pm-font-family)";
 	}
 
 	valueChanged() {
