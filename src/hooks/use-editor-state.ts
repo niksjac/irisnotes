@@ -1,11 +1,10 @@
-import { useAtom } from "jotai";
-import { fontSizeAtom } from "@/atoms";
+import { useAtomValue } from "jotai";
+import { editorSettingsAtom } from "@/atoms/settings";
 
 export function useEditorState() {
-	const [fontSize, setFontSize] = useAtom(fontSizeAtom);
+	const settings = useAtomValue(editorSettingsAtom);
 
 	return {
-		fontSize,
-		setFontSize,
+		fontSize: settings?.fontSize ?? 14,
 	};
 }

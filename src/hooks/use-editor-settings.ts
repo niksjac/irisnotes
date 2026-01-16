@@ -51,13 +51,18 @@ export interface UseEditorSettingsReturn {
 export function useEditorSettings(): UseEditorSettingsReturn {
 	const [settings, setSettings] = useAtom(editorSettingsAtom);
 
+	// Merge stored settings with defaults to handle new fields
+	const mergedSettings = useMemo(() => {
+		if (settings && typeof settings === "object") {
+			return { ...DEFAULT_EDITOR_SETTINGS, ...settings };
+		}
+		return DEFAULT_EDITOR_SETTINGS;
+	}, [settings]);
+
 	// Apply settings to CSS custom properties whenever they change
 	useEffect(() => {
-		// Handle both promise and direct value (jotai async atoms can return either)
-		if (settings && typeof settings === "object") {
-			applyEditorSettings(settings as EditorSettings);
-		}
-	}, [settings]);
+		applyEditorSettings(mergedSettings);
+	}, [mergedSettings]);
 
 	// Update a single setting
 	const updateSetting = useCallback(
@@ -78,13 +83,13 @@ export function useEditorSettings(): UseEditorSettingsReturn {
 	// Memoize return object
 	return useMemo(
 		() => ({
-			settings: (settings as EditorSettings) || DEFAULT_EDITOR_SETTINGS,
+			settings: mergedSettings,
 			setSettings,
 			updateSetting,
 			resetSettings,
 			constraints: EDITOR_SETTINGS_CONSTRAINTS,
 		}),
-		[settings, setSettings, updateSetting, resetSettings],
+		[mergedSettings, setSettings, updateSetting, resetSettings],
 	);
 }
 
