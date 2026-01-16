@@ -21,6 +21,13 @@ function isEmptyBlock(node: any): boolean {
 }
 
 /**
+ * Check if a node is a textblock (paragraph, heading, etc.)
+ */
+function isTextBlock(node: any): boolean {
+	return node.isTextblock;
+}
+
+/**
  * Creates a plugin that renders selection as inline decorations
  * instead of using native browser selection.
  */
@@ -44,10 +51,26 @@ export function tightSelectionPlugin(): Plugin {
 				}
 
 				const decorations: Decoration[] = [];
+				// Track list items that contain selected content
+				const selectedListItems = new Set<number>();
+				// Track textblocks with selected content and their selection bounds
+				const selectedTextBlocks = new Map<number, { start: number; end: number; nodeEnd: number }>();
 
 				// Walk through each node in the selection range
 				state.doc.nodesBetween(from, to, (node, pos) => {
-					// Only decorate text nodes
+					// Track textblocks (paragraphs, headings) with selected content
+					if (isTextBlock(node) && !isEmptyBlock(node)) {
+						const nodeStart = pos;
+						const nodeEnd = pos + node.nodeSize;
+						if (from < nodeEnd && to > nodeStart) {
+							// Calculate the text selection bounds within this block
+							const textStart = Math.max(from, nodeStart + 1); // +1 to skip into the block
+							const textEnd = Math.min(to, nodeEnd - 1); // -1 to stay within the block
+							selectedTextBlocks.set(pos, { start: textStart, end: textEnd, nodeEnd });
+						}
+					}
+
+					// Only decorate text nodes with inline markers (for positioning info)
 					if (node.isText) {
 						const start = Math.max(from, pos);
 						const end = Math.min(to, pos + node.nodeSize);
@@ -93,8 +116,42 @@ export function tightSelectionPlugin(): Plugin {
 						}
 					}
 
+					// Track list items that have selected content
+					if (node.type.name === "list_item") {
+						const nodeStart = pos;
+						const nodeEnd = pos + node.nodeSize;
+						if (from < nodeEnd && to > nodeStart) {
+							selectedListItems.add(pos);
+						}
+					}
+
 					return true; // Continue traversing
 				});
+
+				// Add decorations for selected list items (to extend selection to cover bullets)
+				for (const pos of selectedListItems) {
+					const node = state.doc.nodeAt(pos);
+					if (node) {
+						decorations.push(
+							Decoration.node(pos, pos + node.nodeSize, {
+								class: "pm-tight-selection-list-item",
+							})
+						);
+					}
+				}
+
+				// Add node decorations for textblocks with selected content
+				// This provides a full-height background for each line with selection
+				for (const [pos, bounds] of selectedTextBlocks) {
+					const node = state.doc.nodeAt(pos);
+					if (node) {
+						decorations.push(
+							Decoration.node(pos, pos + node.nodeSize, {
+								class: "pm-tight-selection-line",
+							})
+						);
+					}
+				}
 
 				return DecorationSet.create(state.doc, decorations);
 			},
