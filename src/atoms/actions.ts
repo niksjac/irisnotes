@@ -1,10 +1,10 @@
 import { atom } from "jotai";
 import {
 	activityBarVisible,
-	fontSizeAtom,
 	sidebarCollapsed,
 	toolbarVisibleAtom,
 } from "./index";
+import { editorSettingsAtom } from "./settings";
 
 // Layout actions
 export const toggleSidebarAtom = atom(null, (get, set) => {
@@ -22,21 +22,24 @@ export const toggleToolbarAtom = atom(null, (get, set) => {
 	set(toolbarVisibleAtom, !current);
 });
 
-// Editor actions
+// Editor font size actions (scales base font, inline em sizes scale proportionally)
 // Note: Line wrapping is now handled directly via useLineWrapping hook
 
 export const increaseFontSizeAtom = atom(null, (get, set) => {
-	const current = get(fontSizeAtom);
-	set(fontSizeAtom, Math.min(current + 2, 24));
+	const settings = get(editorSettingsAtom);
+	const newSize = Math.min((settings.fontSize || 14) + 1, 32);
+	set(editorSettingsAtom, { ...settings, fontSize: newSize });
 });
 
 export const decreaseFontSizeAtom = atom(null, (get, set) => {
-	const current = get(fontSizeAtom);
-	set(fontSizeAtom, Math.max(current - 2, 10));
+	const settings = get(editorSettingsAtom);
+	const newSize = Math.max((settings.fontSize || 14) - 1, 8);
+	set(editorSettingsAtom, { ...settings, fontSize: newSize });
 });
 
-export const resetFontSizeAtom = atom(null, (_, set) => {
-	set(fontSizeAtom, 14);
+export const resetFontSizeAtom = atom(null, (get, set) => {
+	const settings = get(editorSettingsAtom);
+	set(editorSettingsAtom, { ...settings, fontSize: 14 });
 });
 
 export const handleSidebarCollapsedChangeAtom = atom(

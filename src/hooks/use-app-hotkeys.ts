@@ -198,6 +198,16 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHandler(handlers.onToggleToolbar),
 		createHotkeyOptions(hotkeyMapping.toggleToolbar.global)
 	);
+	useHotkeys(
+		hotkeyMapping.increaseFontSize.key,
+		createHandler(handlers.onIncreaseFontSize),
+		createHotkeyOptions(hotkeyMapping.increaseFontSize.global)
+	);
+	useHotkeys(
+		hotkeyMapping.decreaseFontSize.key,
+		createHandler(handlers.onDecreaseFontSize),
+		createHotkeyOptions(hotkeyMapping.decreaseFontSize.global)
+	);
 
 	// Focus hotkeys
 	useHotkeys(

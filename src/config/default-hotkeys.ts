@@ -72,6 +72,18 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		category: "Editor",
 		global: true,
 	},
+	increaseFontSize: {
+		key: "ctrl+alt+up",
+		description: "Increase Editor Font Size",
+		category: "Editor",
+		global: true,
+	},
+	decreaseFontSize: {
+		key: "ctrl+alt+down",
+		description: "Decrease Editor Font Size",
+		category: "Editor",
+		global: true,
+	},
 	paneResizeLeft: {
 		key: "alt+comma",
 		description: "Resize Pane Left",

@@ -95,6 +95,10 @@ export interface HotkeyMapping {
 	// Notes hotkeys
 	newNote: HotkeyConfig;
 	newNoteWithLocation: HotkeyConfig;
+
+	// Font size hotkeys
+	increaseFontSize: HotkeyConfig;
+	decreaseFontSize: HotkeyConfig;
 }
 
 export interface AppHotkeysProps {
@@ -150,6 +154,8 @@ export interface AppHotkeysProps {
 	onToggleEditorView?: () => void;
 	onToggleLineWrapping?: () => void;
 	onToggleToolbar?: () => void;
+	onIncreaseFontSize?: () => void;
+	onDecreaseFontSize?: () => void;
 
 	// Editor hotkeys (future)
 	// onSave?: () => void;

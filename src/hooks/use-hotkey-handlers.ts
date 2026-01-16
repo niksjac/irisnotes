@@ -26,6 +26,8 @@ import {
 	focusPreviousTabAtom,
 	openSettingsTabAtom,
 	openHotkeysTabAtom,
+	increaseFontSizeAtom,
+	decreaseFontSizeAtom,
 } from "@/atoms";
 import { useEditorViewToggle } from "./use-editor-view-toggle";
 import { useLineWrapping } from "./use-line-wrapping";
@@ -122,6 +124,10 @@ export function useHotkeyHandlers() {
 		toggleEditorView,
 		toggleLineWrapping,
 		toggleToolbar,
+
+		// Font size actions (scales base font, inline em sizes scale proportionally)
+		increaseFontSize: useSetAtom(increaseFontSizeAtom),
+		decreaseFontSize: useSetAtom(decreaseFontSizeAtom),
 
 		// Note actions
 		createNoteInRoot,

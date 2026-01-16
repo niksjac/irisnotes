@@ -35,6 +35,8 @@ export function mapHotkeyHandlers(
 		toggleEditorView: () => void;
 		toggleLineWrapping: () => void;
 		toggleToolbar: () => void;
+		increaseFontSize: () => void;
+		decreaseFontSize: () => void;
 		createNoteInRoot: () => void;
 		openLocationDialog: () => void;
 		openSettings: () => void;
@@ -120,6 +122,8 @@ export function mapHotkeyHandlers(
 		onToggleEditorView: handlers.toggleEditorView,
 		onToggleLineWrapping: handlers.toggleLineWrapping,
 		onToggleToolbar: handlers.toggleToolbar,
+		onIncreaseFontSize: handlers.increaseFontSize,
+		onDecreaseFontSize: handlers.decreaseFontSize,
 		// Views hotkeys
 		onOpenSettings: handlers.openSettings,
 		onOpenHotkeys: handlers.openHotkeys,
