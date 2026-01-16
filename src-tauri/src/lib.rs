@@ -4,7 +4,7 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 use std::path::PathBuf;
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Emitter};
 
 // Helper function to determine if we're in development mode
 fn is_development_mode() -> bool {
@@ -12,7 +12,7 @@ fn is_development_mode() -> bool {
 }
 
 // Helper function to get the appropriate config directory
-fn get_config_dir(app_handle: &AppHandle) -> Result<PathBuf, String> {
+fn get_config_dir(_app_handle: &AppHandle) -> Result<PathBuf, String> {
     if is_development_mode() {
         // In development mode, use ./dev/config relative to project root
         let exe_path = std::env::current_exe()
@@ -59,7 +59,7 @@ fn get_config_dir(app_handle: &AppHandle) -> Result<PathBuf, String> {
 // everything in one place, matching the dev layout. If we want to follow XDG standards
 // in the future, change dirs::config_dir() to dirs::data_dir() which would put the
 // database in ~/.local/share/irisnotes/ on Linux instead.
-fn get_data_dir(app_handle: &AppHandle) -> Result<PathBuf, String> {
+fn get_data_dir(_app_handle: &AppHandle) -> Result<PathBuf, String> {
     if is_development_mode() {
         // In development mode, use ./dev relative to project root
         let exe_path = std::env::current_exe()
