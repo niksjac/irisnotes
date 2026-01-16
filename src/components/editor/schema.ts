@@ -50,7 +50,7 @@ const strikethroughMarkSpec = {
  */
 const textColorMarkSpec = {
 	attrs: {
-		color: {},
+		color: { default: "#000000" },
 	},
 	parseDOM: [
 		{
@@ -150,13 +150,18 @@ const codeBlockSpec = {
 // ============ Build Extended Schema ============
 
 // Extend the basic marks with our custom marks
+// Order matters! Marks defined first are rendered "outer" in DOM.
+// We want color/highlight outermost so text-decoration inherits the color.
 const extendedMarks = basicSchema.spec.marks.append({
-	underline: underlineMarkSpec,
-	strikethrough: strikethroughMarkSpec,
+	// Color marks first (outermost) - so decorations inherit the color
 	textColor: textColorMarkSpec,
 	highlight: highlightMarkSpec,
+	// Font marks
 	fontSize: fontSizeMarkSpec,
 	fontFamily: fontFamilyMarkSpec,
+	// Decoration marks last (innermost) - they'll inherit color from parent
+	underline: underlineMarkSpec,
+	strikethrough: strikethroughMarkSpec,
 });
 
 // Extend nodes with lists and code_block
