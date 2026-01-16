@@ -32,8 +32,8 @@ export const PROSEMIRROR_HOTKEYS: EditorHotkeyConfig[] = [
 	{ key: "Ctrl+Shift+2", description: "Heading 2", category: "Blocks" },
 	{ key: "Ctrl+Shift+3", description: "Heading 3", category: "Blocks" },
 	{ key: "Ctrl+Shift+0", description: "Paragraph", category: "Blocks" },
-	{ key: "Ctrl+Shift+8", description: "Bullet List", category: "Blocks" },
-	{ key: "Ctrl+Shift+9", description: "Numbered List", category: "Blocks" },
+	{ key: "Alt+L", description: "Bullet List", category: "Blocks" },
+	{ key: "Alt+O", description: "Numbered List", category: "Blocks" },
 	{ key: "Ctrl+Shift+.", description: "Blockquote", category: "Blocks" },
 	{ key: "Ctrl+Shift+C", description: "Code Block", category: "Blocks" },
 
@@ -80,9 +80,9 @@ export const PROSEMIRROR_HOTKEYS: EditorHotkeyConfig[] = [
 		category: "History",
 	},
 
-	// Lists
-	{ key: "Tab", description: "Indent List Item", category: "Lists" },
-	{ key: "Shift+Tab", description: "Outdent List Item", category: "Lists" },
+	// Lists & Indentation
+	{ key: "Tab", description: "Indent (list item or text)", category: "Indentation" },
+	{ key: "Shift+Tab", description: "Outdent (list item or text)", category: "Indentation" },
 	{
 		key: "Enter",
 		description: "New List Item / Split Block",
