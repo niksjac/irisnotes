@@ -1,36 +1,23 @@
-import { useAtomValue } from "jotai";
 import { useEffect } from "react";
-import { isWrappingAtom } from "../atoms";
 import { useConfig } from "./use-config";
 
 /**
  * Hook to persist editor settings to config on shutdown
  * Layout state is handled separately via localStorage in use-layout-persistence.ts
+ * 
+ * Note: Many settings (like lineWrapping) are now saved directly when toggled,
+ * so this hook may become unnecessary. Kept for potential future use.
  */
 export const useAppPersistence = () => {
-	const isWrapping = useAtomValue(isWrappingAtom);
-	const { config, updateConfig, loading } = useConfig();
+	const { config, loading } = useConfig();
 
 	// Save state on app shutdown/beforeunload
 	useEffect(() => {
 		if (loading) return;
 
 		const persistAppState = () => {
-			try {
-				// Only update if editor state has changed
-				const editorNeedsUpdate = config?.editor?.lineWrapping !== isWrapping;
-
-				if (editorNeedsUpdate && config?.editor) {
-					updateConfig({
-						editor: {
-							...config.editor,
-							lineWrapping: isWrapping,
-						},
-					});
-				}
-			} catch (error) {
-				console.warn("Failed to persist app state on shutdown:", error);
-			}
+			// Settings are now saved directly when changed
+			// This hook is kept for potential future persistence needs
 		};
 
 		// Listen for beforeunload (browser/window close)
@@ -88,5 +75,5 @@ export const useAppPersistence = () => {
 			// Final save on component unmount
 			persistAppState();
 		};
-	}, [isWrapping, config, updateConfig, loading]);
+	}, [config, loading]);
 };

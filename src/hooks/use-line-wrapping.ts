@@ -1,11 +1,27 @@
-import { useAtom } from "jotai";
-import { isWrappingAtom } from "@/atoms";
+import { useConfig } from "./use-config";
 
 export function useLineWrapping() {
-	const [isWrapping, setIsWrapping] = useAtom(isWrappingAtom);
+	const { config, updateConfig } = useConfig();
 
-	const toggleLineWrapping = () => {
-		setIsWrapping(!isWrapping);
+	const isWrapping = config?.editor?.lineWrapping ?? false;
+
+	const toggleLineWrapping = async () => {
+		const newValue = !isWrapping;
+		await updateConfig({
+			editor: {
+				...config.editor,
+				lineWrapping: newValue,
+			},
+		});
+	};
+
+	const setIsWrapping = async (value: boolean) => {
+		await updateConfig({
+			editor: {
+				...config.editor,
+				lineWrapping: value,
+			},
+		});
 	};
 
 	return {

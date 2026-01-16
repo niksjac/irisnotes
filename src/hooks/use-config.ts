@@ -87,7 +87,7 @@ export const useConfig = () => {
 			}
 
 			const configString = await invoke<string>("read_config", {
-				filename: configPath,
+				filename: "config",
 			});
 			const parsedConfig = JSON.parse(configString) as AppConfig;
 
