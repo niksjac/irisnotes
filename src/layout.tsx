@@ -19,6 +19,7 @@ import {
 	useTheme,
 	useNoteActions,
 	useEditorSettings,
+	useKeyTips,
 } from "@/hooks";
 import { mapHotkeyHandlers } from "@/utils/hotkey-mapping";
 import {
@@ -42,6 +43,9 @@ export const Layout: React.FC = () => {
 
 	// Apply editor settings (cursor, fonts, etc.) at startup
 	useEditorSettings();
+
+	// Initialize KeyTips system (Alt+key shortcuts)
+	useKeyTips();
 
 	// Persist app state
 	useAppPersistence();
