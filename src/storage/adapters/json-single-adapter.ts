@@ -710,6 +710,39 @@ export class JsonSingleStorageAdapter implements StorageAdapter {
 	async deleteSetting(): Promise<VoidStorageResult> {
 		throw new Error("Not implemented");
 	}
+
+	// Full-text search (client-side for JSON adapters)
+	async searchItems(
+		query: string,
+		options?: { types?: Array<"note" | "book" | "section">; limit?: number }
+	): Promise<StorageResult<FlexibleItem[]>> {
+		try {
+			const types = options?.types || ["note", "book", "section"];
+			const limit = options?.limit || 50;
+			const lowerQuery = query.toLowerCase();
+
+			const results = this.data.items
+				.filter(
+					(item) =>
+						types.includes(item.type) &&
+						!item.deleted_at &&
+						(item.title.toLowerCase().includes(lowerQuery) ||
+							item.content?.toLowerCase().includes(lowerQuery) ||
+							item.content_plaintext?.toLowerCase().includes(lowerQuery))
+				)
+				.slice(0, limit);
+
+			return { success: true, data: results };
+		} catch (error) {
+			return { success: false, error: `Failed to search items: ${error}` };
+		}
+	}
+
+	async rebuildSearchIndex(): Promise<VoidStorageResult> {
+		// No-op for JSON adapters - search is done client-side
+		return { success: true };
+	}
+
 	async sync(): Promise<VoidStorageResult> {
 		await this.saveData();
 		return { success: true };

@@ -826,6 +826,51 @@ export class JsonHybridStorageAdapter implements StorageAdapter {
 	async deleteSetting(): Promise<VoidStorageResult> {
 		throw new Error("Not implemented");
 	}
+
+	// Full-text search (client-side for JSON adapters)
+	// Note: json-hybrid stores content separately, so this only searches titles
+	// For full content search, would need to load all content files
+	async searchItems(
+		query: string,
+		options?: { types?: Array<"note" | "book" | "section">; limit?: number }
+	): Promise<StorageResult<FlexibleItem[]>> {
+		try {
+			const types = options?.types || ["note", "book", "section"];
+			const limit = options?.limit || 50;
+			const lowerQuery = query.toLowerCase();
+
+			// Filter by title only (content is in separate files)
+			const matchingItems = this.structureData.items
+				.filter(
+					(item) =>
+						types.includes(item.type) &&
+						!item.deleted_at &&
+						item.title.toLowerCase().includes(lowerQuery)
+				)
+				.slice(0, limit);
+
+			// Load content for matching items to return full FlexibleItem
+			const results: FlexibleItem[] = await Promise.all(
+				matchingItems.map(async (item) => {
+					if (item.type === "note") {
+						const content = await this.loadContent(item.id);
+						return { ...item, ...content } as FlexibleItem;
+					}
+					return item as FlexibleItem;
+				})
+			);
+
+			return { success: true, data: results };
+		} catch (error) {
+			return { success: false, error: `Failed to search items: ${error}` };
+		}
+	}
+
+	async rebuildSearchIndex(): Promise<VoidStorageResult> {
+		// No-op for JSON adapters - search is done client-side
+		return { success: true };
+	}
+
 	async sync(): Promise<VoidStorageResult> {
 		await this.saveStructureData();
 		return { success: true };

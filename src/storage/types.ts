@@ -13,25 +13,14 @@ import type {
 import type { FlexibleItem, CreateItemParams } from "../types/items";
 import type { TreeData } from "../types";
 
-// Storage backend types
-export type StorageBackend = "sqlite" | "json-single" | "json-hybrid" | "cloud";
+// Storage backend type - SQLite only (export/import for file-based backup)
+export type StorageBackend = "sqlite";
 
 // Storage configuration
 export interface StorageConfig {
 	backend: StorageBackend;
 	sqlite?: {
 		database_path: string;
-	};
-	jsonSingle?: {
-		file_path: string;
-	};
-	jsonHybrid?: {
-		structure_file: string;
-		content_dir: string;
-	};
-	cloud?: {
-		provider: "google-drive" | "dropbox" | "onedrive";
-		credentials?: any;
 	};
 }
 
@@ -70,6 +59,15 @@ export interface StorageAdapter {
 		params: Partial<FlexibleItem>
 	): Promise<StorageResult<FlexibleItem>>;
 	deleteItem(id: string): Promise<VoidStorageResult>;
+
+	// Full-text search for items
+	searchItems(
+		query: string,
+		options?: { types?: Array<"note" | "book" | "section">; limit?: number }
+	): Promise<StorageResult<FlexibleItem[]>>;
+
+	// FTS index management
+	rebuildSearchIndex(): Promise<VoidStorageResult>;
 
 	// Tree operations
 	getTreeData(): Promise<StorageResult<TreeData[]>>;

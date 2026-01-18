@@ -16,6 +16,7 @@ import type {
 } from "../../types/database";
 import type {
 	StorageAdapter,
+	StorageBackend,
 	StorageConfig,
 	StorageResult,
 	VoidStorageResult,
@@ -806,13 +807,122 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 	async deleteSetting(): Promise<VoidStorageResult> {
 		throw new Error("Not implemented");
 	}
+
+	// ===== FULL-TEXT SEARCH =====
+
+	async searchItems(
+		query: string,
+		options?: { types?: Array<"note" | "book" | "section">; limit?: number }
+	): Promise<StorageResult<FlexibleItem[]>> {
+		if (!this.db) return { success: false, error: "Database not initialized" };
+
+		try {
+			const types = options?.types || ["note", "book", "section"];
+			const limit = options?.limit || 50;
+			const typeFilter = types.map(() => "?").join(",");
+
+			// Escape special FTS5 characters and prepare query
+			const ftsQuery = this.prepareFtsQuery(query);
+
+			let results: any[];
+			try {
+				// Use FTS5 search with ranking
+				results = await this.db.select<any[]>(
+					`SELECT items.*, 
+						bm25(items_fts) as rank,
+						snippet(items_fts, 1, '>>>MATCH<<<', '<<<MATCH>>>', '...', 30) as match_snippet
+					 FROM items_fts
+					 JOIN items ON items.rowid = items_fts.rowid
+					 WHERE items_fts MATCH ?
+					   AND items.type IN (${typeFilter})
+					   AND items.deleted_at IS NULL
+					 ORDER BY rank
+					 LIMIT ?`,
+					[ftsQuery, ...types, limit]
+				);
+			} catch (ftsError) {
+				console.warn("FTS search failed, falling back to LIKE:", ftsError);
+				// Fallback to LIKE search
+				const likeQuery = `%${query}%`;
+				results = await this.db.select<any[]>(
+					`SELECT *, NULL as match_snippet FROM items
+					 WHERE type IN (${typeFilter})
+					   AND deleted_at IS NULL
+					   AND (title LIKE ? OR content_plaintext LIKE ?)
+					 ORDER BY 
+					   CASE WHEN title LIKE ? THEN 0 ELSE 1 END,
+					   created_at DESC
+					 LIMIT ?`,
+					[...types, likeQuery, likeQuery, likeQuery, limit]
+				);
+			}
+
+			const items: FlexibleItem[] = results.map((row) => ({
+				...this.rowToFlexibleItem(row),
+				// Include match snippet in metadata for UI display
+				metadata: {
+					...this.rowToFlexibleItem(row).metadata,
+					_matchSnippet: row.match_snippet || undefined,
+				},
+			}));
+
+			return { success: true, data: items };
+		} catch (error) {
+			return { success: false, error: `Failed to search items: ${error}` };
+		}
+	}
+
+	async rebuildSearchIndex(): Promise<VoidStorageResult> {
+		if (!this.db) return { success: false, error: "Database not initialized" };
+
+		try {
+			// FTS5 external content table rebuild command
+			await this.db.execute(
+				"INSERT INTO items_fts(items_fts) VALUES('rebuild')"
+			);
+			return { success: true };
+		} catch (error) {
+			return {
+				success: false,
+				error: `Failed to rebuild search index: ${error}`,
+			};
+		}
+	}
+
+	/**
+	 * Prepare query string for FTS5
+	 * Escapes special characters and handles phrase queries
+	 */
+	private prepareFtsQuery(query: string): string {
+		// If query looks like a phrase (multiple words), treat each word as a prefix match
+		const trimmed = query.trim();
+		if (!trimmed) return '""';
+
+		// Escape double quotes in the query
+		const escaped = trimmed.replace(/"/g, '""');
+
+		// Split into words and create prefix match for each
+		const words = escaped.split(/\s+/).filter((w) => w.length > 0);
+
+		if (words.length === 1) {
+			// Single word: use prefix match
+			return `"${words[0]}"*`;
+		}
+
+		// Multiple words: match all with prefix on last word for "as you type" feel
+		const prefixWords = words.map((w, i) =>
+			i === words.length - 1 ? `"${w}"*` : `"${w}"`
+		);
+		return prefixWords.join(" ");
+	}
+
 	async sync(): Promise<VoidStorageResult> {
 		return { success: true };
 	}
 
 	async getStorageInfo(): Promise<
 		StorageResult<{
-			backend: "sqlite" | "json-single" | "json-hybrid" | "cloud";
+			backend: StorageBackend;
 			note_count: number;
 			category_count: number;
 			tag_count: number;
