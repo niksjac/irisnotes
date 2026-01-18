@@ -1,6 +1,8 @@
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
+import { useAtom, useSetAtom } from "jotai";
 import { useItems } from "./use-items";
 import { useTabManagement } from "./use-tab-management";
+import { locationDialogOpenAtom, closeLocationDialogAtom } from "@/atoms/actions";
 
 /**
  * Hook for note creation actions with tab management integration.
@@ -9,7 +11,8 @@ import { useTabManagement } from "./use-tab-management";
 export function useNoteActions() {
 	const { createNote, createBook, createSection, items } = useItems();
 	const { openItemInTab } = useTabManagement();
-	const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
+	const [isLocationDialogOpen, setIsLocationDialogOpen] = useAtom(locationDialogOpenAtom);
+	const closeDialogAction = useSetAtom(closeLocationDialogAtom);
 
 	/**
 	 * Create a new note in the root and open it in a tab
@@ -100,8 +103,8 @@ export function useNoteActions() {
 	 * Close the location picker dialog
 	 */
 	const closeLocationDialog = useCallback(() => {
-		setIsLocationDialogOpen(false);
-	}, []);
+		closeDialogAction();
+	}, [closeDialogAction]);
 
 	/**
 	 * Get all books (for location picker)

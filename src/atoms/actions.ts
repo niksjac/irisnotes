@@ -48,3 +48,14 @@ export const handleSidebarCollapsedChangeAtom = atom(
 		set(sidebarCollapsed, collapsed);
 	}
 );
+
+// Note location dialog state
+export const locationDialogOpenAtom = atom<boolean>(false);
+
+export const openLocationDialogAtom = atom(null, (_get, set) => {
+	set(locationDialogOpenAtom, true);
+});
+
+export const closeLocationDialogAtom = atom(null, (_get, set) => {
+	set(locationDialogOpenAtom, false);
+});
