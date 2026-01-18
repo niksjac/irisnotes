@@ -128,24 +128,23 @@ CREATE VIRTUAL TABLE IF NOT EXISTS items_fts USING fts5(
     content_rowid=rowid
 );
 
--- FTS triggers (disabled - causing issues with Tauri SQL plugin)
--- TODO: Fix rowid reference for TEXT PRIMARY KEY tables
--- CREATE TRIGGER IF NOT EXISTS items_fts_insert AFTER INSERT ON items BEGIN
---     INSERT INTO items_fts(rowid, title, content_plaintext)
---     VALUES (new.rowid, new.title, new.content_plaintext);
--- END;
+-- FTS triggers for automatic index sync
+CREATE TRIGGER IF NOT EXISTS items_fts_insert AFTER INSERT ON items BEGIN
+    INSERT INTO items_fts(rowid, title, content_plaintext)
+    VALUES (new.rowid, new.title, new.content_plaintext);
+END;
 
--- CREATE TRIGGER IF NOT EXISTS items_fts_delete AFTER DELETE ON items BEGIN
---     INSERT INTO items_fts(items_fts, rowid, title, content_plaintext)
---     VALUES ('delete', old.rowid, old.title, old.content_plaintext);
--- END;
+CREATE TRIGGER IF NOT EXISTS items_fts_delete AFTER DELETE ON items BEGIN
+    INSERT INTO items_fts(items_fts, rowid, title, content_plaintext)
+    VALUES ('delete', old.rowid, old.title, old.content_plaintext);
+END;
 
--- CREATE TRIGGER IF NOT EXISTS items_fts_update AFTER UPDATE ON items BEGIN
---     INSERT INTO items_fts(items_fts, rowid, title, content_plaintext)
---     VALUES ('delete', old.rowid, old.title, old.content_plaintext);
---     INSERT INTO items_fts(rowid, title, content_plaintext)
---     VALUES (new.rowid, new.title, new.content_plaintext);
--- END;
+CREATE TRIGGER IF NOT EXISTS items_fts_update AFTER UPDATE ON items BEGIN
+    INSERT INTO items_fts(items_fts, rowid, title, content_plaintext)
+    VALUES ('delete', old.rowid, old.title, old.content_plaintext);
+    INSERT INTO items_fts(rowid, title, content_plaintext)
+    VALUES (new.rowid, new.title, new.content_plaintext);
+END;
 
 -- Timestamp triggers
 CREATE TRIGGER IF NOT EXISTS update_items_timestamp AFTER UPDATE ON items
