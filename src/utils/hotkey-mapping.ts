@@ -41,6 +41,8 @@ export function mapHotkeyHandlers(
 		openLocationDialog: () => void;
 		openSettings: () => void;
 		openHotkeys: () => void;
+		openQuickSearch: () => void;
+		openSearchSidebar: () => void;
 	}
 ): AppHotkeysProps {
 	return {
@@ -127,5 +129,8 @@ export function mapHotkeyHandlers(
 		// Views hotkeys
 		onOpenSettings: handlers.openSettings,
 		onOpenHotkeys: handlers.openHotkeys,
+		// Search hotkeys
+		onQuickSearch: handlers.openQuickSearch,
+		onFullTextSearch: handlers.openSearchSidebar,
 	};
 }

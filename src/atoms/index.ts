@@ -39,3 +39,6 @@ export * from "./tree";
 
 // Import action atoms
 export * from "./actions";
+
+// Import search atoms
+export * from "./search";

@@ -7,6 +7,7 @@ import {
 	Sidebar,
 	PaneContainer,
 	NoteLocationDialog,
+	QuickSearchDialog,
 } from "@/components";
 import {
 	useLayout,
@@ -104,6 +105,9 @@ export const Layout: React.FC = () => {
 				onClose={closeLocationDialog}
 				onCreateNote={createNoteInLocation}
 			/>
+
+			{/* Quick Search Dialog */}
+			<QuickSearchDialog />
 		</div>
 	);
 };

@@ -252,6 +252,20 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		category: "Notes",
 		global: true,
 	},
+
+	// Search hotkeys
+	quickSearch: {
+		key: "ctrl+p",
+		description: "Quick Search (by note name)",
+		category: "Search",
+		global: true,
+	},
+	fullTextSearch: {
+		key: "ctrl+shift+f",
+		description: "Full Text Search (in content)",
+		category: "Search",
+		global: true,
+	},
 };
 
 /**

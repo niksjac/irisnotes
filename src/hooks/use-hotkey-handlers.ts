@@ -28,6 +28,9 @@ import {
 	openHotkeysTabAtom,
 	increaseFontSizeAtom,
 	decreaseFontSizeAtom,
+	openQuickSearchAtom,
+	openSearchSidebarAtom,
+	sidebarCollapsed,
 } from "@/atoms";
 import { useEditorViewToggle } from "./use-editor-view-toggle";
 import { useLineWrapping } from "./use-line-wrapping";
@@ -136,5 +139,23 @@ export function useHotkeyHandlers() {
 		// View actions
 		openSettings: useSetAtom(openSettingsTabAtom),
 		openHotkeys: useSetAtom(openHotkeysTabAtom),
+
+		// Search actions
+		openQuickSearch: useSetAtom(openQuickSearchAtom),
+		openSearchSidebar: useOpenSearchSidebar(),
+	};
+}
+
+/**
+ * Custom hook to open search sidebar and ensure sidebar is visible
+ */
+function useOpenSearchSidebar() {
+	const openSearchSidebar = useSetAtom(openSearchSidebarAtom);
+	const setSidebarCollapsed = useSetAtom(sidebarCollapsed);
+
+	return () => {
+		// Ensure sidebar is visible when opening search
+		setSidebarCollapsed(false);
+		openSearchSidebar();
 	};
 }

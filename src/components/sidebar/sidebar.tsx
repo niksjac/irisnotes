@@ -1,12 +1,16 @@
 import type React from "react";
 import { useCallback } from "react";
+import { useAtomValue } from "jotai";
 import { useItems, useNotesStorage } from "@/hooks";
+import { sidebarViewModeAtom } from "@/atoms";
 import { TreeView } from "../tree";
 import { StorageIndicator } from "./storage-indicator";
+import { SearchSidebar } from "./search-sidebar";
 
 export const Sidebar: React.FC = () => {
 	const { isInitialized } = useNotesStorage();
 	const { isLoading } = useItems();
+	const sidebarViewMode = useAtomValue(sidebarViewModeAtom);
 
 	// Focus tree when clicking on sidebar empty space
 	// If a tree item was previously focused, restore focus to it; otherwise focus first item
@@ -46,6 +50,11 @@ export const Sidebar: React.FC = () => {
 				</div>
 			</div>
 		);
+	}
+
+	// Render search sidebar when in search mode
+	if (sidebarViewMode === "search") {
+		return <SearchSidebar />;
 	}
 
 	return (

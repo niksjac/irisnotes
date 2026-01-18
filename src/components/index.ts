@@ -5,8 +5,8 @@ export {
 } from "./activity-bar";
 export { RightClickMenu } from "./right-click-menu";
 export { EditorContainer } from "./editor";
-export { Sidebar, SidebarResizer } from "./sidebar";
+export { Sidebar, SidebarResizer, SearchSidebar } from "./sidebar";
 export { TreeView } from "./tree";
 export { Tab, TabBar, TabContent } from "./tabs";
 export { Pane, PaneContainer, PaneResizer } from "./panes";
-export { NoteLocationDialog } from "./dialogs";
+export { NoteLocationDialog, QuickSearchDialog } from "./dialogs";

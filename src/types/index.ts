@@ -99,6 +99,10 @@ export interface HotkeyMapping {
 	// Font size hotkeys
 	increaseFontSize: HotkeyConfig;
 	decreaseFontSize: HotkeyConfig;
+
+	// Search hotkeys
+	quickSearch: HotkeyConfig;
+	fullTextSearch: HotkeyConfig;
 }
 
 export interface AppHotkeysProps {
@@ -173,6 +177,10 @@ export interface AppHotkeysProps {
 	// Views hotkeys
 	onOpenSettings?: () => void;
 	onOpenHotkeys?: () => void;
+
+	// Search hotkeys
+	onQuickSearch?: () => void;
+	onFullTextSearch?: () => void;
 }
 
 // Storage configuration types

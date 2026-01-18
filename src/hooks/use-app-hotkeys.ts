@@ -239,4 +239,16 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHandler(handlers.onOpenHotkeys),
 		createHotkeyOptions(hotkeyMapping.openHotkeys.global)
 	);
+
+	// Search hotkeys
+	useHotkeys(
+		hotkeyMapping.quickSearch.key,
+		createHandler(handlers.onQuickSearch),
+		createHotkeyOptions(hotkeyMapping.quickSearch.global)
+	);
+	useHotkeys(
+		hotkeyMapping.fullTextSearch.key,
+		createHandler(handlers.onFullTextSearch),
+		createHotkeyOptions(hotkeyMapping.fullTextSearch.global)
+	);
 }
