@@ -1,18 +1,18 @@
 import * as Icons from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useHotkeysConfig } from "@/hooks/use-hotkeys-config";
 import {
 	PROSEMIRROR_HOTKEYS,
 	CODEMIRROR_HOTKEYS,
 	SYSTEM_HOTKEYS,
-	groupHotkeysByCategory,
 } from "@/config/editor-hotkeys";
 import type { HotkeyConfig } from "@/types";
 
-interface HotkeyGroup {
-	title: string;
-	icon: React.ReactNode;
-	shortcuts: { keys: string; description: string }[];
+interface HotkeyEntry {
+	keys: string;
+	description: string;
+	context: string;
+	category: string;
 }
 
 /**
@@ -104,122 +104,146 @@ function getCategoryIcon(category: string): React.ReactNode {
 
 export function HotkeysView() {
 	const { hotkeys: appHotkeys } = useHotkeysConfig();
+	const [searchQuery, setSearchQuery] = useState("");
 
-	// Build hotkey groups from all sources
-	const hotkeyGroups = useMemo<HotkeyGroup[]>(() => {
-		const groups: HotkeyGroup[] = [];
+	// Build flat list of all hotkeys
+	const allHotkeys = useMemo<HotkeyEntry[]>(() => {
+		const entries: HotkeyEntry[] = [];
 
-		// 1. App-level hotkeys from useHotkeysConfig (grouped by category)
-		const appHotkeysByCategory: Record<
-			string,
-			{ keys: string; description: string }[]
-		> = {};
-
+		// 1. App-level hotkeys
 		for (const [_, config] of Object.entries(appHotkeys) as [
 			string,
 			HotkeyConfig,
 		][]) {
-			// Skip invalid configs
 			if (!config?.key || !config?.description || !config?.category) {
 				continue;
 			}
-			const category = config.category;
-			if (!appHotkeysByCategory[category]) {
-				appHotkeysByCategory[category] = [];
-			}
-			appHotkeysByCategory[category].push({
+			entries.push({
 				keys: formatHotkeyForDisplay(config.key),
 				description: config.description,
-			});
-		}
-
-		// Add app hotkey groups
-		for (const [category, shortcuts] of Object.entries(appHotkeysByCategory)) {
-			groups.push({
-				title: category,
-				icon: getCategoryIcon(category),
-				shortcuts,
+				context: "App",
+				category: config.category,
 			});
 		}
 
 		// 2. ProseMirror editor hotkeys
-		const pmGrouped = groupHotkeysByCategory(PROSEMIRROR_HOTKEYS);
-		for (const [category, hotkeys] of Object.entries(pmGrouped)) {
-			groups.push({
-				title: `Rich Editor - ${category}`,
-				icon: getCategoryIcon(category),
-				shortcuts: hotkeys.map((h) => ({
-					keys: h.key,
-					description: h.description,
-				})),
+		for (const h of PROSEMIRROR_HOTKEYS) {
+			entries.push({
+				keys: h.key,
+				description: h.description,
+				context: "Rich Editor",
+				category: h.category,
 			});
 		}
 
 		// 3. CodeMirror source editor hotkeys
-		const cmGrouped = groupHotkeysByCategory(CODEMIRROR_HOTKEYS);
-		for (const [category, hotkeys] of Object.entries(cmGrouped)) {
-			groups.push({
-				title: `Source Editor - ${category}`,
-				icon: getCategoryIcon(category),
-				shortcuts: hotkeys.map((h) => ({
-					keys: h.key,
-					description: h.description,
-				})),
+		for (const h of CODEMIRROR_HOTKEYS) {
+			entries.push({
+				keys: h.key,
+				description: h.description,
+				context: "Source Editor",
+				category: h.category,
 			});
 		}
 
 		// 4. System/browser hotkeys
-		const sysGrouped = groupHotkeysByCategory(SYSTEM_HOTKEYS);
-		for (const [category, hotkeys] of Object.entries(sysGrouped)) {
-			groups.push({
-				title: `System - ${category}`,
-				icon: getCategoryIcon(category),
-				shortcuts: hotkeys.map((h) => ({
-					keys: h.key,
-					description: h.description,
-				})),
+		for (const h of SYSTEM_HOTKEYS) {
+			entries.push({
+				keys: h.key,
+				description: h.description,
+				context: "System",
+				category: h.category,
 			});
 		}
 
-		return groups;
+		// Sort by context, then category, then description
+		entries.sort((a, b) => {
+			const contextOrder = ["App", "Rich Editor", "Source Editor", "System"];
+			const contextDiff = contextOrder.indexOf(a.context) - contextOrder.indexOf(b.context);
+			if (contextDiff !== 0) return contextDiff;
+			const catDiff = a.category.localeCompare(b.category);
+			if (catDiff !== 0) return catDiff;
+			return a.description.localeCompare(b.description);
+		});
+
+		return entries;
 	}, [appHotkeys]);
+
+	// Filter hotkeys based on search query
+	const filteredHotkeys = useMemo(() => {
+		if (!searchQuery.trim()) return allHotkeys;
+		const query = searchQuery.toLowerCase();
+		return allHotkeys.filter(
+			(h) =>
+				h.keys.toLowerCase().includes(query) ||
+				h.description.toLowerCase().includes(query) ||
+				h.context.toLowerCase().includes(query) ||
+				h.category.toLowerCase().includes(query)
+		);
+	}, [allHotkeys, searchQuery]);
+
+	// Get unique categories for the legend
+	const categories = useMemo(() => {
+		const cats = new Set(filteredHotkeys.map((h) => h.category));
+		return Array.from(cats).sort();
+	}, [filteredHotkeys]);
+
+	// Get context color
+	const getContextColor = (context: string) => {
+		switch (context) {
+			case "App":
+				return "bg-indigo-500";
+			case "Rich Editor":
+				return "bg-emerald-500";
+			case "Source Editor":
+				return "bg-amber-500";
+			case "System":
+				return "bg-gray-500";
+			default:
+				return "bg-gray-400";
+		}
+	};
 
 	return (
 		<div className="h-full overflow-auto bg-white dark:bg-gray-900">
-			<div className="max-w-5xl mx-auto p-6 space-y-6">
-				{/* Header */}
-				<div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-					<h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
-						<Icons.Keyboard className="w-7 h-7" />
-						Keyboard Shortcuts
-					</h1>
-					<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-						Complete reference for all available keyboard shortcuts
-					</p>
-				</div>
-
-				{/* Tip */}
-				<div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-					<div className="flex items-start gap-3">
-						<Icons.Lightbulb className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
-						<div className="text-sm text-blue-800 dark:text-blue-200">
-							<strong>Tip:</strong> On macOS, use{" "}
-							<kbd className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-800 rounded text-xs font-mono">
-								⌘
-							</kbd>{" "}
-							(Command) instead of{" "}
-							<kbd className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-800 rounded text-xs font-mono">
-								Ctrl
-							</kbd>
-						</div>
+			<div className="max-w-6xl mx-auto p-6 space-y-4">
+				{/* Header with Search */}
+				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-4">
+					<div>
+						<h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+							<Icons.Keyboard className="w-7 h-7" />
+							Keyboard Shortcuts
+						</h1>
+						<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+							{filteredHotkeys.length} of {allHotkeys.length} shortcuts
+						</p>
+					</div>
+					{/* Search Bar */}
+					<div className="relative w-full sm:w-72">
+						<Icons.Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+						<input
+							type="text"
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+							placeholder="Filter shortcuts..."
+							className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+						/>
+						{searchQuery && (
+							<button
+								onClick={() => setSearchQuery("")}
+								className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+							>
+								<Icons.X className="w-4 h-4" />
+							</button>
+						)}
 					</div>
 				</div>
 
-				{/* Legend */}
+				{/* Context Legend */}
 				<div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
 					<div className="flex items-center gap-2">
 						<span className="w-3 h-3 rounded bg-indigo-500" />
-						<span>App Shortcuts</span>
+						<span>App</span>
 					</div>
 					<div className="flex items-center gap-2">
 						<span className="w-3 h-3 rounded bg-emerald-500" />
@@ -233,54 +257,101 @@ export function HotkeysView() {
 						<span className="w-3 h-3 rounded bg-gray-500" />
 						<span>System</span>
 					</div>
+					<span className="text-gray-400">|</span>
+					<span className="text-xs text-gray-500 dark:text-gray-400">
+						Tip: On macOS, use ⌘ instead of Ctrl
+					</span>
 				</div>
 
-				{/* Shortcut Groups */}
-				<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-					{hotkeyGroups.map((group) => {
-						// Determine color based on group title
-						let accentColor = "bg-indigo-500";
-						if (group.title.startsWith("Rich Editor")) {
-							accentColor = "bg-emerald-500";
-						} else if (group.title.startsWith("Source Editor")) {
-							accentColor = "bg-amber-500";
-						} else if (group.title.startsWith("System")) {
-							accentColor = "bg-gray-500";
-						}
+				{/* Shortcuts Table */}
+				<div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+					<table className="w-full text-sm">
+						<thead>
+							<tr className="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+								<th className="px-4 py-2.5 text-left font-semibold text-gray-700 dark:text-gray-300 w-36">
+									Keys
+								</th>
+								<th className="px-4 py-2.5 text-left font-semibold text-gray-700 dark:text-gray-300">
+									Description
+								</th>
+								<th className="px-4 py-2.5 text-left font-semibold text-gray-700 dark:text-gray-300 w-32">
+									Context
+								</th>
+								<th className="px-4 py-2.5 text-left font-semibold text-gray-700 dark:text-gray-300 w-36">
+									Category
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							{filteredHotkeys.length === 0 ? (
+								<tr>
+									<td colSpan={4} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+										No shortcuts match "{searchQuery}"
+									</td>
+								</tr>
+							) : (
+								filteredHotkeys.map((hotkey, idx) => {
+									const prev = filteredHotkeys[idx - 1];
+									const isNewContext = !prev || prev.context !== hotkey.context;
+									const isNewCategory = !prev || prev.context !== hotkey.context || prev.category !== hotkey.category;
 
-						return (
-							<div
-								key={group.title}
-								className="bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden"
-							>
-								{/* Group Header */}
-								<div className="px-4 py-3 bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 flex items-center gap-2">
-									<span className={`w-2 h-2 rounded-full ${accentColor}`} />
-									<h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2 text-sm">
-										{group.icon}
-										{group.title}
-									</h2>
-								</div>
-
-								{/* Shortcuts */}
-								<div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-64 overflow-y-auto">
-									{group.shortcuts.map((shortcut, idx) => (
-										<div
-											key={`${shortcut.keys}-${idx}`}
-											className="px-4 py-2 flex items-center justify-between gap-2"
-										>
-											<span className="text-sm text-gray-700 dark:text-gray-300 truncate">
-												{shortcut.description}
-											</span>
-											<kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded text-xs font-mono whitespace-nowrap flex-shrink-0">
-												{shortcut.keys}
-											</kbd>
-										</div>
-									))}
-								</div>
-							</div>
-						);
-					})}
+									return (
+										<>
+											{/* Context group header */}
+											{isNewContext && (
+												<tr key={`context-${hotkey.context}`}>
+													<td
+														colSpan={4}
+														className={`px-4 py-2 font-semibold text-white text-sm ${getContextColor(hotkey.context)}`}
+													>
+														{hotkey.context}
+													</td>
+												</tr>
+											)}
+											{/* Category subgroup header */}
+											{isNewCategory && (
+												<tr key={`cat-${hotkey.context}-${hotkey.category}`}>
+													<td
+														colSpan={4}
+														className="px-4 py-1.5 bg-gray-100 dark:bg-gray-800 border-y border-gray-200 dark:border-gray-700"
+													>
+														<span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400">
+															{getCategoryIcon(hotkey.category)}
+															{hotkey.category}
+														</span>
+													</td>
+												</tr>
+											)}
+											{/* Hotkey row */}
+											<tr
+												key={`${hotkey.keys}-${hotkey.context}-${idx}`}
+												className="hover:bg-gray-50 dark:hover:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800"
+											>
+												<td className="px-4 py-1.5 pl-6">
+													<kbd className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded text-xs font-mono whitespace-nowrap">
+														{hotkey.keys}
+													</kbd>
+												</td>
+												<td className="px-4 py-1.5 text-gray-700 dark:text-gray-300">
+													{hotkey.description}
+												</td>
+												<td className="px-4 py-1.5">
+													<span className="text-gray-500 dark:text-gray-500 text-xs">
+														{hotkey.context}
+													</span>
+												</td>
+												<td className="px-4 py-1.5">
+													<span className="text-gray-500 dark:text-gray-500 text-xs">
+														{hotkey.category}
+													</span>
+												</td>
+											</tr>
+										</>
+									);
+								})
+							)}
+						</tbody>
+					</table>
 				</div>
 			</div>
 		</div>
