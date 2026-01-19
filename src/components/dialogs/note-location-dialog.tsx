@@ -32,6 +32,8 @@ export const NoteLocationDialog: FC<NoteLocationDialogProps> = ({
 }) => {
 	const dialogRef = useRef<HTMLDivElement>(null);
 	const noteInputRef = useRef<HTMLInputElement>(null);
+	const bookInputRef = useRef<HTMLInputElement>(null);
+	const sectionInputRef = useRef<HTMLInputElement>(null);
 	const { getBooks, getSectionsForBook, items } = useNoteActions();
 
 	// Form state
@@ -203,14 +205,27 @@ export const NoteLocationDialog: FC<NoteLocationDialogProps> = ({
 	};
 
 	const handleNoteKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === "Enter" && noteTitle.trim()) {
+		if (e.key === "Enter" && e.ctrlKey && noteTitle.trim()) {
+			// Ctrl+Enter: submit immediately
 			e.preventDefault();
 			handleSubmit();
+		} else if (e.key === "Enter" && noteTitle.trim()) {
+			// Enter: move to next field
+			e.preventDefault();
+			bookInputRef.current?.focus();
 		}
 	};
 
 	const handleBookKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === "ArrowDown") {
+		if (e.key === "Enter" && e.ctrlKey && noteTitle.trim()) {
+			// Ctrl+Enter: submit immediately
+			e.preventDefault();
+			handleSubmit();
+		} else if (e.key === "Tab" && !e.shiftKey && showBookDropdown && filteredBooks.length > 0) {
+			// Tab: select top suggestion
+			e.preventDefault();
+			selectBook(filteredBooks[bookHighlightIndex]);
+		} else if (e.key === "ArrowDown") {
 			e.preventDefault();
 			setShowBookDropdown(true);
 			setBookHighlightIndex((prev) =>
@@ -224,13 +239,23 @@ export const NoteLocationDialog: FC<NoteLocationDialogProps> = ({
 			if (showBookDropdown && filteredBooks[bookHighlightIndex]) {
 				selectBook(filteredBooks[bookHighlightIndex]);
 			}
+			// Move to section field
+			sectionInputRef.current?.focus();
 		} else if (e.key === "Escape") {
 			setShowBookDropdown(false);
 		}
 	};
 
 	const handleSectionKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === "ArrowDown") {
+		if (e.key === "Enter" && e.ctrlKey && noteTitle.trim()) {
+			// Ctrl+Enter: submit immediately
+			e.preventDefault();
+			handleSubmit();
+		} else if (e.key === "Tab" && !e.shiftKey && showSectionDropdown && filteredSections.length > 0) {
+			// Tab: select top suggestion
+			e.preventDefault();
+			selectSection(filteredSections[sectionHighlightIndex]);
+		} else if (e.key === "ArrowDown") {
 			e.preventDefault();
 			setShowSectionDropdown(true);
 			setSectionHighlightIndex((prev) =>
@@ -243,6 +268,10 @@ export const NoteLocationDialog: FC<NoteLocationDialogProps> = ({
 			e.preventDefault();
 			if (showSectionDropdown && filteredSections[sectionHighlightIndex]) {
 				selectSection(filteredSections[sectionHighlightIndex]);
+			}
+			// Last field: submit if note title exists
+			if (noteTitle.trim()) {
+				handleSubmit();
 			}
 		} else if (e.key === "Escape") {
 			setShowSectionDropdown(false);
@@ -365,7 +394,7 @@ export const NoteLocationDialog: FC<NoteLocationDialogProps> = ({
 							autoComplete="off"
 						/>
 						<p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-							Press Enter to create note
+							Enter to continue, Ctrl+Enter to create
 						</p>
 					</div>
 
@@ -376,6 +405,7 @@ export const NoteLocationDialog: FC<NoteLocationDialogProps> = ({
 							Book
 						</label>
 						<input
+							ref={bookInputRef}
 							type="text"
 							value={bookQuery}
 							onChange={(e) => {
@@ -422,6 +452,7 @@ export const NoteLocationDialog: FC<NoteLocationDialogProps> = ({
 							Section
 						</label>
 						<input
+							ref={sectionInputRef}
 							type="text"
 							value={sectionQuery}
 							onChange={(e) => {
