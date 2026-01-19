@@ -274,6 +274,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 			content: params.content || "",
 			content_type: params.content_type || "html",
 			content_raw: params.content_raw,
+			parent_id: params.parent_id,
 			metadata: {},
 		});
 
