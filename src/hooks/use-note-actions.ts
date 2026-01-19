@@ -36,8 +36,72 @@ export function useNoteActions() {
 	}, [createNote, openItemInTab]);
 
 	/**
+	 * Create a new note with title, optionally in a book and/or section.
+	 * Creates new book/section if they don't exist.
+	 */
+	const createNoteWithLocation = useCallback(
+		async (
+			noteTitle: string,
+			bookInfo: { id: string } | { title: string } | null,
+			sectionInfo: { id: string } | { title: string } | null
+		) => {
+			let bookId: string | undefined;
+			let sectionId: string | undefined;
+
+			// Handle book - either use existing or create new
+			if (bookInfo) {
+				if ("id" in bookInfo) {
+					bookId = bookInfo.id;
+				} else {
+					// Create new book
+					const bookResult = await createBook(bookInfo.title);
+					if (!bookResult.success || !bookResult.data) {
+						return bookResult;
+					}
+					bookId = bookResult.data.id;
+				}
+			}
+
+			// Handle section - either use existing or create new
+			if (sectionInfo && bookId) {
+				if ("id" in sectionInfo) {
+					sectionId = sectionInfo.id;
+				} else {
+					// Create new section inside the book
+					const sectionResult = await createSection(sectionInfo.title, bookId);
+					if (!sectionResult.success || !sectionResult.data) {
+						return sectionResult;
+					}
+					sectionId = sectionResult.data.id;
+				}
+			}
+
+			// Determine final parent: section > book > root
+			const parentId = sectionId ?? bookId;
+
+			const result = await createNote({
+				title: noteTitle,
+				content: "",
+				parent_id: parentId,
+			});
+
+			if (result.success && result.data) {
+				openItemInTab({
+					id: result.data.id,
+					title: result.data.title,
+					type: "note",
+				});
+			}
+
+			return result;
+		},
+		[createNote, createBook, createSection, openItemInTab]
+	);
+
+	/**
 	 * Create a new note in a specific location and open it in a tab
 	 * If newBookTitle is provided, creates a new book first and puts the note inside
+	 * @deprecated Use createNoteWithLocation instead
 	 */
 	const createNoteInLocation = useCallback(
 		async (parentId: string | null, newBookTitle?: string) => {
@@ -131,6 +195,7 @@ export function useNoteActions() {
 	return {
 		createNoteInRoot,
 		createNoteInLocation,
+		createNoteWithLocation,
 		createNewBook,
 		createNewSection,
 		isLocationDialogOpen,
@@ -138,5 +203,6 @@ export function useNoteActions() {
 		closeLocationDialog,
 		getBooks,
 		getSectionsForBook,
+		items,
 	};
 }

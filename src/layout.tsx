@@ -36,7 +36,7 @@ export const Layout: React.FC = () => {
 	const {
 		isLocationDialogOpen,
 		closeLocationDialog,
-		createNoteInLocation,
+		createNoteWithLocation,
 	} = useNoteActions();
 
 	// Apply theme (adds .dark class to document)
@@ -103,7 +103,7 @@ export const Layout: React.FC = () => {
 			<NoteLocationDialog
 				isOpen={isLocationDialogOpen}
 				onClose={closeLocationDialog}
-				onCreateNote={createNoteInLocation}
+				onCreateNote={createNoteWithLocation}
 			/>
 
 			{/* Quick Search Dialog */}
