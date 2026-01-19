@@ -1,29 +1,38 @@
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, useMemo, type FC } from "react";
 import { Search, FileText, Book, FolderOpen } from "lucide-react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import {
 	quickSearchOpenAtom,
 	quickSearchQueryAtom,
 	itemsAtom,
-	selectedItemIdAtom,
 } from "@/atoms";
 import { useTabManagement } from "@/hooks";
 import type { FlexibleItem } from "@/types/items";
 
 type SearchMode = "notes" | "sections" | "books";
 
-interface SearchResult {
+interface NoteResult {
 	item: FlexibleItem;
 	section: FlexibleItem | null;
 	book: FlexibleItem | null;
 }
 
+interface SectionResult {
+	item: FlexibleItem;
+	book: FlexibleItem | null;
+}
+
+interface BookResult {
+	item: FlexibleItem;
+}
+
+type SearchResult = NoteResult | SectionResult | BookResult;
+
 export const QuickSearchDialog: FC = () => {
 	const [isOpen, setIsOpen] = useAtom(quickSearchOpenAtom);
 	const [query, setQuery] = useAtom(quickSearchQueryAtom);
 	const items = useAtomValue(itemsAtom);
-	const setSelectedItemId = useSetAtom(selectedItemIdAtom);
 	const { openItemInTab } = useTabManagement();
 
 	const dialogRef = useRef<HTMLDivElement>(null);
@@ -32,37 +41,47 @@ export const QuickSearchDialog: FC = () => {
 	const [mode, setMode] = useState<SearchMode>("notes");
 
 	// Build search results based on mode
-	// All modes return notes, but filter differently:
-	// - notes: match note title
-	// - sections: show notes in sections matching the query
-	// - books: show notes in books matching the query
+	// Each mode searches and returns its own type:
+	// - notes: search notes, show with compact section/book info
+	// - sections: search sections, show with book info
+	// - books: search books, no extra columns
 	const searchResults = useMemo((): SearchResult[] => {
-		// Always get all notes with their hierarchy
-		const allNoteResults = items
-			.filter((item) => item.type === "note")
-			.map((note) => buildSearchResult(note, items));
-
+		// Return empty if no query - don't show anything until user types
 		if (!query.trim()) {
-			return allNoteResults.slice(0, 30);
+			return [];
 		}
 
 		const lowerQuery = query.toLowerCase();
-		
-		const matchingResults = allNoteResults.filter((result) => {
-			switch (mode) {
-				case "notes":
-					// Match note title
-					return result.item.title.toLowerCase().includes(lowerQuery);
-				case "sections":
-					// Match section name
-					return result.section?.title.toLowerCase().includes(lowerQuery) ?? false;
-				case "books":
-					// Match book name
-					return result.book?.title.toLowerCase().includes(lowerQuery) ?? false;
-			}
-		});
 
-		return matchingResults.slice(0, 30);
+		switch (mode) {
+			case "notes": {
+				const notes = items.filter(
+					(item) =>
+						item.type === "note" &&
+						!item.deleted_at &&
+						item.title.toLowerCase().includes(lowerQuery)
+				);
+				return notes.slice(0, 30).map((note) => buildNoteResult(note, items));
+			}
+			case "sections": {
+				const sections = items.filter(
+					(item) =>
+						item.type === "section" &&
+						!item.deleted_at &&
+						item.title.toLowerCase().includes(lowerQuery)
+				);
+				return sections.slice(0, 30).map((section) => buildSectionResult(section, items));
+			}
+			case "books": {
+				const books = items.filter(
+					(item) =>
+						item.type === "book" &&
+						!item.deleted_at &&
+						item.title.toLowerCase().includes(lowerQuery)
+				);
+				return books.slice(0, 30).map((book) => ({ item: book }));
+			}
+		}
 	}, [query, items, mode]);
 
 	// Reset selection when results change
@@ -147,11 +166,12 @@ export const QuickSearchDialog: FC = () => {
 	};
 
 	const handleSelectItem = (result: SearchResult) => {
-		// All modes return notes, so always open in tab
+		// Open item based on its actual type
+		const itemType = result.item.type as "note" | "section" | "book";
 		openItemInTab({
 			id: result.item.id,
 			title: result.item.title,
-			type: "note",
+			type: itemType,
 		});
 		handleClose();
 	};
@@ -166,18 +186,24 @@ export const QuickSearchDialog: FC = () => {
 
 	const getPlaceholder = () => {
 		switch (mode) {
-			case "notes": return "Search by note name...";
-			case "sections": return "Search by section name...";
-			case "books": return "Search by book name...";
+			case "notes": return "Search notes...";
+			case "sections": return "Search sections...";
+			case "books": return "Search books...";
 		}
 	};
 
 	const getEmptyMessage = () => {
-		if (!query.trim()) return "No notes available";
+		if (!query.trim()) {
+			switch (mode) {
+				case "notes": return "Type to search notes...";
+				case "sections": return "Type to search sections...";
+				case "books": return "Type to search books...";
+			}
+		}
 		switch (mode) {
 			case "notes": return `No notes matching "${query}"`;
-			case "sections": return `No notes in sections matching "${query}"`;
-			case "books": return `No notes in books matching "${query}"`;
+			case "sections": return `No sections matching "${query}"`;
+			case "books": return `No books matching "${query}"`;
 		}
 	};
 
@@ -187,7 +213,7 @@ export const QuickSearchDialog: FC = () => {
 		<div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] bg-black/30">
 			<div
 				ref={dialogRef}
-				className="w-full max-w-3xl bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+				className="w-full max-w-xl bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
 			>
 				{/* Mode Switcher */}
 				<div className="flex border-b border-gray-200 dark:border-gray-700">
@@ -220,66 +246,70 @@ export const QuickSearchDialog: FC = () => {
 					/>
 				</div>
 
-				{/* Results - Column-based compact layout */}
+				{/* Results - compact row layout */}
 				<div className="max-h-72 overflow-y-auto">
 					{searchResults.length === 0 ? (
 						<div className="px-4 py-6 text-center text-gray-500 dark:text-gray-400 text-sm">
 							{getEmptyMessage()}
 						</div>
 					) : (
-						<table className="w-full text-sm">
-							{/* Column Headers */}
-							<thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-								<tr className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-									<th className="text-left px-4 py-1 font-medium">Name</th>
-									<th className="text-left px-2 py-1 font-medium w-28">Section</th>
-									<th className="text-left px-2 py-1 font-medium w-28">Book</th>
-								</tr>
-							</thead>
-							{/* Rows */}
-							<tbody>
-								{searchResults.map((result, index) => (
-									<tr
-										key={result.item.id}
-										onClick={() => handleSelectItem(result)}
-										onMouseEnter={() => setSelectedIndex(index)}
-										className={`cursor-pointer border-b border-gray-100 dark:border-gray-700/30 ${
-											index === selectedIndex
-												? "bg-blue-50 dark:bg-blue-900/30"
-												: "hover:bg-gray-50 dark:hover:bg-gray-700/50"
-										}`}
-									>
-										{/* Item name */}
-										<td className="px-4 py-1">
-											<div className="flex items-center gap-2 min-w-0">
-													<FileText className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
-												<span className="font-medium text-gray-900 dark:text-gray-100 truncate">
-													{highlightMatch(result.item.title, query)}
+						<div className="py-1">
+							{searchResults.map((result, index) => (
+								<button
+									key={result.item.id}
+									onClick={() => handleSelectItem(result)}
+									onMouseEnter={() => setSelectedIndex(index)}
+									className={`w-full text-left px-4 py-1.5 flex items-center gap-3 transition-colors ${
+										index === selectedIndex
+											? "bg-blue-50 dark:bg-blue-900/30"
+											: "hover:bg-gray-50 dark:hover:bg-gray-700/50"
+									}`}
+								>
+									{/* Item icon and name */}
+									<div className="flex items-center gap-2 min-w-0 flex-1">
+										{mode === "notes" && (
+											<FileText className="h-4 w-4 text-green-500 flex-shrink-0" />
+										)}
+										{mode === "sections" && (
+											<FolderOpen className="h-4 w-4 text-amber-500 flex-shrink-0" />
+										)}
+										{mode === "books" && (
+											<Book className="h-4 w-4 text-blue-500 flex-shrink-0" />
+										)}
+										<span className="font-medium text-gray-900 dark:text-gray-100 truncate text-sm">
+											{highlightMatch(result.item.title, query)}
+										</span>
+									</div>
+
+									{/* Hierarchy info - compact, mode-specific */}
+									{mode === "notes" && (
+										<div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
+											{"section" in result && result.section && (
+												<span className="truncate max-w-24" title={result.section.title}>
+													{result.section.title}
 												</span>
-											</div>
-										</td>
-										{/* Section column */}
-										<td className="px-2 py-1 w-28">
-											{result.section && (
-												<div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
-														<FolderOpen className="h-3 w-3 text-amber-500 flex-shrink-0" />
-													<span className="truncate text-xs">{result.section.title}</span>
-												</div>
 											)}
-										</td>
-										{/* Book column */}
-										<td className="px-2 py-1 w-28">
-											{result.book && (
-												<div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
-														<Book className="h-3 w-3 text-blue-500 flex-shrink-0" />
-													<span className="truncate text-xs">{result.book.title}</span>
-												</div>
+											{"book" in result && result.book && (
+												<>
+													{("section" in result && result.section) && <span>·</span>}
+													<span className="truncate max-w-24" title={result.book.title}>
+														{result.book.title}
+													</span>
+												</>
 											)}
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
+										</div>
+									)}
+									{mode === "sections" && "book" in result && result.book && (
+										<div className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
+											<span className="truncate max-w-32" title={result.book.title}>
+												{result.book.title}
+											</span>
+										</div>
+									)}
+									{/* Books mode: no extra columns */}
+								</button>
+							))}
+						</div>
 					)}
 				</div>
 
@@ -309,16 +339,16 @@ export const QuickSearchDialog: FC = () => {
 	return createPortal(dialogContent, document.body);
 };
 
-// Helper to build search result with hierarchy info
-function buildSearchResult(
-	item: FlexibleItem,
+// Helper to build note result with hierarchy info
+function buildNoteResult(
+	note: FlexibleItem,
 	items: FlexibleItem[]
-): SearchResult {
+): NoteResult {
 	let section: FlexibleItem | null = null;
 	let book: FlexibleItem | null = null;
 
-	if (item.parent_id) {
-		const parent = items.find((i) => i.id === item.parent_id);
+	if (note.parent_id) {
+		const parent = items.find((i) => i.id === note.parent_id);
 		if (parent) {
 			if (parent.type === "section") {
 				section = parent;
@@ -335,7 +365,24 @@ function buildSearchResult(
 		}
 	}
 
-	return { item, section, book };
+	return { item: note, section, book };
+}
+
+// Helper to build section result with book info
+function buildSectionResult(
+	section: FlexibleItem,
+	items: FlexibleItem[]
+): SectionResult {
+	let book: FlexibleItem | null = null;
+
+	if (section.parent_id) {
+		const parent = items.find((i) => i.id === section.parent_id);
+		if (parent?.type === "book") {
+			book = parent;
+		}
+	}
+
+	return { item: section, book };
 }
 
 // Helper to highlight matching text
