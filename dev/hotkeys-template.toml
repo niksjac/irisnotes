@@ -31,6 +31,12 @@ description = "Toggle Activity Bar"
 category = "Layout"
 global = true
 
+[expandActivityBar]
+key = "ctrl+shift+j"
+description = "Expand/Collapse Activity Bar"
+category = "Layout"
+global = true
+
 # =============================================================================
 # Tabs
 # =============================================================================

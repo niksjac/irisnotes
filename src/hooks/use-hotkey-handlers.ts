@@ -38,6 +38,7 @@ import { useEditorViewToggle } from "./use-editor-view-toggle";
 import { useLineWrapping } from "./use-line-wrapping";
 import { useEditorLayout } from "./use-editor-layout";
 import { useNoteActions } from "./use-note-actions";
+import { useView } from "./use-view";
 
 /**
  * Hook that provides all hotkey handler functions
@@ -48,6 +49,7 @@ export function useHotkeyHandlers() {
 	const { toggleLineWrapping } = useLineWrapping();
 	const { toggleToolbar } = useEditorLayout();
 	const { createNoteInRoot, openLocationDialog } = useNoteActions();
+	const { toggleActivityBarExpanded } = useView();
 	// Tab actions
 	const closeActiveTab = useSetAtom(closeActiveTabAtom);
 	const newTabInActivePane = useSetAtom(newTabInActivePaneAtom);
@@ -133,6 +135,9 @@ export function useHotkeyHandlers() {
 		toggleEditorView,
 		toggleLineWrapping,
 		toggleToolbar,
+
+		// Activity bar
+		toggleActivityBarExpanded,
 
 		// Font size actions (scales base font, inline em sizes scale proportionally)
 		increaseFontSize: useSetAtom(increaseFontSizeAtom),

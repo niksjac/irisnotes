@@ -40,6 +40,11 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHandler(handlers.onToggleActivityBar),
 		createHotkeyOptions(hotkeyMapping.toggleActivityBar.global)
 	);
+	useHotkeys(
+		hotkeyMapping.expandActivityBar.key,
+		createHandler(handlers.onExpandActivityBar),
+		createHotkeyOptions(hotkeyMapping.expandActivityBar.global)
+	);
 
 	// Tab hotkeys
 	useHotkeys(

@@ -18,6 +18,12 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		category: "Layout",
 		global: true,
 	},
+	expandActivityBar: {
+		key: "ctrl+shift+j",
+		description: "Expand/Collapse Activity Bar",
+		category: "Layout",
+		global: true,
+	},
 
 	// Tab hotkeys
 	closeTab: {

@@ -38,6 +38,7 @@ export interface HotkeyMapping {
 	// Layout hotkeys
 	toggleSidebar: HotkeyConfig;
 	toggleActivityBar: HotkeyConfig;
+	expandActivityBar: HotkeyConfig;
 
 	// Tab hotkeys
 	closeTab: HotkeyConfig;
@@ -111,6 +112,7 @@ export interface AppHotkeysProps {
 	// Layout hotkeys
 	onToggleSidebar?: () => void;
 	onToggleActivityBar?: () => void;
+	onExpandActivityBar?: () => void;
 
 	// Tab hotkeys
 	onCloseTab?: () => void;
