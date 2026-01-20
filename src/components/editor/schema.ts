@@ -1,17 +1,206 @@
 /**
- * Extended ProseMirror Schema
+ * Line-Based ProseMirror Schema
  *
- * Extends prosemirror-schema-basic with additional marks for rich formatting:
+ * Custom schema designed for a line-based editor (like OneNote/Notepad++).
+ * Key design decisions:
+ * - No semantic heading tags (h1-h6) - use fontSize mark instead
+ * - No hard_break - each Enter creates a new block
+ * - All blocks are paragraphs with optional formatting marks
+ *
+ * Marks available:
+ * - bold, italic, code (basic formatting)
  * - underline, strikethrough
  * - textColor, highlight (background color)
- * - fontSize (inline size override)
+ * - fontSize, fontFamily (inline overrides)
+ * - link
  */
 
 import { Schema, type Mark, type Node as PMNode } from "prosemirror-model";
-import { schema as basicSchema } from "prosemirror-schema-basic";
+import OrderedMap from "orderedmap";
 import { addListNodes } from "prosemirror-schema-list";
 
-// ============ Custom Mark Specs ============
+// ============ Node Specs ============
+
+/**
+ * Document node - the root
+ */
+const docSpec = {
+	content: "block+",
+};
+
+/**
+ * Paragraph - the primary block type
+ * In our line-based model, everything is a paragraph
+ */
+const paragraphSpec = {
+	content: "inline*",
+	group: "block",
+	parseDOM: [
+		{ tag: "p" },
+		// Parse headings as paragraphs (legacy content migration)
+		{ tag: "h1" },
+		{ tag: "h2" },
+		{ tag: "h3" },
+		{ tag: "h4" },
+		{ tag: "h5" },
+		{ tag: "h6" },
+		{ tag: "div" },
+	],
+	toDOM: () => ["p", 0] as const,
+};
+
+/**
+ * Blockquote
+ */
+const blockquoteSpec = {
+	content: "block+",
+	group: "block",
+	defining: true,
+	parseDOM: [{ tag: "blockquote" }],
+	toDOM: () => ["blockquote", 0] as const,
+};
+
+/**
+ * Horizontal rule
+ */
+const horizontalRuleSpec = {
+	group: "block",
+	parseDOM: [{ tag: "hr" }],
+	toDOM: () => ["hr"] as const,
+};
+
+/**
+ * Code block
+ */
+const codeBlockSpec = {
+	content: "text*",
+	marks: "",
+	group: "block",
+	code: true,
+	defining: true,
+	attrs: {
+		language: { default: "javascript" },
+	},
+	parseDOM: [
+		{
+			tag: "pre",
+			preserveWhitespace: "full" as const,
+			getAttrs: (node: HTMLElement) => ({
+				language: node.getAttribute("data-language") || "javascript",
+			}),
+		},
+	],
+	toDOM: (node: PMNode) =>
+		[
+			"pre",
+			{ "data-language": node.attrs.language as string },
+			["code", 0],
+		] as const,
+};
+
+/**
+ * Text node
+ */
+const textSpec = {
+	group: "inline",
+};
+
+/**
+ * Image node
+ */
+const imageSpec = {
+	inline: true,
+	attrs: {
+		src: {},
+		alt: { default: null },
+		title: { default: null },
+	},
+	group: "inline",
+	draggable: true,
+	parseDOM: [
+		{
+			tag: "img[src]",
+			getAttrs: (node: HTMLElement) => ({
+				src: node.getAttribute("src"),
+				alt: node.getAttribute("alt"),
+				title: node.getAttribute("title"),
+			}),
+		},
+	],
+	toDOM: (node: PMNode) =>
+		[
+			"img",
+			{
+				src: node.attrs.src as string,
+				alt: node.attrs.alt as string,
+				title: node.attrs.title as string,
+			},
+		] as const,
+};
+
+// ============ Mark Specs ============
+
+/**
+ * Link mark
+ */
+const linkMarkSpec = {
+	attrs: {
+		href: {},
+		title: { default: null },
+	},
+	inclusive: false,
+	parseDOM: [
+		{
+			tag: "a[href]",
+			getAttrs: (node: HTMLElement) => ({
+				href: node.getAttribute("href"),
+				title: node.getAttribute("title"),
+			}),
+		},
+	],
+	toDOM: (mark: Mark) =>
+		[
+			"a",
+			{ href: mark.attrs.href as string, title: mark.attrs.title as string },
+			0,
+		] as const,
+};
+
+/**
+ * Bold/Strong mark
+ */
+const boldMarkSpec = {
+	parseDOM: [
+		{ tag: "strong" },
+		{ tag: "b" },
+		{
+			style: "font-weight",
+			getAttrs: (value: string) =>
+				/^(bold(er)?|[5-9]\d{2,})$/.test(value) ? {} : false,
+		},
+	],
+	toDOM: () => ["strong", 0] as const,
+};
+
+/**
+ * Italic/Emphasis mark
+ */
+const italicMarkSpec = {
+	parseDOM: [
+		{ tag: "em" },
+		{ tag: "i" },
+		{ style: "font-style=italic" },
+	],
+	toDOM: () => ["em", 0] as const,
+};
+
+/**
+ * Inline code mark
+ */
+const codeMarkSpec = {
+	parseDOM: [{ tag: "code" }],
+	toDOM: () => ["code", 0] as const,
+};
 
 /**
  * Underline mark
@@ -119,70 +308,54 @@ const fontFamilyMarkSpec = {
 		["span", { style: `font-family: ${mark.attrs.family}` }, 0] as const,
 };
 
-// ============ Code Block Node Spec ============
+// ============ Build Schema ============
 
-const codeBlockSpec = {
-	content: "text*",
-	marks: "",
-	group: "block",
-	code: true,
-	defining: true,
-	attrs: {
-		language: { default: "javascript" },
-	},
-	parseDOM: [
-		{
-			tag: "pre",
-			preserveWhitespace: "full" as const,
-			getAttrs: (node: HTMLElement) => ({
-				language: node.getAttribute("data-language") || "javascript",
-			}),
-		},
-	],
-	toDOM: (node: PMNode) =>
-		[
-			"pre",
-			{ "data-language": node.attrs.language as string },
-			["code", 0],
-		] as const,
-};
+// Base nodes as OrderedMap (required by addListNodes)
+const baseNodes = OrderedMap.from({
+	doc: docSpec,
+	paragraph: paragraphSpec,
+	blockquote: blockquoteSpec,
+	horizontal_rule: horizontalRuleSpec,
+	code_block: codeBlockSpec,
+	text: textSpec,
+	image: imageSpec,
+});
 
-// ============ Build Extended Schema ============
+// Add list nodes
+const nodesWithLists = addListNodes(
+	baseNodes,
+	"paragraph block*",
+	"block"
+);
 
-// Extend the basic marks with our custom marks
-// Order matters! Marks defined first are rendered "outer" in DOM.
-// We want color/highlight outermost so text-decoration inherits the color.
-const extendedMarks = basicSchema.spec.marks.append({
+// All marks - order matters! Outer marks first.
+const allMarks = {
 	// Color marks first (outermost) - so decorations inherit the color
 	textColor: textColorMarkSpec,
 	highlight: highlightMarkSpec,
 	// Font marks
 	fontSize: fontSizeMarkSpec,
 	fontFamily: fontFamilyMarkSpec,
-	// Decoration marks last (innermost) - they'll inherit color from parent
+	// Link
+	link: linkMarkSpec,
+	// Basic formatting
+	strong: boldMarkSpec,
+	em: italicMarkSpec,
+	code: codeMarkSpec,
+	// Decoration marks last (innermost)
 	underline: underlineMarkSpec,
 	strikethrough: strikethroughMarkSpec,
-});
-
-// Extend nodes with lists and code_block
-// Remove hard_break to enforce line-based model (no soft line breaks within blocks)
-const nodesWithoutHardBreak = basicSchema.spec.nodes.remove("hard_break");
-const extendedNodes = addListNodes(
-	nodesWithoutHardBreak,
-	"paragraph block*",
-	"block"
-).append({
-	code_block: codeBlockSpec,
-});
+};
 
 /**
- * Extended schema with all custom marks and nodes
+ * Line-based schema - no headings, just paragraphs with marks
  */
 export const editorSchema = new Schema({
-	nodes: extendedNodes,
-	marks: extendedMarks,
+	nodes: nodesWithLists,
+	marks: allMarks,
 });
 
 // ============ Type Exports ============
 
 export type EditorSchema = typeof editorSchema;
+

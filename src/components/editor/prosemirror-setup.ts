@@ -267,13 +267,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 	}
 
 	// Block formatting shortcuts
-
-	// Headings: Ctrl+Shift+1/2/3
-	if (nodes.heading) {
-		customKeybindings["Mod-Shift-1"] = setBlockType(nodes.heading, { level: 1 });
-		customKeybindings["Mod-Shift-2"] = setBlockType(nodes.heading, { level: 2 });
-		customKeybindings["Mod-Shift-3"] = setBlockType(nodes.heading, { level: 3 });
-	}
+	// Note: No heading shortcuts - headings are just fontSize marks in our line-based model
 
 	// Paragraph: Ctrl+Shift+0
 	if (nodes.paragraph) {

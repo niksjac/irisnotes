@@ -28,9 +28,7 @@ export const PROSEMIRROR_HOTKEYS: EditorHotkeyConfig[] = [
 	},
 
 	// Block formatting
-	{ key: "Ctrl+Shift+1", description: "Heading 1", category: "Blocks" },
-	{ key: "Ctrl+Shift+2", description: "Heading 2", category: "Blocks" },
-	{ key: "Ctrl+Shift+3", description: "Heading 3", category: "Blocks" },
+	// Note: No heading shortcuts - use font size instead
 	{ key: "Ctrl+Shift+0", description: "Paragraph", category: "Blocks" },
 	{ key: "Alt+L", description: "Bullet List", category: "Blocks" },
 	{ key: "Alt+O", description: "Numbered List", category: "Blocks" },
