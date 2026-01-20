@@ -102,6 +102,7 @@ export const PaneContainer: FC = () => {
 			id: `empty-tab-${Date.now()}`,
 			title: "Empty Tab",
 			viewType: "empty-view",
+			openedAt: Date.now(),
 		};
 
 		if (paneIndex === 0) {

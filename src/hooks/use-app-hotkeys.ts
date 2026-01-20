@@ -174,6 +174,16 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHandler(handlers.onFocusPreviousTab),
 		createHotkeyOptions(hotkeyMapping.focusPreviousTab.global)
 	);
+	useHotkeys(
+		hotkeyMapping.focusNextSpawnedTab.key,
+		createHandler(handlers.onFocusNextSpawnedTab),
+		createHotkeyOptions(hotkeyMapping.focusNextSpawnedTab.global)
+	);
+	useHotkeys(
+		hotkeyMapping.focusPreviousSpawnedTab.key,
+		createHandler(handlers.onFocusPreviousSpawnedTab),
+		createHotkeyOptions(hotkeyMapping.focusPreviousSpawnedTab.global)
+	);
 
 	// App hotkeys
 	useHotkeys(

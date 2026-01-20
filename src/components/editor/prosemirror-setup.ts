@@ -1,5 +1,5 @@
-import type { Schema, NodeType } from "prosemirror-model";
-import type { Plugin, Command } from "prosemirror-state";
+import type { Schema, NodeType, Node } from "prosemirror-model";
+import type { Plugin, Command, EditorState, Transaction } from "prosemirror-state";
 import { keymap } from "prosemirror-keymap";
 import { history } from "prosemirror-history";
 import {
@@ -184,15 +184,16 @@ export function customSetup(options: SetupOptions): Plugin[] {
 	// MUST come before baseKeymap to override default Enter behavior
 	// splitListItem comes first to handle Enter in lists (creates next numbered/bulleted item)
 	const { nodes } = options.schema;
-	const enterKeymap = {
+	const listItemType = nodes.list_item;
+	const enterKeymap: Record<string, Command> = {
 		"Enter": chainCommands(
-			splitListItem(nodes.list_item),
+			...(listItemType ? [splitListItem(listItemType)] : []),
 			liftEmptyBlock,
 			createParagraphNear,
 			splitBlockPreserveMarks
 		),
 		"Shift-Enter": chainCommands(
-			splitListItem(nodes.list_item),
+			...(listItemType ? [splitListItem(listItemType)] : []),
 			liftEmptyBlock,
 			createParagraphNear,
 			splitBlockPreserveMarks
@@ -294,7 +295,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		const tabInList = sinkListItem(nodes.list_item);
 		const shiftTabInList = liftListItem(nodes.list_item);
 		
-		customKeybindings["Tab"] = (state, dispatch) => {
+		customKeybindings["Tab"] = (state: EditorState, dispatch?: (tr: Transaction) => void) => {
 			// Try to indent list item first
 			if (tabInList(state, dispatch)) {
 				return true;
@@ -313,7 +314,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 					
 					// Find all block positions that overlap with selection
 					const positions: number[] = [];
-					doc.nodesBetween(from, to, (node, pos) => {
+					doc.nodesBetween(from, to, (node: Node, pos: number) => {
 						if (node.isTextblock) {
 							positions.push(pos + 1); // +1 to get inside the block
 						}
@@ -332,7 +333,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 			return true;
 		};
 		
-		customKeybindings["Shift-Tab"] = (state, dispatch) => {
+		customKeybindings["Shift-Tab"] = (state: EditorState, dispatch?: (tr: Transaction) => void) => {
 			// Try to outdent list item first
 			if (shiftTabInList(state, dispatch)) {
 				return true;
@@ -347,7 +348,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 					const lineStart = $from.start();
 					const lineText = $from.parent.textContent;
 					const match = lineText.match(/^( {1,2})/);
-					if (match) {
+					if (match?.[1]) {
 						const spacesToRemove = match[1].length;
 						dispatch(state.tr.delete(lineStart, lineStart + spacesToRemove).scrollIntoView());
 					}
@@ -358,10 +359,10 @@ export function customSetup(options: SetupOptions): Plugin[] {
 					
 					// Collect blocks and their leading spaces
 					const edits: { pos: number; remove: number }[] = [];
-					doc.nodesBetween(from, to, (node, pos) => {
+					doc.nodesBetween(from, to, (node: Node, pos: number) => {
 						if (node.isTextblock && node.textContent) {
 							const match = node.textContent.match(/^( {1,2})/);
-							if (match) {
+							if (match?.[1]) {
 								edits.push({ pos: pos + 1, remove: match[1].length });
 							}
 						}
@@ -370,7 +371,9 @@ export function customSetup(options: SetupOptions): Plugin[] {
 					// Remove spaces (reverse order to maintain positions)
 					for (let i = edits.length - 1; i >= 0; i--) {
 						const edit = edits[i];
-						tr.delete(edit.pos, edit.pos + edit.remove);
+						if (edit) {
+							tr.delete(edit.pos, edit.pos + edit.remove);
+						}
 					}
 					
 					if (edits.length > 0) {
@@ -382,7 +385,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		};
 	} else {
 		// No list support, just handle tab characters
-		customKeybindings["Tab"] = (state, dispatch) => {
+		customKeybindings["Tab"] = (state: EditorState, dispatch?: (tr: Transaction) => void) => {
 			if (dispatch) {
 				const { from, to, empty } = state.selection;
 				
@@ -392,7 +395,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 					const tr = state.tr;
 					const doc = state.doc;
 					const positions: number[] = [];
-					doc.nodesBetween(from, to, (node, pos) => {
+					doc.nodesBetween(from, to, (node: Node, pos: number) => {
 						if (node.isTextblock) {
 							positions.push(pos + 1);
 						}
@@ -407,7 +410,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 			}
 			return true;
 		};
-		customKeybindings["Shift-Tab"] = (state, dispatch) => {
+		customKeybindings["Shift-Tab"] = (state: EditorState, dispatch?: (tr: Transaction) => void) => {
 			if (dispatch) {
 				const { from, to, empty } = state.selection;
 				
@@ -416,7 +419,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 					const lineStart = $from.start();
 					const lineText = $from.parent.textContent;
 					const match = lineText.match(/^( {1,2})/);
-					if (match) {
+					if (match?.[1]) {
 						const spacesToRemove = match[1].length;
 						dispatch(state.tr.delete(lineStart, lineStart + spacesToRemove).scrollIntoView());
 					}
@@ -424,17 +427,19 @@ export function customSetup(options: SetupOptions): Plugin[] {
 					const tr = state.tr;
 					const doc = state.doc;
 					const edits: { pos: number; remove: number }[] = [];
-					doc.nodesBetween(from, to, (node, pos) => {
+					doc.nodesBetween(from, to, (node: Node, pos: number) => {
 						if (node.isTextblock && node.textContent) {
 							const match = node.textContent.match(/^( {1,2})/);
-							if (match) {
+							if (match?.[1]) {
 								edits.push({ pos: pos + 1, remove: match[1].length });
 							}
 						}
 					});
 					for (let i = edits.length - 1; i >= 0; i--) {
 						const edit = edits[i];
-						tr.delete(edit.pos, edit.pos + edit.remove);
+						if (edit) {
+							tr.delete(edit.pos, edit.pos + edit.remove);
+						}
 					}
 					if (edits.length > 0) {
 						dispatch(tr.scrollIntoView());

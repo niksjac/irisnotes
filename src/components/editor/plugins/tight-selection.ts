@@ -142,7 +142,7 @@ export function tightSelectionPlugin(): Plugin {
 
 				// Add node decorations for textblocks with selected content
 				// This provides a full-height background for each line with selection
-				for (const [pos, bounds] of selectedTextBlocks) {
+				for (const [pos] of selectedTextBlocks) {
 					const node = state.doc.nodeAt(pos);
 					if (node) {
 						decorations.push(

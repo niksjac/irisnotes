@@ -24,6 +24,8 @@ import {
 	focusTab9Atom,
 	focusNextTabAtom,
 	focusPreviousTabAtom,
+	focusNextSpawnedTabAtom,
+	focusPreviousSpawnedTabAtom,
 	openSettingsTabAtom,
 	openHotkeysTabAtom,
 	increaseFontSizeAtom,
@@ -83,6 +85,8 @@ export function useHotkeyHandlers() {
 	// Tab navigation
 	const focusNextTab = useSetAtom(focusNextTabAtom);
 	const focusPreviousTab = useSetAtom(focusPreviousTabAtom);
+	const focusNextSpawnedTab = useSetAtom(focusNextSpawnedTabAtom);
+	const focusPreviousSpawnedTab = useSetAtom(focusPreviousSpawnedTabAtom);
 
 	return {
 		// Tab actions
@@ -122,6 +126,8 @@ export function useHotkeyHandlers() {
 		// Tab navigation
 		focusNextTab,
 		focusPreviousTab,
+		focusNextSpawnedTab,
+		focusPreviousSpawnedTab,
 
 		// Editor view toggle
 		toggleEditorView,

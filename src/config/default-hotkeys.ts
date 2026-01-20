@@ -208,6 +208,18 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		category: "Tab Navigation",
 		global: true,
 	},
+	focusNextSpawnedTab: {
+		key: "alt+right",
+		description: "Focus Next Tab (by Open Order)",
+		category: "Tab Navigation",
+		global: true,
+	},
+	focusPreviousSpawnedTab: {
+		key: "alt+left",
+		description: "Focus Previous Tab (by Open Order)",
+		category: "Tab Navigation",
+		global: true,
+	},
 
 	// Focus hotkeys
 	focusTreeView: {

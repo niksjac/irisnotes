@@ -224,7 +224,8 @@ export const NoteLocationDialog: FC<NoteLocationDialogProps> = ({
 		} else if (e.key === "Tab" && !e.shiftKey && showBookDropdown && filteredBooks.length > 0) {
 			// Tab: select top suggestion
 			e.preventDefault();
-			selectBook(filteredBooks[bookHighlightIndex]);
+			const selectedBook = filteredBooks[bookHighlightIndex];
+			if (selectedBook) selectBook(selectedBook);
 		} else if (e.key === "ArrowDown") {
 			e.preventDefault();
 			setShowBookDropdown(true);
@@ -254,7 +255,8 @@ export const NoteLocationDialog: FC<NoteLocationDialogProps> = ({
 		} else if (e.key === "Tab" && !e.shiftKey && showSectionDropdown && filteredSections.length > 0) {
 			// Tab: select top suggestion
 			e.preventDefault();
-			selectSection(filteredSections[sectionHighlightIndex]);
+			const selectedSection = filteredSections[sectionHighlightIndex];
+			if (selectedSection) selectSection(selectedSection);
 		} else if (e.key === "ArrowDown") {
 			e.preventDefault();
 			setShowSectionDropdown(true);

@@ -81,6 +81,8 @@ export interface HotkeyMapping {
 	// Tab navigation
 	focusNextTab: HotkeyConfig;
 	focusPreviousTab: HotkeyConfig;
+	focusNextSpawnedTab: HotkeyConfig;
+	focusPreviousSpawnedTab: HotkeyConfig;
 
 	// Focus hotkeys
 	focusTreeView: HotkeyConfig;
@@ -147,6 +149,8 @@ export interface AppHotkeysProps {
 	// Tab navigation hotkeys
 	onFocusNextTab?: () => void;
 	onFocusPreviousTab?: () => void;
+	onFocusNextSpawnedTab?: () => void;
+	onFocusPreviousSpawnedTab?: () => void;
 
 	// Focus hotkeys
 	onFocusTreeView?: () => void;
@@ -185,20 +189,9 @@ export interface AppHotkeysProps {
 
 // Storage configuration types
 export interface StorageSettings {
-	backend: "sqlite" | "json-single" | "json-hybrid" | "cloud"; // Available storage backends
+	backend: "sqlite"; // SQLite only - use export/import for file-based backup
 	sqlite?: {
 		database_path: string;
-	};
-	jsonSingle?: {
-		file_path: string;
-	};
-	jsonHybrid?: {
-		structure_file: string;
-		content_dir: string;
-	};
-	cloud?: {
-		provider: "google-drive" | "dropbox" | "onedrive";
-		credentials?: any; // Provider-specific credentials
 	};
 }
 
@@ -265,6 +258,7 @@ export interface Tab {
 	viewData?: any; // For note IDs, folder IDs, etc.
 	isDirty?: boolean;
 	editorMode?: "rich" | "source"; // Track which editor view to use
+	openedAt: number; // Timestamp when tab was opened (for spawn-order navigation)
 }
 
 export interface PaneState {

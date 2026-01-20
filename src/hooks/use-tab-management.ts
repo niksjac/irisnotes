@@ -111,6 +111,7 @@ export const useTabManagement = () => {
 			title: item.title,
 			viewType,
 			viewData: { [dataKey]: item.id },
+			openedAt: Date.now(),
 		};
 
 		if (targetPane === 0) {
@@ -170,6 +171,7 @@ export const useTabManagement = () => {
 			title: `📂 ${item.title}`,
 			viewType: "editor-source-view",
 			viewData: { content: content },
+			openedAt: Date.now(),
 		};
 
 		if (activePane === 0) {

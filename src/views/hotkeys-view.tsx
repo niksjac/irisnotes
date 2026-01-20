@@ -182,12 +182,6 @@ export function HotkeysView() {
 		);
 	}, [allHotkeys, searchQuery]);
 
-	// Get unique categories for the legend
-	const categories = useMemo(() => {
-		const cats = new Set(filteredHotkeys.map((h) => h.category));
-		return Array.from(cats).sort();
-	}, [filteredHotkeys]);
-
 	// Get context color
 	const getContextColor = (context: string) => {
 		switch (context) {

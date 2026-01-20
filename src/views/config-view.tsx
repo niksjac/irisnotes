@@ -4,9 +4,7 @@ import { useConfig } from "@/hooks/use-config";
 import { useEditorSettings } from "@/hooks/use-editor-settings";
 import { useAtomValue } from "jotai";
 import { itemsAtom, notesAtom, booksAtom, sectionsAtom } from "@/atoms/items";
-import { getAvailableBackends } from "@/storage/factory";
 import { exportSettings, importSettings } from "@/storage/settings";
-import type { StorageBackend } from "@/storage/types";
 import type {
 	EditorFontFamily,
 	CursorWidth,
@@ -16,7 +14,7 @@ import * as Icons from "lucide-react";
 
 export function ConfigView() {
 	const { darkMode, toggleDarkMode } = useTheme();
-	const { config, updateConfig } = useConfig();
+	const { config } = useConfig();
 	const { settings: editorSettings, updateSetting, resetSettings, constraints } = useEditorSettings();
 
 	// Export/Import state
@@ -29,53 +27,7 @@ export function ConfigView() {
 	const books = useAtomValue(booksAtom);
 	const sections = useAtomValue(sectionsAtom);
 
-	// Storage backend switching
-	const availableBackends = getAvailableBackends() as StorageBackend[];
-	const currentBackend = config.storage.backend;
-
-	const handleBackendChange = async (backend: StorageBackend) => {
-		if (backend === currentBackend) return;
-		try {
-			await updateConfig({
-				storage: {
-					...config.storage,
-					backend,
-				},
-			});
-		} catch (error) {
-			console.error("Failed to change storage backend:", error);
-		}
-	};
-
-	const getBackendIcon = (backend: StorageBackend) => {
-		switch (backend) {
-			case "sqlite":
-				return Icons.Database;
-			case "json-single":
-				return Icons.FileText;
-			case "json-hybrid":
-				return Icons.FolderOpen;
-			case "cloud":
-				return Icons.Cloud;
-			default:
-				return Icons.HardDrive;
-		}
-	};
-
-	const getBackendLabel = (backend: StorageBackend) => {
-		switch (backend) {
-			case "sqlite":
-				return "SQLite Database";
-			case "json-single":
-				return "Single JSON File";
-			case "json-hybrid":
-				return "JSON + Files";
-			case "cloud":
-				return "Cloud Storage";
-			default:
-				return backend;
-		}
-	};
+	// Storage backend - SQLite only
 
 	const handleExportSettings = async () => {
 		setIsExporting(true);
@@ -223,79 +175,30 @@ export function ConfigView() {
 				<section className="space-y-4">
 					<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
 						<Icons.HardDrive className="w-5 h-5" />
-						Storage Backend
+						Storage
 					</h2>
 
 					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
-						{/* Backend Selector */}
-						<div className="flex items-center justify-between">
+						{/* Backend Info */}
+						<div className="flex items-start gap-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+							<Icons.Database className="w-5 h-5 text-blue-500 mt-0.5" />
 							<div>
 								<div className="font-medium text-gray-900 dark:text-gray-100">
-									Backend Type
+									SQLite Database
 								</div>
-								<div className="text-sm text-gray-500 dark:text-gray-400">
-									Where your data is stored
+								<div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+									Fast, reliable local database.
+									{config.storage.sqlite?.database_path && (
+										<div className="mt-2">
+											<span className="text-gray-600 dark:text-gray-400">
+												Path:{" "}
+											</span>
+											<code className="text-xs bg-gray-100 dark:bg-gray-600 px-1.5 py-0.5 rounded">
+												{config.storage.sqlite.database_path}
+											</code>
+										</div>
+									)}
 								</div>
-							</div>
-							<select
-								value={currentBackend}
-								onChange={(e) =>
-									handleBackendChange(e.target.value as StorageBackend)
-								}
-								className="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 text-sm cursor-pointer hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M6%208L1%203h10z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_0.75rem_center] bg-no-repeat pr-8"
-							>
-								{availableBackends.map((backend) => (
-									<option key={backend} value={backend} className="bg-gray-100 dark:bg-gray-700">
-										{getBackendLabel(backend)}
-									</option>
-								))}
-							</select>
-						</div>
-
-						{/* Backend Info */}
-						<div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-							<div className="flex items-start gap-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-								{(() => {
-									const Icon = getBackendIcon(currentBackend);
-									return <Icon className="w-5 h-5 text-blue-500 mt-0.5" />;
-								})()}
-								<div>
-									<div className="font-medium text-gray-900 dark:text-gray-100">
-										{getBackendLabel(currentBackend)}
-									</div>
-									<div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-										{currentBackend === "sqlite" && (
-											<>
-												Fast, reliable local database. Recommended for most users.
-												{config.storage.sqlite?.database_path && (
-													<div className="mt-2">
-														<span className="text-gray-600 dark:text-gray-400">
-															Path:{" "}
-														</span>
-														<code className="text-xs bg-gray-100 dark:bg-gray-600 px-1.5 py-0.5 rounded">
-															{config.storage.sqlite.database_path}
-														</code>
-													</div>
-												)}
-											</>
-										)}
-										{currentBackend === "json-single" &&
-											"All data stored in a single JSON file. Good for portability and debugging."}
-										{currentBackend === "json-hybrid" &&
-											"Notes stored as individual files. Best for version control and external editing."}
-										{currentBackend === "cloud" &&
-											"Sync your notes across devices. Coming soon!"}
-									</div>
-								</div>
-							</div>
-						</div>
-
-						{/* Warning for backend changes */}
-						<div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-							<Icons.AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
-							<div className="text-sm text-amber-800 dark:text-amber-200">
-								Changing storage backend requires app restart. Data is not
-								automatically migrated between backends.
 							</div>
 						</div>
 					</div>

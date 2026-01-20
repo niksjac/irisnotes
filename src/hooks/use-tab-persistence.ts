@@ -21,12 +21,23 @@ const TAB_STORAGE_KEY = "irisnotes-tab-state";
 
 /**
  * Loads tab state from localStorage
+ * Migrates old tabs that don't have openedAt timestamp
  */
 export const loadTabState = (): TabState | null => {
 	try {
 		const stored = localStorage.getItem(TAB_STORAGE_KEY);
 		if (stored) {
-			return JSON.parse(stored);
+			const state: TabState = JSON.parse(stored);
+			// Migrate old tabs that don't have openedAt
+			const migrateTab = (tab: Tab, index: number): Tab => ({
+				...tab,
+				openedAt: tab.openedAt ?? Date.now() - (1000 * index), // Give each a unique timestamp based on position
+			});
+			return {
+				...state,
+				pane0Tabs: state.pane0Tabs.map(migrateTab),
+				pane1Tabs: state.pane1Tabs.map(migrateTab),
+			};
 		}
 	} catch (error) {
 		console.warn("Failed to load tab state:", error);

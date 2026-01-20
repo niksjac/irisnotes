@@ -46,6 +46,7 @@ export const newTabInActivePaneAtom = atom(null, (get, set) => {
 		id: `empty-tab-${Date.now()}`,
 		title: "Empty Tab",
 		viewType: "empty-view",
+		openedAt: Date.now(),
 	};
 
 	if (paneIndex === 0) {
@@ -89,6 +90,7 @@ export const openSettingsTabAtom = atom(null, (get, set) => {
 		id: "settings-tab",
 		title: "Settings",
 		viewType: "config-view",
+		openedAt: Date.now(),
 	};
 
 	if (paneState.activePane === 0) {
@@ -130,6 +132,7 @@ export const openHotkeysTabAtom = atom(null, (get, set) => {
 		id: "hotkeys-tab",
 		title: "Keyboard Shortcuts",
 		viewType: "hotkeys-view",
+		openedAt: Date.now(),
 	};
 
 	if (paneState.activePane === 0) {
@@ -509,6 +512,61 @@ export const focusPreviousTabAtom = atom(null, (get, set) => {
 	// Move to previous tab, wrapping around to last if at the beginning
 	const prevIndex = currentIndex === 0 ? tabs.length - 1 : currentIndex - 1;
 	const prevTab = tabs[prevIndex];
+
+	if (prevTab) {
+		if (activePane === 0) {
+			set(pane0ActiveTabAtom, prevTab.id);
+		} else {
+			set(pane1ActiveTabAtom, prevTab.id);
+		}
+	}
+});
+
+// Spawn-order navigation atoms (navigate tabs by openedAt timestamp)
+export const focusNextSpawnedTabAtom = atom(null, (get, set) => {
+	const paneState = get(paneStateAtom);
+	const activePane = paneState.activePane;
+	const tabs = activePane === 0 ? get(pane0TabsAtom) : get(pane1TabsAtom);
+	const currentActiveTabId =
+		activePane === 0 ? get(pane0ActiveTabAtom) : get(pane1ActiveTabAtom);
+
+	if (tabs.length <= 1 || !currentActiveTabId) return;
+
+	// Sort tabs by openedAt timestamp
+	const sortedTabs = [...tabs].sort((a, b) => a.openedAt - b.openedAt);
+	const currentIndex = sortedTabs.findIndex((tab) => tab.id === currentActiveTabId);
+	if (currentIndex === -1) return;
+
+	// Move to next tab in spawn order, wrapping around
+	const nextIndex = (currentIndex + 1) % sortedTabs.length;
+	const nextTab = sortedTabs[nextIndex];
+
+	if (nextTab) {
+		if (activePane === 0) {
+			set(pane0ActiveTabAtom, nextTab.id);
+		} else {
+			set(pane1ActiveTabAtom, nextTab.id);
+		}
+	}
+});
+
+export const focusPreviousSpawnedTabAtom = atom(null, (get, set) => {
+	const paneState = get(paneStateAtom);
+	const activePane = paneState.activePane;
+	const tabs = activePane === 0 ? get(pane0TabsAtom) : get(pane1TabsAtom);
+	const currentActiveTabId =
+		activePane === 0 ? get(pane0ActiveTabAtom) : get(pane1ActiveTabAtom);
+
+	if (tabs.length <= 1 || !currentActiveTabId) return;
+
+	// Sort tabs by openedAt timestamp
+	const sortedTabs = [...tabs].sort((a, b) => a.openedAt - b.openedAt);
+	const currentIndex = sortedTabs.findIndex((tab) => tab.id === currentActiveTabId);
+	if (currentIndex === -1) return;
+
+	// Move to previous tab in spawn order, wrapping around
+	const prevIndex = currentIndex === 0 ? sortedTabs.length - 1 : currentIndex - 1;
+	const prevTab = sortedTabs[prevIndex];
 
 	if (prevTab) {
 		if (activePane === 0) {

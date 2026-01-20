@@ -32,6 +32,8 @@ export function mapHotkeyHandlers(
 		focusTab9: () => void;
 		focusNextTab: () => void;
 		focusPreviousTab: () => void;
+		focusNextSpawnedTab: () => void;
+		focusPreviousSpawnedTab: () => void;
 		toggleEditorView: () => void;
 		toggleLineWrapping: () => void;
 		toggleToolbar: () => void;
@@ -80,6 +82,8 @@ export function mapHotkeyHandlers(
 		// Tab navigation hotkeys
 		onFocusNextTab: handlers.focusNextTab,
 		onFocusPreviousTab: handlers.focusPreviousTab,
+		onFocusNextSpawnedTab: handlers.focusNextSpawnedTab,
+		onFocusPreviousSpawnedTab: handlers.focusPreviousSpawnedTab,
 		// Focus hotkeys
 		onFocusTreeView: () => {
 			// Open sidebar if collapsed
