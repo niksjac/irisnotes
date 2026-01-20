@@ -714,6 +714,22 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 				{/* Separator */}
 				<div className="flex-shrink-0 w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
 
+				{/* Clear Custom Formatting */}
+				<button
+					type="button"
+					tabIndex={0}
+					className="relative w-8 h-8 flex items-center justify-center rounded transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+					onClick={clearCustomFormatting}
+					title="Clear Custom Formatting (Alt+R)"
+				>
+					<RemoveFormatting size={16} />
+					{altKeyHeld && (
+						<span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center bg-amber-400 text-[9px] font-bold text-amber-900 rounded shadow-sm">
+							R
+						</span>
+					)}
+				</button>
+
 				{/* Font Size Dropdown */}
 				<FontSizeDropdown
 					schema={schema}
@@ -737,25 +753,6 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					keyTip="F"
 					inputRef={fontFamilyInputRef}
 				/>
-
-				{/* Separator */}
-				<div className="flex-shrink-0 w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
-
-				{/* Clear Custom Formatting */}
-				<button
-					type="button"
-					tabIndex={0}
-					className="relative w-8 h-8 flex items-center justify-center rounded transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-					onClick={clearCustomFormatting}
-					title="Clear Custom Formatting (Alt+R)"
-				>
-					<RemoveFormatting size={16} />
-					{altKeyHeld && (
-						<span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center bg-amber-400 text-[9px] font-bold text-amber-900 rounded shadow-sm">
-							R
-						</span>
-					)}
-				</button>
 			</div>
 
 			{/* Right scroll arrow */}
