@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import * as Icons from "lucide-react";
 import { useEditorLayout, useSidebar, useView, useTheme, useKeyTipActions } from "@/hooks";
-import { useEditorState, useLineWrapping } from "@/hooks";
+import { useLineWrapping } from "@/hooks";
 import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import {
 	paneStateAtom,
@@ -58,7 +58,6 @@ export function ActivityBar() {
 	}, [pane0Tabs, pane1Tabs, pane0ActiveTab, pane1ActiveTab]);
 
 	const { toolbarVisible, toggleToolbar } = useEditorLayout();
-	const { fontSize } = useEditorState();
 	const { isWrapping, toggleLineWrapping } = useLineWrapping();
 	const { darkMode, toggleDarkMode } = useTheme();
 	const [paneState, setPaneState] = useAtom(paneStateAtom);
@@ -220,23 +219,6 @@ export function ActivityBar() {
 						: "md:flex-col md:mt-auto md:pt-2 md:border-t md:border-gray-300 dark:md:border-gray-600 md:gap-2"
 				)}
 			>
-				{/* Font Size Indicator */}
-				<div
-					className={clsx(
-						"flex items-center justify-center cursor-default text-gray-700 dark:text-gray-300 font-medium tabular-nums",
-						// Mobile: compact
-						"text-xs h-6 w-8",
-						// Desktop: depends on expanded state
-						activityBarExpanded
-							? "md:justify-start md:w-full md:px-2 md:h-7 md:text-xs"
-							: "md:w-6 md:h-6 md:text-[11px]"
-					)}
-					title={`Base font size: ${fontSize}px (Ctrl+Alt+Up/Down to adjust)`}
-				>
-					<span>{fontSize}</span>
-					{activityBarExpanded && <span className="hidden md:inline ml-1">px</span>}
-				</div>
-
 				<ActivityBarButton
 					icon={toolbarVisible ? Icons.PanelTop : Icons.PanelTopDashed}
 					isActive={toolbarVisible}
