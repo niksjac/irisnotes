@@ -7,7 +7,6 @@ import {
 	pane0ActiveTabAtom,
 	pane1ActiveTabAtom,
 } from "@/atoms";
-import type { Tab } from "@/types";
 import { Pane } from "./pane";
 import { PaneResizer } from "./pane-resizer";
 import { useEffect } from "react";
@@ -97,26 +96,6 @@ export const PaneContainer: FC = () => {
 		}
 	};
 
-	const handleNewTab = (paneIndex: 0 | 1) => {
-		const newTab: Tab = {
-			id: `empty-tab-${Date.now()}`,
-			title: "Empty Tab",
-			viewType: "empty-view",
-			openedAt: Date.now(),
-		};
-
-		if (paneIndex === 0) {
-			setPane0Tabs((prev) => [...prev, newTab]);
-			setPane0ActiveTab(newTab.id);
-		} else {
-			setPane1Tabs((prev) => [...prev, newTab]);
-			setPane1ActiveTab(newTab.id);
-		}
-
-		// Set active pane
-		setPaneState((prev) => ({ ...prev, activePane: paneIndex }));
-	};
-
 	const handlePaneClick = (paneIndex: 0 | 1) => {
 		setPaneState((prev) => ({ ...prev, activePane: paneIndex }));
 	};
@@ -154,7 +133,6 @@ export const PaneContainer: FC = () => {
 				activeTabId={pane0ActiveTab}
 				onTabSelect={(tabId) => handleTabSelect(0, tabId)}
 				onTabClose={(tabId) => handleTabClose(0, tabId)}
-				onNewTab={() => handleNewTab(0)}
 				onTabReorder={(draggedTabId, targetTabId) =>
 					handleTabReorder(0, draggedTabId, targetTabId)
 				}
@@ -176,7 +154,6 @@ export const PaneContainer: FC = () => {
 					activeTabId={pane0ActiveTab}
 					onTabSelect={(tabId) => handleTabSelect(0, tabId)}
 					onTabClose={(tabId) => handleTabClose(0, tabId)}
-					onNewTab={() => handleNewTab(0)}
 					onTabReorder={(draggedTabId, targetTabId) =>
 						handleTabReorder(0, draggedTabId, targetTabId)
 					}
@@ -197,7 +174,6 @@ export const PaneContainer: FC = () => {
 					activeTabId={pane1ActiveTab}
 					onTabSelect={(tabId) => handleTabSelect(1, tabId)}
 					onTabClose={(tabId) => handleTabClose(1, tabId)}
-					onNewTab={() => handleNewTab(1)}
 					onTabReorder={(draggedTabId, targetTabId) =>
 						handleTabReorder(1, draggedTabId, targetTabId)
 					}

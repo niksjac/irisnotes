@@ -1,7 +1,7 @@
 import type { FC } from "react";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import type { Tab } from "@/types";
-import { focusAreaAtom, type FocusArea } from "@/atoms";
+import { focusAreaAtom, type FocusArea, tabBarVisibleAtom } from "@/atoms";
 import { TabBar, TabContent } from "@/components/tabs";
 
 interface PaneProps {
@@ -9,7 +9,6 @@ interface PaneProps {
 	activeTabId: string | null;
 	onTabSelect: (tabId: string) => void;
 	onTabClose?: (tabId: string) => void;
-	onNewTab?: () => void;
 	onTabReorder?: (draggedTabId: string, targetTabId: string) => void;
 	onPaneClick?: () => void;
 	isDualPaneMode?: boolean;
@@ -21,7 +20,6 @@ export const Pane: FC<PaneProps> = ({
 	activeTabId,
 	onTabSelect,
 	onTabClose,
-	onNewTab,
 	onTabReorder,
 	onPaneClick,
 	isDualPaneMode = false,
@@ -29,6 +27,7 @@ export const Pane: FC<PaneProps> = ({
 }) => {
 	const activeTab = tabs.find((tab) => tab.id === activeTabId) || null;
 	const [focusArea, setFocusArea] = useAtom(focusAreaAtom);
+	const tabBarVisible = useAtomValue(tabBarVisibleAtom);
 
 	// This pane's focus area identifier
 	const myFocusArea: FocusArea = paneIndex === 0 ? "pane-0" : "pane-1";
@@ -53,15 +52,16 @@ export const Pane: FC<PaneProps> = ({
 			onClick={handlePaneClick}
 			onFocusCapture={() => setFocusArea(myFocusArea)}
 		>
-			<TabBar
-				tabs={tabs}
-				activeTabId={activeTabId}
-				onTabSelect={onTabSelect}
-				onTabClose={onTabClose}
-				onNewTab={onNewTab}
-				onTabReorder={onTabReorder}
-				hasFocus={hasFocus}
-			/>
+			{tabBarVisible && (
+				<TabBar
+					tabs={tabs}
+					activeTabId={activeTabId}
+					onTabSelect={onTabSelect}
+					onTabClose={onTabClose}
+					onTabReorder={onTabReorder}
+					hasFocus={hasFocus}
+				/>
+			)}
 			<TabContent tab={activeTab} />
 		</div>
 	);
