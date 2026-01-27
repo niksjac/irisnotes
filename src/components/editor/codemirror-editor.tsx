@@ -6,7 +6,7 @@ import {
 	highlightActiveLine,
 	highlightActiveLineGutter,
 } from "@codemirror/view";
-import { EditorState, Compartment, EditorSelection, type Extension } from "@codemirror/state";
+import { EditorState, Compartment, EditorSelection, Prec, type Extension } from "@codemirror/state";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { bracketMatching } from "@codemirror/language";
 import { searchKeymap, highlightSelectionMatches } from "@codemirror/search";
@@ -21,6 +21,7 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import type { ViewUpdate } from "@codemirror/view";
 import { useTheme, useLineWrapping } from "@/hooks";
 import { editorCursorPositionStore } from "@/hooks/use-editor-view-toggle";
+import { isAppHotkey } from "@/utils/app-hotkeys";
 
 // Compartments for dynamic configuration (allows efficient partial reconfiguration)
 const readOnlyCompartment = new Compartment();
@@ -131,6 +132,21 @@ export function CodeMirrorEditor({
 
 	// Build static extensions (don't change during editor lifetime)
 	const buildStaticExtensions = (): Extension[] => [
+		// FIRST: Highest priority handler to let app hotkeys bubble up
+		// This must come before any keymaps to intercept app-level shortcuts
+		Prec.highest(
+			EditorView.domEventHandlers({
+				keydown: (e: KeyboardEvent) => {
+					if (isAppHotkey(e)) {
+						// Tell CodeMirror we handled this (stop its processing)
+						// but don't preventDefault so the event bubbles to document
+						// for react-hotkeys-hook
+						return true;
+					}
+					return false;
+				},
+			})
+		),
 		lineNumbers(),
 		highlightActiveLineGutter(),
 		highlightActiveLine(),
@@ -140,7 +156,7 @@ export function CodeMirrorEditor({
 		autocompletion(),
 		highlightSelectionMatches(),
 		markdown(),
-		// Smart select keymap FIRST - overrides default selectAll
+		// Smart select keymap - overrides default selectAll
 		keymap.of([
 			{ key: "Mod-a", run: smartSelectAll, preventDefault: true },
 		]),
@@ -271,6 +287,41 @@ export function CodeMirrorEditor({
 			});
 		}
 	}, [content]);
+
+	// Add capture-phase event listener to intercept app hotkeys BEFORE CodeMirror
+	// This is necessary because CodeMirror may call stopPropagation() on events
+	useEffect(() => {
+		const container = editorRef.current;
+		if (!container) return;
+
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (isAppHotkey(e)) {
+				// Let the event bubble up to document for react-hotkeys-hook
+				// Don't stopPropagation or preventDefault here
+				// But we need to prevent CodeMirror from handling it by stopping propagation
+				// to CodeMirror and re-dispatching to document
+				e.stopPropagation();
+				// Dispatch a new event to document so react-hotkeys-hook can catch it
+				const clonedEvent = new KeyboardEvent('keydown', {
+					key: e.key,
+					code: e.code,
+					ctrlKey: e.ctrlKey,
+					shiftKey: e.shiftKey,
+					altKey: e.altKey,
+					metaKey: e.metaKey,
+					bubbles: true,
+					cancelable: true,
+				});
+				document.dispatchEvent(clonedEvent);
+			}
+		};
+
+		// Use capture phase to intercept BEFORE CodeMirror
+		container.addEventListener('keydown', handleKeyDown, { capture: true });
+		return () => {
+			container.removeEventListener('keydown', handleKeyDown, { capture: true });
+		};
+	}, []);
 
 	// Note: Editor focus is controlled by user actions (click, Ctrl+Alt+1/2)
 	// We intentionally don't auto-focus to prevent stealing focus from tree

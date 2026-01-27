@@ -2,13 +2,18 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useCallback, useEffect, useState } from "react";
 import { DEFAULT_HOTKEYS } from "@/config/default-hotkeys";
+import { updateAppHotkeyPatterns } from "@/utils/app-hotkeys";
 import type { HotkeyMapping } from "@/types";
 
 /**
  * Hook for loading hotkeys from hotkeys.toml config file
  */
 export function useHotkeysConfig() {
-	const [hotkeys, setHotkeys] = useState<HotkeyMapping>(DEFAULT_HOTKEYS);
+	const [hotkeys, setHotkeys] = useState<HotkeyMapping>(() => {
+		// Initialize with defaults and update CodeMirror patterns
+		updateAppHotkeyPatterns(DEFAULT_HOTKEYS);
+		return DEFAULT_HOTKEYS;
+	});
 	const [loading, setLoading] = useState(true);
 
 	const loadHotkeys = useCallback(async () => {
@@ -25,9 +30,12 @@ export function useHotkeysConfig() {
 				...parsedHotkeys,
 			};
 
+			// Update CodeMirror app hotkey patterns
+			updateAppHotkeyPatterns(mergedHotkeys);
 			setHotkeys(mergedHotkeys);
 		} catch {
 			// Failed to load hotkeys.toml - use defaults
+			updateAppHotkeyPatterns(DEFAULT_HOTKEYS);
 			setHotkeys(DEFAULT_HOTKEYS);
 		} finally {
 			setLoading(false);
@@ -48,6 +56,8 @@ export function useHotkeysConfig() {
 					...DEFAULT_HOTKEYS,
 					...newHotkeys,
 				};
+				// Update CodeMirror app hotkey patterns
+				updateAppHotkeyPatterns(mergedHotkeys);
 				setHotkeys(mergedHotkeys);
 			} catch (error) {
 				console.error("Failed to save hotkeys:", error);
