@@ -450,6 +450,25 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		};
 	}
 
+	// Escape: Exit editor focus and move to toolbar
+	// This allows keyboard-only navigation back to UI elements
+	customKeybindings["Escape"] = (_state: EditorState, _dispatch?: (tr: Transaction) => void, view?: any) => {
+		// Find the toolbar in the DOM and focus its first focusable element
+		const toolbar = document.querySelector('[data-editor-toolbar]');
+		if (toolbar) {
+			const firstFocusable = toolbar.querySelector('button, input, [tabindex="0"]') as HTMLElement | null;
+			if (firstFocusable) {
+				firstFocusable.focus();
+				return true;
+			}
+		}
+		// If no toolbar, just blur the editor
+		if (view) {
+			(view.dom as HTMLElement).blur();
+		}
+		return true;
+	};
+
 	// Blockquote: Ctrl+Shift+. - now toggleable
 	if (nodes.blockquote) {
 		customKeybindings["Mod-Shift-."] = toggleBlockquote(nodes.blockquote);
