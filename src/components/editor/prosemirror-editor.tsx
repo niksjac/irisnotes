@@ -2,8 +2,10 @@ import { useEffect, useRef } from "react";
 import { EditorState, TextSelection, Selection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { DOMParser, DOMSerializer } from "prosemirror-model";
+import { useSetAtom } from "jotai";
 import { useLineWrapping } from "@/hooks";
 import { editorCursorPositionStore } from "@/hooks/use-editor-view-toggle";
+import { editorStatsAtom } from "@/atoms/editor-stats";
 import { customSetup } from "./prosemirror-setup";
 import { EditorToolbar } from "./editor-toolbar";
 import { CodeBlockView } from "./codemirror-nodeview";
@@ -36,6 +38,45 @@ export function ProseMirrorEditor({
 	const onChangeRef = useRef(onChange);
 	const initialContentRef = useRef(content);
 	const { isWrapping } = useLineWrapping();
+	const setEditorStats = useSetAtom(editorStatsAtom);
+	const setEditorStatsRef = useRef(setEditorStats);
+
+	// Keep refs up to date
+	useEffect(() => {
+		setEditorStatsRef.current = setEditorStats;
+	}, [setEditorStats]);
+
+	// Helper to calculate editor stats from state
+	const calculateAndUpdateStats = (state: EditorState) => {
+		const { doc, selection } = state;
+		const pos = selection.from;
+		
+		// Calculate line and column
+		let line = 1;
+		let lastLineStart = 0;
+		doc.nodesBetween(0, pos, (node, nodePos) => {
+			if (node.isBlock && nodePos < pos) {
+				line++;
+				lastLineStart = nodePos + 1;
+			}
+			return true;
+		});
+		const column = pos - lastLineStart + 1;
+		
+		// Calculate word count and character count from full document
+		let text = "";
+		doc.descendants((node) => {
+			if (node.isText) {
+				text += node.text + " ";
+			} else if (node.isBlock) {
+				text += " ";
+			}
+		});
+		const charCount = text.replace(/\s/g, "").length;
+		const wordCount = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+		
+		setEditorStatsRef.current({ line, column, wordCount, charCount });
+	};
 
 	// Keep refs up to date
 	useEffect(() => {
@@ -97,6 +138,11 @@ export function ProseMirrorEditor({
 					editorCursorPositionStore.setPosition(newState.selection.from);
 				}
 
+				// Update stats on selection or content changes
+				if (transaction.selectionSet || transaction.docChanged) {
+					calculateAndUpdateStats(newState);
+				}
+
 				// Call onChange when content changes (debounce with requestAnimationFrame)
 				if (transaction.docChanged && onChangeRef.current) {
 					requestAnimationFrame(() => {
@@ -130,6 +176,9 @@ export function ProseMirrorEditor({
 		viewRef.current = view;
 		// Note: Don't auto-focus - let user click or use Ctrl+Alt+1/2 to focus pane
 		// Initial cursor position is set in EditorState.create() above
+
+		// Calculate initial stats
+		calculateAndUpdateStats(state);
 
 		// Auto-focus if requested (e.g., when toggling editor view)
 		if (autoFocus) {

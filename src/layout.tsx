@@ -1,6 +1,6 @@
 import type React from "react";
 import { useEffect } from "react";
-import { useSetAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import {
 	ActivityBar,
 	SidebarResizer,
@@ -8,7 +8,10 @@ import {
 	PaneContainer,
 	NoteLocationDialog,
 	QuickSearchDialog,
+	StatusBar,
 } from "@/components";
+import { QuickHotkeysModal } from "@/components/dialogs/quick-hotkeys-modal";
+import { quickHotkeysOpenAtom, hideQuickHotkeysAtom } from "@/atoms";
 import {
 	useLayout,
 	useAppHotkeys,
@@ -38,6 +41,10 @@ export const Layout: React.FC = () => {
 		closeLocationDialog,
 		createNoteWithLocation,
 	} = useNoteActions();
+
+	// Quick hotkeys modal state
+	const [isQuickHotkeysOpen] = useAtom(quickHotkeysOpenAtom);
+	const hideQuickHotkeys = useSetAtom(hideQuickHotkeysAtom);
 
 	// Apply theme (adds .dark class to document)
 	useTheme();
@@ -99,6 +106,9 @@ export const Layout: React.FC = () => {
 				</div>
 			</div>
 
+			{/* Status Bar */}
+			<StatusBar />
+
 			{/* Note Location Dialog */}
 			<NoteLocationDialog
 				isOpen={isLocationDialogOpen}
@@ -108,6 +118,9 @@ export const Layout: React.FC = () => {
 
 			{/* Quick Search Dialog */}
 			<QuickSearchDialog />
+
+			{/* Quick Hotkeys Modal */}
+			<QuickHotkeysModal isOpen={isQuickHotkeysOpen} onClose={hideQuickHotkeys} />
 		</div>
 	);
 };

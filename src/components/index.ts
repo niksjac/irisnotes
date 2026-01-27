@@ -6,6 +6,7 @@ export {
 export { RightClickMenu } from "./right-click-menu";
 export { EditorContainer } from "./editor";
 export { Sidebar, SidebarResizer, SearchSidebar } from "./sidebar";
+export { StatusBar } from "./status-bar";
 export { TreeView } from "./tree";
 export { Tab, TabBar, TabContent } from "./tabs";
 export { Pane, PaneContainer, PaneResizer } from "./panes";
