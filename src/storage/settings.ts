@@ -8,21 +8,41 @@
  */
 
 import Database from "@tauri-apps/plugin-sql";
+import { invoke } from "@tauri-apps/api/core";
 import { save, open } from "@tauri-apps/plugin-dialog";
 import { writeTextFile, readTextFile } from "@tauri-apps/plugin-fs";
 
 // Database singleton
 let dbInstance: Database | null = null;
+let dbInitPromise: Promise<Database> | null = null;
 
 /**
  * Get database connection (lazy initialization)
+ * Uses the same path resolution as the main storage adapter
  */
 async function getDb(): Promise<Database> {
-	if (!dbInstance) {
-		// Default path matches sqlite-adapter.ts behavior
-		dbInstance = await Database.load("sqlite:./dev/notes.db");
+	if (dbInstance) {
+		return dbInstance;
 	}
-	return dbInstance;
+
+	// Prevent multiple simultaneous init attempts
+	if (dbInitPromise) {
+		return dbInitPromise;
+	}
+
+	dbInitPromise = (async () => {
+		try {
+			// Get the actual database path from Tauri backend (handles dev vs prod)
+			const databasePath = await invoke<string>("get_database_path");
+			dbInstance = await Database.load(`sqlite:${databasePath}`);
+			return dbInstance;
+		} catch (error) {
+			dbInitPromise = null;
+			throw error;
+		}
+	})();
+
+	return dbInitPromise;
 }
 
 /**

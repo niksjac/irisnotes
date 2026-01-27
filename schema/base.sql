@@ -120,30 +120,28 @@ CREATE INDEX IF NOT EXISTS idx_items_type_parent ON items(type, parent_id);
 CREATE INDEX IF NOT EXISTS idx_item_tags_item_id ON item_tags(item_id);
 CREATE INDEX IF NOT EXISTS idx_item_tags_tag_id ON item_tags(tag_id);
 
--- Full-text search
+-- Full-text search (standalone FTS table, not external content)
+-- Stores its own copy of searchable text, synced via triggers
 CREATE VIRTUAL TABLE IF NOT EXISTS items_fts USING fts5(
+    item_id UNINDEXED,
     title,
-    content_plaintext,
-    content=items,
-    content_rowid=rowid
+    content_plaintext
 );
 
 -- FTS triggers for automatic index sync
 CREATE TRIGGER IF NOT EXISTS items_fts_insert AFTER INSERT ON items BEGIN
-    INSERT INTO items_fts(rowid, title, content_plaintext)
-    VALUES (new.rowid, new.title, new.content_plaintext);
+    INSERT INTO items_fts(item_id, title, content_plaintext)
+    VALUES (NEW.id, NEW.title, NEW.content_plaintext);
 END;
 
 CREATE TRIGGER IF NOT EXISTS items_fts_delete AFTER DELETE ON items BEGIN
-    INSERT INTO items_fts(items_fts, rowid, title, content_plaintext)
-    VALUES ('delete', old.rowid, old.title, old.content_plaintext);
+    DELETE FROM items_fts WHERE item_id = OLD.id;
 END;
 
 CREATE TRIGGER IF NOT EXISTS items_fts_update AFTER UPDATE ON items BEGIN
-    INSERT INTO items_fts(items_fts, rowid, title, content_plaintext)
-    VALUES ('delete', old.rowid, old.title, old.content_plaintext);
-    INSERT INTO items_fts(rowid, title, content_plaintext)
-    VALUES (new.rowid, new.title, new.content_plaintext);
+    UPDATE items_fts 
+    SET title = NEW.title, content_plaintext = NEW.content_plaintext 
+    WHERE item_id = NEW.id;
 END;
 
 -- Timestamp triggers

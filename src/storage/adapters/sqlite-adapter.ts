@@ -402,7 +402,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 			try {
 				results = await this.db.select<any[]>(
 					`SELECT items.* FROM items
-					 JOIN items_fts ON items.rowid = items_fts.rowid
+					 JOIN items_fts ON items.id = items_fts.item_id
 					 WHERE items_fts MATCH ? AND items.type = 'note' AND items.deleted_at IS NULL
 					 ORDER BY rank`,
 					[query]
@@ -728,9 +728,58 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		}
 	}
 
-	async reorderTreeItem(): Promise<VoidStorageResult> {
-		throw new Error("Not implemented");
+	async reorderTreeItem(
+		itemId: string,
+		_itemType: "note" | "book" | "section",
+		newIndex: number,
+		parentId: string | null
+	): Promise<VoidStorageResult> {
+		if (!this.db) return { success: false, error: "Database not initialized" };
+
+		try {
+			// Get all sibling items in the same parent, sorted by sort_order
+			const siblings = await this.db.select<Array<{ id: string; sort_order: string }>>(
+				`SELECT id, sort_order FROM items 
+				 WHERE ${parentId ? "parent_id = ?" : "parent_id IS NULL"} 
+				 AND deleted_at IS NULL 
+				 ORDER BY sort_order ASC`,
+				parentId ? [parentId] : []
+			);
+
+			// Find the items before and after the target position
+			// Filter out the item being moved
+			const otherSiblings = siblings.filter(s => s.id !== itemId);
+
+			let prevKey: string | null = null;
+			let nextKey: string | null = null;
+
+			if (newIndex <= 0) {
+				// Moving to first position
+				nextKey = otherSiblings[0]?.sort_order || null;
+			} else if (newIndex >= otherSiblings.length) {
+				// Moving to last position
+				prevKey = otherSiblings[otherSiblings.length - 1]?.sort_order || null;
+			} else {
+				// Moving to middle position
+				prevKey = otherSiblings[newIndex - 1]?.sort_order || null;
+				nextKey = otherSiblings[newIndex]?.sort_order || null;
+			}
+
+			// Generate a sort_order between prev and next
+			const newSortOrder = generateKeyBetween(prevKey, nextKey);
+
+			// Update the item's sort_order
+			await this.db.execute(
+				`UPDATE items SET sort_order = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+				[newSortOrder, itemId]
+			);
+
+			return { success: true };
+		} catch (error) {
+			return { success: false, error: `Failed to reorder item: ${error}` };
+		}
 	}
+
 	async getTags(): Promise<StorageResult<Tag[]>> {
 		if (!this.db) return { success: false, error: "Database not initialized" };
 		try {
@@ -833,7 +882,7 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 						bm25(items_fts) as rank,
 						snippet(items_fts, 1, '>>>MATCH<<<', '<<<MATCH>>>', '...', 30) as match_snippet
 					 FROM items_fts
-					 JOIN items ON items.rowid = items_fts.rowid
+					 JOIN items ON items.id = items_fts.item_id
 					 WHERE items_fts MATCH ?
 					   AND items.type IN (${typeFilter})
 					   AND items.deleted_at IS NULL
@@ -877,10 +926,12 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		if (!this.db) return { success: false, error: "Database not initialized" };
 
 		try {
-			// FTS5 external content table rebuild command
-			await this.db.execute(
-				"INSERT INTO items_fts(items_fts) VALUES('rebuild')"
-			);
+			// For standalone FTS table, we need to repopulate from items table
+			await this.db.execute("DELETE FROM items_fts");
+			await this.db.execute(`
+				INSERT INTO items_fts(item_id, title, content_plaintext)
+				SELECT id, title, content_plaintext FROM items WHERE deleted_at IS NULL
+			`);
 			return { success: true };
 		} catch (error) {
 			return {
