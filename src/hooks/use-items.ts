@@ -444,6 +444,102 @@ export const useItems = () => {
 		[selectedItemId]
 	);
 
+	// ========================================
+	// SORTING OPERATIONS
+	// ========================================
+
+	/**
+	 * Sort all items recursively by a given field and direction.
+	 * This sorts items at every level (root, within books, within sections).
+	 */
+	/**
+	 * Get type priority for sorting (books first, then sections, then notes)
+	 */
+	const getTypePriority = (type: string): number => {
+		switch (type) {
+			case "book": return 0;
+			case "section": return 1;
+			case "note": return 2;
+			default: return 3;
+		}
+	};
+
+	const sortItemsRecursively = useCallback(
+		async (field: "title" | "created" | "updated" | "type", direction: "asc" | "desc") => {
+			setError(null);
+
+			try {
+				if (!storageAdapter) {
+					setError("Storage not initialized");
+					return { success: false, error: "Storage not initialized" };
+				}
+
+				// Group items by parent_id
+				const itemsByParent = new Map<string | null, FlexibleItem[]>();
+				for (const item of items) {
+					const parentId = item.parent_id ?? null;
+					if (!itemsByParent.has(parentId)) {
+						itemsByParent.set(parentId, []);
+					}
+					itemsByParent.get(parentId)?.push(item);
+				}
+
+				// Sort each group and reorder
+				for (const [parentId, groupItems] of itemsByParent) {
+					// Sort items within this group
+					const sortedItems = [...groupItems].sort((a, b) => {
+						// For "type" field, group by type first, then sort by title within each type
+						if (field === "type") {
+							const typeDiff = getTypePriority(a.type) - getTypePriority(b.type);
+							// Apply direction to type grouping (desc = notes first, asc = books first)
+							const adjustedTypeDiff = direction === "desc" ? -typeDiff : typeDiff;
+							if (adjustedTypeDiff !== 0) return adjustedTypeDiff;
+							// Within same type, sort by title alphabetically
+							return a.title.localeCompare(b.title);
+						}
+
+						let comparison = 0;
+						switch (field) {
+							case "title":
+								comparison = a.title.localeCompare(b.title);
+								break;
+							case "created":
+								comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+								break;
+							case "updated":
+								comparison = new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
+								break;
+						}
+						return direction === "desc" ? -comparison : comparison;
+					});
+
+					// Apply new order to each item in this group
+					for (let i = 0; i < sortedItems.length; i++) {
+						const item = sortedItems[i];
+						if (item) {
+							await storageAdapter.reorderTreeItem(
+								item.id,
+								item.type,
+								i,
+								parentId
+							);
+						}
+					}
+				}
+
+				// Reload to get updated sort_order values
+				await loadAllItems();
+
+				return { success: true };
+			} catch (err) {
+				const errorMsg = `Failed to sort items: ${err}`;
+				setError(errorMsg);
+				return { success: false, error: errorMsg };
+			}
+		},
+		[storageAdapter, items, loadAllItems]
+	);
+
 	return {
 		// Data
 		items,
@@ -473,6 +569,9 @@ export const useItems = () => {
 		selectItem,
 		clearSelection,
 		isSelected,
+
+		// Sorting
+		sortItemsRecursively,
 
 		// Error handling
 		clearError,

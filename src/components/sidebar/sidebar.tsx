@@ -4,12 +4,12 @@ import { useAtomValue } from "jotai";
 import { useItems, useNotesStorage } from "@/hooks";
 import { sidebarViewModeAtom } from "@/atoms";
 import { TreeView } from "../tree";
-import { StorageIndicator } from "./storage-indicator";
+import { TreeHeader } from "./tree-header";
 import { SearchSidebar } from "./search-sidebar";
 
 export const Sidebar: React.FC = () => {
 	const { isInitialized } = useNotesStorage();
-	const { isLoading } = useItems();
+	const { isLoading, items } = useItems();
 	const sidebarViewMode = useAtomValue(sidebarViewModeAtom);
 
 	// Focus tree when clicking on sidebar empty space
@@ -62,9 +62,13 @@ export const Sidebar: React.FC = () => {
 			className="flex flex-col h-full bg-white dark:bg-gray-900 cursor-default"
 			onClick={handleSidebarClick}
 		>
-			<StorageIndicator />
+			<TreeHeader />
 			<div className="flex-1 overflow-hidden">
 				<TreeView />
+			</div>
+			{/* Item count footer */}
+			<div className="flex-shrink-0 px-3 py-2 text-[11px] text-gray-400 dark:text-gray-600 border-t border-gray-200 dark:border-gray-700">
+				{items.length} items
 			</div>
 		</div>
 	);
