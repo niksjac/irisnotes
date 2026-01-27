@@ -1,4 +1,5 @@
 import type { AppHotkeysProps } from "@/types";
+import { getTreeViewCallbacks } from "@/atoms/tree";
 
 /**
  * Maps useHotkeyHandlers return value to AppHotkeysProps format
@@ -9,6 +10,7 @@ export function mapHotkeyHandlers(
 	views: { toggleActivityBar: () => void },
 	handlers: {
 		closeActiveTab: () => void;
+		reopenLastClosedTab: () => void;
 		newTabInActivePane: () => void;
 		moveActiveTabLeft: () => void;
 		moveActiveTabRight: () => void;
@@ -38,12 +40,14 @@ export function mapHotkeyHandlers(
 		toggleLineWrapping: () => void;
 		toggleToolbar: () => void;
 		toggleActivityBarExpanded: () => void;
+		toggleTabBar: () => void;
 		increaseFontSize: () => void;
 		decreaseFontSize: () => void;
 		createNoteInRoot: () => void;
 		openLocationDialog: () => void;
 		openSettings: () => void;
 		openHotkeys: () => void;
+		showQuickHotkeys: () => void;
 		openQuickSearch: () => void;
 		openSearchSidebar: () => void;
 	}
@@ -55,6 +59,7 @@ export function mapHotkeyHandlers(
 		onExpandActivityBar: handlers.toggleActivityBarExpanded,
 		// Tab hotkeys
 		onCloseTab: handlers.closeActiveTab,
+		onReopenLastClosedTab: handlers.reopenLastClosedTab,
 		onNewTab: handlers.newTabInActivePane,
 		onMoveTabLeft: handlers.moveActiveTabLeft,
 		onMoveTabRight: handlers.moveActiveTabRight,
@@ -121,6 +126,96 @@ export function mapHotkeyHandlers(
 				}
 			}
 		},
+		onFocusEditor: () => {
+			// Focus the ProseMirror editor
+			const prosemirror = document.querySelector('.ProseMirror') as HTMLElement | null;
+			if (prosemirror) {
+				prosemirror.focus();
+			} else {
+				// Try CodeMirror editor as fallback (source view)
+				const codemirror = document.querySelector('.cm-editor .cm-content') as HTMLElement | null;
+				if (codemirror) {
+					codemirror.focus();
+				}
+			}
+		},
+		onToggleEditorTreeFocus: () => {
+			// Check if focus is currently in tree view
+			const treeContainer = document.querySelector('[data-tree-container="true"]');
+			const activeElement = document.activeElement;
+			const isInTreeView = treeContainer?.contains(activeElement);
+			
+			if (isInTreeView) {
+				// Focus is in tree view, move to editor
+				const prosemirror = document.querySelector('.ProseMirror') as HTMLElement | null;
+				if (prosemirror) {
+					prosemirror.focus();
+				} else {
+					const codemirror = document.querySelector('.cm-editor .cm-content') as HTMLElement | null;
+					if (codemirror) {
+						codemirror.focus();
+					}
+				}
+			} else {
+				// Focus is elsewhere, move to tree view
+				if (sidebar.collapsed) {
+					sidebar.setCollapsed(false);
+					requestAnimationFrame(() => {
+						const container = document.querySelector('[data-tree-container="true"]');
+						if (!container) return;
+						const previouslyFocused = container.querySelector('button[role="treeitem"][tabindex="0"]') as HTMLElement | null;
+						if (previouslyFocused) {
+							previouslyFocused.focus();
+						} else {
+							const firstItem = container.querySelector('button[role="treeitem"]') as HTMLElement | null;
+							if (firstItem) firstItem.focus();
+						}
+					});
+				} else {
+					if (!treeContainer) return;
+					const previouslyFocused = treeContainer.querySelector('button[role="treeitem"][tabindex="0"]') as HTMLElement | null;
+					if (previouslyFocused) {
+						previouslyFocused.focus();
+					} else {
+						const firstItem = treeContainer.querySelector('button[role="treeitem"]') as HTMLElement | null;
+						if (firstItem) firstItem.focus();
+					}
+				}
+			}
+		},
+		onFocusEditorTitle: () => {
+			// Focus the note title input
+			const titleInput = document.querySelector('[data-note-title]') as HTMLElement | null;
+			if (titleInput) {
+				titleInput.focus();
+			}
+		},
+		onFocusToolbar: () => {
+			// Focus the first button in the editor toolbar
+			const toolbar = document.querySelector('[data-editor-toolbar]');
+			if (!toolbar) return;
+			const firstButton = toolbar.querySelector('button') as HTMLElement | null;
+			if (firstButton) {
+				firstButton.focus();
+			}
+		},
+		onFocusTabBar: () => {
+			// Focus the first tab in the tab bar
+			const tabBar = document.querySelector('[data-tab-bar]');
+			if (!tabBar) return;
+			// Find the active tab first, or fall back to first tab
+			const activeTab = tabBar.querySelector('button[data-active="true"]') as HTMLElement | null;
+			if (activeTab) {
+				activeTab.focus();
+			} else {
+				const firstTab = tabBar.querySelector('button') as HTMLElement | null;
+				if (firstTab) {
+					firstTab.focus();
+				}
+			}
+		},
+		// Tab bar visibility
+		onToggleTabBar: handlers.toggleTabBar,
 		// Notes hotkeys
 		onNewNote: handlers.createNoteInRoot,
 		onNewNoteWithLocation: handlers.openLocationDialog,
@@ -135,8 +230,22 @@ export function mapHotkeyHandlers(
 		// Views hotkeys
 		onOpenSettings: handlers.openSettings,
 		onOpenHotkeys: handlers.openHotkeys,
+		onShowQuickHotkeys: handlers.showQuickHotkeys,
 		// Search hotkeys
 		onQuickSearch: handlers.openQuickSearch,
 		onFullTextSearch: handlers.openSearchSidebar,
+		// Tree view hotkeys
+		onRevealActiveInTree: () => {
+			const callbacks = getTreeViewCallbacks();
+			if (callbacks?.revealActiveInTree) {
+				callbacks.revealActiveInTree();
+			}
+		},
+		onToggleHoist: () => {
+			const callbacks = getTreeViewCallbacks();
+			if (callbacks?.toggleHoist) {
+				callbacks.toggleHoist();
+			}
+		},
 	};
 }

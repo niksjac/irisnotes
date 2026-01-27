@@ -32,6 +32,12 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		category: "Tabs",
 		global: true,
 	},
+	reopenLastClosedTab: {
+		key: "ctrl+shift+t",
+		description: "Reopen Last Closed Tab",
+		category: "Tabs",
+		global: true,
+	},
 	newTab: {
 		key: "ctrl+t",
 		description: "New Tab",
@@ -73,7 +79,7 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		global: true,
 	},
 	toggleToolbar: {
-		key: "ctrl+shift+t",
+		key: "f9",
 		description: "Toggle Editor Toolbar",
 		category: "Editor",
 		global: true,
@@ -229,9 +235,47 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 
 	// Focus hotkeys
 	focusTreeView: {
-		key: "ctrl+shift+e",
+		key: "f8",
 		description: "Focus Tree View",
 		category: "Focus",
+		global: true,
+	},
+	focusEditor: {
+		key: "f10",
+		description: "Focus Editor",
+		category: "Focus",
+		global: true,
+	},
+	toggleEditorTreeFocus: {
+		key: "f6",
+		description: "Toggle Focus: Editor ↔ Tree View",
+		category: "Focus",
+		global: true,
+	},
+	focusToolbar: {
+		key: "f7",
+		description: "Focus Toolbar",
+		category: "Focus",
+		global: true,
+	},
+	focusEditorTitle: {
+		key: "ctrl+alt+t",
+		description: "Focus Note Title",
+		category: "Focus",
+		global: true,
+	},
+	focusTabBar: {
+		key: "ctrl+alt+o",
+		description: "Focus Tab Bar",
+		category: "Focus",
+		global: true,
+	},
+
+	// Tab bar visibility
+	toggleTabBar: {
+		key: "ctrl+alt+b",
+		description: "Toggle Tab Bar Visibility",
+		category: "Layout",
 		global: true,
 	},
 
@@ -256,6 +300,12 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		category: "Views",
 		global: true,
 	},
+	showQuickHotkeys: {
+		key: "f1",
+		description: "Show Quick Hotkeys Reference",
+		category: "Views",
+		global: true,
+	},
 
 	// Notes hotkeys
 	newNote: {
@@ -265,7 +315,7 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		global: true,
 	},
 	newNoteWithLocation: {
-		key: "ctrl+shift+n",
+		key: "ctrl+alt+n",
 		description: "Create New Note (Pick Location)",
 		category: "Notes",
 		global: true,
@@ -282,6 +332,20 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		key: "ctrl+shift+f",
 		description: "Full Text Search (in content)",
 		category: "Search",
+		global: true,
+	},
+
+	// Tree view hotkeys
+	revealActiveInTree: {
+		key: "ctrl+shift+e",
+		description: "Reveal Active Note in Tree View",
+		category: "Tree View",
+		global: true,
+	},
+	toggleHoist: {
+		key: "ctrl+h",
+		description: "Hoist/Unhoist Selected Book or Section",
+		category: "Tree View",
 		global: true,
 	},
 };

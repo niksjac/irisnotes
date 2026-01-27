@@ -9,9 +9,25 @@ export const paneStateAtom = atom<PaneState>({
 	splitDirection: "horizontal",
 });
 
+// Tab bar visibility
+export const tabBarVisibleAtom = atom<boolean>(true);
+
+// Toggle tab bar visibility
+export const toggleTabBarAtom = atom(null, (get, set) => {
+	set(tabBarVisibleAtom, !get(tabBarVisibleAtom));
+});
+
 // Tab state per pane
 export const pane0TabsAtom = atom<Tab[]>([]);
 export const pane1TabsAtom = atom<Tab[]>([]);
+
+// Recently closed tabs stack (for Ctrl+Shift+T reopen)
+interface ClosedTabEntry {
+	tab: Tab;
+	paneIndex: 0 | 1;
+}
+export const recentlyClosedTabsAtom = atom<ClosedTabEntry[]>([]);
+const MAX_RECENTLY_CLOSED = 20; // Keep at most 20 recently closed tabs
 
 // Active tab per pane
 export const pane0ActiveTabAtom = atom<string | null>(null);
@@ -586,6 +602,17 @@ export const closeActiveTabAtom = atom(null, (get, set) => {
 		const activeTabId = get(pane0ActiveTabAtom);
 
 		if (activeTabId) {
+			// Find the tab being closed and save it to recently closed stack
+			const closingTab = tabs.find((tab) => tab.id === activeTabId);
+			if (closingTab) {
+				const recentlyClosed = get(recentlyClosedTabsAtom);
+				const newRecentlyClosed = [
+					{ tab: closingTab, paneIndex: 0 as const },
+					...recentlyClosed.slice(0, MAX_RECENTLY_CLOSED - 1),
+				];
+				set(recentlyClosedTabsAtom, newRecentlyClosed);
+			}
+
 			// Find the index of the tab being closed
 			const closingTabIndex = tabs.findIndex((tab) => tab.id === activeTabId);
 			const newTabs = tabs.filter((tab) => tab.id !== activeTabId);
@@ -606,6 +633,17 @@ export const closeActiveTabAtom = atom(null, (get, set) => {
 		const activeTabId = get(pane1ActiveTabAtom);
 
 		if (activeTabId) {
+			// Find the tab being closed and save it to recently closed stack
+			const closingTab = tabs.find((tab) => tab.id === activeTabId);
+			if (closingTab) {
+				const recentlyClosed = get(recentlyClosedTabsAtom);
+				const newRecentlyClosed = [
+					{ tab: closingTab, paneIndex: 1 as const },
+					...recentlyClosed.slice(0, MAX_RECENTLY_CLOSED - 1),
+				];
+				set(recentlyClosedTabsAtom, newRecentlyClosed);
+			}
+
 			// Find the index of the tab being closed
 			const closingTabIndex = tabs.findIndex((tab) => tab.id === activeTabId);
 			const newTabs = tabs.filter((tab) => tab.id !== activeTabId);
@@ -622,4 +660,41 @@ export const closeActiveTabAtom = atom(null, (get, set) => {
 			}
 		}
 	}
+});
+
+// Reopen last closed tab
+export const reopenLastClosedTabAtom = atom(null, (get, set) => {
+	const recentlyClosed = get(recentlyClosedTabsAtom);
+	if (recentlyClosed.length === 0) return;
+
+	const [lastClosed, ...remaining] = recentlyClosed;
+	if (!lastClosed) return;
+
+	const { tab, paneIndex } = lastClosed;
+	const paneState = get(paneStateAtom);
+
+	// Determine which pane to reopen in:
+	// - If original pane still exists (single pane mode = pane 0 only), use it
+	// - Otherwise use the active pane
+	const targetPane = paneState.count === 1 ? 0 : paneIndex;
+
+	// Add the tab back to the appropriate pane
+	if (targetPane === 0) {
+		const tabs = get(pane0TabsAtom);
+		// Generate new ID to avoid conflicts if same note was reopened in another tab
+		const reopenedTab = { ...tab, id: `${tab.viewData?.noteId || 'tab'}-${Date.now()}` };
+		set(pane0TabsAtom, [...tabs, reopenedTab]);
+		set(pane0ActiveTabAtom, reopenedTab.id);
+	} else {
+		const tabs = get(pane1TabsAtom);
+		const reopenedTab = { ...tab, id: `${tab.viewData?.noteId || 'tab'}-${Date.now()}` };
+		set(pane1TabsAtom, [...tabs, reopenedTab]);
+		set(pane1ActiveTabAtom, reopenedTab.id);
+	}
+
+	// Set focus to the pane where we reopened the tab
+	set(paneStateAtom, { ...paneState, activePane: targetPane });
+
+	// Remove from recently closed stack
+	set(recentlyClosedTabsAtom, remaining);
 });

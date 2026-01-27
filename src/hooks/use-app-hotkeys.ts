@@ -13,7 +13,7 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 	const createHotkeyOptions = (global: boolean = true) => ({
 		preventDefault: true,
 		enableOnContentEditable: global,
-		enableOnFormTags: global,
+		enableOnFormTags: global ? ["INPUT", "TEXTAREA", "SELECT"] as const : false as const,
 	});
 
 	// Mobile check for pane operations
@@ -51,6 +51,11 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		hotkeyMapping.closeTab.key,
 		createHandler(handlers.onCloseTab),
 		createHotkeyOptions(hotkeyMapping.closeTab.global)
+	);
+	useHotkeys(
+		hotkeyMapping.reopenLastClosedTab.key,
+		createHandler(handlers.onReopenLastClosedTab),
+		createHotkeyOptions(hotkeyMapping.reopenLastClosedTab.global)
 	);
 	useHotkeys(
 		hotkeyMapping.newTab.key,
@@ -230,6 +235,38 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHandler(handlers.onFocusTreeView),
 		createHotkeyOptions(hotkeyMapping.focusTreeView.global)
 	);
+	useHotkeys(
+		hotkeyMapping.focusEditor.key,
+		createHandler(handlers.onFocusEditor),
+		createHotkeyOptions(hotkeyMapping.focusEditor.global)
+	);
+	useHotkeys(
+		hotkeyMapping.toggleEditorTreeFocus.key,
+		createHandler(handlers.onToggleEditorTreeFocus),
+		createHotkeyOptions(hotkeyMapping.toggleEditorTreeFocus.global)
+	);
+	useHotkeys(
+		hotkeyMapping.focusEditorTitle.key,
+		createHandler(handlers.onFocusEditorTitle),
+		createHotkeyOptions(hotkeyMapping.focusEditorTitle.global)
+	);
+	useHotkeys(
+		hotkeyMapping.focusToolbar.key,
+		createHandler(handlers.onFocusToolbar),
+		createHotkeyOptions(hotkeyMapping.focusToolbar.global)
+	);
+	useHotkeys(
+		hotkeyMapping.focusTabBar.key,
+		createHandler(handlers.onFocusTabBar),
+		createHotkeyOptions(hotkeyMapping.focusTabBar.global)
+	);
+
+	// Tab bar visibility
+	useHotkeys(
+		hotkeyMapping.toggleTabBar.key,
+		createHandler(handlers.onToggleTabBar),
+		createHotkeyOptions(hotkeyMapping.toggleTabBar.global)
+	);
 
 	// Notes hotkeys
 	useHotkeys(
@@ -254,6 +291,11 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHandler(handlers.onOpenHotkeys),
 		createHotkeyOptions(hotkeyMapping.openHotkeys.global)
 	);
+	useHotkeys(
+		hotkeyMapping.showQuickHotkeys.key,
+		createHandler(handlers.onShowQuickHotkeys),
+		createHotkeyOptions(hotkeyMapping.showQuickHotkeys.global)
+	);
 
 	// Search hotkeys
 	useHotkeys(
@@ -265,5 +307,17 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		hotkeyMapping.fullTextSearch.key,
 		createHandler(handlers.onFullTextSearch),
 		createHotkeyOptions(hotkeyMapping.fullTextSearch.global)
+	);
+
+	// Tree view hotkeys
+	useHotkeys(
+		hotkeyMapping.revealActiveInTree.key,
+		createHandler(handlers.onRevealActiveInTree),
+		createHotkeyOptions(hotkeyMapping.revealActiveInTree.global)
+	);
+	useHotkeys(
+		hotkeyMapping.toggleHoist.key,
+		createHandler(handlers.onToggleHoist),
+		createHotkeyOptions(hotkeyMapping.toggleHoist.global)
 	);
 }

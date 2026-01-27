@@ -42,6 +42,7 @@ export interface HotkeyMapping {
 
 	// Tab hotkeys
 	closeTab: HotkeyConfig;
+	reopenLastClosedTab: HotkeyConfig;
 	newTab: HotkeyConfig;
 	moveTabLeft: HotkeyConfig;
 	moveTabRight: HotkeyConfig;
@@ -87,6 +88,14 @@ export interface HotkeyMapping {
 
 	// Focus hotkeys
 	focusTreeView: HotkeyConfig;
+	focusEditor: HotkeyConfig;
+	toggleEditorTreeFocus: HotkeyConfig;
+	focusToolbar: HotkeyConfig;
+	focusEditorTitle: HotkeyConfig;
+	focusTabBar: HotkeyConfig;
+
+	// Tab bar visibility
+	toggleTabBar: HotkeyConfig;
 
 	// App hotkeys
 	refreshApp: HotkeyConfig;
@@ -94,6 +103,7 @@ export interface HotkeyMapping {
 	// Views hotkeys
 	openSettings: HotkeyConfig;
 	openHotkeys: HotkeyConfig;
+	showQuickHotkeys: HotkeyConfig;
 
 	// Notes hotkeys
 	newNote: HotkeyConfig;
@@ -106,6 +116,10 @@ export interface HotkeyMapping {
 	// Search hotkeys
 	quickSearch: HotkeyConfig;
 	fullTextSearch: HotkeyConfig;
+
+	// Tree view hotkeys
+	revealActiveInTree: HotkeyConfig;
+	toggleHoist: HotkeyConfig;
 }
 
 export interface AppHotkeysProps {
@@ -116,6 +130,7 @@ export interface AppHotkeysProps {
 
 	// Tab hotkeys
 	onCloseTab?: () => void;
+	onReopenLastClosedTab?: () => void;
 	onNewTab?: () => void;
 	onMoveTabLeft?: () => void;
 	onMoveTabRight?: () => void;
@@ -156,6 +171,14 @@ export interface AppHotkeysProps {
 
 	// Focus hotkeys
 	onFocusTreeView?: () => void;
+	onFocusEditor?: () => void;
+	onToggleEditorTreeFocus?: () => void;
+	onFocusToolbar?: () => void;
+	onFocusEditorTitle?: () => void;
+	onFocusTabBar?: () => void;
+
+	// Tab bar visibility
+	onToggleTabBar?: () => void;
 
 	// App hotkeys
 	onRefreshApp?: () => void;
@@ -183,10 +206,15 @@ export interface AppHotkeysProps {
 	// Views hotkeys
 	onOpenSettings?: () => void;
 	onOpenHotkeys?: () => void;
+	onShowQuickHotkeys?: () => void;
 
 	// Search hotkeys
 	onQuickSearch?: () => void;
 	onFullTextSearch?: () => void;
+
+	// Tree view hotkeys
+	onRevealActiveInTree?: () => void;
+	onToggleHoist?: () => void;
 }
 
 // Storage configuration types

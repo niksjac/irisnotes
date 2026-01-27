@@ -1,6 +1,7 @@
 import { useSetAtom } from "jotai";
 import {
 	closeActiveTabAtom,
+	reopenLastClosedTabAtom,
 	newTabInActivePaneAtom,
 	moveActiveTabLeftAtom,
 	moveActiveTabRightAtom,
@@ -33,6 +34,8 @@ import {
 	openQuickSearchAtom,
 	openSearchSidebarAtom,
 	sidebarCollapsed,
+	toggleTabBarAtom,
+	showQuickHotkeysAtom,
 } from "@/atoms";
 import { useEditorViewToggle } from "./use-editor-view-toggle";
 import { useLineWrapping } from "./use-line-wrapping";
@@ -52,6 +55,7 @@ export function useHotkeyHandlers() {
 	const { toggleActivityBarExpanded } = useView();
 	// Tab actions
 	const closeActiveTab = useSetAtom(closeActiveTabAtom);
+	const reopenLastClosedTab = useSetAtom(reopenLastClosedTabAtom);
 	const newTabInActivePane = useSetAtom(newTabInActivePaneAtom);
 	const moveActiveTabLeft = useSetAtom(moveActiveTabLeftAtom);
 	const moveActiveTabRight = useSetAtom(moveActiveTabRightAtom);
@@ -93,6 +97,7 @@ export function useHotkeyHandlers() {
 	return {
 		// Tab actions
 		closeActiveTab,
+		reopenLastClosedTab,
 		newTabInActivePane,
 		moveActiveTabLeft,
 		moveActiveTabRight,
@@ -139,6 +144,9 @@ export function useHotkeyHandlers() {
 		// Activity bar
 		toggleActivityBarExpanded,
 
+		// Tab bar visibility
+		toggleTabBar: useSetAtom(toggleTabBarAtom),
+
 		// Font size actions (scales base font, inline em sizes scale proportionally)
 		increaseFontSize: useSetAtom(increaseFontSizeAtom),
 		decreaseFontSize: useSetAtom(decreaseFontSizeAtom),
@@ -150,6 +158,7 @@ export function useHotkeyHandlers() {
 		// View actions
 		openSettings: useSetAtom(openSettingsTabAtom),
 		openHotkeys: useSetAtom(openHotkeysTabAtom),
+		showQuickHotkeys: useSetAtom(showQuickHotkeysAtom),
 
 		// Search actions
 		openQuickSearch: useSetAtom(openQuickSearchAtom),
