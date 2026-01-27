@@ -1,7 +1,7 @@
 -- Development seed data for IrisNotes
 -- Test data: multiple books, sections, and notes for comprehensive testing
 -- Using fractional indexing (lexicographic strings) for sync-safe ordering
--- Content uses HTML format to demonstrate all ProseMirror editor features
+-- Content uses HTML format with paragraph-based structure (no headings)
 
 -- ============================================================
 -- ROOT-LEVEL NOTES (testing flexible hierarchy)
@@ -9,9 +9,10 @@
 
 INSERT INTO items (id, type, title, content, content_plaintext, content_type, parent_id, sort_order, metadata, created_at, updated_at) VALUES
 ('note-root-1', 'note', 'Welcome to IrisNotes', 
-'<h1>Welcome to IrisNotes!</h1>
+'<p><strong><span style="font-size: 1.5em">Welcome to IrisNotes!</span></strong></p>
 <p>This is your <strong>personal note-taking</strong> companion. IrisNotes supports rich text formatting with a powerful ProseMirror-based editor.</p>
-<h2>Getting Started</h2>
+<p></p>
+<p><strong><span style="font-size: 1.25em">Getting Started</span></strong></p>
 <p>Here are some things you can do:</p>
 <ul>
 <li>Create <strong>Books</strong> to organize related notes</li>
@@ -30,7 +31,7 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 'html', NULL, 'a1', '{}', datetime('now'), datetime('now')),
 
 ('note-root-3', 'note', 'Shopping List', 
-'<h2>Weekly Shopping</h2>
+'<p><strong><span style="font-size: 1.25em">Weekly Shopping</span></strong></p>
 <ul>
 <li>Milk</li>
 <li>Bread</li>
@@ -77,7 +78,7 @@ INSERT INTO items (id, type, title, parent_id, sort_order, metadata, created_at,
 
 INSERT INTO items (id, type, title, content, content_plaintext, content_type, parent_id, sort_order, metadata, created_at, updated_at) VALUES
 ('note-1', 'note', 'Basic Text Styles', 
-'<h1>Basic Text Formatting</h1>
+'<p><strong><span style="font-size: 1.5em">Basic Text Formatting</span></strong></p>
 <p>IrisNotes supports all essential text formatting options:</p>
 <ul>
 <li><strong>Bold text</strong> - Use Ctrl+B or the toolbar</li>
@@ -86,30 +87,33 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 <li><s>Strikethrough text</s> - For crossing things out</li>
 <li><code>Inline code</code> - Use Ctrl+` or the toolbar</li>
 </ul>
-<h2>Combining Styles</h2>
+<p></p>
+<p><strong><span style="font-size: 1.25em">Combining Styles</span></strong></p>
 <p>You can <strong><em>combine bold and italic</em></strong>, or even <strong><u>bold and underline</u></strong>!</p>
 <p>Here''s some <strong><em><u>triple-styled text</u></em></strong> for maximum emphasis.</p>',
 'Basic Text Formatting IrisNotes supports all essential text formatting options: Bold text - Use Ctrl+B or the toolbar Italic text - Use Ctrl+I or the toolbar Underlined text - Available in the toolbar Strikethrough text - For crossing things out Inline code - Use Ctrl+` or the toolbar Combining Styles You can combine bold and italic, or even bold and underline! Here''s some triple-styled text for maximum emphasis.',
 'html', 'section-1', 'a0', '{}', datetime('now'), datetime('now')),
 
-('note-2', 'note', 'Headings Demo', 
-'<h1>Heading Level 1</h1>
-<p>This is the largest heading, typically used for main titles.</p>
-<h2>Heading Level 2</h2>
-<p>Second-level headings are great for major sections.</p>
-<h3>Heading Level 3</h3>
-<p>Use these for subsections within a major section.</p>
-<h4>Heading Level 4</h4>
-<p>Fourth-level headings for detailed breakdowns.</p>
-<h5>Heading Level 5</h5>
-<p>Fifth-level headings are rarely needed but available.</p>
-<h6>Heading Level 6</h6>
-<p>The smallest heading level - use sparingly.</p>',
-'Heading Level 1 This is the largest heading, typically used for main titles. Heading Level 2 Second-level headings are great for major sections. Heading Level 3 Use these for subsections within a major section. Heading Level 4 Fourth-level headings for detailed breakdowns. Heading Level 5 Fifth-level headings are rarely needed but available. Heading Level 6 The smallest heading level - use sparingly.',
+('note-2', 'note', 'Text Sizes Demo', 
+'<p><strong><span style="font-size: 2em">Large Title Style (2em)</span></strong></p>
+<p>This demonstrates using font sizes instead of heading tags.</p>
+<p></p>
+<p><strong><span style="font-size: 1.5em">Section Title (1.5em)</span></strong></p>
+<p>Use larger font sizes with bold for section headers.</p>
+<p></p>
+<p><strong><span style="font-size: 1.25em">Subsection (1.25em)</span></strong></p>
+<p>Slightly larger text works great for subsections.</p>
+<p></p>
+<p><strong>Normal Bold</strong></p>
+<p>Regular bold text for inline emphasis.</p>
+<p></p>
+<p><span style="font-size: 0.85em">Smaller text (0.85em) for notes and fine print.</span></p>
+<p><span style="font-size: 0.7em">Even smaller (0.7em) for captions.</span></p>',
+'Large Title Style (2em) This demonstrates using font sizes instead of heading tags. Section Title (1.5em) Use larger font sizes with bold for section headers. Subsection (1.25em) Slightly larger text works great for subsections. Normal Bold Regular bold text for inline emphasis. Smaller text (0.85em) for notes and fine print. Even smaller (0.7em) for captions.',
 'html', 'section-1', 'a1', '{}', datetime('now'), datetime('now')),
 
 ('note-3', 'note', 'Font Sizes', 
-'<h2>Font Size Variations</h2>
+'<p><strong><span style="font-size: 1.25em">Font Size Variations</span></strong></p>
 <p>You can change the size of text using the font size dropdown:</p>
 <p><span style="font-size: 0.7em">This text is smaller (0.7em)</span></p>
 <p><span style="font-size: 0.85em">This text is slightly smaller (0.85em)</span></p>
@@ -122,7 +126,7 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 'html', 'section-1', 'a2', '{}', datetime('now'), datetime('now')),
 
 ('note-4', 'note', 'Font Families', 
-'<h2>Different Fonts</h2>
+'<p><strong><span style="font-size: 1.25em">Different Fonts</span></strong></p>
 <p>Mix different font families within your notes:</p>
 <p><span style="font-family: Arial, Helvetica, sans-serif">This uses Arial (sans-serif)</span></p>
 <p><span style="font-family: Georgia, ''Times New Roman'', serif">This uses Georgia (serif)</span></p>
@@ -138,21 +142,23 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 
 INSERT INTO items (id, type, title, content, content_plaintext, content_type, parent_id, sort_order, metadata, created_at, updated_at) VALUES
 ('note-5', 'note', 'Lists Demo', 
-'<h2>Bullet Lists</h2>
+'<p><strong><span style="font-size: 1.25em">Bullet Lists</span></strong></p>
 <ul>
 <li>First item</li>
 <li>Second item with <strong>bold text</strong></li>
 <li>Third item with <em>italic text</em></li>
 <li>Fourth item with <code>inline code</code></li>
 </ul>
-<h2>Numbered Lists</h2>
+<p></p>
+<p><strong><span style="font-size: 1.25em">Numbered Lists</span></strong></p>
 <ol>
 <li>Step one: Open the app</li>
 <li>Step two: Create a new note</li>
 <li>Step three: Start writing!</li>
 <li>Step four: Organize into books and sections</li>
 </ol>
-<h2>Nested Lists</h2>
+<p></p>
+<p><strong><span style="font-size: 1.25em">Nested Lists</span></strong></p>
 <ul>
 <li>Main topic
 <ul>
@@ -170,7 +176,7 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 'html', 'section-2', 'a0', '{}', datetime('now'), datetime('now')),
 
 ('note-6', 'note', 'Blockquotes', 
-'<h2>Using Blockquotes</h2>
+'<p><strong><span style="font-size: 1.25em">Using Blockquotes</span></strong></p>
 <p>Blockquotes are perfect for highlighting important information or citations:</p>
 <blockquote>
 <p>The best time to plant a tree was 20 years ago. The second best time is now.</p>
@@ -186,7 +192,7 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 'html', 'section-2', 'a1', '{}', datetime('now'), datetime('now')),
 
 ('note-7', 'note', 'Code Blocks', 
-'<h2>Code Blocks</h2>
+'<p><strong><span style="font-size: 1.25em">Code Blocks</span></strong></p>
 <p>For longer code snippets, use code blocks:</p>
 <pre data-language="javascript"><code>function greet(name) {
   return `Hello, ${name}!`;
@@ -216,28 +222,30 @@ print([fibonacci(i) for i in range(10)])</code></pre>',
 
 INSERT INTO items (id, type, title, content, content_plaintext, content_type, parent_id, sort_order, metadata, created_at, updated_at) VALUES
 ('note-8', 'note', 'Text Colors', 
-'<h2>Colorful Text</h2>
+'<p><strong><span style="font-size: 1.25em">Colorful Text</span></strong></p>
 <p>Add color to your text to make it stand out:</p>
 <p><span style="color: #ef4444">Red text for warnings or important items</span></p>
 <p><span style="color: #22c55e">Green text for success or positive notes</span></p>
 <p><span style="color: #3b82f6">Blue text for links or references</span></p>
 <p><span style="color: #8b5cf6">Purple text for special highlights</span></p>
 <p><span style="color: #f97316">Orange text for caution or notes</span></p>
-<h3>Combining with Other Formatting</h3>
+<p></p>
+<p><strong>Combining with Other Formatting</strong></p>
 <p><strong><span style="color: #ef4444">Bold red text</span></strong> for critical warnings!</p>
 <p><em><span style="color: #3b82f6">Italic blue text</span></em> for subtle emphasis.</p>',
 'Colorful Text Add color to your text to make it stand out: Red text for warnings or important items Green text for success or positive notes Blue text for links or references Purple text for special highlights Orange text for caution or notes Combining with Other Formatting Bold red text for critical warnings! Italic blue text for subtle emphasis.',
 'html', 'section-3', 'a0', '{}', datetime('now'), datetime('now')),
 
 ('note-9', 'note', 'Highlights', 
-'<h2>Text Highlighting</h2>
+'<p><strong><span style="font-size: 1.25em">Text Highlighting</span></strong></p>
 <p>Use highlights to mark important information:</p>
 <p><mark style="background-color: #fef08a">Yellow highlight - classic highlighter style</mark></p>
 <p><mark style="background-color: #fde047">Bright yellow for maximum visibility</mark></p>
 <p><mark style="background-color: #86efac">Green highlight for positive items</mark></p>
 <p><mark style="background-color: #fca5a5">Red/pink highlight for warnings</mark></p>
 <p><mark style="background-color: #a5b4fc">Blue highlight for notes and references</mark></p>
-<h3>Use Cases</h3>
+<p></p>
+<p><strong>Use Cases</strong></p>
 <ul>
 <li>Mark <mark style="background-color: #fef08a">key terms</mark> in study notes</li>
 <li>Highlight <mark style="background-color: #86efac">completed tasks</mark> in to-do lists</li>
@@ -247,12 +255,14 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 'html', 'section-3', 'a1', '{}', datetime('now'), datetime('now')),
 
 ('note-10', 'note', 'Complete Formatting Example', 
-'<h1>Complete Formatting Showcase</h1>
+'<p><strong><span style="font-size: 1.5em">Complete Formatting Showcase</span></strong></p>
 <p>This note demonstrates <strong>all formatting features</strong> working together.</p>
-<h2>Project Summary</h2>
+<p></p>
+<p><strong><span style="font-size: 1.25em">Project Summary</span></strong></p>
 <p><mark style="background-color: #fef08a"><strong>Status:</strong></mark> <span style="color: #22c55e">In Progress</span></p>
 <p><strong>Priority:</strong> <span style="color: #ef4444">High</span></p>
-<h3>Key Features</h3>
+<p></p>
+<p><strong>Key Features</strong></p>
 <ol>
 <li><strong>Rich Text Editor</strong> - Full formatting support</li>
 <li><em>Fast Search</em> - FTS5-powered full-text search</li>
@@ -261,7 +271,8 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 <blockquote>
 <p><span style="color: #8b5cf6"><strong>Remember:</strong></span> Great notes lead to great ideas!</p>
 </blockquote>
-<h3>Code Example</h3>
+<p></p>
+<p><strong>Code Example</strong></p>
 <pre data-language="typescript"><code>interface Note {
   id: string;
   title: string;
@@ -277,17 +288,20 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 
 INSERT INTO items (id, type, title, content, content_plaintext, content_type, parent_id, sort_order, metadata, created_at, updated_at) VALUES
 ('note-11', 'note', 'Alpha Requirements', 
-'<h1>Project Alpha Requirements</h1>
-<h2>Overview</h2>
+'<p><strong><span style="font-size: 1.5em">Project Alpha Requirements</span></strong></p>
+<p></p>
+<p><strong><span style="font-size: 1.25em">Overview</span></strong></p>
 <p>Project Alpha is a <strong>high-priority initiative</strong> to modernize our core infrastructure.</p>
-<h2>Functional Requirements</h2>
+<p></p>
+<p><strong><span style="font-size: 1.25em">Functional Requirements</span></strong></p>
 <ol>
 <li><mark style="background-color: #86efac">User authentication system</mark></li>
 <li>Data encryption at rest</li>
 <li>Real-time sync capabilities</li>
 <li>Offline mode support</li>
 </ol>
-<h2>Technical Specifications</h2>
+<p></p>
+<p><strong><span style="font-size: 1.25em">Technical Specifications</span></strong></p>
 <ul>
 <li><strong>Backend:</strong> Rust + SQLite</li>
 <li><strong>Frontend:</strong> React + TypeScript</li>
@@ -298,17 +312,19 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 'html', 'section-4', 'a0', '{}', datetime('now'), datetime('now')),
 
 ('note-12', 'note', 'Alpha Meeting Notes', 
-'<h2>Meeting: Alpha Kickoff</h2>
+'<p><strong><span style="font-size: 1.25em">Meeting: Alpha Kickoff</span></strong></p>
 <p><strong>Date:</strong> January 15, 2026</p>
 <p><strong>Attendees:</strong> Team Alpha</p>
-<h3>Agenda</h3>
+<p></p>
+<p><strong>Agenda</strong></p>
 <ol>
 <li>Project overview</li>
 <li>Timeline review</li>
 <li>Resource allocation</li>
 <li>Risk assessment</li>
 </ol>
-<h3>Action Items</h3>
+<p></p>
+<p><strong>Action Items</strong></p>
 <ul>
 <li><s>Set up development environment</s> - <span style="color: #22c55e">Done</span></li>
 <li>Create initial wireframes - <span style="color: #f97316">In Progress</span></li>
@@ -318,15 +334,17 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 'html', 'section-4', 'a1', '{}', datetime('now'), datetime('now')),
 
 ('note-13', 'note', 'Beta Research', 
-'<h2>Project Beta Research Notes</h2>
+'<p><strong><span style="font-size: 1.25em">Project Beta Research Notes</span></strong></p>
 <p>Preliminary research findings for the new feature set.</p>
-<h3>Competitor Analysis</h3>
+<p></p>
+<p><strong>Competitor Analysis</strong></p>
 <ul>
 <li><strong>Notion</strong> - Block-based, good for databases</li>
 <li><strong>Obsidian</strong> - Markdown-focused, local-first</li>
 <li><strong>OneNote</strong> - Freeform canvas, heavy</li>
 </ul>
-<h3>Key Differentiators</h3>
+<p></p>
+<p><strong>Key Differentiators</strong></p>
 <blockquote><p>Our focus: <mark style="background-color: #a5b4fc">Speed, simplicity, and offline-first architecture</mark></p></blockquote>
 <p>Target users: Developers and power users who value <span style="color: #22c55e">performance</span> over features.</p>',
 'Project Beta Research Notes Preliminary research findings for the new feature set. Competitor Analysis Notion - Block-based, good for databases Obsidian - Markdown-focused, local-first OneNote - Freeform canvas, heavy Key Differentiators Our focus: Speed, simplicity, and offline-first architecture Target users: Developers and power users who value performance over features.',
@@ -338,9 +356,10 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 
 INSERT INTO items (id, type, title, content, content_plaintext, content_type, parent_id, sort_order, metadata, created_at, updated_at) VALUES
 ('note-14', 'note', 'Pasta Carbonara', 
-'<h1>Classic Pasta Carbonara</h1>
+'<p><strong><span style="font-size: 1.5em">Classic Pasta Carbonara</span></strong></p>
 <p><em>A creamy Italian classic without cream!</em></p>
-<h2>Ingredients</h2>
+<p></p>
+<p><strong><span style="font-size: 1.25em">Ingredients</span></strong></p>
 <ul>
 <li>400g spaghetti</li>
 <li>200g guanciale or pancetta</li>
@@ -348,7 +367,8 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 <li>100g Pecorino Romano, grated</li>
 <li>Black pepper to taste</li>
 </ul>
-<h2>Instructions</h2>
+<p></p>
+<p><strong><span style="font-size: 1.25em">Instructions</span></strong></p>
 <ol>
 <li>Cook pasta in <strong>well-salted</strong> water</li>
 <li>Crisp the guanciale in a cold pan, then heat</li>
@@ -361,8 +381,9 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 'html', 'section-6', 'a0', '{}', datetime('now'), datetime('now')),
 
 ('note-15', 'note', 'Chocolate Cake', 
-'<h1>Rich Chocolate Cake</h1>
-<h2>Ingredients</h2>
+'<p><strong><span style="font-size: 1.5em">Rich Chocolate Cake</span></strong></p>
+<p></p>
+<p><strong><span style="font-size: 1.25em">Ingredients</span></strong></p>
 <ul>
 <li>2 cups flour</li>
 <li>2 cups sugar</li>
@@ -372,7 +393,8 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 <li>1/2 cup vegetable oil</li>
 <li>1 cup hot water</li>
 </ul>
-<h2>Notes</h2>
+<p></p>
+<p><strong>Notes</strong></p>
 <p>Bake at <strong>350°F (175°C)</strong> for 30-35 minutes.</p>
 <p><span style="color: #22c55e">✓ Tested and approved!</span></p>',
 'Rich Chocolate Cake Ingredients 2 cups flour 2 cups sugar 3/4 cup cocoa powder 2 eggs 1 cup milk 1/2 cup vegetable oil 1 cup hot water Notes Bake at 350°F (175°C) for 30-35 minutes. ✓ Tested and approved!',
@@ -384,16 +406,18 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 
 INSERT INTO items (id, type, title, content, content_plaintext, content_type, parent_id, sort_order, metadata, created_at, updated_at) VALUES
 ('note-16', 'note', 'Japan Trip Planning', 
-'<h1>Japan Trip 2026</h1>
+'<p><strong><span style="font-size: 1.5em">Japan Trip 2026</span></strong></p>
 <p><mark style="background-color: #a5b4fc"><strong>Dates:</strong> March 15-30, 2026</mark></p>
-<h2>Itinerary</h2>
+<p></p>
+<p><strong><span style="font-size: 1.25em">Itinerary</span></strong></p>
 <ol>
 <li><strong>Tokyo</strong> (5 days) - Shibuya, Shinjuku, Akihabara</li>
 <li><strong>Kyoto</strong> (4 days) - Temples, Geisha district</li>
 <li><strong>Osaka</strong> (3 days) - Food tour, Dotonbori</li>
 <li><strong>Hiroshima</strong> (2 days) - Peace Memorial, Miyajima</li>
 </ol>
-<h2>Budget</h2>
+<p></p>
+<p><strong><span style="font-size: 1.25em">Budget</span></strong></p>
 <ul>
 <li>Flights: $1,200</li>
 <li>JR Pass: $400</li>
@@ -405,22 +429,25 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 'html', 'section-7', 'a0', '{}', datetime('now'), datetime('now')),
 
 ('note-17', 'note', 'Packing List', 
-'<h2>Travel Packing List</h2>
-<h3>Essentials</h3>
+'<p><strong><span style="font-size: 1.25em">Travel Packing List</span></strong></p>
+<p></p>
+<p><strong>Essentials</strong></p>
 <ul>
 <li><s>Passport</s> ✓</li>
 <li><s>Travel insurance docs</s> ✓</li>
 <li>Phone + charger</li>
 <li>Power adapter (Japan: Type A/B)</li>
 </ul>
-<h3>Clothing</h3>
+<p></p>
+<p><strong>Clothing</strong></p>
 <ul>
 <li>5x t-shirts</li>
 <li>2x pants</li>
 <li>Comfortable walking shoes</li>
 <li>Light jacket</li>
 </ul>
-<h3>Tech</h3>
+<p></p>
+<p><strong>Tech</strong></p>
 <ul>
 <li>Camera</li>
 <li>Portable battery</li>
@@ -436,7 +463,7 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 
 INSERT INTO items (id, type, title, content, content_plaintext, content_type, parent_id, sort_order, metadata, created_at, updated_at) VALUES
 ('note-18', 'note', 'Editor Features Overview', 
-'<h2>About This Book</h2>
+'<p><strong><span style="font-size: 1.25em">About This Book</span></strong></p>
 <p>This book contains examples of <strong>all formatting features</strong> available in IrisNotes.</p>
 <p>Browse the sections to see:</p>
 <ul>
@@ -449,7 +476,7 @@ INSERT INTO items (id, type, title, content, content_plaintext, content_type, pa
 'html', 'book-1', 'Zz', '{}', datetime('now'), datetime('now')),
 
 ('note-19', 'note', 'Work Overview', 
-'<h2>Work Projects Hub</h2>
+'<p><strong><span style="font-size: 1.25em">Work Projects Hub</span></strong></p>
 <p>This book contains notes for various work projects.</p>
 <p>Current active projects:</p>
 <ul>

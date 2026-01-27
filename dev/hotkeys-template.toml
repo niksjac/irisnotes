@@ -120,9 +120,45 @@ category = "Focus"
 global = true
 
 [focusTreeView]
-key = "ctrl+shift+e"
+key = "f8"
 description = "Focus Tree View"
 category = "Focus"
+global = true
+
+[focusEditor]
+key = "f10"
+description = "Focus Editor"
+category = "Focus"
+global = true
+
+[toggleEditorTreeFocus]
+key = "f6"
+description = "Toggle Focus: Editor ↔ Tree View"
+category = "Focus"
+global = true
+
+[focusToolbar]
+key = "f7"
+description = "Focus Toolbar"
+category = "Focus"
+global = true
+
+[focusEditorTitle]
+key = "ctrl+alt+t"
+description = "Focus Note Title"
+category = "Focus"
+global = true
+
+[focusTabBar]
+key = "ctrl+alt+o"
+description = "Focus Tab Bar"
+category = "Focus"
+global = true
+
+[toggleTabBar]
+key = "ctrl+alt+b"
+description = "Toggle Tab Bar Visibility"
+category = "Layout"
 global = true
 
 # =============================================================================
@@ -232,7 +268,7 @@ category = "Editor"
 global = true
 
 [toggleToolbar]
-key = "ctrl+shift+t"
+key = "f9"
 description = "Toggle Editor Toolbar"
 category = "Editor"
 global = true
@@ -253,6 +289,12 @@ description = "Open Keyboard Shortcuts"
 category = "Views"
 global = true
 
+[showQuickHotkeys]
+key = "f1"
+description = "Show Quick Hotkeys Reference"
+category = "Views"
+global = true
+
 # =============================================================================
 # Notes
 # =============================================================================
@@ -264,7 +306,7 @@ category = "Notes"
 global = true
 
 [newNoteWithLocation]
-key = "ctrl+shift+n"
+key = "ctrl+alt+n"
 description = "New Note (pick location)"
 category = "Notes"
 global = true
