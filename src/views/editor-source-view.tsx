@@ -35,9 +35,10 @@ export function EditorSourceView({ viewData }: EditorSourceViewProps) {
 	return (
 		<div className="flex flex-col h-full bg-white dark:bg-gray-900">
 			{/* Note Title */}
-			<div className="flex-shrink-0 p-4 border-b border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">
+			<div className="flex-shrink-0 px-3 py-1 border-b border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-inset">
 				<input
-					className="w-full bg-transparent border-none text-lg font-semibold text-gray-900 dark:text-gray-100 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-sm"
+					data-note-title
+					className="w-full bg-transparent border-none text-base font-semibold text-gray-900 dark:text-gray-100 py-1 focus:outline-none"
 					type="text"
 					value={note.title}
 					onChange={(e) => handleNoteTitleChange(note.id, e.target.value)}
