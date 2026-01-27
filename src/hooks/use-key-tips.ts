@@ -7,16 +7,24 @@ export const altKeyHeldAtom = atom<boolean>(false);
 // Delay before showing KeyTips (ms) - allows quick Alt+key combos without visual distraction
 const KEYTIP_SHOW_DELAY = 400;
 
+// TEMPORARILY DISABLED - set to true to re-enable Alt+key KeyTips feature
+const KEYTIPS_ENABLED = false;
+
 /**
  * Hook to manage KeyTips (Access Keys) functionality.
  * When Alt is held down for a short delay, shows key hints on buttons.
  * Pressing a key while Alt is held triggers the associated action.
+ * 
+ * CURRENTLY DISABLED - see KEYTIPS_ENABLED flag
  */
 export function useKeyTips() {
 	const [altKeyHeld, setAltKeyHeld] = useAtom(altKeyHeldAtom);
 	const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	useEffect(() => {
+		// Feature disabled
+		if (!KEYTIPS_ENABLED) return;
+
 		const handleKeyDown = (e: KeyboardEvent) => {
 			// Track Alt key being held (but not Alt+Tab or other system combos)
 			if (e.key === "Alt" && !e.ctrlKey && !e.metaKey) {
@@ -78,6 +86,8 @@ export function useKeyTips() {
 /**
  * Hook to register keytip actions and handle Alt+key presses.
  * @param actions - Array of { key, action, label } objects
+ * 
+ * CURRENTLY DISABLED - see KEYTIPS_ENABLED flag
  */
 export function useKeyTipActions(
 	actions: Array<{ key: string; action: () => void; label?: string }>
@@ -85,6 +95,8 @@ export function useKeyTipActions(
 	const [altKeyHeld] = useAtom(altKeyHeldAtom);
 
 	useEffect(() => {
+		// Feature disabled
+		if (!KEYTIPS_ENABLED) return;
 		if (!altKeyHeld) return;
 
 		const handleKeyDown = (e: KeyboardEvent) => {
