@@ -10,7 +10,8 @@ import {
 	type TreeInstance,
 } from "@headless-tree/core";
 import { itemsAtom, selectedItemIdAtom } from "@/atoms/items";
-import { focusAreaAtom } from "@/atoms";
+import { focusAreaAtom, pane0TabsAtom, pane1TabsAtom, pane0ActiveTabAtom, pane1ActiveTabAtom, hoistedRootIdAtom } from "@/atoms";
+import { registerTreeViewCallbacks, unregisterTreeViewCallbacks } from "@/atoms/tree";
 import type { FlexibleItem } from "@/types/items";
 import { compareSortOrder } from "@/utils/sort-order";
 import {
@@ -21,6 +22,7 @@ import {
 	FolderOpen,
 	Folder,
 	Scissors,
+	ArrowUp,
 } from "lucide-react";
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import {
@@ -32,6 +34,7 @@ import {
 import { canBeChildOf } from "@/storage/hierarchy";
 import { RightClickMenu } from "@/components/right-click-menu";
 import type { TreeRightClickData } from "@/types/right-click-menu";
+
 
 /** Type alias for tree hotkey handlers */
 type TreeHotkeyHandler = (
@@ -166,6 +169,47 @@ const customArrowNavFeature: FeatureImplementation<FlexibleItem> = {
 };
 export function TreeView() {
 	const items = useAtomValue(itemsAtom);
+	const pane0Tabs = useAtomValue(pane0TabsAtom);
+	const pane1Tabs = useAtomValue(pane1TabsAtom);
+	
+	// Track which items are currently open in editor tabs
+	const openedItemIds = useMemo(() => {
+		const ids = new Set<string>();
+		for (const tab of [...pane0Tabs, ...pane1Tabs]) {
+			if (tab.viewData?.noteId) {
+				ids.add(tab.viewData.noteId);
+			}
+		}
+		return ids;
+	}, [pane0Tabs, pane1Tabs]);
+	
+	// Track currently active (visible) item in editor/view (can be note, section, or book)
+	const pane0ActiveTab = useAtomValue(pane0ActiveTabAtom);
+	const pane1ActiveTab = useAtomValue(pane1ActiveTabAtom);
+	const activeItemId = useMemo(() => {
+		// Find active tab in pane 0 (primary)
+		const activeInPane0 = pane0Tabs.find((t) => t.id === pane0ActiveTab);
+		if (activeInPane0?.viewData) {
+			// Check all possible item types
+			const itemId = activeInPane0.viewData.noteId || 
+			               activeInPane0.viewData.sectionId || 
+			               activeInPane0.viewData.bookId;
+			if (itemId) return itemId;
+		}
+		// Fallback to pane 1
+		const activeInPane1 = pane1Tabs.find((t) => t.id === pane1ActiveTab);
+		if (activeInPane1?.viewData) {
+			const itemId = activeInPane1.viewData.noteId || 
+			               activeInPane1.viewData.sectionId || 
+			               activeInPane1.viewData.bookId;
+			if (itemId) return itemId;
+		}
+		return null;
+	}, [pane0Tabs, pane1Tabs, pane0ActiveTab, pane1ActiveTab]);
+	
+	// Hoisted root for focusing on a subtree
+	const [hoistedRootId, setHoistedRootId] = useAtom(hoistedRootIdAtom);
+	
 	const setSelectedItemId = useSetAtom(selectedItemIdAtom);
 	const { openItemInTab } = useTabManagement();
 	const { moveItem, updateItemTitle, deleteItem } = useItems();
@@ -267,13 +311,19 @@ export function TreeView() {
 		return map;
 	}, [items, itemMap]);
 
-	// Find root items (items without parent_id or with null parent_id)
+	// Find root items - use hoisted root's children if hoisted, otherwise top-level items
 	const rootItemIds = useMemo(() => {
+		if (hoistedRootId) {
+			// When hoisted, show children of the hoisted item as root
+			const children = childrenMap.get(hoistedRootId) || [];
+			return children; // Already sorted by childrenMap
+		}
+		// Normal mode: show items without parent
 		return items
 			.filter((item) => !item.parent_id)
 			.sort((a, b) => compareSortOrder(a.sort_order, b.sort_order))
 			.map((item) => item.id);
-	}, [items]);
+	}, [items, hoistedRootId, childrenMap]);
 
 	// Create a version key based on parent relationships to force tree rebuild
 	const dataVersion = useMemo(() => {
@@ -797,6 +847,216 @@ export function TreeView() {
 		tree.rebuildTree();
 	}, [dataVersion, tree]);
 
+	// Rebuild tree when hoist state changes
+	useEffect(() => {
+		tree.rebuildTree();
+	}, [hoistedRootId, tree]);
+
+	// ============================================================================
+	// Reveal Active in Tree & Hoist Feature
+	// ============================================================================
+
+	/**
+	 * Build the chain of parent IDs from an item up to root
+	 */
+	const getParentChain = useCallback((itemId: string): string[] => {
+		const chain: string[] = [];
+		let currentId: string | null | undefined = itemId;
+		
+		while (currentId) {
+			const item = itemMap.get(currentId);
+			if (!item || !item.parent_id) break;
+			chain.push(item.parent_id);
+			currentId = item.parent_id;
+		}
+		return chain;
+	}, [itemMap]);
+
+	/**
+	 * Check if an item is within the currently hoisted subtree
+	 */
+	const isItemInHoistedScope = useCallback((itemId: string): boolean => {
+		if (!hoistedRootId) return true; // No hoist = everything is in scope
+		
+		// Check if itemId is the hoisted root or one of its descendants
+		let currentId: string | null | undefined = itemId;
+		while (currentId) {
+			if (currentId === hoistedRootId) return true;
+			const item = itemMap.get(currentId);
+			if (!item) break;
+			currentId = item.parent_id;
+		}
+		return false;
+	}, [hoistedRootId, itemMap]);
+
+	/**
+	 * Reveal the active item (note/section/book) in tree view:
+	 * 1. Clear hoist if item is outside hoisted scope
+	 * 2. Expand all parent folders
+	 * 3. Focus the item
+	 * 4. Scroll it into view
+	 */
+	const revealActiveInTree = useCallback(() => {
+		if (!activeItemId) {
+			return;
+		}
+		
+		// If hoisted and item is outside scope, unhoist first
+		if (hoistedRootId && !isItemInHoistedScope(activeItemId)) {
+			setHoistedRootId(null);
+		}
+		
+		// Get parent chain and expand all ancestors
+		const parentChain = getParentChain(activeItemId);
+		
+		// Update tree state to expand all ancestors
+		setTreeState((prev) => {
+			const currentExpanded = prev.expandedItems || [];
+			const newExpanded = [...new Set([...currentExpanded, ...parentChain])];
+			return { ...prev, expandedItems: newExpanded };
+		});
+
+		// Set focus to tree area
+		setFocusArea("tree");
+
+		// Focus the item after a short delay to allow tree to re-render with expanded parents
+		setTimeout(() => {
+			tree.rebuildTree();
+			
+			setTimeout(() => {
+				const visibleItems = tree.getItems();
+				const targetItem = visibleItems.find(
+					(i) => i.getItemMeta().itemId === activeItemId
+				);
+				if (targetItem) {
+					targetItem.setFocused();
+					tree.updateDomFocus();
+					// Scroll into view
+					requestAnimationFrame(() => {
+						const activeElement = document.activeElement;
+						if (activeElement && activeElement instanceof HTMLElement) {
+							activeElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+						}
+					});
+				}
+			}, 50);
+		}, 50);
+	}, [activeItemId, hoistedRootId, isItemInHoistedScope, setHoistedRootId, getParentChain, tree, setFocusArea]);
+
+	/**
+	 * Get the hoistable container for an item:
+	 * - For books/sections: return the item itself
+	 * - For notes: return the parent container (if any)
+	 */
+	const getHoistableContainer = useCallback((itemId: string): string | null => {
+		const item = itemMap.get(itemId);
+		if (!item) return null;
+		
+		if (item.type === "book" || item.type === "section") {
+			// Books and sections can be hoisted directly
+			return item.id;
+		}
+		// Notes: hoist their parent container
+		if (item.parent_id) {
+			return item.parent_id;
+		}
+		return null; // Note at root level, nothing to hoist
+	}, [itemMap]);
+
+	/**
+	 * Toggle hoist mode:
+	 * - If already hoisted: unhoist (return to normal view)
+	 * - If tree has focus: hoist the focused item's container
+	 * - If editor has focus: hoist the active item's container
+	 */
+	const toggleHoist = useCallback(() => {
+		if (hoistedRootId) {
+			// Unhoist - return to normal view
+			setHoistedRootId(null);
+			return;
+		}
+		
+		// Determine which item to hoist based on current focus
+		let itemToHoist: string | null = null;
+		
+		// Check if tree has focus
+		const treeContainer = document.querySelector('[data-tree-container="true"]');
+		const isTreeFocused = treeContainer?.contains(document.activeElement);
+		
+		if (isTreeFocused) {
+			// Use focused tree item
+			const focusedItem = tree.getFocusedItem();
+			if (focusedItem) {
+				const itemData = focusedItem.getItemData();
+				itemToHoist = getHoistableContainer(itemData.id);
+			}
+		} else {
+			// Use active item from editor/view
+			if (activeItemId) {
+				itemToHoist = getHoistableContainer(activeItemId);
+			}
+		}
+		
+		if (itemToHoist) {
+			setHoistedRootId(itemToHoist);
+			setFocusArea("tree");
+			// Focus first item in tree after hoisting
+			setTimeout(() => {
+				tree.rebuildTree();
+				setTimeout(() => {
+					const container = document.querySelector('[data-tree-container="true"]');
+					if (container) {
+						const firstItem = container.querySelector('button[role="treeitem"]') as HTMLElement | null;
+						if (firstItem) {
+							firstItem.focus();
+						}
+					}
+				}, 50);
+			}, 50);
+		}
+	}, [hoistedRootId, setHoistedRootId, tree, activeItemId, getHoistableContainer, setFocusArea]);
+
+	/**
+	 * Expand all folders in the tree
+	 */
+	const expandAll = useCallback(() => {
+		setTreeState((prev) => ({ ...prev, expandedItems: folderIds }));
+		// Delay rebuild to allow React to re-render with new state
+		setTimeout(() => {
+			tree.rebuildTree();
+		}, 0);
+	}, [folderIds, tree]);
+
+	/**
+	 * Collapse all folders in the tree
+	 */
+	const collapseAll = useCallback(() => {
+		setTreeState((prev) => ({ ...prev, expandedItems: [] }));
+		// Delay rebuild to allow React to re-render with new state
+		setTimeout(() => {
+			tree.rebuildTree();
+		}, 0);
+	}, [tree]);
+
+	// Register callbacks for global hotkey access
+	useEffect(() => {
+		registerTreeViewCallbacks({
+			revealActiveInTree,
+			toggleHoist,
+			expandAll,
+			collapseAll,
+		});
+		return () => {
+			unregisterTreeViewCallbacks();
+		};
+	}, [revealActiveInTree, toggleHoist, expandAll, collapseAll]);
+
+	// Get the hoisted item's name for display
+	const hoistedRootName = useMemo(() => {
+		if (!hoistedRootId) return null;
+		return itemMap.get(hoistedRootId)?.title || null;
+	}, [hoistedRootId, itemMap]);
+
 	const getItemIcon = (item: FlexibleItem, isExpanded: boolean) => {
 		switch (item.type) {
 			case "book":
@@ -825,11 +1085,6 @@ export function TreeView() {
 	if (items.length === 0) {
 		return (
 			<div className="w-full h-full flex flex-col">
-				<div className="flex items-center justify-between px-3 min-h-[40px] border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-					<h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-						Notes Tree
-					</h2>
-				</div>
 				<div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
 					<p className="text-sm">Loading items...</p>
 				</div>
@@ -839,21 +1094,27 @@ export function TreeView() {
 
 	return (
 		<div className="w-full h-full flex flex-col">
-			{/* Tree Header - matches tab bar height */}
-			<div className="flex items-center justify-between px-3 min-h-[40px] border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-				<h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-					Notes Tree
-				</h2>
-				<div className="text-xs text-gray-500 dark:text-gray-400">
-					{items.length} items
+			{/* Hoist indicator bar - shows when in hoist mode */}
+			{hoistedRootId && hoistedRootName && (
+				<div className="flex-shrink-0 px-2 py-1.5 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 flex items-center gap-2">
+					<span className="text-xs text-amber-700 dark:text-amber-400 flex-1 truncate">
+						Focused on: <strong>{hoistedRootName}</strong>
+					</span>
+					<button
+						type="button"
+						onClick={() => setHoistedRootId(null)}
+						className="p-1 hover:bg-amber-200 dark:hover:bg-amber-800 rounded transition-colors"
+						title="Exit focused view (Ctrl+H)"
+					>
+						<ArrowUp className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+					</button>
 				</div>
-			</div>
-
+			)}
 			{/* Tree Content - flex container to fill available space */}
 			<div className="flex-1 min-h-0 overflow-auto p-2 flex flex-col">
-				{/* Root drop zone - visible when dragging */}
+				{/* Root drop zone - subtle placeholder style */}
 				<div
-					className="flex-shrink-0 mb-2 p-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded text-center text-xs text-gray-500 dark:text-gray-400 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+					className="flex-shrink-0 mb-2 py-1.5 border border-dashed border-gray-200 dark:border-gray-700 rounded text-center text-[11px] text-gray-400 dark:text-gray-600 hover:border-blue-300 dark:hover:border-blue-700 hover:text-gray-500 dark:hover:text-gray-500 transition-colors"
 					onDragOver={(e) => {
 						e.preventDefault();
 						e.currentTarget.classList.add("border-blue-500", "bg-blue-100", "dark:bg-blue-900/40");
@@ -917,6 +1178,8 @@ export function TreeView() {
 						// Use library's isFocused which falls back to first item when focusedItem is null
 						const isFocused = item.isFocused?.() ?? false;
 						const isInClipboard = clipboardItemIds.includes(itemData.id);
+						const isOpenInEditor = openedItemIds.has(itemData.id);
+						const isActiveItem = itemData.id === activeItemId;
 
 						// Get the props from headless-tree (includes ALL handlers: drag, drop, etc.)
 						const itemProps = item.getProps();
@@ -987,6 +1250,17 @@ export function TreeView() {
 								<span className="flex-1 truncate text-xs text-gray-800 dark:text-gray-200">
 									{itemData.title}
 								</span>
+								{isActiveItem ? (
+									<span 
+										className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 ring-2 ring-blue-300 dark:ring-blue-400" 
+										title="Currently visible in editor"
+									/>
+								) : isOpenInEditor ? (
+									<span 
+										className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-gray-500 flex-shrink-0" 
+										title="Open in tab"
+									/>
+								) : null}
 								{clipboardItemIds.includes(itemData.id) && (
 									<Scissors className="w-3 h-3 text-orange-500 flex-shrink-0" />
 								)}
