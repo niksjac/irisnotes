@@ -30,3 +30,14 @@ export const toggleSearchSidebarAtom = atom(null, (get, set) => {
 	const currentMode = get(sidebarViewModeAtom);
 	set(sidebarViewModeAtom, currentMode === "search" ? "tree" : "search");
 });
+
+// Quick hotkeys modal (Ctrl+/)
+export const quickHotkeysOpenAtom = atom<boolean>(false);
+
+export const showQuickHotkeysAtom = atom(null, (_get, set) => {
+	set(quickHotkeysOpenAtom, true);
+});
+
+export const hideQuickHotkeysAtom = atom(null, (_get, set) => {
+	set(quickHotkeysOpenAtom, false);
+});

@@ -42,3 +42,6 @@ export * from "./actions";
 
 // Import search atoms
 export * from "./search";
+
+// Import editor stats atoms
+export * from "./editor-stats";
