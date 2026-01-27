@@ -24,7 +24,7 @@ export const TabContent: FC<TabContentProps> = ({ tab }) => {
 
 	return (
 		<div className="flex-1 flex flex-col overflow-hidden">
-			<View viewType={tab.viewType} viewData={tab.viewData} />
+			<View key={tab.id} viewType={tab.viewType} viewData={tab.viewData} />
 		</div>
 	);
 };
