@@ -50,11 +50,42 @@ const FONT_SIZE_SCALES = [
 ];
 
 const FONT_FAMILIES = [
+	// System defaults
 	{ label: "System Default", value: "system-ui, -apple-system, sans-serif" },
+	
+	// Sans-serif fonts
 	{ label: "Sans Serif", value: "Arial, Helvetica, sans-serif" },
-	{ label: "Serif", value: "Georgia, 'Times New Roman', serif" },
-	{ label: "Monospace", value: "'Courier New', Consolas, monospace" },
 	{ label: "Inter", value: "Inter, system-ui, sans-serif" },
+	{ label: "Roboto", value: "Roboto, Arial, sans-serif" },
+	{ label: "Open Sans", value: "'Open Sans', Arial, sans-serif" },
+	{ label: "Lato", value: "Lato, Arial, sans-serif" },
+	{ label: "Noto Sans", value: "'Noto Sans', Arial, sans-serif" },
+	{ label: "Ubuntu", value: "Ubuntu, Arial, sans-serif" },
+	{ label: "Segoe UI", value: "'Segoe UI', Tahoma, sans-serif" },
+	{ label: "Helvetica Neue", value: "'Helvetica Neue', Helvetica, Arial, sans-serif" },
+	
+	// Serif fonts
+	{ label: "Serif", value: "Georgia, 'Times New Roman', serif" },
+	{ label: "Times New Roman", value: "'Times New Roman', Times, serif" },
+	{ label: "Noto Serif", value: "'Noto Serif', Georgia, serif" },
+	{ label: "Merriweather", value: "Merriweather, Georgia, serif" },
+	{ label: "Playfair Display", value: "'Playfair Display', Georgia, serif" },
+	
+	// Monospace fonts
+	{ label: "Monospace", value: "'Courier New', Consolas, monospace" },
+	{ label: "JetBrains Mono", value: "'JetBrains Mono', 'Fira Code', monospace" },
+	{ label: "Fira Code", value: "'Fira Code', 'JetBrains Mono', monospace" },
+	{ label: "Source Code Pro", value: "'Source Code Pro', Consolas, monospace" },
+	{ label: "Consolas", value: "Consolas, 'Courier New', monospace" },
+	{ label: "JetBrainsMonoNL NF", value: "'JetBrainsMonoNL NF', 'JetBrains Mono', monospace" },
+	{ label: "Cascadia Code", value: "'Cascadia Code', Consolas, monospace" },
+	{ label: "Ubuntu Mono", value: "'Ubuntu Mono', 'Courier New', monospace" },
+	{ label: "Hack", value: "Hack, 'DejaVu Sans Mono', monospace" },
+	{ label: "DejaVu Sans Mono", value: "'DejaVu Sans Mono', Consolas, monospace" },
+	{ label: "Iosevka", value: "Iosevka, 'Fira Code', monospace" },
+	{ label: "Nerd Font Mono", value: "'JetBrainsMono Nerd Font', 'FiraCode Nerd Font', 'Hack Nerd Font', monospace" },
+	
+	// Display/Fun fonts  
 	{ label: "Comic Sans", value: "'Comic Sans MS', cursive" },
 ];
 
@@ -499,9 +530,19 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 			}
 		};
 
+		const handleEscapeKey = (event: KeyboardEvent) => {
+			if (event.key === "Escape") {
+				setShowColorPicker(null);
+			}
+		};
+
 		if (showColorPicker) {
 			document.addEventListener("mousedown", handleClickOutside);
-			return () => document.removeEventListener("mousedown", handleClickOutside);
+			document.addEventListener("keydown", handleEscapeKey);
+			return () => {
+				document.removeEventListener("mousedown", handleClickOutside);
+				document.removeEventListener("keydown", handleEscapeKey);
+			};
 		}
 
 		return undefined;
@@ -578,6 +619,7 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 	return (
 		<div
 			ref={toolbarRef}
+			data-editor-toolbar
 			className="relative flex items-center bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 min-w-0"
 		>
 			{/* Left scroll arrow */}
@@ -598,6 +640,32 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 				ref={scrollContainerRef}
 				className="flex items-center gap-1 px-2 py-1.5 overflow-x-auto flex-1 min-w-0"
 				style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+				onKeyDown={(e) => {
+					if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+						e.preventDefault();
+						const container = scrollContainerRef.current;
+						if (!container) return;
+						
+						// Get all focusable elements in toolbar
+						const focusables = container.querySelectorAll<HTMLElement>('button, input, [tabindex="0"]');
+						const currentIndex = Array.from(focusables).findIndex(el => el === document.activeElement);
+						
+						if (currentIndex === -1) return;
+						
+						let nextIndex: number;
+						if (e.key === "ArrowRight") {
+							nextIndex = (currentIndex + 1) % focusables.length;
+						} else {
+							nextIndex = (currentIndex - 1 + focusables.length) % focusables.length;
+						}
+						
+						focusables[nextIndex]?.focus();
+						focusables[nextIndex]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+					} else if (e.key === "Escape") {
+						// Return focus to editor on Escape
+						editorView?.focus();
+					}
+				}}
 			>
 				{allButtons.map((button, index) => {
 					const IconComponent = button.icon;
@@ -718,7 +786,7 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 				<button
 					type="button"
 					tabIndex={0}
-					className="relative w-8 h-8 flex items-center justify-center rounded transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+					className="relative flex-shrink-0 w-8 h-8 flex items-center justify-center rounded transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
 					onClick={clearCustomFormatting}
 					title="Clear Custom Formatting (Alt+R)"
 				>
@@ -785,10 +853,10 @@ interface FontDropdownProps {
 
 function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, altKeyHeld, keyTip, inputRef: externalInputRef }: FontDropdownProps) {
 	const [isOpen, setIsOpen] = useState(false);
-	const [inputValue, setInputValue] = useState("");
-	const [selectedIndex, setSelectedIndex] = useState(-1);
+	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
+	const dropdownRef = useRef<HTMLDivElement>(null);
 	const internalInputRef = useRef<HTMLInputElement>(null);
 	const inputRef = externalInputRef || internalInputRef;
 	const settings = useAtomValue(editorSettingsAtom);
@@ -815,54 +883,29 @@ function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, 
 		? Math.round(currentScale * baseFontSize) 
 		: baseFontSize;
 
-	// All available px sizes from scales
-	const allPxSizes = FONT_SIZE_SCALES.map((scale) => Math.round(scale * baseFontSize));
+	// All items: scales + reset option
+	const allItems = [...FONT_SIZE_SCALES, "reset"] as const;
+	const totalItems = allItems.length;
 
-	// Filter scales based on input - match px values that START with the input
-	const filteredScales = inputValue
-		? FONT_SIZE_SCALES.filter((scale) => {
-				const px = Math.round(scale * baseFontSize);
-				return px.toString().startsWith(inputValue);
-		  })
-		: FONT_SIZE_SCALES;
-
-	// Get autocomplete suggestion - the first matching size
-	const getAutocompleteSuggestion = (): string => {
-		if (!inputValue) return "";
-		// Find first px size that starts with input
-		const match = allPxSizes.find((px) => px.toString().startsWith(inputValue));
-		return match ? match.toString() : "";
-	};
-
-	const autocompleteSuggestion = getAutocompleteSuggestion();
-
-	// Apply a size value (px input converted to em)
-	const applySize = (pxValue: number) => {
-		const emValue = pxValue / baseFontSize;
-		applyMarkWithAttrs(schema.marks.fontSize, { size: `${emValue}em` });
-		setIsOpen(false);
-		setInputValue("");
-		editorView?.focus();
-	};
-
-	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		// Only allow numbers
-		const value = e.target.value.replace(/[^0-9]/g, "");
-		setInputValue(value);
-		setSelectedIndex(0);
-	};
+	// Scroll selected item into view
+	useEffect(() => {
+		if (isOpen && dropdownRef.current) {
+			const selectedEl = dropdownRef.current.querySelector(`[data-index="${selectedIndex}"]`);
+			selectedEl?.scrollIntoView({ block: "nearest" });
+		}
+	}, [isOpen, selectedIndex]);
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (!isOpen) {
-			if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+			if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter" || e.key === " ") {
 				setIsOpen(true);
-				setSelectedIndex(0);
+				// Find current scale in list or default to 0
+				const currentIdx = FONT_SIZE_SCALES.findIndex(s => Math.abs(s - (currentScale || 1)) < 0.01);
+				setSelectedIndex(currentIdx >= 0 ? currentIdx : 0);
 				e.preventDefault();
 			}
 			return;
 		}
-
-		const totalItems = filteredScales.length + 1; // +1 for reset option
 
 		switch (e.key) {
 			case "ArrowDown":
@@ -873,39 +916,22 @@ function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, 
 				e.preventDefault();
 				setSelectedIndex((prev) => Math.max(prev - 1, 0));
 				break;
-			case "Tab":
-				// Accept autocomplete suggestion
-				if (autocompleteSuggestion && autocompleteSuggestion !== inputValue) {
-					e.preventDefault();
-					setInputValue(autocompleteSuggestion);
-				}
-				break;
 			case "Enter":
+			case " ":
 				e.preventDefault();
-				// If there's an autocomplete suggestion, use it
-				const sizeToApply = autocompleteSuggestion || inputValue;
-				if (sizeToApply && !isNaN(parseInt(sizeToApply))) {
-					const px = parseInt(sizeToApply);
-					if (px >= 4 && px <= 200) {
-						applySize(px);
-						return;
-					}
-				}
-				// Otherwise select from filtered list
-				if (selectedIndex === filteredScales.length) {
+				if (selectedIndex === FONT_SIZE_SCALES.length) {
+					// Reset option
 					removeMark(schema.marks.fontSize);
-					setIsOpen(false);
-					setInputValue("");
-				} else if (selectedIndex >= 0 && selectedIndex < filteredScales.length) {
-					applyMarkWithAttrs(schema.marks.fontSize, { size: `${filteredScales[selectedIndex]}em` });
-					setIsOpen(false);
-					setInputValue("");
+				} else {
+					applyMarkWithAttrs(schema.marks.fontSize, { size: `${FONT_SIZE_SCALES[selectedIndex]}em` });
 				}
+				setIsOpen(false);
 				editorView?.focus();
 				break;
 			case "Escape":
+			case "Tab":
 				setIsOpen(false);
-				setInputValue("");
+				if (e.key === "Escape") e.preventDefault();
 				break;
 		}
 	};
@@ -915,7 +941,6 @@ function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, 
 		const handleClickOutside = (e: MouseEvent) => {
 			if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
 				setIsOpen(false);
-				setInputValue("");
 			}
 		};
 		if (isOpen) {
@@ -925,22 +950,11 @@ function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, 
 		return undefined;
 	}, [isOpen]);
 
-	// Focus input and reset selectedIndex when opened
-	useEffect(() => {
-		if (isOpen) {
-			inputRef.current?.focus();
-			setSelectedIndex(0); // Start with first item selected for keyboard navigation
-		}
-	}, [isOpen]);
-
-	// Calculate dropdown position when opening (for fixed positioning)
+	// Calculate dropdown position
 	useEffect(() => {
 		if (isOpen && containerRef.current) {
 			const rect = containerRef.current.getBoundingClientRect();
-			setDropdownPos({
-				top: rect.bottom + 4,
-				left: rect.left,
-			});
+			setDropdownPos({ top: rect.bottom + 4, left: rect.left });
 		} else {
 			setDropdownPos(null);
 		}
@@ -953,64 +967,39 @@ function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, 
 					{keyTip}
 				</span>
 			)}
-			<div
-				className={`flex items-center h-7 px-1 gap-0.5 rounded border bg-white dark:bg-gray-700 transition-colors min-w-[55px] ${
-					isOpen ? "border-blue-500" : "border-gray-300 dark:border-gray-600 hover:border-blue-500"
+			<button
+				ref={inputRef as React.RefObject<HTMLButtonElement>}
+				type="button"
+				className={`flex items-center h-7 px-2 gap-1 rounded border bg-white dark:bg-gray-700 transition-colors min-w-[60px] text-xs text-gray-700 dark:text-gray-300 ${
+					isOpen ? "border-blue-500 ring-1 ring-blue-500" : "border-gray-300 dark:border-gray-600 hover:border-blue-500"
 				}`}
-				onClick={() => !isOpen && setIsOpen(true)}
-				title={`Font Size (type or select, Tab to autocomplete)${keyTip ? ` (Alt+${keyTip})` : ""}`}
+				onClick={() => setIsOpen(!isOpen)}
+				onKeyDown={handleKeyDown}
+				title={`Font Size${keyTip ? ` (Alt+${keyTip})` : ""}`}
 			>
-				<div className="relative w-[36px] h-full">
-					{/* Autocomplete suggestion (shown behind input) */}
-					{isOpen && autocompleteSuggestion && autocompleteSuggestion !== inputValue && (
-						<span className="absolute inset-0 flex items-center justify-center text-xs text-gray-400 pointer-events-none">
-							{autocompleteSuggestion}
-						</span>
-					)}
-					<input
-						ref={inputRef}
-						type="text"
-						inputMode="numeric"
-						pattern="[0-9]*"
-						className="absolute inset-0 w-full h-full text-xs text-gray-700 dark:text-gray-300 bg-transparent outline-none text-center"
-						value={isOpen ? inputValue : displaySize.toString()}
-						placeholder={displaySize.toString()}
-						onChange={handleInputChange}
-						onFocus={() => setIsOpen(true)}
-						onKeyDown={handleKeyDown}
-					/>
-				</div>
-				<button
-					type="button"
-					tabIndex={-1}
-					className="p-0.5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-					onClick={(e) => {
-						e.stopPropagation();
-						setIsOpen(!isOpen);
-					}}
-				>
-					{isOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-				</button>
-			</div>
+				<span className="flex-1 text-center">{displaySize}</span>
+				{isOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+			</button>
 			{isOpen && dropdownPos && (
 				<div 
+					ref={dropdownRef}
 					className="fixed bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-lg z-[100] min-w-[90px] max-h-[200px] overflow-y-auto"
 					style={{ top: dropdownPos.top, left: dropdownPos.left }}
 				>
-					{filteredScales.map((scale, index) => {
+					{FONT_SIZE_SCALES.map((scale, index) => {
 						const effectivePx = Math.round(scale * baseFontSize);
-						const isSelected = currentScale !== null && Math.abs(currentScale - scale) < 0.01;
+						const isCurrentlySelected = currentScale !== null && Math.abs(currentScale - scale) < 0.01;
 						return (
 							<button
 								key={scale}
 								type="button"
+								data-index={index}
 								className={`w-full flex items-center justify-between px-2 py-1 text-xs text-gray-700 dark:text-gray-300 ${
 									selectedIndex === index ? "bg-blue-100 dark:bg-blue-900" : "hover:bg-gray-100 dark:hover:bg-gray-700"
-								} ${isSelected ? "font-semibold" : ""}`}
+								} ${isCurrentlySelected ? "font-semibold" : ""}`}
 								onClick={() => {
 									applyMarkWithAttrs(schema.marks.fontSize, { size: `${scale}em` });
 									setIsOpen(false);
-									setInputValue("");
 									editorView?.focus();
 								}}
 								onMouseEnter={() => setSelectedIndex(index)}
@@ -1022,16 +1011,16 @@ function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, 
 					})}
 					<button
 						type="button"
+						data-index={FONT_SIZE_SCALES.length}
 						className={`w-full text-[10px] text-gray-600 dark:text-gray-400 py-1.5 border-t border-gray-200 dark:border-gray-700 ${
-							selectedIndex === filteredScales.length ? "bg-blue-100 dark:bg-blue-900" : "hover:bg-gray-100 dark:hover:bg-gray-700"
+							selectedIndex === FONT_SIZE_SCALES.length ? "bg-blue-100 dark:bg-blue-900" : "hover:bg-gray-100 dark:hover:bg-gray-700"
 						}`}
 						onClick={() => {
 							removeMark(schema.marks.fontSize);
 							setIsOpen(false);
-							setInputValue("");
 							editorView?.focus();
 						}}
-						onMouseEnter={() => setSelectedIndex(filteredScales.length)}
+						onMouseEnter={() => setSelectedIndex(FONT_SIZE_SCALES.length)}
 					>
 						Reset ({baseFontSize})
 					</button>
@@ -1043,10 +1032,10 @@ function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, 
 
 function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, altKeyHeld, keyTip, inputRef: externalInputRef }: FontDropdownProps) {
 	const [isOpen, setIsOpen] = useState(false);
-	const [inputValue, setInputValue] = useState("");
-	const [selectedIndex, setSelectedIndex] = useState(-1);
+	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
+	const dropdownRef = useRef<HTMLDivElement>(null);
 	const internalInputRef = useRef<HTMLInputElement>(null);
 	const inputRef = externalInputRef || internalInputRef;
 
@@ -1063,49 +1052,27 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 	}, [editorView, schema]);
 
 	const currentFamily = getCurrentFontFamily();
+	const totalItems = FONT_FAMILIES.length + 1; // +1 for reset
 
-	// Filter families based on input - match labels that START with the input
-	const filteredFamilies = inputValue
-		? FONT_FAMILIES.filter((font) =>
-				font.label.toLowerCase().startsWith(inputValue.toLowerCase())
-		  )
-		: FONT_FAMILIES;
-
-	// Get autocomplete suggestion - the first matching font label
-	const getAutocompleteSuggestion = (): string => {
-		if (!inputValue) return "";
-		const match = FONT_FAMILIES.find((font) =>
-			font.label.toLowerCase().startsWith(inputValue.toLowerCase())
-		);
-		return match ? match.label : "";
-	};
-
-	const autocompleteSuggestion = getAutocompleteSuggestion();
-
-	// Apply a custom font family
-	const applyCustomFamily = (family: string) => {
-		applyMarkWithAttrs(schema.marks.fontFamily, { family });
-		setIsOpen(false);
-		setInputValue("");
-		editorView?.focus();
-	};
-
-	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setInputValue(e.target.value);
-		setSelectedIndex(0);
-	};
+	// Scroll selected item into view
+	useEffect(() => {
+		if (isOpen && dropdownRef.current) {
+			const selectedEl = dropdownRef.current.querySelector(`[data-index="${selectedIndex}"]`);
+			selectedEl?.scrollIntoView({ block: "nearest" });
+		}
+	}, [isOpen, selectedIndex]);
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (!isOpen) {
-			if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+			if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter" || e.key === " ") {
 				setIsOpen(true);
-				setSelectedIndex(0);
+				// Find current family in list or default to 0
+				const currentIdx = FONT_FAMILIES.findIndex(f => f.label === currentFamily);
+				setSelectedIndex(currentIdx >= 0 ? currentIdx : 0);
 				e.preventDefault();
 			}
 			return;
 		}
-
-		const totalItems = filteredFamilies.length + 1; // +1 for reset option
 
 		switch (e.key) {
 			case "ArrowDown":
@@ -1116,49 +1083,25 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 				e.preventDefault();
 				setSelectedIndex((prev) => Math.max(prev - 1, 0));
 				break;
-			case "Tab":
-				// Accept autocomplete suggestion
-				if (autocompleteSuggestion && autocompleteSuggestion.toLowerCase() !== inputValue.toLowerCase()) {
-					e.preventDefault();
-					setInputValue(autocompleteSuggestion);
-				}
-				break;
 			case "Enter":
+			case " ":
 				e.preventDefault();
-				// If there's an autocomplete match, use it
-				if (autocompleteSuggestion) {
-					const matchedFont = FONT_FAMILIES.find((f) => f.label === autocompleteSuggestion);
-					if (matchedFont) {
-						applyMarkWithAttrs(schema.marks.fontFamily, { family: matchedFont.value });
-						setIsOpen(false);
-						setInputValue("");
-						editorView?.focus();
-						return;
-					}
-				}
-				// If there's custom input that doesn't match, apply it as custom font
-				if (inputValue && filteredFamilies.length === 0) {
-					applyCustomFamily(inputValue);
-					return;
-				}
-				// If reset is selected
-				if (selectedIndex === filteredFamilies.length) {
+				if (selectedIndex === FONT_FAMILIES.length) {
+					// Reset option
 					removeMark(schema.marks.fontFamily);
-					setIsOpen(false);
-					setInputValue("");
-				} else if (selectedIndex >= 0 && selectedIndex < filteredFamilies.length) {
-					const selectedFont = filteredFamilies[selectedIndex];
+				} else if (selectedIndex >= 0 && selectedIndex < FONT_FAMILIES.length) {
+					const selectedFont = FONT_FAMILIES[selectedIndex];
 					if (selectedFont) {
 						applyMarkWithAttrs(schema.marks.fontFamily, { family: selectedFont.value });
 					}
-					setIsOpen(false);
-					setInputValue("");
 				}
+				setIsOpen(false);
 				editorView?.focus();
 				break;
 			case "Escape":
+			case "Tab":
 				setIsOpen(false);
-				setInputValue("");
+				if (e.key === "Escape") e.preventDefault();
 				break;
 		}
 	};
@@ -1168,7 +1111,6 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 		const handleClickOutside = (e: MouseEvent) => {
 			if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
 				setIsOpen(false);
-				setInputValue("");
 			}
 		};
 		if (isOpen) {
@@ -1178,22 +1120,11 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 		return undefined;
 	}, [isOpen]);
 
-	// Focus input and reset selectedIndex when opened
-	useEffect(() => {
-		if (isOpen) {
-			inputRef.current?.focus();
-			setSelectedIndex(0); // Start with first item selected for keyboard navigation
-		}
-	}, [isOpen]);
-
-	// Calculate dropdown position when opening (for fixed positioning)
+	// Calculate dropdown position
 	useEffect(() => {
 		if (isOpen && containerRef.current) {
 			const rect = containerRef.current.getBoundingClientRect();
-			setDropdownPos({
-				top: rect.bottom + 4,
-				left: rect.left,
-			});
+			setDropdownPos({ top: rect.bottom + 4, left: rect.left });
 		} else {
 			setDropdownPos(null);
 		}
@@ -1206,65 +1137,30 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 					{keyTip}
 				</span>
 			)}
-			<div
-				className={`flex items-center h-7 px-1 gap-0.5 rounded border bg-white dark:bg-gray-700 transition-colors ${
-					isOpen ? "border-blue-500" : "border-gray-300 dark:border-gray-600 hover:border-blue-500"
+			<button
+				ref={inputRef as React.RefObject<HTMLButtonElement>}
+				type="button"
+				className={`flex items-center h-7 px-2 gap-1 rounded border bg-white dark:bg-gray-700 transition-colors min-w-[100px] max-w-[140px] text-xs text-gray-700 dark:text-gray-300 ${
+					isOpen ? "border-blue-500 ring-1 ring-blue-500" : "border-gray-300 dark:border-gray-600 hover:border-blue-500"
 				}`}
-				onClick={() => !isOpen && setIsOpen(true)}
-				title={`Font Family (type or select, Tab to autocomplete)${keyTip ? ` (Alt+${keyTip})` : ""}`}
+				onClick={() => setIsOpen(!isOpen)}
+				onKeyDown={handleKeyDown}
+				title={`Font Family${keyTip ? ` (Alt+${keyTip})` : ""}`}
 			>
-				<div className="relative h-full">
-					{/* Hidden text to calculate width */}
-					<span className="invisible text-xs px-1 whitespace-nowrap">
-						{isOpen ? (inputValue || currentFamily) : currentFamily}
-					</span>
-					{/* Autocomplete suggestion (shown behind input) */}
-					{isOpen && autocompleteSuggestion && autocompleteSuggestion.toLowerCase() !== inputValue.toLowerCase() && (
-						<span className="absolute inset-0 flex items-center text-xs text-gray-400 pointer-events-none px-1 truncate">
-							{autocompleteSuggestion}
-						</span>
-					)}
-					<input
-						ref={inputRef}
-						type="text"
-						className="absolute inset-0 w-full h-full text-xs text-gray-700 dark:text-gray-300 bg-transparent outline-none px-1"
-						value={isOpen ? inputValue : currentFamily}
-						placeholder={currentFamily}
-						onChange={handleInputChange}
-						onFocus={() => setIsOpen(true)}
-						onKeyDown={handleKeyDown}
-					/>
-				</div>
-				<button
-					type="button"
-					tabIndex={-1}
-					className="flex-shrink-0 p-0.5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-					onClick={(e) => {
-						e.stopPropagation();
-						setIsOpen(!isOpen);
-					}}
-				>
-					{isOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-				</button>
-			</div>
+				<span className="flex-1 text-left truncate">{currentFamily}</span>
+				{isOpen ? <ChevronUp size={12} className="flex-shrink-0" /> : <ChevronDown size={12} className="flex-shrink-0" />}
+			</button>
 			{isOpen && dropdownPos && (
 				<div 
+					ref={dropdownRef}
 					className="fixed bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-lg z-[100] min-w-[140px] max-h-[200px] overflow-y-auto"
 					style={{ top: dropdownPos.top, left: dropdownPos.left }}
 				>
-					{filteredFamilies.length === 0 && inputValue && (
-						<button
-							type="button"
-							className="w-full flex items-center px-2 py-1.5 text-xs text-gray-700 dark:text-gray-300 bg-blue-100 dark:bg-blue-900"
-							onClick={() => applyCustomFamily(inputValue)}
-						>
-							Use "{inputValue}"
-						</button>
-					)}
-					{filteredFamilies.map((font, index) => (
+					{FONT_FAMILIES.map((font, index) => (
 						<button
 							key={font.value}
 							type="button"
+							data-index={index}
 							className={`w-full flex items-center px-2 py-1 text-xs text-gray-700 dark:text-gray-300 ${
 								selectedIndex === index ? "bg-blue-100 dark:bg-blue-900" : "hover:bg-gray-100 dark:hover:bg-gray-700"
 							} ${currentFamily === font.label ? "font-semibold" : ""}`}
@@ -1272,7 +1168,6 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 							onClick={() => {
 								applyMarkWithAttrs(schema.marks.fontFamily, { family: font.value });
 								setIsOpen(false);
-								setInputValue("");
 								editorView?.focus();
 							}}
 							onMouseEnter={() => setSelectedIndex(index)}
@@ -1282,16 +1177,16 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 					))}
 					<button
 						type="button"
+						data-index={FONT_FAMILIES.length}
 						className={`w-full text-[10px] text-gray-600 dark:text-gray-400 py-1.5 border-t border-gray-200 dark:border-gray-700 ${
-							selectedIndex === filteredFamilies.length ? "bg-blue-100 dark:bg-blue-900" : "hover:bg-gray-100 dark:hover:bg-gray-700"
+							selectedIndex === FONT_FAMILIES.length ? "bg-blue-100 dark:bg-blue-900" : "hover:bg-gray-100 dark:hover:bg-gray-700"
 						}`}
 						onClick={() => {
 							removeMark(schema.marks.fontFamily);
 							setIsOpen(false);
-							setInputValue("");
 							editorView?.focus();
 						}}
-						onMouseEnter={() => setSelectedIndex(filteredFamilies.length)}
+						onMouseEnter={() => setSelectedIndex(FONT_FAMILIES.length)}
 					>
 						Reset to default
 					</button>
