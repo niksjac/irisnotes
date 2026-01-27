@@ -214,3 +214,47 @@ select option {
  * The application relies on Tailwind's built-in color, spacing, and typography scales
  * rather than custom variables for maximum compatibility and performance.
  */
+
+/* CodeMirror selection highlight - ensure visible selection in code blocks */
+/* Use high specificity to override oneDark theme */
+.cm-editor .cm-selectionBackground,
+.cm-editor .cm-content .cm-selectionBackground,
+.cm-editor.cm-focused .cm-selectionLayer .cm-selectionBackground {
+  background-color: rgba(59, 130, 246, 0.3) !important; /* blue-500 with 30% opacity */
+}
+
+.cm-editor.cm-focused .cm-selectionBackground,
+.cm-editor.cm-focused .cm-content .cm-selectionBackground {
+  background-color: rgba(59, 130, 246, 0.4) !important; /* slightly stronger when focused */
+}
+
+.dark .cm-editor .cm-selectionBackground,
+.dark .cm-editor .cm-content .cm-selectionBackground,
+.dark .cm-editor.cm-focused .cm-selectionLayer .cm-selectionBackground {
+  background-color: rgba(96, 165, 250, 0.35) !important; /* blue-400 for dark mode */
+}
+
+.dark .cm-editor.cm-focused .cm-selectionBackground,
+.dark .cm-editor.cm-focused .cm-content .cm-selectionBackground {
+  background-color: rgba(96, 165, 250, 0.5) !important;
+}
+
+/* Also style the native selection as fallback */
+.cm-editor .cm-line::selection,
+.cm-editor .cm-line *::selection {
+  background-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+.dark .cm-editor .cm-line::selection,
+.dark .cm-editor .cm-line *::selection {
+  background-color: rgba(96, 165, 250, 0.35) !important;
+}
+
+/* CodeMirror cursor visibility */
+.cm-editor .cm-cursor {
+  border-left-color: #3b82f6 !important; /* blue-500 */
+}
+
+.dark .cm-editor .cm-cursor {
+  border-left-color: #60a5fa !important; /* blue-400 */
+}
