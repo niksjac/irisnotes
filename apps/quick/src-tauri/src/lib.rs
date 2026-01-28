@@ -40,18 +40,36 @@ impl DbState {
 
 // Get the database path (same as main IrisNotes app)
 fn get_database_path() -> PathBuf {
-    // In development, use the dev database with absolute path
+    // In development, use the dev database from monorepo root
     #[cfg(debug_assertions)]
     {
-        // Use absolute path to irisnotes dev database
-        let home = dirs::home_dir().unwrap_or_default();
-        let dev_path = home.join("repos/irisnotes/dev/notes.db");
+        // Find monorepo root by looking for pnpm-workspace.yaml
+        let exe_path = std::env::current_exe().ok();
+        let mut project_root = exe_path
+            .and_then(|p| p.parent().map(|p| p.to_path_buf()))
+            .unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+
+        // Navigate up to find monorepo root
+        loop {
+            if project_root.join("pnpm-workspace.yaml").exists() {
+                break;
+            }
+            if !project_root.pop() {
+                // Fallback: try home directory path
+                let home = dirs::home_dir().unwrap_or_default();
+                project_root = home.join("repos/irisnotes");
+                break;
+            }
+        }
+
+        let dev_path = project_root.join("dev/notes.db");
         if dev_path.exists() {
             eprintln!("Using dev database at: {:?}", dev_path);
             return dev_path;
         }
-        // Try XDG data dir
-        let data_path = dirs::data_dir()
+        
+        // Fallback to config dir
+        let data_path = dirs::config_dir()
             .unwrap_or_else(|| PathBuf::from("."))
             .join("irisnotes")
             .join("notes.db");
@@ -61,7 +79,8 @@ fn get_database_path() -> PathBuf {
 
     #[cfg(not(debug_assertions))]
     {
-        dirs::data_dir()
+        // Production: use config dir (same as main app)
+        dirs::config_dir()
             .unwrap_or_else(|| PathBuf::from("."))
             .join("irisnotes")
             .join("notes.db")

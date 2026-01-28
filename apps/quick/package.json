@@ -4,8 +4,10 @@
   "description": "Quick Search overlay for IrisNotes",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 3333",
-    "build": "tsc && vite build",
+    "dev": "tauri dev",
+    "dev:frontend": "vite --port 3333",
+    "build": "tauri build",
+    "build:frontend": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri"
   },

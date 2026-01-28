@@ -4,10 +4,10 @@
   "identifier": "com.irisnotes.quick",
   "version": "0.1.0",
   "build": {
-    "beforeDevCommand": "pnpm dev",
+    "beforeDevCommand": "pnpm run dev:frontend",
     "devUrl": "http://localhost:3333",
-    "beforeBuildCommand": "pnpm build",
-    "frontendDist": "../build"
+    "beforeBuildCommand": "pnpm run build:frontend",
+    "frontendDist": "../dist"
   },
   "app": {
     "withGlobalTauri": true,

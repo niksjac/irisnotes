@@ -21,9 +21,11 @@ fn get_config_dir(_app_handle: &AppHandle) -> Result<PathBuf, String> {
             .ok_or("Failed to get exe parent")?
             .to_path_buf();
 
-        // Navigate up to find project root (where package.json exists)
+        // Navigate up to find monorepo root (where pnpm-workspace.yaml exists)
+        // We use pnpm-workspace.yaml instead of package.json because apps/main 
+        // also has a package.json
         loop {
-            if project_root.join("package.json").exists() {
+            if project_root.join("pnpm-workspace.yaml").exists() {
                 break;
             }
             if !project_root.pop() {
@@ -68,9 +70,11 @@ fn get_data_dir(_app_handle: &AppHandle) -> Result<PathBuf, String> {
             .ok_or("Failed to get exe parent")?
             .to_path_buf();
 
-        // Navigate up to find project root (where package.json exists)
+        // Navigate up to find monorepo root (where pnpm-workspace.yaml exists)
+        // We use pnpm-workspace.yaml instead of package.json because apps/main 
+        // also has a package.json
         loop {
-            if project_root.join("package.json").exists() {
+            if project_root.join("pnpm-workspace.yaml").exists() {
                 break;
             }
             if !project_root.pop() {

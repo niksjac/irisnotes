@@ -1,11 +1,13 @@
 {
-	"name": "tauri-app",
+	"name": "irisnotes-main",
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",
 	"scripts": {
-		"dev": "vite",
-		"build": "tsc && vite build",
+		"dev": "tauri dev",
+		"dev:frontend": "vite",
+		"build": "tauri build",
+		"build:frontend": "tsc && vite build",
 		"preview": "vite preview",
 		"tauri": "tauri",
 		"type-check": "tsc --noEmit",

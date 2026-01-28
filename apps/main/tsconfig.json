@@ -25,7 +25,7 @@
 			"@/types": ["src/types"],
 			"@/storage": ["src/storage"],
 			"@/styles": ["src/styles"],
-			"@schema/*": ["schema/*"]
+			"@schema/*": ["../../schema/*"]
 		},
 
 		/* Development experience */
