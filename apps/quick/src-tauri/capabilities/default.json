@@ -1,0 +1,16 @@
+{
+  "$schema": "https://schemas.tauri.app/config/2/capability",
+  "identifier": "default",
+  "description": "Default capability for IrisNotes Quick Search",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-set-focus",
+    "core:window:allow-is-visible",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister",
+    "shell:allow-open"
+  ]
+}
