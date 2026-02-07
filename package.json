@@ -4,12 +4,18 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "dev": "concurrently -n main,quick -c blue,magenta \"pnpm main\" \"pnpm quick\"",
     "main": "pnpm -C apps/main tauri dev",
     "quick": "pnpm -C apps/quick tauri dev",
+    "build": "pnpm build:main && pnpm build:quick",
     "build:main": "pnpm -C apps/main tauri build",
     "build:quick": "pnpm -C apps/quick tauri build",
+    "cli": "cargo run --manifest-path apps/main/src-tauri/Cargo.toml --",
     "type-check": "pnpm -C apps/main run type-check",
     "test": "pnpm -C apps/main run test",
     "test:e2e": "pnpm -C apps/main run test:e2e"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }
