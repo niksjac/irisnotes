@@ -56,6 +56,7 @@ export interface HotkeyMapping {
 	toggleEditorView: HotkeyConfig;
 	toggleLineWrapping: HotkeyConfig;
 	toggleToolbar: HotkeyConfig;
+	toggleTitleBar: HotkeyConfig;
 
 	// Sidebar resizing hotkeys
 	sidebarResizeLeft: HotkeyConfig;
@@ -187,6 +188,7 @@ export interface AppHotkeysProps {
 	onToggleEditorView?: () => void;
 	onToggleLineWrapping?: () => void;
 	onToggleToolbar?: () => void;
+	onToggleTitleBar?: () => void;
 	onIncreaseFontSize?: () => void;
 	onDecreaseFontSize?: () => void;
 
@@ -230,6 +232,7 @@ export interface AppConfig {
 	editor: {
 		lineWrapping: boolean;
 		toolbarVisible: boolean;
+		titleBarVisible?: boolean;
 	};
 	debug: {
 		enableExampleNote: boolean;

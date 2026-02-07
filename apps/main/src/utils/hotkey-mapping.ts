@@ -39,6 +39,7 @@ export function mapHotkeyHandlers(
 		toggleEditorView: () => void;
 		toggleLineWrapping: () => void;
 		toggleToolbar: () => void;
+		toggleTitleBar: () => void;
 		toggleActivityBarExpanded: () => void;
 		toggleTabBar: () => void;
 		increaseFontSize: () => void;
@@ -225,6 +226,7 @@ export function mapHotkeyHandlers(
 		onToggleEditorView: handlers.toggleEditorView,
 		onToggleLineWrapping: handlers.toggleLineWrapping,
 		onToggleToolbar: handlers.toggleToolbar,
+		onToggleTitleBar: handlers.toggleTitleBar,
 		onIncreaseFontSize: handlers.increaseFontSize,
 		onDecreaseFontSize: handlers.decreaseFontSize,
 		// Views hotkeys

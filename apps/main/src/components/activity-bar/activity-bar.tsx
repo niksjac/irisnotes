@@ -57,7 +57,7 @@ export function ActivityBar() {
 		);
 	}, [pane0Tabs, pane1Tabs, pane0ActiveTab, pane1ActiveTab]);
 
-	const { toolbarVisible, toggleToolbar } = useEditorLayout();
+	const { toolbarVisible, toggleToolbar, titleBarVisible, toggleTitleBar } = useEditorLayout();
 	const { isWrapping, toggleLineWrapping } = useLineWrapping();
 	const { darkMode, toggleDarkMode } = useTheme();
 	const [paneState, setPaneState] = useAtom(paneStateAtom);
@@ -76,10 +76,11 @@ export function ActivityBar() {
 		{ key: "3", action: openHotkeysTab, label: "Hotkeys" },
 		{ key: "4", action: togglePaneMode, label: "Toggle Pane" },
 		{ key: "5", action: toggleToolbar, label: "Toolbar" },
-		{ key: "6", action: toggleLineWrapping, label: "Wrap" },
-		{ key: "7", action: toggleDarkMode, label: "Theme" },
+		{ key: "6", action: toggleTitleBar, label: "Title Bar" },
+		{ key: "7", action: toggleLineWrapping, label: "Wrap" },
+		{ key: "8", action: toggleDarkMode, label: "Theme" },
 		{ key: "e", action: toggleActivityBarExpanded, label: "Expand/Collapse" },
-	], [toggleSidebar, openSettingsTab, openHotkeysTab, togglePaneMode, toggleToolbar, toggleLineWrapping, toggleDarkMode, toggleActivityBarExpanded]);
+	], [toggleSidebar, openSettingsTab, openHotkeysTab, togglePaneMode, toggleToolbar, toggleTitleBar, toggleLineWrapping, toggleDarkMode, toggleActivityBarExpanded]);
 
 	// Use the KeyTip system for Alt+key shortcuts
 	const { altKeyHeld } = useKeyTipActions(keyTipActions);
@@ -231,13 +232,24 @@ export function ActivityBar() {
 				/>
 
 				<ActivityBarButton
+					icon={titleBarVisible ? Icons.Heading : Icons.HeadingIcon}
+					isActive={titleBarVisible}
+					onClick={toggleTitleBar}
+					title={`${titleBarVisible ? "Hide" : "Show"} title bar (Alt+6)`}
+					label="Title Bar"
+					expanded={activityBarExpanded}
+					keyTip="6"
+					showKeyTip={altKeyHeld}
+				/>
+
+				<ActivityBarButton
 					icon={isWrapping ? Icons.WrapText : Icons.ArrowRight}
 					isActive={isWrapping}
 					onClick={toggleLineWrapping}
-					title={`${isWrapping ? "Disable" : "Enable"} line wrapping (Alt+6)`}
+					title={`${isWrapping ? "Disable" : "Enable"} line wrapping (Alt+7)`}
 					label="Wrap Text"
 					expanded={activityBarExpanded}
-					keyTip="6"
+					keyTip="7"
 					showKeyTip={altKeyHeld}
 				/>
 
@@ -245,10 +257,10 @@ export function ActivityBar() {
 					icon={darkMode ? Icons.Sun : Icons.Moon}
 					isActive={false}
 					onClick={toggleDarkMode}
-					title={`Switch to ${darkMode ? "light" : "dark"} mode (Alt+7)`}
+					title={`Switch to ${darkMode ? "light" : "dark"} mode (Alt+8)`}
 					label={darkMode ? "Light Mode" : "Dark Mode"}
 					expanded={activityBarExpanded}
-					keyTip="7"
+					keyTip="8"
 					showKeyTip={altKeyHeld}
 				/>
 			</div>

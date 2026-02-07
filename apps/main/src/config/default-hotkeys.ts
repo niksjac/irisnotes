@@ -84,6 +84,12 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		category: "Editor",
 		global: true,
 	},
+	toggleTitleBar: {
+		key: "f8",
+		description: "Toggle Note Title Bar",
+		category: "Editor",
+		global: true,
+	},
 	increaseFontSize: {
 		key: "ctrl+alt+up",
 		description: "Increase Editor Font Size",

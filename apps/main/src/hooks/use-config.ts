@@ -22,6 +22,7 @@ const DEFAULT_CONFIG: AppConfig = {
 	editor: {
 		lineWrapping: false,
 		toolbarVisible: true,
+		titleBarVisible: true,
 	},
 	debug: {
 		enableExampleNote: false,

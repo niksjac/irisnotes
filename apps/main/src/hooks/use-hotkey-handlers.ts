@@ -50,7 +50,7 @@ import { useView } from "./use-view";
 export function useHotkeyHandlers() {
 	const { toggleEditorView } = useEditorViewToggle();
 	const { toggleLineWrapping } = useLineWrapping();
-	const { toggleToolbar } = useEditorLayout();
+	const { toggleToolbar, toggleTitleBar } = useEditorLayout();
 	const { createNoteInRoot, openLocationDialog } = useNoteActions();
 	const { toggleActivityBarExpanded } = useView();
 	// Tab actions
@@ -140,6 +140,7 @@ export function useHotkeyHandlers() {
 		toggleEditorView,
 		toggleLineWrapping,
 		toggleToolbar,
+		toggleTitleBar,
 
 		// Activity bar
 		toggleActivityBarExpanded,

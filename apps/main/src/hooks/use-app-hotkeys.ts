@@ -219,6 +219,11 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHotkeyOptions(hotkeyMapping.toggleToolbar.global)
 	);
 	useHotkeys(
+		hotkeyMapping.toggleTitleBar.key,
+		createHandler(handlers.onToggleTitleBar),
+		createHotkeyOptions(hotkeyMapping.toggleTitleBar.global)
+	);
+	useHotkeys(
 		hotkeyMapping.increaseFontSize.key,
 		createHandler(handlers.onIncreaseFontSize),
 		createHotkeyOptions(hotkeyMapping.increaseFontSize.global)

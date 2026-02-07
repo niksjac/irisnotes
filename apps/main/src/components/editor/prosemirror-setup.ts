@@ -22,6 +22,7 @@ import { tightSelectionPlugin } from "./plugins/tight-selection";
 import { customCursorPlugin } from "./plugins/custom-cursor";
 import { activeLinePlugin } from "./plugins/active-line";
 import { lineCommandsKeymap } from "./plugins/line-commands";
+import { searchPlugin } from "./plugins/search";
 
 /**
  * Toggle list command - wraps in list if not in one, or lifts out if already in one
@@ -248,6 +249,9 @@ export function customSetup(options: SetupOptions): Plugin[] {
 
 	// Auto-link URLs as you type + Ctrl+Click/Ctrl+Enter to open
 	plugins.push(...autolinkPlugin(options.schema));
+
+	// Search plugin for Ctrl+F find in note
+	plugins.push(searchPlugin());
 
 	// Custom keybindings for extended marks
 	const customKeybindings: { [key: string]: any } = {
