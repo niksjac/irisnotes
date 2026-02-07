@@ -1,6 +1,6 @@
 [package]
 name = "irisnotes"
-version = "0.1.0"
+version = "1.0.0"
 description = "A modern note-taking application inspired by Trilium Notes"
 authors = ["you"]
 edition = "2021"
@@ -31,5 +31,10 @@ tauri-plugin-clipboard-manager = "2.3"
 tauri-plugin-notification = "2.3"
 tauri-plugin-window-state = "2.4"
 tauri-plugin-global-shortcut = "2.3"
+tauri-plugin-single-instance = "2"
 toml = "0.8"
+# CLI dependencies
+clap = { version = "4", features = ["derive"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+colored = "2"
 
