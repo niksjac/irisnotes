@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# IrisNotes CLI wrapper script
+# Usage: ./iris <command> [args]
+# 
+# This script allows running the CLI without installing it globally.
+# For global installation, you can symlink this to /usr/local/bin/iris
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec bun run "$SCRIPT_DIR/src/index.ts" "$@"

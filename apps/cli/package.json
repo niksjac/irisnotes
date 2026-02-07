@@ -1,0 +1,20 @@
+{
+  "name": "irisnotes-cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "iris": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "type-check": "bun run --bun tsc --noEmit"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.2"
+  }
+}
