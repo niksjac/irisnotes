@@ -35,6 +35,9 @@ export const PROSEMIRROR_HOTKEYS: EditorHotkeyConfig[] = [
 	{ key: "Ctrl+Shift+.", description: "Blockquote", category: "Blocks" },
 	{ key: "Ctrl+Shift+C", description: "Code Block", category: "Blocks" },
 
+	// Search
+	{ key: "Ctrl+F", description: "Find in Note", category: "Search" },
+
 	// Line operations
 	{ key: "Alt+↑", description: "Move Line Up", category: "Line Operations" },
 	{ key: "Alt+↓", description: "Move Line Down", category: "Line Operations" },

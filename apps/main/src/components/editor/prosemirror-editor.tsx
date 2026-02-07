@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { EditorState, TextSelection, Selection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { DOMParser, DOMSerializer } from "prosemirror-model";
@@ -8,6 +8,7 @@ import { editorCursorPositionStore } from "@/hooks/use-editor-view-toggle";
 import { editorStatsAtom } from "@/atoms/editor-stats";
 import { customSetup } from "./prosemirror-setup";
 import { EditorToolbar } from "./editor-toolbar";
+import { SearchBar } from "./search-bar";
 import { CodeBlockView } from "./codemirror-nodeview";
 import { editorSchema } from "./schema";
 import "prosemirror-view/style/prosemirror.css";
@@ -40,6 +41,16 @@ export function ProseMirrorEditor({
 	const { isWrapping } = useLineWrapping();
 	const setEditorStats = useSetAtom(editorStatsAtom);
 	const setEditorStatsRef = useRef(setEditorStats);
+	const [showSearch, setShowSearch] = useState(false);
+
+	// Handle Ctrl+F to open search
+	const handleSearchOpen = useCallback(() => {
+		setShowSearch(true);
+	}, []);
+
+	const handleSearchClose = useCallback(() => {
+		setShowSearch(false);
+	}, []);
 
 	// Keep refs up to date
 	useEffect(() => {
@@ -185,6 +196,16 @@ export function ProseMirrorEditor({
 			setTimeout(() => view.focus(), 0);
 		}
 
+		// Handle Ctrl+F for search
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+				e.preventDefault();
+				e.stopPropagation();
+				handleSearchOpen();
+			}
+		};
+		view.dom.addEventListener("keydown", handleKeyDown);
+
 		return () => {
 			// Save cursor position before unmounting
 			if (viewRef.current) {
@@ -192,6 +213,7 @@ export function ProseMirrorEditor({
 					viewRef.current.state.selection.from
 				);
 			}
+			view.dom.removeEventListener("keydown", handleKeyDown);
 			view.destroy();
 			viewRef.current = null;
 		};
@@ -259,8 +281,11 @@ export function ProseMirrorEditor({
 
 	return (
 		<div
-			className="h-full w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col overflow-visible"
+			className="h-full w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col overflow-visible relative"
 		>
+			{showSearch && (
+				<SearchBar view={viewRef.current} onClose={handleSearchClose} />
+			)}
 			{toolbarVisible && (
 				<EditorToolbar editorView={viewRef.current} schema={mySchema} />
 			)}
