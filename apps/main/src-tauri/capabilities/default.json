@@ -10,6 +10,8 @@
     "core:path:default",
     "window-state:default",
     "notification:default",
+    "clipboard-manager:default",
+    "clipboard-manager:allow-write-text",
     "fs:allow-read-text-file",
     "fs:allow-write-text-file",
     "fs:allow-read-dir",

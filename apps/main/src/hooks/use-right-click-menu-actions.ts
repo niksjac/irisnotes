@@ -10,7 +10,9 @@ import {
 	FolderOpen,
 	PanelLeft,
 	PanelRight,
+	Hash,
 } from "lucide-react";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import type {
 	MenuGroup,
 	TreeRightClickData,
@@ -218,6 +220,19 @@ export function useRightClickMenuActions({
 							// TODO: Implement duplicate functionality
 						},
 						disabled: !isNote, // Only enable for notes initially
+					},
+					{
+						id: "copy-id",
+						label: "Copy ID",
+						icon: Hash,
+						action: async () => {
+							try {
+								await writeText(data.nodeId);
+							} catch {
+								// Fallback for web/non-Tauri
+								navigator.clipboard.writeText(data.nodeId);
+							}
+						},
 					},
 				],
 			});
