@@ -1,6 +1,6 @@
 import { useCallback } from "react";
-import { useAtom, useSetAtom } from "jotai";
-import { sidebarCollapsed, activityBarVisible, sidebarWidth } from "@/atoms";
+import { useAtom } from "jotai";
+import { sidebarCollapsed, activityBarVisible } from "@/atoms";
 import { useAppPersistence } from "./use-app-persistence";
 import { useLayoutPersistence } from "./use-layout-persistence";
 
@@ -8,7 +8,6 @@ export const useLayout = () => {
 	// Sidebar state (atoms are initialized from localStorage at definition time)
 	const [sidebarCollapsedValue, setSidebarCollapsed] =
 		useAtom(sidebarCollapsed);
-	const setSidebarWidth = useSetAtom(sidebarWidth);
 
 	// View state
 	const [activityBarVisibleValue, setActivityBarVisible] =
