@@ -2,12 +2,12 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "IrisNotes Quick",
   "identifier": "com.irisnotes.quick",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "build": {
     "beforeDevCommand": "pnpm run dev:frontend",
     "devUrl": "http://localhost:3333",
     "beforeBuildCommand": "pnpm run build:frontend",
-    "frontendDist": "../dist"
+    "frontendDist": "../build"
   },
   "app": {
     "withGlobalTauri": true,
@@ -19,7 +19,7 @@
       {
         "title": "IrisNotes Quick Search",
         "label": "main",
-        "width": 600,
+        "width": 1100,
         "height": 450,
         "center": true,
         "resizable": false,
@@ -34,7 +34,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["deb", "rpm", "dmg", "nsis"],
     "icon": ["icons/icon.png"]
   },
   "plugins": {}
