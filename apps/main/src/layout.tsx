@@ -24,6 +24,7 @@ import {
 	useNoteActions,
 	useEditorSettings,
 	useKeyTips,
+	useQuickAppListener,
 } from "@/hooks";
 import { mapHotkeyHandlers } from "@/utils/hotkey-mapping";
 import {
@@ -48,6 +49,9 @@ export const Layout: React.FC = () => {
 
 	// Apply theme (adds .dark class to document)
 	useTheme();
+
+	// Listen for signals from quick app to open notes
+	useQuickAppListener();
 
 	// Apply editor settings (cursor, fonts, etc.) at startup
 	useEditorSettings();

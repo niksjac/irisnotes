@@ -1,10 +1,15 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+pub mod cli;
+
 use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 use std::path::PathBuf;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
+
+// Embed the database schema at compile time
+const DATABASE_SCHEMA: &str = include_str!("../../../../schema/base.sql");
 
 // Helper function to determine if we're in development mode
 fn is_development_mode() -> bool {
@@ -103,6 +108,45 @@ fn get_data_dir(_app_handle: &AppHandle) -> Result<PathBuf, String> {
         
         Ok(data_dir)
     }
+}
+
+/// Initialize the database if it doesn't exist
+/// Creates the schema from base.sql embedded at compile time
+fn init_database(app_handle: &AppHandle) -> Result<(), String> {
+    use rusqlite::Connection;
+    
+    let data_dir = get_data_dir(app_handle)?;
+    let db_path = data_dir.join("notes.db");
+    
+    // Check if the database file already exists
+    if db_path.exists() {
+        // Database exists - check if it has tables
+        let conn = Connection::open(&db_path)
+            .map_err(|e| format!("Failed to open database: {}", e))?;
+        
+        let table_count: i32 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='items'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap_or(0);
+        
+        if table_count > 0 {
+            // Database is already initialized
+            return Ok(());
+        }
+    }
+    
+    // Create new database with schema
+    let conn = Connection::open(&db_path)
+        .map_err(|e| format!("Failed to create database: {}", e))?;
+    
+    conn.execute_batch(DATABASE_SCHEMA)
+        .map_err(|e| format!("Failed to initialize database schema: {}", e))?;
+    
+    println!("Database initialized at: {}", db_path.display());
+    Ok(())
 }
 
 #[tauri::command]
@@ -215,22 +259,19 @@ async fn setup_config_watcher(app_handle: AppHandle) -> Result<(), String> {
         // Keep the watcher alive
         let _watcher = watcher;
 
-        let mut last_event_time = Instant::now();
+        let mut last_config_event = Instant::now();
         let debounce_duration = Duration::from_millis(100); // 100ms debounce
 
         for event in rx {
             if let Some(path) = event.paths.first() {
-                let is_config_file = path.file_name() == Some(std::ffi::OsStr::new("config.json"))
-                    || path.file_name() == Some(std::ffi::OsStr::new("config.toml"));
+                let file_name = path.file_name();
+                let is_config_file = file_name == Some(std::ffi::OsStr::new("config.json"))
+                    || file_name == Some(std::ffi::OsStr::new("config.toml"));
                 
                 if is_config_file {
                     let now = Instant::now();
-
-                    // Debounce rapid file events
-                    if now.duration_since(last_event_time) > debounce_duration {
-                        last_event_time = now;
-
-                        // Emit an event to the frontend when config file changes
+                    if now.duration_since(last_config_event) > debounce_duration {
+                        last_config_event = now;
                         if let Err(e) = app_handle_clone.emit("config-file-changed", ()) {
                             eprintln!("Failed to emit config change event: {}", e);
                         }
@@ -267,6 +308,23 @@ async fn get_app_info(app_handle: tauri::AppHandle) -> Result<serde_json::Value,
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            // Another instance tried to start - check for --open-note argument
+            for arg in &args {
+                if let Some(note_id) = arg.strip_prefix("--open-note=") {
+                    // Emit to the specific window
+                    if let Some(window) = app.get_webview_window("main") {
+                        let _ = window.emit("open-note-from-quick", note_id.to_string());
+                    }
+                }
+            }
+            
+            // Focus our window
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_sql::Builder::default().build())
@@ -275,6 +333,29 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_global_shortcut::Builder::default().build())
+        .setup(|app| {
+            // Initialize database if it doesn't exist
+            if let Err(e) = init_database(app.handle()) {
+                eprintln!("Warning: Failed to initialize database: {}", e);
+            }
+            
+            // Check for --open-note argument on startup (from quick app launching us)
+            let args: Vec<String> = std::env::args().collect();
+            
+            for arg in &args {
+                if let Some(note_id) = arg.strip_prefix("--open-note=") {
+                    let note_id = note_id.to_string();
+                    let app_handle = app.handle().clone();
+                    // Emit event after a short delay to let frontend initialize
+                    std::thread::spawn(move || {
+                        std::thread::sleep(std::time::Duration::from_millis(500));
+                        let _ = app_handle.emit("open-note-from-quick", note_id);
+                    });
+                    break;
+                }
+            }
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             greet,
             read_config,

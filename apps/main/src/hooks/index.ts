@@ -74,6 +74,9 @@ export {
 // Debug and development
 export { useAppInfo } from "./use-app-info";
 
+// Quick app integration (IrisNotes Quick Search)
+export { useQuickAppListener } from "./use-quick-app-listener";
+
 // KeyTips (Access Keys) - Alt+key shortcuts
 export { useKeyTips, useKeyTipActions, altKeyHeldAtom } from "./use-key-tips";
 
