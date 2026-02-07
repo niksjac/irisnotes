@@ -1,14 +1,11 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { sidebarCollapsed, activityBarVisible, sidebarWidth } from "@/atoms";
 import { useAppPersistence } from "./use-app-persistence";
-import {
-	useLayoutPersistence,
-	loadLayoutState,
-} from "./use-layout-persistence";
+import { useLayoutPersistence } from "./use-layout-persistence";
 
 export const useLayout = () => {
-	// Sidebar state
+	// Sidebar state (atoms are initialized from localStorage at definition time)
 	const [sidebarCollapsedValue, setSidebarCollapsed] =
 		useAtom(sidebarCollapsed);
 	const setSidebarWidth = useSetAtom(sidebarWidth);
@@ -16,20 +13,6 @@ export const useLayout = () => {
 	// View state
 	const [activityBarVisibleValue, setActivityBarVisible] =
 		useAtom(activityBarVisible);
-
-	// Track if we've already loaded from localStorage to prevent loops
-	const hasLoadedFromStorage = useRef(false);
-
-	// Initialize layout from localStorage ONCE on mount
-	useEffect(() => {
-		if (!hasLoadedFromStorage.current) {
-			const savedLayout = loadLayoutState();
-			setSidebarWidth(savedLayout.sidebarWidth);
-			setActivityBarVisible(savedLayout.activityBarVisible);
-			setSidebarCollapsed(savedLayout.sidebarCollapsed);
-			hasLoadedFromStorage.current = true;
-		}
-	}, []); // Empty deps - only run once on mount
 
 	// Auto-save layout changes to localStorage (with debouncing)
 	useLayoutPersistence();

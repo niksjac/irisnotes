@@ -1,43 +1,73 @@
 import { useAtom } from "jotai";
-import { useCallback, useEffect, useRef } from "react";
-import { toolbarVisibleAtom } from "@/atoms";
+import { useCallback, useRef } from "react";
+import { toolbarVisibleAtom, titleBarVisibleAtom } from "@/atoms";
 import { useConfig } from "@/hooks/use-config";
+
+// Module-level state to track pending saves
+let pendingSaveTimeout: ReturnType<typeof setTimeout> | null = null;
+let pendingToolbar: boolean | null = null;
+let pendingTitleBar: boolean | null = null;
 
 export const useEditorLayout = () => {
 	const { config, updateConfig } = useConfig();
 	const [toolbarVisible, setToolbarVisible] = useAtom(toolbarVisibleAtom);
-	const initializedRef = useRef(false);
-	const pendingSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const [titleBarVisible, setTitleBarVisible] = useAtom(titleBarVisibleAtom);
+	
+	// Keep refs to current config for use in timeout
+	const configRef = useRef(config);
+	configRef.current = config;
 
-	// Sync atom from config ONLY on initial mount
-	useEffect(() => {
-		if (!initializedRef.current) {
-			setToolbarVisible(config.editor.toolbarVisible);
-			initializedRef.current = true;
+	// Note: Initial values come from localStorage (in atoms/index.ts)
+	// Config file is used for backup/sync but not as primary source
+
+	// Shared save function that batches pending changes
+	const scheduleSave = useCallback(() => {
+		if (pendingSaveTimeout) {
+			clearTimeout(pendingSaveTimeout);
 		}
-	}, [config.editor.toolbarVisible, setToolbarVisible]);
+		pendingSaveTimeout = setTimeout(() => {
+			const currentConfig = configRef.current;
+			const changes: Record<string, boolean> = {};
+			
+			if (pendingToolbar !== null) {
+				changes.toolbarVisible = pendingToolbar;
+				pendingToolbar = null;
+			}
+			if (pendingTitleBar !== null) {
+				changes.titleBarVisible = pendingTitleBar;
+				pendingTitleBar = null;
+			}
+			
+			if (Object.keys(changes).length > 0) {
+				void updateConfig({
+					editor: {
+						...currentConfig.editor,
+						...changes,
+					},
+				});
+			}
+			pendingSaveTimeout = null;
+		}, 100);
+	}, [updateConfig]);
 
 	const toggleToolbar = useCallback(() => {
 		const newVisibility = !toolbarVisible;
-		// Update atom immediately for instant UI response
 		setToolbarVisible(newVisibility);
-		
-		// Debounce config save to avoid blocking
-		if (pendingSaveRef.current) {
-			clearTimeout(pendingSaveRef.current);
-		}
-		pendingSaveRef.current = setTimeout(() => {
-			void updateConfig({
-				editor: {
-					...config.editor,
-					toolbarVisible: newVisibility,
-				},
-			});
-		}, 100);
-	}, [toolbarVisible, config.editor, updateConfig, setToolbarVisible]);
+		pendingToolbar = newVisibility;
+		scheduleSave();
+	}, [toolbarVisible, setToolbarVisible, scheduleSave]);
+
+	const toggleTitleBar = useCallback(() => {
+		const newVisibility = !titleBarVisible;
+		setTitleBarVisible(newVisibility);
+		pendingTitleBar = newVisibility;
+		scheduleSave();
+	}, [titleBarVisible, setTitleBarVisible, scheduleSave]);
 
 	return {
 		toolbarVisible,
 		toggleToolbar,
+		titleBarVisible,
+		toggleTitleBar,
 	};
 };

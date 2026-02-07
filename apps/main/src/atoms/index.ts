@@ -1,17 +1,57 @@
 import { atom } from "jotai";
 
-// Layout atoms
-export const sidebarCollapsed = atom<boolean>(false);
-export const sidebarWidth = atom<number>(300); // Default width
+// ============ Layout Storage Utilities ============
+
+const LAYOUT_STORAGE_KEY = "irisnotes-layout-state";
+
+interface LayoutState {
+	sidebarWidth: number;
+	activityBarVisible: boolean;
+	sidebarCollapsed: boolean;
+	titleBarVisible: boolean;
+	toolbarVisible: boolean;
+}
+
+const DEFAULT_LAYOUT: LayoutState = {
+	sidebarWidth: 300,
+	activityBarVisible: true,
+	sidebarCollapsed: false,
+	titleBarVisible: true,
+	toolbarVisible: false,
+};
+
+/**
+ * Loads layout state from localStorage synchronously.
+ * Called at module initialization time to prevent flicker.
+ */
+const loadInitialLayout = (): LayoutState => {
+	try {
+		const stored = localStorage.getItem(LAYOUT_STORAGE_KEY);
+		if (stored) {
+			return { ...DEFAULT_LAYOUT, ...JSON.parse(stored) };
+		}
+	} catch {
+		// Ignore errors during initial load
+	}
+	return DEFAULT_LAYOUT;
+};
+
+// Load layout once at module initialization (synchronous, before first render)
+const initialLayout = loadInitialLayout();
+
+// Layout atoms - initialized from localStorage to prevent flicker
+export const sidebarCollapsed = atom<boolean>(initialLayout.sidebarCollapsed);
+export const sidebarWidth = atom<number>(initialLayout.sidebarWidth);
 export const sidebarHeight = atom<number>(200); // Default height for mobile
-export const activityBarVisible = atom<boolean>(true);
+export const activityBarVisible = atom<boolean>(initialLayout.activityBarVisible);
 export const activityBarExpanded = atom<boolean>(false); // Expanded shows labels
 
 // Focus area: tracks which major UI section has focus (mutually exclusive)
 export type FocusArea = "activity-bar" | "tree" | "pane-0" | "pane-1" | null;
 export const focusAreaAtom = atom<FocusArea>(null);
 
-export const toolbarVisibleAtom = atom<boolean>(false);
+export const toolbarVisibleAtom = atom<boolean>(initialLayout.toolbarVisible);
+export const titleBarVisibleAtom = atom<boolean>(initialLayout.titleBarVisible);
 
 // Editor atoms
 export const isWrappingAtom = atom<boolean>(false);
