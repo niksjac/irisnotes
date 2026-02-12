@@ -14,6 +14,7 @@ import {
 	pane1ActiveTabAtom,
 } from "@/atoms";
 import { ActivityBarButton } from "./activity-bar-button";
+import { IrisLogo } from "@/components/iris-logo";
 import { useEffect, useRef, useCallback, useMemo } from "react";
 
 export function ActivityBar() {
@@ -130,6 +131,18 @@ export function ActivityBar() {
 					: "md:w-9 md:h-auto md:flex-col md:justify-start md:py-2 md:gap-2 md:border-r md:border-b-0"
 			)}
 		>
+			{/* Logo - desktop only, at top of activity bar */}
+			<div className={clsx(
+				"hidden md:flex md:w-full md:justify-center md:mb-2",
+				activityBarExpanded ? "md:py-2 md:border-b md:border-gray-200 dark:md:border-gray-700" : ""
+			)}>
+				<IrisLogo 
+					size={activityBarExpanded ? 28 : 22} 
+					showText={activityBarExpanded}
+					className={activityBarExpanded ? "py-1" : ""}
+				/>
+			</div>
+
 			{/* Expand/Collapse toggle - desktop only */}
 			<div className={clsx("hidden md:flex md:w-full", activityBarExpanded ? "md:justify-end md:mb-1" : "md:justify-center md:mb-2")}>
 				<button
