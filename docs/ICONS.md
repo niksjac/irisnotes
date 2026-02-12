@@ -4,58 +4,80 @@ This document explains how to customize icons for both the main IrisNotes app an
 
 ## Quick Reference
 
-| Icon Type | Main App | Quick App |
-|-----------|----------|-----------|
-| Window/Taskbar | `apps/main/src-tauri/icons/` | `apps/quick/src-tauri/icons/` |
-| System Tray | N/A | `~/.config/irisnotes/quick-tray-icon.png` |
+| Icon Type | Format | Location |
+|-----------|--------|----------|
+| App Source | SVG | `assets/icon.svg` |
+| Window/Taskbar | PNG (generated) | `apps/*/src-tauri/icons/` |
+| System Tray | SVG or PNG | `~/.config/irisnotes/quick-tray-icon.svg` |
+| In-App Logo | SVG (React) | `apps/main/src/components/logo.tsx` |
 
 ## 1. Changing System Tray Icon (Quick App Only)
 
 The Quick app supports custom tray icons at runtime without rebuilding.
+**SVG is preferred** for best quality at any scale.
 
 ### Production
-Place your custom icon at:
+Place your custom icon at (SVG preferred, PNG fallback):
 ```
+~/.config/irisnotes/quick-tray-icon.svg
 ~/.config/irisnotes/quick-tray-icon.png
 ```
 
 ### Development
 Place your icon at:
 ```
+dev/quick-tray-icon.svg
 dev/quick-tray-icon.png
 ```
 
-**Requirements:**
-- Format: PNG
-- Recommended size: 32x32 or 64x64 pixels (will be scaled)
+**SVG Requirements:**
+- Must be valid SVG
+- Will be rendered at 64x64 pixels
+- Simple paths work best (avoid complex filters)
+
+**PNG Requirements:**
+- Recommended size: 32x32 or 64x64 pixels
 - Restart the app after changing
 
 ## 2. Changing App Icons (Window, Taskbar, Desktop Entry)
 
-App icons are embedded at build time. To customize:
+App icons are embedded at build time. **Start with an SVG source**.
 
-### Step 1: Create Your Icon
+### Step 1: Create Your SVG Icon
 
-Create a **1024x1024 PNG** icon with transparency.
-
-### Step 2: Generate All Sizes
-
-Use Tauri CLI to generate all required sizes:
-
+Edit or replace `assets/icon.svg`:
 ```bash
-cd apps/main
-pnpm exec tauri icon path/to/your-icon.png
+# View current icon
+cat assets/icon.svg
 ```
 
-This generates:
+The SVG should use a 24x24 viewBox (standard icon size).
+
+### Step 2: Generate All PNG Sizes
+
+Run the icon generation script:
+```bash
+./scripts/generate-icons.sh
+```
+
+This generates all required sizes for both apps:
 - `icons/32x32.png` - Small icon
 - `icons/128x128.png` - Medium icon
 - `icons/128x128@2x.png` - Retina medium
 - `icons/icon.png` - 512x512 base icon
-- `icons/icon.ico` - Windows icon
-- `icons/icon.icns` - macOS icon bundle
+- `icons/icon.ico` - Windows icon (requires ImageMagick)
+- `icons/icon.icns` - macOS icon bundle (requires png2icns)
 - `icons/Square*.png` - Windows Store icons
 - `icons/StoreLogo.png` - Windows Store logo
+
+**Dependencies:**
+```bash
+# Arch Linux
+sudo pacman -S librsvg imagemagick
+
+# Ubuntu/Debian
+sudo apt install librsvg2-bin imagemagick
+```
 
 ### Step 3: Rebuild
 
