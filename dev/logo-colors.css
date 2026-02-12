@@ -1,0 +1,31 @@
+/**
+ * IrisNotes Logo Color Palette
+ * Reference colors inspired by iris flowers
+ */
+
+:root {
+  /* Classic Iris Purple (most iconic) */
+  --iris-purple-deep: #6B4C9A;
+  --iris-purple-medium: #8E6DB8;
+  --iris-purple-soft: #A78DC5;
+  --iris-purple-light: #C9B6D9;
+
+  /* Blue Iris */
+  --iris-blue-deep: #4B5FA5;
+  --iris-blue-medium: #6A7CBF;
+  --iris-blue-periwinkle: #8B9ED6;
+
+  /* Yellow Iris (for accents) */
+  --iris-yellow-gold: #D4A42E;
+  --iris-yellow-soft: #F5D76E;
+
+  /* Natural Bearded Iris Combo */
+  --iris-natural-purple: #5C4A99;
+  --iris-natural-beard: #F5C33B;
+  --iris-natural-green: #3D5A47;
+
+  /* Modern/Minimal Options */
+  --iris-modern-vibrant: #7B68EE;    /* Medium slate blue - RECOMMENDED */
+  --iris-modern-soft: #9370DB;       /* Medium purple */
+  --iris-modern-professional: #483D8B; /* Dark slate blue */
+}
