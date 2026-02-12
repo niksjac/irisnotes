@@ -354,7 +354,8 @@ fn toggle_window(app: &AppHandle) {
 }
 
 // Load custom tray icon from config directory (or dev folder in debug mode)
-// Supports theme-specific icons: quick-tray-icon-dark.png and quick-tray-icon-light.png
+// Supports both SVG and PNG formats
+// Theme-specific icons: quick-tray-icon-dark.{svg,png} and quick-tray-icon-light.{svg,png}
 fn load_custom_tray_icon() -> Option<Image<'static>> {
     let icon_path = get_tray_icon_path()?;
     
@@ -362,9 +363,65 @@ fn load_custom_tray_icon() -> Option<Image<'static>> {
         return None;
     }
     
-    // Read and decode the PNG file
     let file_bytes = std::fs::read(&icon_path).ok()?;
-    let img = image::load_from_memory(&file_bytes).ok()?;
+    
+    // Check if it's an SVG file
+    let extension = icon_path.extension()?.to_str()?;
+    
+    if extension.eq_ignore_ascii_case("svg") {
+        // Render SVG to RGBA using resvg
+        load_svg_icon(&file_bytes)
+    } else {
+        // Load PNG/other raster formats with image crate
+        load_raster_icon(&file_bytes)
+    }
+}
+
+// Render SVG to RGBA image using resvg
+fn load_svg_icon(svg_data: &[u8]) -> Option<Image<'static>> {
+    use resvg::tiny_skia;
+    use resvg::usvg;
+    
+    // Parse SVG
+    let tree = usvg::Tree::from_data(svg_data, &usvg::Options::default()).ok()?;
+    
+    // Target size for tray icon (32x32 is standard, but render at 64 for HiDPI)
+    let size = 64u32;
+    
+    // Calculate scale to fit in target size while maintaining aspect ratio
+    let svg_size = tree.size();
+    let scale = (size as f32 / svg_size.width()).min(size as f32 / svg_size.height());
+    
+    let width = (svg_size.width() * scale).ceil() as u32;
+    let height = (svg_size.height() * scale).ceil() as u32;
+    
+    // Create pixel buffer
+    let mut pixmap = tiny_skia::Pixmap::new(width, height)?;
+    
+    // Render SVG
+    let transform = tiny_skia::Transform::from_scale(scale, scale);
+    resvg::render(&tree, transform, &mut pixmap.as_mut());
+    
+    // Convert to RGBA (resvg uses premultiplied alpha, need to unpremultiply)
+    let rgba_data: Vec<u8> = pixmap.pixels().iter().flat_map(|pixel| {
+        let a = pixel.alpha();
+        if a == 0 {
+            [0, 0, 0, 0]
+        } else {
+            // Unpremultiply alpha
+            let r = ((pixel.red() as u16 * 255) / a as u16) as u8;
+            let g = ((pixel.green() as u16 * 255) / a as u16) as u8;
+            let b = ((pixel.blue() as u16 * 255) / a as u16) as u8;
+            [r, g, b, a]
+        }
+    }).collect();
+    
+    Some(Image::new_owned(rgba_data, width, height))
+}
+
+// Load raster image (PNG, etc.)
+fn load_raster_icon(image_data: &[u8]) -> Option<Image<'static>> {
+    let img = image::load_from_memory(image_data).ok()?;
     let rgba = img.to_rgba8();
     let (width, height) = rgba.dimensions();
     
@@ -414,6 +471,9 @@ fn get_tray_icon_path() -> Option<PathBuf> {
     // Dark theme -> use light icon, Light theme -> use dark icon
     let theme_suffix = if is_dark { "-light" } else { "-dark" };
     
+    // Extensions to try, in order of preference (SVG first for quality)
+    let extensions = ["svg", "png"];
+    
     #[cfg(debug_assertions)]
     {
         // In development, check dev folder first
@@ -432,32 +492,40 @@ fn get_tray_icon_path() -> Option<PathBuf> {
             }
         }
 
-        // Try theme-specific icon first
-        let themed_path = project_root.join(format!("dev/quick-tray-icon{}.png", theme_suffix));
-        if themed_path.exists() {
-            return Some(themed_path);
+        // Try theme-specific icons first (SVG then PNG)
+        for ext in &extensions {
+            let themed_path = project_root.join(format!("dev/quick-tray-icon{}.{}", theme_suffix, ext));
+            if themed_path.exists() {
+                return Some(themed_path);
+            }
         }
         
-        // Fall back to generic icon
-        let dev_path = project_root.join("dev/quick-tray-icon.png");
-        if dev_path.exists() {
-            return Some(dev_path);
+        // Fall back to generic icons (SVG then PNG)
+        for ext in &extensions {
+            let dev_path = project_root.join(format!("dev/quick-tray-icon.{}", ext));
+            if dev_path.exists() {
+                return Some(dev_path);
+            }
         }
     }
     
     // Production: check config dir
     let config_dir = dirs::config_dir()?.join("irisnotes");
     
-    // Try theme-specific icon first
-    let themed_path = config_dir.join(format!("quick-tray-icon{}.png", theme_suffix));
-    if themed_path.exists() {
-        return Some(themed_path);
+    // Try theme-specific icons first (SVG then PNG)
+    for ext in &extensions {
+        let themed_path = config_dir.join(format!("quick-tray-icon{}.{}", theme_suffix, ext));
+        if themed_path.exists() {
+            return Some(themed_path);
+        }
     }
     
-    // Fall back to generic icon
-    let config_path = config_dir.join("quick-tray-icon.png");
-    if config_path.exists() {
-        return Some(config_path);
+    // Fall back to generic icons (SVG then PNG)
+    for ext in &extensions {
+        let config_path = config_dir.join(format!("quick-tray-icon.{}", ext));
+        if config_path.exists() {
+            return Some(config_path);
+        }
     }
     
     None

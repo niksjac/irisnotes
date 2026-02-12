@@ -1,0 +1,43 @@
+<svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- IrisNotes Logo - Light variant for dark backgrounds -->
+  <!-- Three iris petals arranged in a fan -->
+  
+  <!-- Center petal -->
+  <path
+    d="M12 2C12 2 14 6 14 10C14 14 12 18 12 18C12 18 10 14 10 10C10 6 12 2 12 2Z"
+    fill="#E8E4FF"
+    opacity="0.95"
+  />
+  <!-- Left petal -->
+  <path
+    d="M6 5C6 5 10 7 12 10C14 13 14 18 14 18C14 18 10 14 8 11C6 8 6 5 6 5Z"
+    fill="#C9B6F9"
+    opacity="0.85"
+  />
+  <!-- Right petal -->
+  <path
+    d="M18 5C18 5 14 7 12 10C10 13 10 18 10 18C10 18 14 14 16 11C18 8 18 5 18 5Z"
+    fill="#C9B6F9"
+    opacity="0.85"
+  />
+  <!-- Stem -->
+  <path
+    d="M12 16V22"
+    stroke="#A78DC5"
+    stroke-width="1.5"
+    stroke-linecap="round"
+  />
+  <!-- Small leaves -->
+  <path
+    d="M12 19C10 18 9 17 9 17"
+    stroke="#A78DC5"
+    stroke-width="1"
+    stroke-linecap="round"
+  />
+  <path
+    d="M12 20C14 19 15 18 15 18"
+    stroke="#A78DC5"
+    stroke-width="1"
+    stroke-linecap="round"
+  />
+</svg>
