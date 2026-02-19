@@ -16,6 +16,8 @@ import { pane0ActiveTabAtom, pane1TabsAtom, pane0TabsAtom, pane1ActiveTabAtom, p
 import { useMemo, useCallback } from "react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
+const isDev = import.meta.env.DEV;
+
 export function StatusBar() {
 	const settings = useAtomValue(editorSettingsAtom);
 	const editorStats = useAtomValue(editorStatsAtom);
@@ -75,6 +77,14 @@ export function StatusBar() {
 		<div className="flex-shrink-0 h-5 px-3 flex items-center justify-between gap-4 text-[11px] text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 select-none">
 			{/* Left side - editor stats */}
 			<div className="flex items-center gap-3 tabular-nums">
+				{isDev && (
+					<>
+						<span className="px-1.5 rounded font-semibold text-[10px] bg-amber-400 text-amber-900 dark:bg-amber-500 dark:text-amber-950">
+							DEV
+						</span>
+						<span className="text-gray-300 dark:text-gray-600">|</span>
+					</>
+				)}
 				{isEditorActive && activeNoteId && (
 					<>
 						<button

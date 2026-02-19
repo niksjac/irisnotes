@@ -83,8 +83,14 @@ export const Layout: React.FC = () => {
 	// Fixed hotkey setup with proper name mapping
 	useAppHotkeys(mapHotkeyHandlers(sidebar, views, hotkeyHandlers));
 
+	const isDev = import.meta.env.DEV;
+
 	return (
 		<div className="flex flex-col h-screen w-screen">
+			{/* Dev mode top accent bar */}
+			{isDev && (
+				<div className="flex-shrink-0 h-0.5 bg-amber-400 dark:bg-amber-500" />
+			)}
 			<div className="flex-1 overflow-hidden">
 				{/* Responsive layout using CSS-only approach */}
 				<div className="overflow-hidden h-full flex flex-col md:flex-row">
