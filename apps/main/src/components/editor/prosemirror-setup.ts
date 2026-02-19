@@ -213,6 +213,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		"Shift-Ctrl-7",
 		"Shift-Ctrl-8",
 		"Shift-Ctrl-9",
+		"Escape", // We override Escape with our own handler (blur/toolbar focus)
 	];
 
 	// Remove excluded shortcuts from editor keymap
@@ -225,7 +226,9 @@ export function customSetup(options: SetupOptions): Plugin[] {
 	plugins.push(keymap(filteredKeymap));
 
 	// Base keymap (arrows, enter, backspace, etc.)
-	plugins.push(keymap(baseKeymap));
+	// Remove Escape → selectParentNode so our custom Escape handler (blur/toolbar) takes priority
+	const { Escape: _removed, ...baseKeymapWithoutEscape } = baseKeymap;
+	plugins.push(keymap(baseKeymapWithoutEscape));
 
 	// History (undo/redo)
 	if (options.history !== false) {
