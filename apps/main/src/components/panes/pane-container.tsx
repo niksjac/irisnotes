@@ -1,15 +1,21 @@
 import type { FC } from "react";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import {
 	paneStateAtom,
 	pane0TabsAtom,
 	pane1TabsAtom,
 	pane0ActiveTabAtom,
 	pane1ActiveTabAtom,
+	itemsAtom,
 } from "@/atoms";
 import { Pane } from "./pane";
 import { PaneResizer } from "./pane-resizer";
 import { useEffect } from "react";
+import type { Tab } from "@/types";
+
+/** Extract the item ID a tab is displaying */
+const getItemIdFromTab = (tab: Tab): string | null =>
+	tab.viewData?.noteId ?? tab.viewData?.sectionId ?? tab.viewData?.bookId ?? null;
 
 export const PaneContainer: FC = () => {
 	const [paneState, setPaneState] = useAtom(paneStateAtom);
@@ -17,6 +23,31 @@ export const PaneContainer: FC = () => {
 	const [pane1Tabs, setPane1Tabs] = useAtom(pane1TabsAtom);
 	const [pane0ActiveTab, setPane0ActiveTab] = useAtom(pane0ActiveTabAtom);
 	const [pane1ActiveTab, setPane1ActiveTab] = useAtom(pane1ActiveTabAtom);
+
+	// Keep tab titles in sync when items are renamed
+	const items = useAtomValue(itemsAtom);
+
+	useEffect(() => {
+		if (items.length === 0) return;
+
+		const syncTitles = (prev: Tab[]): Tab[] => {
+			let changed = false;
+			const updated = prev.map((tab) => {
+				const itemId = getItemIdFromTab(tab);
+				if (!itemId) return tab;
+				const item = items.find((i) => i.id === itemId);
+				if (item && item.title !== tab.title) {
+					changed = true;
+					return { ...tab, title: item.title };
+				}
+				return tab;
+			});
+			return changed ? updated : prev;
+		};
+
+		setPane0Tabs(syncTitles);
+		setPane1Tabs(syncTitles);
+	}, [items, setPane0Tabs, setPane1Tabs]);
 
 	// Force single pane mode on mobile
 	useEffect(() => {
