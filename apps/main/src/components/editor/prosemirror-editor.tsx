@@ -133,11 +133,76 @@ export function ProseMirrorEditor({
 			selection: initialSelection,
 		});
 
+		// Track Ctrl+Shift+V for "paste as code block" special paste
+		let pasteAsCodeBlock = false;
+		const handlePasteKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "v" && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+				pasteAsCodeBlock = true;
+				// Reset after a short delay (in case paste event doesn't fire)
+				setTimeout(() => { pasteAsCodeBlock = false; }, 200);
+			}
+		};
+		editorRef.current.addEventListener("keydown", handlePasteKeyDown);
+
 		const view = new EditorView(editorRef.current, {
 			state,
 			editable: () => !readOnly,
 			nodeViews: {
 				code_block: (node, view, getPos) => new CodeBlockView(node, view, getPos),
+			},
+			handlePaste(view, event) {
+				// Only intercept when Ctrl+Shift+V was used (special paste)
+				if (!pasteAsCodeBlock) return false;
+				pasteAsCodeBlock = false;
+
+				const cd = event.clipboardData;
+				if (!cd) return false;
+
+				// Detect VS Code paste via the special clipboard type
+				const vscodeData = cd.getData("vscode-editor-data");
+				if (!vscodeData) return false;
+
+				try {
+					const { mode } = JSON.parse(vscodeData);
+					const text = cd.getData("text/plain");
+					if (!text) return false;
+
+					// Map VS Code language modes to our language identifiers
+					const languageMap: Record<string, string> = {
+						typescript: "typescript",
+						typescriptreact: "tsx",
+						javascript: "javascript",
+						javascriptreact: "jsx",
+						python: "python",
+						rust: "rust",
+						java: "java",
+						cpp: "cpp",
+						c: "c",
+						html: "html",
+						css: "css",
+						json: "json",
+						jsonc: "json",
+						sql: "sql",
+						xml: "xml",
+						php: "php",
+						markdown: "markdown",
+						shellscript: "shell",
+						bash: "shell",
+					};
+					const language = languageMap[mode] || mode || "text";
+
+					// Create a code_block node with the detected language
+					const codeBlock = mySchema.nodes.code_block.create(
+						{ language },
+						text ? mySchema.text(text) : undefined,
+					);
+
+					const tr = view.state.tr.replaceSelectionWith(codeBlock);
+					view.dispatch(tr.scrollIntoView());
+					return true;
+				} catch {
+					return false;
+				}
 			},
 			transformPastedHTML(html) {
 				// Line-based model: convert <br> to paragraph breaks instead of
@@ -229,6 +294,7 @@ export function ProseMirrorEditor({
 					viewRef.current.state.selection.from
 				);
 			}
+			editorRef.current?.removeEventListener("keydown", handlePasteKeyDown);
 			view.dom.removeEventListener("keydown", handleKeyDown);
 			view.destroy();
 			viewRef.current = null;
