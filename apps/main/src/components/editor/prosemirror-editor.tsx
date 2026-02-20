@@ -139,6 +139,15 @@ export function ProseMirrorEditor({
 			nodeViews: {
 				code_block: (node, view, getPos) => new CodeBlockView(node, view, getPos),
 			},
+			transformPastedHTML(html) {
+				// Browsers/source apps often wrap clipboard HTML with computed styles
+				// like "color: rgb(0, 0, 0)" (default black) which creates unnecessary
+				// textColor marks. Strip default-black color and clean up empty styles.
+				return html
+					.replace(/\s*color:\s*rgb\(0,\s*0,\s*0\);?/gi, "")
+					.replace(/\s*color:\s*#000000;?/gi, "")
+					.replace(/\s*style="\s*"/g, "");
+			},
 			dispatchTransaction(transaction) {
 				const newState = view.state.apply(transaction);
 				view.updateState(newState);
