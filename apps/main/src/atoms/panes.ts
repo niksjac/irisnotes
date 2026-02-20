@@ -53,27 +53,6 @@ export const activeTabAtom = atom((get) => {
 	return tabs.find((tab) => tab.id === activeTabId) || null;
 });
 
-// Tab management actions
-export const newTabInActivePaneAtom = atom(null, (get, set) => {
-	const paneState = get(paneStateAtom);
-	const paneIndex = paneState.activePane;
-
-	const newTab: Tab = {
-		id: `empty-tab-${Date.now()}`,
-		title: "Empty Tab",
-		viewType: "empty-view",
-		openedAt: Date.now(),
-	};
-
-	if (paneIndex === 0) {
-		set(pane0TabsAtom, (prev) => [...prev, newTab]);
-		set(pane0ActiveTabAtom, newTab.id);
-	} else {
-		set(pane1TabsAtom, (prev) => [...prev, newTab]);
-		set(pane1ActiveTabAtom, newTab.id);
-	}
-});
-
 // Open or focus a special view tab (Settings, Hotkeys, etc.)
 // If tab already exists, switch to it. Otherwise create a new one.
 export const openSettingsTabAtom = atom(null, (get, set) => {

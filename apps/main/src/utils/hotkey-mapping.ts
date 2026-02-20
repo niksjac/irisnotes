@@ -11,7 +11,6 @@ export function mapHotkeyHandlers(
 	handlers: {
 		closeActiveTab: () => void;
 		reopenLastClosedTab: () => void;
-		newTabInActivePane: () => void;
 		moveActiveTabLeft: () => void;
 		moveActiveTabRight: () => void;
 		toggleDualPane: () => void;
@@ -61,7 +60,6 @@ export function mapHotkeyHandlers(
 		// Tab hotkeys
 		onCloseTab: handlers.closeActiveTab,
 		onReopenLastClosedTab: handlers.reopenLastClosedTab,
-		onNewTab: handlers.newTabInActivePane,
 		onMoveTabLeft: handlers.moveActiveTabLeft,
 		onMoveTabRight: handlers.moveActiveTabRight,
 		// Pane hotkeys

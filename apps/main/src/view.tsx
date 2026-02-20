@@ -6,7 +6,6 @@ import {
 	HotkeysView,
 	EditorRichView,
 	EditorSourceView,
-	EmptyView,
 	SectionView,
 } from "@/views";
 
@@ -29,9 +28,7 @@ export const View: FC<ViewProps> = ({ viewType, viewData }) => {
 			return <EditorSourceView viewData={viewData} />;
 		case "section-view":
 			return <SectionView viewData={viewData} />;
-		case "empty-view":
-			return <EmptyView />;
 		default:
-			return <EmptyView />;
+			return null;
 	}
 };

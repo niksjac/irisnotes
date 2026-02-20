@@ -58,11 +58,6 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHotkeyOptions(hotkeyMapping.reopenLastClosedTab.global)
 	);
 	useHotkeys(
-		hotkeyMapping.newTab.key,
-		createHandler(handlers.onNewTab),
-		createHotkeyOptions(hotkeyMapping.newTab.global)
-	);
-	useHotkeys(
 		hotkeyMapping.moveTabLeft.key,
 		createHandler(handlers.onMoveTabLeft),
 		createHotkeyOptions(hotkeyMapping.moveTabLeft.global)

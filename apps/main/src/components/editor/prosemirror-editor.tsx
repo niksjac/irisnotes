@@ -116,7 +116,6 @@ export function ProseMirrorEditor({
 				"Mod-g", // Toggle sidebar
 				"Mod-j", // Toggle activity bar
 				"Mod-w", // Close tab
-				"Mod-t", // New tab
 				"Mod-e", // Toggle editor view
 			],
 		});

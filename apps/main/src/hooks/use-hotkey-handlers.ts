@@ -2,7 +2,6 @@ import { useSetAtom } from "jotai";
 import {
 	closeActiveTabAtom,
 	reopenLastClosedTabAtom,
-	newTabInActivePaneAtom,
 	moveActiveTabLeftAtom,
 	moveActiveTabRightAtom,
 	toggleDualPaneModeAtom,
@@ -56,7 +55,6 @@ export function useHotkeyHandlers() {
 	// Tab actions
 	const closeActiveTab = useSetAtom(closeActiveTabAtom);
 	const reopenLastClosedTab = useSetAtom(reopenLastClosedTabAtom);
-	const newTabInActivePane = useSetAtom(newTabInActivePaneAtom);
 	const moveActiveTabLeft = useSetAtom(moveActiveTabLeftAtom);
 	const moveActiveTabRight = useSetAtom(moveActiveTabRightAtom);
 
@@ -98,7 +96,6 @@ export function useHotkeyHandlers() {
 		// Tab actions
 		closeActiveTab,
 		reopenLastClosedTab,
-		newTabInActivePane,
 		moveActiveTabLeft,
 		moveActiveTabRight,
 

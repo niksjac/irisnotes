@@ -38,12 +38,6 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		category: "Tabs",
 		global: true,
 	},
-	newTab: {
-		key: "ctrl+t",
-		description: "New Tab",
-		category: "Tabs",
-		global: true,
-	},
 	moveTabLeft: {
 		key: "ctrl+shift+alt+left",
 		description: "Move Tab Left",

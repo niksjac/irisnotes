@@ -43,7 +43,6 @@ export interface HotkeyMapping {
 	// Tab hotkeys
 	closeTab: HotkeyConfig;
 	reopenLastClosedTab: HotkeyConfig;
-	newTab: HotkeyConfig;
 	moveTabLeft: HotkeyConfig;
 	moveTabRight: HotkeyConfig;
 
@@ -132,7 +131,6 @@ export interface AppHotkeysProps {
 	// Tab hotkeys
 	onCloseTab?: () => void;
 	onReopenLastClosedTab?: () => void;
-	onNewTab?: () => void;
 	onMoveTabLeft?: () => void;
 	onMoveTabRight?: () => void;
 
@@ -262,8 +260,7 @@ export type ViewType =
 	| "editor-rich-view"
 	| "editor-source-view"
 	| "section-view"
-	| "book-view"
-	| "empty-view";
+	| "book-view";
 
 // Tree view types
 export interface TreeData {

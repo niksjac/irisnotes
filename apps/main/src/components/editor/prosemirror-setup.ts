@@ -163,7 +163,6 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		"Mod-g", // Toggle sidebar (changed from Mod-b to free up bold)
 		"Mod-j", // Toggle activity bar
 		"Mod-w", // Close tab
-		"Mod-t", // New tab
 		"Mod-e", // Toggle editor view
 	];
 
