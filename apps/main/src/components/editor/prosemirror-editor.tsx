@@ -140,10 +140,18 @@ export function ProseMirrorEditor({
 				code_block: (node, view, getPos) => new CodeBlockView(node, view, getPos),
 			},
 			transformPastedHTML(html) {
-				// Browsers/source apps often wrap clipboard HTML with computed styles
-				// like "color: rgb(0, 0, 0)" (default black) which creates unnecessary
-				// textColor marks. Strip default-black color and clean up empty styles.
+				// Line-based model: convert <br> to paragraph breaks instead of
+				// relying on ProseMirror's hard_break (which doesn't exist in our schema).
+				// 1. Strip trailing <br> before </p> (prevents extra empty paragraphs)
+				// 2. Convert remaining <br> to </p><p> (splits into separate lines)
+				// 3. Normalize <p>&nbsp;</p> to <p></p> (nbsp is just a browser hack
+				//    to keep empty paragraphs visible; ProseMirror handles empty <p> fine)
+				// 4. Strip default-black color that browsers inject into clipboard HTML
+				// 5. Clean up empty style attributes
 				return html
+					.replace(/<br\s*\/?>\s*<\/p>/gi, "</p>")
+					.replace(/<br\s*\/?>/gi, "</p><p>")
+					.replace(/<p>\s*&nbsp;\s*<\/p>/gi, "<p></p>")
 					.replace(/\s*color:\s*rgb\(0,\s*0,\s*0\);?/gi, "")
 					.replace(/\s*color:\s*#000000;?/gi, "")
 					.replace(/\s*style="\s*"/g, "");
