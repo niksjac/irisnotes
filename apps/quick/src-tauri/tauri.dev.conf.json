@@ -1,0 +1,23 @@
+{
+	"$schema": "https://schema.tauri.app/config/2",
+	"identifier": "com.irisnotes.quick.dev",
+	"productName": "IrisNotes Quick Dev",
+	"app": {
+		"windows": [
+			{
+				"title": "IrisNotes Quick Search [DEV]",
+				"label": "main",
+				"width": 1100,
+				"height": 450,
+				"center": true,
+				"resizable": false,
+				"decorations": false,
+				"alwaysOnTop": true,
+				"skipTaskbar": true,
+				"transparent": true,
+				"visible": false,
+				"focus": true
+			}
+		]
+	}
+}

@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -n main,quick -c blue,magenta \"pnpm main\" \"pnpm quick\"",
-    "main": "pnpm -C apps/main tauri dev",
-    "quick": "pnpm -C apps/quick tauri dev",
+    "main": "pnpm -C apps/main tauri dev --config src-tauri/tauri.dev.conf.json",
+    "quick": "pnpm -C apps/quick tauri dev --config src-tauri/tauri.dev.conf.json",
     "build": "pnpm build:main && pnpm build:quick",
     "build:main": "pnpm -C apps/main tauri build",
     "build:quick": "pnpm -C apps/quick tauri build",

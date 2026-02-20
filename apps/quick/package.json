@@ -4,7 +4,7 @@
   "description": "Quick Search overlay for IrisNotes",
   "type": "module",
   "scripts": {
-    "dev": "tauri dev",
+    "dev": "tauri dev --config src-tauri/tauri.dev.conf.json",
     "dev:frontend": "vite --port 3333",
     "build": "tauri build",
     "build:frontend": "tsc && vite build",
