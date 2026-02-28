@@ -72,32 +72,67 @@ const LANGUAGE_OPTIONS = [
 ];
 
 // Simple language auto-detection based on content patterns
-function detectLanguage(code: string): string {
+export function detectLanguage(code: string): string {
 	const trimmed = code.trim();
 	if (!trimmed) return "text";
 	
-	// Check for common patterns
-	if (/^#!/.test(trimmed) || /\b(echo|grep|awk|sed|cat|ls|cd|mkdir)\b/.test(trimmed)) return "shell";
+	// Check for common patterns - ORDER MATTERS!
+	// Start with highly specific patterns that are unlikely to false-positive
+	
+	// Shell - shebang or very specific shell commands at start
+	if (/^#!/.test(trimmed)) return "shell";
+	
+	// PHP - very specific start
 	if (/^<\?php/.test(trimmed)) return "php";
+	
+	// HTML/XML - start patterns
 	if (/^<!DOCTYPE|^<html/i.test(trimmed)) return "html";
 	if (/^<\?xml/.test(trimmed)) return "xml";
+	
+	// JSON - must be valid JSON
 	if (/^\s*{[\s\S]*}$/.test(trimmed) || /^\s*\[[\s\S]*\]$/.test(trimmed)) {
 		try { JSON.parse(trimmed); return "json"; } catch {}
 	}
-	if (/\b(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)\b/i.test(trimmed)) return "sql";
-	if (/^(import|from)\s+\w+/.test(trimmed) && /def\s+\w+\s*\(/.test(trimmed)) return "python";
-	if (/\bfn\s+\w+\s*\(/.test(trimmed) && /->/.test(trimmed)) return "rust";
-	if (/\b(public|private|class)\s+\w+/.test(trimmed) && /\bvoid\b/.test(trimmed)) return "java";
-	if (/^#include\s*</.test(trimmed) || /\bint\s+main\s*\(/.test(trimmed)) return "cpp";
-	if (/\bfunction\s*\w*\s*\(/.test(trimmed) || /\bconst\s+\w+\s*=/.test(trimmed) || /=>\s*{/.test(trimmed)) {
-		if (/<\w+/.test(trimmed)) return "jsx";
-		return "javascript";
-	}
-	if (/:\s*(string|number|boolean|any)\b/.test(trimmed) || /interface\s+\w+/.test(trimmed)) {
-		if (/<\w+/.test(trimmed)) return "tsx";
+	
+	// TypeScript/TSX - check BEFORE JavaScript (TS is a superset)
+	// Look for type annotations like `: Type`, generics, interface/type keywords
+	if (/:\s*[A-Z]\w*[<>\[\]|&]*\s*[,)=]/.test(trimmed) || // Type annotation like `: SearchBarProps` or `: FC<Props>`
+		/\binterface\s+\w+/.test(trimmed) ||
+		/\btype\s+\w+\s*=/.test(trimmed) ||
+		/<\w+>/.test(trimmed) && /\b(const|let|function)\b/.test(trimmed)) { // Generics with JS keywords
+		if (/<[A-Z]\w*[\s/>]/.test(trimmed)) return "tsx"; // JSX elements start with capital
 		return "typescript";
 	}
-	if (/^\s*\w+\s*{[^}]*}/.test(trimmed) && /:\s*[^;]+;/.test(trimmed)) return "css";
+	
+	// JavaScript/JSX - function/const patterns
+	if (/\bfunction\s+\w+\s*\(/.test(trimmed) || 
+		/\bconst\s+\w+\s*=/.test(trimmed) || 
+		/=>\s*[{(]/.test(trimmed) ||
+		/\bexport\s+(default\s+)?function/.test(trimmed)) {
+		if (/<[A-Z]\w*[\s/>]/.test(trimmed)) return "jsx";
+		return "javascript";
+	}
+	
+	// Python - import/def pattern
+	if (/^(import|from)\s+\w+/.test(trimmed) || /\bdef\s+\w+\s*\(/.test(trimmed)) return "python";
+	
+	// Rust - fn with arrow return type
+	if (/\bfn\s+\w+\s*\(/.test(trimmed) && /->/.test(trimmed)) return "rust";
+	
+	// Java - class with public/private and void
+	if (/\b(public|private|protected)\s+(static\s+)?(class|void|int|String)\b/.test(trimmed)) return "java";
+	
+	// C/C++ - #include or main function
+	if (/^#include\s*[<"]/.test(trimmed) || /\bint\s+main\s*\(/.test(trimmed)) return "cpp";
+	
+	// SQL - must START with a SQL keyword (not just contain "select" somewhere)
+	if (/^\s*(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|WITH)\b/i.test(trimmed)) return "sql";
+	
+	// CSS - selector { property: value; }
+	if (/^\s*[\w.#\-\[\]]+\s*{[^}]*:[^}]+}/.test(trimmed)) return "css";
+	
+	// Shell commands (looser check, after other languages)
+	if (/\b(echo|grep|awk|sed|cat|ls|cd|mkdir|chmod|sudo)\s/.test(trimmed)) return "shell";
 	
 	return "text";
 }
