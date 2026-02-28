@@ -550,51 +550,8 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 		}
 	}, [showColorPicker]);
 
-	// Handle Alt+key shortcuts for toolbar buttons
-	useEffect(() => {
-		if (!altKeyHeld || !editorView) return;
-
-		const handleKeyDown = (e: KeyboardEvent) => {
-			if (!e.altKey) return;
-
-			const keyLower = e.key.toLowerCase();
-			const button = allButtons.find((b) => b.keyTip?.toLowerCase() === keyLower);
-
-			if (button) {
-				e.preventDefault();
-				e.stopPropagation();
-				executeCommand(button.command)();
-			} else if (keyLower === "t") {
-				// Toggle text color picker
-				e.preventDefault();
-				e.stopPropagation();
-				setShowColorPicker((prev) => (prev === "text" ? null : "text"));
-			} else if (keyLower === "h") {
-				// Toggle highlight picker
-				e.preventDefault();
-				e.stopPropagation();
-				setShowColorPicker((prev) => (prev === "highlight" ? null : "highlight"));
-			} else if (keyLower === "z") {
-				// Focus font size input
-				e.preventDefault();
-				e.stopPropagation();
-				fontSizeInputRef.current?.focus();
-			} else if (keyLower === "f") {
-				// Focus font family input
-				e.preventDefault();
-				e.stopPropagation();
-				fontFamilyInputRef.current?.focus();
-			} else if (keyLower === "r") {
-				// Clear custom formatting
-				e.preventDefault();
-				e.stopPropagation();
-				clearCustomFormatting();
-			}
-		};
-
-		window.addEventListener("keydown", handleKeyDown, true);
-		return () => window.removeEventListener("keydown", handleKeyDown, true);
-	}, [altKeyHeld, allButtons, editorView, executeCommand]);
+	// NOTE: Alt+key toolbar shortcuts temporarily disabled to free up key combinations.
+	// The key-tips visual system (altKeyHeld badges) is kept for potential future use.
 
 	// Don't render if required props are missing
 	if (!editorView || !schema) return null;
