@@ -1,5 +1,5 @@
 import * as Icons from "lucide-react";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useHotkeysConfig } from "@/hooks/use-hotkeys-config";
 import {
 	PROSEMIRROR_HOTKEYS,
@@ -290,10 +290,10 @@ export function HotkeysView() {
 									const isNewCategory = !prev || prev.context !== hotkey.context || prev.category !== hotkey.category;
 
 									return (
-										<>
+										<Fragment key={`${hotkey.keys}-${hotkey.context}-${idx}`}>
 											{/* Context group header */}
 											{isNewContext && (
-												<tr key={`context-${hotkey.context}`}>
+												<tr>
 													<td
 														colSpan={4}
 														className={`px-4 py-2 font-semibold text-white text-sm ${getContextColor(hotkey.context)}`}
@@ -304,7 +304,7 @@ export function HotkeysView() {
 											)}
 											{/* Category subgroup header */}
 											{isNewCategory && (
-												<tr key={`cat-${hotkey.context}-${hotkey.category}`}>
+												<tr>
 													<td
 														colSpan={4}
 														className="px-4 py-1.5 bg-gray-100 dark:bg-gray-800 border-y border-gray-200 dark:border-gray-700"
@@ -318,7 +318,6 @@ export function HotkeysView() {
 											)}
 											{/* Hotkey row */}
 											<tr
-												key={`${hotkey.keys}-${hotkey.context}-${idx}`}
 												className="hover:bg-gray-50 dark:hover:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800"
 											>
 												<td className="px-4 py-1.5 pl-6">
@@ -340,7 +339,7 @@ export function HotkeysView() {
 													</span>
 												</td>
 											</tr>
-										</>
+										</Fragment>
 									);
 								})
 							)}
