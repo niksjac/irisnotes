@@ -14,9 +14,6 @@ import {
 	ListOrdered,
 	Quote,
 	ChevronDown,
-	ChevronUp,
-	ChevronLeft,
-	ChevronRight,
 	FileCode,
 	Underline,
 	Strikethrough,
@@ -197,52 +194,12 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 	const [showColorPicker, setShowColorPicker] = useState<"text" | "highlight" | null>(null);
 	const [colorPickerPos, setColorPickerPos] = useState<{ top: number; left: number } | null>(null);
 	const [, setUpdateTrigger] = useState(0);
-	const [canScrollLeft, setCanScrollLeft] = useState(false);
-	const [canScrollRight, setCanScrollRight] = useState(false);
 	const toolbarRef = useRef<HTMLDivElement>(null);
-	const scrollContainerRef = useRef<HTMLDivElement>(null);
 	const textColorRef = useRef<HTMLDivElement>(null);
 	const highlightRef = useRef<HTMLDivElement>(null);
 	const fontSizeInputRef = useRef<HTMLInputElement>(null);
 	const fontFamilyInputRef = useRef<HTMLInputElement>(null);
 	const altKeyHeld = useAtomValue(altKeyHeldAtom);
-
-	// Update scroll arrow visibility
-	const updateScrollState = useCallback(() => {
-		const container = scrollContainerRef.current;
-		if (!container) return;
-		const { scrollLeft, scrollWidth, clientWidth } = container;
-		setCanScrollLeft(scrollLeft > 0);
-		setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 1);
-	}, []);
-
-	// Scroll the toolbar
-	const scroll = useCallback((direction: "left" | "right") => {
-		const container = scrollContainerRef.current;
-		if (!container) return;
-		const scrollAmount = 120;
-		container.scrollBy({
-			left: direction === "left" ? -scrollAmount : scrollAmount,
-			behavior: "smooth",
-		});
-	}, []);
-
-	// Monitor scroll state
-	useEffect(() => {
-		const container = scrollContainerRef.current;
-		if (!container) return;
-
-		updateScrollState();
-		container.addEventListener("scroll", updateScrollState);
-
-		const resizeObserver = new ResizeObserver(updateScrollState);
-		resizeObserver.observe(container);
-
-		return () => {
-			container.removeEventListener("scroll", updateScrollState);
-			resizeObserver.disconnect();
-		};
-	}, [updateScrollState]);
 
 	// Helper to check if a mark is active
 	const isMarkActive = (markType: MarkType) => {
@@ -336,19 +293,45 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 	// Get current text color from selection
 	const getCurrentTextColor = useCallback((): string | null => {
 		if (!editorView || !schema.marks.textColor) return null;
-		const { $from, empty } = editorView.state.selection;
-		const marks = empty ? editorView.state.storedMarks || $from.marks() : $from.marks();
-		const colorMark = marks.find((m: any) => m.type === schema.marks.textColor);
-		return colorMark?.attrs?.color || null;
+		const { from, $from, to, empty } = editorView.state.selection;
+		if (empty) {
+			const marks = editorView.state.storedMarks || $from.marks();
+			const colorMark = marks.find((m: any) => m.type === schema.marks.textColor);
+			return colorMark?.attrs?.color || null;
+		}
+		let found: string | null = null;
+		editorView.state.doc.nodesBetween(from, to, (node) => {
+			if (found) return false;
+			if (node.isText) {
+				const mark = node.marks.find((m: any) => m.type === schema.marks.textColor);
+				if (mark) found = mark.attrs?.color || null;
+				return false;
+			}
+			return true;
+		});
+		return found;
 	}, [editorView, schema]);
 
 	// Get current highlight color from selection
 	const getCurrentHighlightColor = useCallback((): string | null => {
 		if (!editorView || !schema.marks.highlight) return null;
-		const { $from, empty } = editorView.state.selection;
-		const marks = empty ? editorView.state.storedMarks || $from.marks() : $from.marks();
-		const highlightMark = marks.find((m: any) => m.type === schema.marks.highlight);
-		return highlightMark?.attrs?.color || null;
+		const { from, $from, to, empty } = editorView.state.selection;
+		if (empty) {
+			const marks = editorView.state.storedMarks || $from.marks();
+			const highlightMark = marks.find((m: any) => m.type === schema.marks.highlight);
+			return highlightMark?.attrs?.color || null;
+		}
+		let found: string | null = null;
+		editorView.state.doc.nodesBetween(from, to, (node) => {
+			if (found) return false;
+			if (node.isText) {
+				const mark = node.marks.find((m: any) => m.type === schema.marks.highlight);
+				if (mark) found = mark.attrs?.color || null;
+				return false;
+			}
+			return true;
+		});
+		return found;
 	}, [editorView, schema]);
 
 	// Clear ALL formatting (all marks)
@@ -620,54 +603,27 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 		<div
 			ref={toolbarRef}
 			data-editor-toolbar
-			className="relative flex items-center bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 min-w-0"
+			className="relative flex items-center flex-wrap bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 min-w-0 px-1 py-1 gap-0.5"
+			onKeyDown={(e) => {
+				if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+					e.preventDefault();
+					const container = toolbarRef.current;
+					if (!container) return;
+					const focusables = container.querySelectorAll<HTMLElement>('button, input, [tabindex="0"]');
+					const currentIndex = Array.from(focusables).findIndex(el => el === document.activeElement);
+					if (currentIndex === -1) return;
+					const nextIndex = e.key === "ArrowRight"
+						? (currentIndex + 1) % focusables.length
+						: (currentIndex - 1 + focusables.length) % focusables.length;
+					focusables[nextIndex]?.focus();
+				} else if (e.key === "Escape") {
+					editorView?.focus();
+				}
+			}}
 		>
-			{/* Left scroll arrow */}
-			{canScrollLeft && (
-				<button
-					type="button"
-					tabIndex={0}
-					className="flex-shrink-0 w-6 h-9 flex items-center justify-center bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors z-10"
-					onClick={() => scroll("left")}
-					title="Scroll left"
-				>
-					<ChevronLeft size={14} />
-				</button>
-			)}
-
-			{/* Scrollable toolbar content */}
-			<div
-				ref={scrollContainerRef}
-				className="flex items-center gap-1 px-2 py-1.5 overflow-x-auto flex-1 min-w-0"
-				style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-				onKeyDown={(e) => {
-					if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-						e.preventDefault();
-						const container = scrollContainerRef.current;
-						if (!container) return;
-						
-						// Get all focusable elements in toolbar
-						const focusables = container.querySelectorAll<HTMLElement>('button, input, [tabindex="0"]');
-						const currentIndex = Array.from(focusables).findIndex(el => el === document.activeElement);
-						
-						if (currentIndex === -1) return;
-						
-						let nextIndex: number;
-						if (e.key === "ArrowRight") {
-							nextIndex = (currentIndex + 1) % focusables.length;
-						} else {
-							nextIndex = (currentIndex - 1 + focusables.length) % focusables.length;
-						}
-						
-						focusables[nextIndex]?.focus();
-						focusables[nextIndex]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
-					} else if (e.key === "Escape") {
-						// Return focus to editor on Escape
-						editorView?.focus();
-					}
-				}}
-			>
-				{allButtons.map((button, index) => {
+			{/* Text formatting group */}
+			<div className="flex items-center gap-0.5">
+				{allButtons.slice(0, 5).map((button, index) => {
 					const IconComponent = button.icon;
 					const isActive = button.isActive?.() || false;
 					return (
@@ -675,7 +631,7 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 							key={index}
 							type="button"
 							tabIndex={0}
-							className={`relative flex-shrink-0 w-8 h-8 flex items-center justify-center rounded transition-colors ${
+							className={`relative flex-shrink-0 w-7 h-7 flex items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ${
 								isActive
 									? "bg-blue-500 text-white hover:bg-blue-600"
 									: "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
@@ -683,8 +639,7 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 							onClick={executeCommand(button.command)}
 							title={`${button.label} ${button.shortcut ? `(${button.shortcut})` : ""}${button.keyTip ? ` [Alt+${button.keyTip}]` : ""}`}
 						>
-							<IconComponent size={16} />
-							{/* KeyTip badge */}
+							<IconComponent size={15} />
 							{altKeyHeld && button.keyTip && (
 								<span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] flex items-center justify-center bg-amber-400 text-gray-900 text-[9px] font-bold rounded shadow-sm border border-amber-500 px-0.5 z-50">
 									{button.keyTip}
@@ -693,23 +648,56 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 						</button>
 					);
 				})}
+			</div>
 
-				{/* Separator */}
-				<div className="flex-shrink-0 w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+			<div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
 
+			{/* Block formatting group */}
+			<div className="flex items-center gap-0.5">
+				{allButtons.slice(5).map((button, index) => {
+					const IconComponent = button.icon;
+					const isActive = button.isActive?.() || false;
+					return (
+						<button
+							key={index + 5}
+							type="button"
+							tabIndex={0}
+							className={`relative flex-shrink-0 w-7 h-7 flex items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ${
+								isActive
+									? "bg-blue-500 text-white hover:bg-blue-600"
+									: "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+							}`}
+							onClick={executeCommand(button.command)}
+							title={`${button.label} ${button.shortcut ? `(${button.shortcut})` : ""}${button.keyTip ? ` [Alt+${button.keyTip}]` : ""}`}
+						>
+							<IconComponent size={15} />
+							{altKeyHeld && button.keyTip && (
+								<span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] flex items-center justify-center bg-amber-400 text-gray-900 text-[9px] font-bold rounded shadow-sm border border-amber-500 px-0.5 z-50">
+									{button.keyTip}
+								</span>
+							)}
+						</button>
+					);
+				})}
+			</div>
+
+			<div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
+
+			{/* Colors & clear formatting group */}
+			<div className="flex items-center gap-0.5">
 				{/* Text Color Picker */}
 				<div className="relative" ref={textColorRef}>
 					<button
 						type="button"
 						tabIndex={0}
-						className="relative w-8 h-8 flex flex-col items-center justify-center rounded transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+						className="relative w-7 h-7 flex flex-col items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
 						onClick={() => setShowColorPicker(showColorPicker === "text" ? null : "text")}
 						title={`Text Color${currentTextColor ? ` (${currentTextColor})` : ""} (Alt+T)`}
 					>
-						<Palette size={14} className="mb-0.5" />
+						<Palette size={13} className="mb-0.5" />
 						<div 
-							className="w-4 h-1 rounded-sm border border-gray-400 dark:border-gray-500"
-							style={{ backgroundColor: currentTextColor || "transparent" }}
+							className="w-3.5 h-0.5 rounded-sm"
+							style={{ backgroundColor: currentTextColor || "currentColor" }}
 						/>
 						{altKeyHeld && (
 							<span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center bg-amber-400 text-[9px] font-bold text-amber-900 rounded shadow-sm">
@@ -743,14 +731,14 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					<button
 						type="button"
 						tabIndex={0}
-						className="relative w-8 h-8 flex flex-col items-center justify-center rounded transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+						className="relative w-7 h-7 flex flex-col items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
 						onClick={() => setShowColorPicker(showColorPicker === "highlight" ? null : "highlight")}
 						title={`Highlight${currentHighlightColor ? ` (${currentHighlightColor})` : ""} (Alt+H)`}
 					>
-						<Highlighter size={14} className="mb-0.5" />
+						<Highlighter size={13} className="mb-0.5" />
 						<div 
-							className="w-4 h-1 rounded-sm border border-gray-400 dark:border-gray-500"
-							style={{ backgroundColor: currentHighlightColor || "transparent" }}
+							className="w-3.5 h-0.5 rounded-sm"
+							style={{ backgroundColor: currentHighlightColor || "currentColor" }}
 						/>
 						{altKeyHeld && (
 							<span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center bg-amber-400 text-[9px] font-bold text-amber-900 rounded shadow-sm">
@@ -779,26 +767,27 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					)}
 				</div>
 
-				{/* Separator */}
-				<div className="flex-shrink-0 w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
-
 				{/* Clear Custom Formatting */}
 				<button
 					type="button"
 					tabIndex={0}
-					className="relative flex-shrink-0 w-8 h-8 flex items-center justify-center rounded transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+					className="relative flex-shrink-0 w-7 h-7 flex items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
 					onClick={clearCustomFormatting}
 					title="Clear Custom Formatting (Alt+R)"
 				>
-					<RemoveFormatting size={16} />
+					<RemoveFormatting size={15} />
 					{altKeyHeld && (
 						<span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center bg-amber-400 text-[9px] font-bold text-amber-900 rounded shadow-sm">
 							R
 						</span>
 					)}
 				</button>
+			</div>
 
-				{/* Font Size Dropdown */}
+			<div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
+
+			{/* Font controls group */}
+			<div className="flex items-center gap-1">
 				<FontSizeDropdown
 					schema={schema}
 					editorView={editorView}
@@ -810,7 +799,6 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					inputRef={fontSizeInputRef}
 				/>
 
-				{/* Font Family Dropdown */}
 				<FontFamilyDropdown
 					schema={schema}
 					editorView={editorView}
@@ -822,19 +810,6 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					inputRef={fontFamilyInputRef}
 				/>
 			</div>
-
-			{/* Right scroll arrow */}
-			{canScrollRight && (
-				<button
-					type="button"
-					tabIndex={0}
-					className="flex-shrink-0 w-6 h-9 flex items-center justify-center bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors z-10"
-					onClick={() => scroll("right")}
-					title="Scroll right"
-				>
-					<ChevronRight size={14} />
-				</button>
-			)}
 		</div>
 	);
 }
@@ -855,6 +830,7 @@ function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, 
 	const [isOpen, setIsOpen] = useState(false);
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
+	const [, setTick] = useState(0);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const internalInputRef = useRef<HTMLInputElement>(null);
@@ -862,11 +838,39 @@ function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, 
 	const settings = useAtomValue(editorSettingsAtom);
 	const baseFontSize = settings?.fontSize ?? 14;
 
+	// Re-render when editor state changes
+	useEffect(() => {
+		if (!editorView) return;
+		const update = () => setTick((t) => t + 1);
+		const interval = setInterval(update, 100);
+		return () => clearInterval(interval);
+	}, [editorView]);
+
 	// Get current font size scale from selection
 	const getCurrentScale = useCallback((): number | null => {
 		if (!editorView) return null;
-		const { $from, empty } = editorView.state.selection;
-		const marks = empty ? editorView.state.storedMarks || $from.marks() : [];
+		const { from, $from, to, empty } = editorView.state.selection;
+		let marks;
+		if (empty) {
+			marks = editorView.state.storedMarks || $from.marks();
+		} else {
+			// For non-empty selection, find the mark on the first text character in range
+			let found: any = null;
+			editorView.state.doc.nodesBetween(from, to, (node) => {
+				if (found) return false;
+				if (node.isText) {
+					const mark = node.marks.find((m: any) => m.type === schema.marks.fontSize);
+					if (mark) found = mark;
+					return false;
+				}
+				return true;
+			});
+			const size = found?.attrs?.size;
+			if (!size) return null;
+			if (size.endsWith("em")) return parseFloat(size);
+			if (size.endsWith("px")) return parseFloat(size) / baseFontSize;
+			return null;
+		}
 		const fontSizeMark = marks.find((m: any) => m.type === schema.marks.fontSize);
 		const size = fontSizeMark?.attrs?.size;
 		if (!size) return null;
@@ -970,15 +974,15 @@ function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, 
 			<button
 				ref={inputRef as React.RefObject<HTMLButtonElement>}
 				type="button"
-				className={`flex items-center h-7 px-2 gap-1 rounded border bg-white dark:bg-gray-700 transition-colors min-w-[60px] text-xs text-gray-700 dark:text-gray-300 ${
-					isOpen ? "border-blue-500 ring-1 ring-blue-500" : "border-gray-300 dark:border-gray-600 hover:border-blue-500"
+				className={`flex items-center h-6 px-1.5 gap-0.5 rounded transition-colors min-w-[42px] text-[11px] text-gray-700 dark:text-gray-300 ${
+					isOpen ? "bg-gray-200 dark:bg-gray-600" : "hover:bg-gray-200 dark:hover:bg-gray-700"
 				}`}
 				onClick={() => setIsOpen(!isOpen)}
 				onKeyDown={handleKeyDown}
 				title={`Font Size${keyTip ? ` (Alt+${keyTip})` : ""}`}
 			>
-				<span className="flex-1 text-center">{displaySize}</span>
-				{isOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+				<span className="flex-1 text-center tabular-nums">{displaySize}</span>
+				<ChevronDown size={10} className={`flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
 			</button>
 			{isOpen && dropdownPos && (
 				<div 
@@ -1034,17 +1038,40 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 	const [isOpen, setIsOpen] = useState(false);
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
+	const [, setTick] = useState(0);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const internalInputRef = useRef<HTMLInputElement>(null);
 	const inputRef = externalInputRef || internalInputRef;
 
+	// Re-render when editor state changes
+	useEffect(() => {
+		if (!editorView) return;
+		const update = () => setTick((t) => t + 1);
+		const interval = setInterval(update, 100);
+		return () => clearInterval(interval);
+	}, [editorView]);
+
 	// Get current font family from selection
 	const getCurrentFontFamily = useCallback(() => {
 		if (!editorView) return "System Default";
-		const { $from, empty } = editorView.state.selection;
-		const marks = empty ? editorView.state.storedMarks || $from.marks() : [];
-		const fontFamilyMark = marks.find((m: any) => m.type === schema.marks.fontFamily);
+		const { from, $from, to, empty } = editorView.state.selection;
+		let fontFamilyMark: any = null;
+		if (empty) {
+			const marks = editorView.state.storedMarks || $from.marks();
+			fontFamilyMark = marks.find((m: any) => m.type === schema.marks.fontFamily);
+		} else {
+			// For non-empty selection, find the mark on the first text character in range
+			editorView.state.doc.nodesBetween(from, to, (node) => {
+				if (fontFamilyMark) return false;
+				if (node.isText) {
+					const mark = node.marks.find((m: any) => m.type === schema.marks.fontFamily);
+					if (mark) fontFamilyMark = mark;
+					return false;
+				}
+				return true;
+			});
+		}
 		if (!fontFamilyMark) return "System Default";
 		const family = fontFamilyMark.attrs?.family;
 		const found = FONT_FAMILIES.find((f) => f.value === family);
@@ -1140,15 +1167,15 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 			<button
 				ref={inputRef as React.RefObject<HTMLButtonElement>}
 				type="button"
-				className={`flex items-center h-7 px-2 gap-1 rounded border bg-white dark:bg-gray-700 transition-colors min-w-[100px] max-w-[140px] text-xs text-gray-700 dark:text-gray-300 ${
-					isOpen ? "border-blue-500 ring-1 ring-blue-500" : "border-gray-300 dark:border-gray-600 hover:border-blue-500"
+				className={`flex items-center h-6 px-1.5 gap-0.5 rounded transition-colors text-[11px] text-gray-700 dark:text-gray-300 whitespace-nowrap ${
+					isOpen ? "bg-gray-200 dark:bg-gray-600" : "hover:bg-gray-200 dark:hover:bg-gray-700"
 				}`}
 				onClick={() => setIsOpen(!isOpen)}
 				onKeyDown={handleKeyDown}
 				title={`Font Family${keyTip ? ` (Alt+${keyTip})` : ""}`}
 			>
-				<span className="flex-1 text-left truncate">{currentFamily}</span>
-				{isOpen ? <ChevronUp size={12} className="flex-shrink-0" /> : <ChevronDown size={12} className="flex-shrink-0" />}
+				<span className="text-left">{currentFamily}</span>
+				<ChevronDown size={10} className={`flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
 			</button>
 			{isOpen && dropdownPos && (
 				<div 
