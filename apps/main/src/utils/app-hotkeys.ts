@@ -63,6 +63,26 @@ export function updateAppHotkeyPatterns(hotkeys: HotkeyMapping): void {
 }
 
 /**
+ * Normalize a KeyboardEvent.code to a lowercase key name matching
+ * react-hotkeys-hook format (strips Key/Digit/Numpad prefixes).
+ * 
+ * Examples: "KeyA" → "a", "Digit1" → "1", "Comma" → "comma",
+ *           "Period" → "period", "Tab" → "tab", "ArrowUp" → "arrowup"
+ */
+const codeAliases: Record<string, string> = {
+	ShiftLeft: "shift", ShiftRight: "shift",
+	AltLeft: "alt", AltRight: "alt",
+	MetaLeft: "meta", MetaRight: "meta",
+	OSLeft: "meta", OSRight: "meta",
+	ControlLeft: "ctrl", ControlRight: "ctrl",
+};
+
+function normalizeCode(code: string): string {
+	const trimmed = code.trim();
+	return (codeAliases[trimmed] || trimmed).toLowerCase().replace(/key|digit|numpad/, "");
+}
+
+/**
  * Check if a keyboard event matches an app-level hotkey
  * 
  * App-level hotkeys are those defined in the hotkey config that control
@@ -71,25 +91,29 @@ export function updateAppHotkeyPatterns(hotkeys: HotkeyMapping): void {
  * This function is used by CodeMirror to determine which keyboard events
  * should propagate to the app's hotkey handlers instead of being consumed.
  * 
+ * Uses event.code (not event.key) for matching, consistent with how
+ * react-hotkeys-hook identifies keys. This ensures named keys like
+ * "comma", "period", "tab" match regardless of keyboard layout or shift state.
+ * 
  * @param e - The keyboard event to check
  * @returns true if the event matches an app hotkey, false otherwise
  */
 export function isAppHotkey(e: KeyboardEvent): boolean {
-	const key = e.key.toLowerCase();
+	const code = normalizeCode(e.code);
 	const ctrl = e.ctrlKey || e.metaKey;
 	const shift = e.shiftKey;
 	const alt = e.altKey;
 	
 	// Special handling for Tab key - these are for tab switching
 	// and should work in editors too (Ctrl+Tab, Ctrl+Shift+Tab)
-	if (key === "tab" && ctrl) {
+	if (code === "tab" && ctrl) {
 		return true;
 	}
 	
 	// Check against all parsed hotkey patterns
 	return currentHotkeyPatterns.some(pattern => {
-		// Match the key
-		if (pattern.key !== key) return false;
+		// Match the key (using normalized event.code)
+		if (pattern.key !== code) return false;
 		
 		// Match modifier keys exactly
 		if (pattern.ctrl !== ctrl) return false;
