@@ -2,11 +2,12 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { EditorState, TextSelection, Selection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { DOMParser, DOMSerializer } from "prosemirror-model";
-import { useSetAtom } from "jotai";
+import { useSetAtom, useAtomValue } from "jotai";
 import { invoke } from "@tauri-apps/api/core";
 import { useLineWrapping } from "@/hooks";
 import { editorCursorPositionStore } from "@/hooks/use-editor-view-toggle";
 import { editorStatsAtom } from "@/atoms/editor-stats";
+import { editorKeybindingsAtom } from "@/atoms/editor-keybindings";
 import { customSetup } from "./prosemirror-setup";
 import { EditorToolbar } from "./editor-toolbar";
 import { SearchBar } from "./search-bar";
@@ -42,6 +43,7 @@ export function ProseMirrorEditor({
 	const { isWrapping } = useLineWrapping();
 	const setEditorStats = useSetAtom(editorStatsAtom);
 	const setEditorStatsRef = useRef(setEditorStats);
+	const editorKeybindings = useAtomValue(editorKeybindingsAtom);
 	const [showSearch, setShowSearch] = useState(false);
 
 	// Handle Ctrl+F to open search
@@ -113,6 +115,7 @@ export function ProseMirrorEditor({
 		const plugins = customSetup({
 			schema: mySchema,
 			history: true,
+			editorKeybindings,
 			appShortcuts: [
 				"Mod-g", // Toggle sidebar
 				"Mod-j", // Toggle activity bar

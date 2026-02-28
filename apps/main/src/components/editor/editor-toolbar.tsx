@@ -5,7 +5,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import type { MarkType, NodeType } from "prosemirror-model";
 import { useAtomValue } from "jotai";
 import { editorSettingsAtom } from "@/atoms/settings";
-import { altKeyHeldAtom } from "@/hooks/use-key-tips";
 import {
 	Bold,
 	Italic,
@@ -199,7 +198,6 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 	const highlightRef = useRef<HTMLDivElement>(null);
 	const fontSizeInputRef = useRef<HTMLInputElement>(null);
 	const fontFamilyInputRef = useRef<HTMLInputElement>(null);
-	const altKeyHeld = useAtomValue(altKeyHeldAtom);
 
 	// Helper to check if a mark is active
 	const isMarkActive = (markType: MarkType) => {
@@ -400,7 +398,6 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					icon: Bold,
 					label: "Bold",
 					shortcut: "Ctrl+B",
-					keyTip: "B",
 					command: toggleMark(schema.marks.strong),
 					isActive: () => isMarkActive(schema.marks.strong),
 					className: "toolbar-bold",
@@ -409,7 +406,6 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					icon: Italic,
 					label: "Italic",
 					shortcut: "Ctrl+I",
-					keyTip: "I",
 					command: toggleMark(schema.marks.em),
 					isActive: () => isMarkActive(schema.marks.em),
 					className: "toolbar-italic",
@@ -418,7 +414,6 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					icon: Code,
 					label: "Code",
 					shortcut: "Ctrl+`",
-					keyTip: "C",
 					command: toggleMark(schema.marks.code),
 					isActive: () => isMarkActive(schema.marks.code),
 					className: "toolbar-code",
@@ -427,7 +422,6 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					icon: Underline,
 					label: "Underline",
 					shortcut: "Ctrl+U",
-					keyTip: "U",
 					command: toggleMark(schema.marks.underline),
 					isActive: () => isMarkActive(schema.marks.underline),
 					className: "toolbar-underline",
@@ -436,7 +430,6 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					icon: Strikethrough,
 					label: "Strikethrough",
 					shortcut: "Ctrl+Shift+S",
-					keyTip: "S",
 					command: toggleMark(schema.marks.strikethrough),
 					isActive: () => isMarkActive(schema.marks.strikethrough),
 					className: "toolbar-strikethrough",
@@ -447,7 +440,6 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					icon: List,
 					label: "Bullet List",
 					shortcut: "Alt+L",
-					keyTip: "L",
 					command: (state: any, dispatch: any) => {
 						if (isBlockActive(schema.nodes.bullet_list)) {
 							return liftListItem(schema.nodes.list_item)(state, dispatch);
@@ -461,7 +453,6 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					icon: ListOrdered,
 					label: "Ordered List",
 					shortcut: "Alt+O",
-					keyTip: "O",
 					command: (state: any, dispatch: any) => {
 						if (isBlockActive(schema.nodes.ordered_list)) {
 							return liftListItem(schema.nodes.list_item)(state, dispatch);
@@ -475,7 +466,6 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					icon: Quote,
 					label: "Blockquote",
 					shortcut: "Ctrl+Shift+.",
-					keyTip: "Q",
 					command: (state: any, dispatch: any) => {
 						if (isBlockActive(schema.nodes.blockquote)) {
 							return lift(state, dispatch);
@@ -489,7 +479,6 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					icon: FileCode,
 					label: "Code Block",
 					shortcut: "Ctrl+Shift+C",
-					keyTip: "K",
 					command: (state: any, dispatch: any) => {
 						if (isBlockActive(schema.nodes.code_block)) {
 							return setBlockType(schema.nodes.paragraph)(state, dispatch);
@@ -551,7 +540,6 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 	}, [showColorPicker]);
 
 	// NOTE: Alt+key toolbar shortcuts temporarily disabled to free up key combinations.
-	// The key-tips visual system (altKeyHeld badges) is kept for potential future use.
 
 	// Don't render if required props are missing
 	if (!editorView || !schema) return null;
@@ -594,14 +582,9 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 									: "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
 							}`}
 							onClick={executeCommand(button.command)}
-							title={`${button.label} ${button.shortcut ? `(${button.shortcut})` : ""}${button.keyTip ? ` [Alt+${button.keyTip}]` : ""}`}
+							title={`${button.label}${button.shortcut ? ` (${button.shortcut})` : ""}`}
 						>
 							<IconComponent size={15} />
-							{altKeyHeld && button.keyTip && (
-								<span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] flex items-center justify-center bg-amber-400 text-gray-900 text-[9px] font-bold rounded shadow-sm border border-amber-500 px-0.5 z-50">
-									{button.keyTip}
-								</span>
-							)}
 						</button>
 					);
 				})}
@@ -625,14 +608,9 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 									: "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
 							}`}
 							onClick={executeCommand(button.command)}
-							title={`${button.label} ${button.shortcut ? `(${button.shortcut})` : ""}${button.keyTip ? ` [Alt+${button.keyTip}]` : ""}`}
+							title={`${button.label}${button.shortcut ? ` (${button.shortcut})` : ""}`}
 						>
 							<IconComponent size={15} />
-							{altKeyHeld && button.keyTip && (
-								<span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] flex items-center justify-center bg-amber-400 text-gray-900 text-[9px] font-bold rounded shadow-sm border border-amber-500 px-0.5 z-50">
-									{button.keyTip}
-								</span>
-							)}
 						</button>
 					);
 				})}
@@ -649,18 +627,13 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 						tabIndex={0}
 						className="relative w-7 h-7 flex flex-col items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
 						onClick={() => setShowColorPicker(showColorPicker === "text" ? null : "text")}
-						title={`Text Color${currentTextColor ? ` (${currentTextColor})` : ""} (Alt+T)`}
+						title={`Text Color${currentTextColor ? ` (${currentTextColor})` : ""}`}
 					>
 						<Palette size={13} className="mb-0.5" />
 						<div 
 							className="w-3.5 h-0.5 rounded-sm"
 							style={{ backgroundColor: currentTextColor || "currentColor" }}
 						/>
-						{altKeyHeld && (
-							<span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center bg-amber-400 text-[9px] font-bold text-amber-900 rounded shadow-sm">
-								T
-							</span>
-						)}
 					</button>
 					{showColorPicker === "text" && colorPickerPos && (
 						<div 
@@ -690,18 +663,13 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 						tabIndex={0}
 						className="relative w-7 h-7 flex flex-col items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
 						onClick={() => setShowColorPicker(showColorPicker === "highlight" ? null : "highlight")}
-						title={`Highlight${currentHighlightColor ? ` (${currentHighlightColor})` : ""} (Alt+H)`}
+						title={`Highlight${currentHighlightColor ? ` (${currentHighlightColor})` : ""}`}
 					>
 						<Highlighter size={13} className="mb-0.5" />
 						<div 
 							className="w-3.5 h-0.5 rounded-sm"
 							style={{ backgroundColor: currentHighlightColor || "currentColor" }}
 						/>
-						{altKeyHeld && (
-							<span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center bg-amber-400 text-[9px] font-bold text-amber-900 rounded shadow-sm">
-								H
-							</span>
-						)}
 					</button>
 					{showColorPicker === "highlight" && colorPickerPos && (
 						<div 
@@ -730,14 +698,9 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					tabIndex={0}
 					className="relative flex-shrink-0 w-7 h-7 flex items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
 					onClick={clearCustomFormatting}
-					title="Clear Custom Formatting (Alt+R)"
+					title="Clear Custom Formatting"
 				>
 					<RemoveFormatting size={15} />
-					{altKeyHeld && (
-						<span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center bg-amber-400 text-[9px] font-bold text-amber-900 rounded shadow-sm">
-							R
-						</span>
-					)}
 				</button>
 			</div>
 
@@ -751,8 +714,6 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					isMarkActive={isMarkActive}
 					applyMarkWithAttrs={applyMarkWithAttrs}
 					removeMark={removeMark}
-					altKeyHeld={altKeyHeld}
-					keyTip="Z"
 					inputRef={fontSizeInputRef}
 				/>
 
@@ -762,8 +723,6 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					isMarkActive={isMarkActive}
 					applyMarkWithAttrs={applyMarkWithAttrs}
 					removeMark={removeMark}
-					altKeyHeld={altKeyHeld}
-					keyTip="F"
 					inputRef={fontFamilyInputRef}
 				/>
 			</div>
@@ -778,12 +737,10 @@ interface FontDropdownProps {
 	isMarkActive: (markType: MarkType) => boolean;
 	applyMarkWithAttrs: (markType: MarkType, attrs: Record<string, any>) => void;
 	removeMark: (markType: MarkType) => void;
-	altKeyHeld?: boolean;
-	keyTip?: string;
 	inputRef?: React.RefObject<HTMLInputElement | null>;
 }
 
-function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, altKeyHeld, keyTip, inputRef: externalInputRef }: FontDropdownProps) {
+function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, inputRef: externalInputRef }: FontDropdownProps) {
 	const [isOpen, setIsOpen] = useState(false);
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
@@ -923,11 +880,6 @@ function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, 
 
 	return (
 		<div className="relative flex-shrink-0" ref={containerRef}>
-			{altKeyHeld && keyTip && (
-				<span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center bg-amber-400 text-[9px] font-bold text-amber-900 rounded shadow-sm z-10">
-					{keyTip}
-				</span>
-			)}
 			<button
 				ref={inputRef as React.RefObject<HTMLButtonElement>}
 				type="button"
@@ -936,7 +888,7 @@ function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, 
 				}`}
 				onClick={() => setIsOpen(!isOpen)}
 				onKeyDown={handleKeyDown}
-				title={`Font Size${keyTip ? ` (Alt+${keyTip})` : ""}`}
+				title="Font Size"
 			>
 				<span className="flex-1 text-center tabular-nums">{displaySize}</span>
 				<ChevronDown size={10} className={`flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
@@ -991,7 +943,7 @@ function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, 
 	);
 }
 
-function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, altKeyHeld, keyTip, inputRef: externalInputRef }: FontDropdownProps) {
+function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, inputRef: externalInputRef }: FontDropdownProps) {
 	const [isOpen, setIsOpen] = useState(false);
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
@@ -1116,11 +1068,6 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 
 	return (
 		<div className="relative flex-shrink-0" ref={containerRef}>
-			{altKeyHeld && keyTip && (
-				<span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center bg-amber-400 text-[9px] font-bold text-amber-900 rounded shadow-sm z-10">
-					{keyTip}
-				</span>
-			)}
 			<button
 				ref={inputRef as React.RefObject<HTMLButtonElement>}
 				type="button"
@@ -1129,7 +1076,7 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 				}`}
 				onClick={() => setIsOpen(!isOpen)}
 				onKeyDown={handleKeyDown}
-				title={`Font Family${keyTip ? ` (Alt+${keyTip})` : ""}`}
+				title="Font Family"
 			>
 				<span className="text-left">{currentFamily}</span>
 				<ChevronDown size={10} className={`flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />

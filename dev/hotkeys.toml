@@ -267,3 +267,11 @@ key = "ctrl+shift+r"
 description = "Reload Window"
 category = "App"
 global = true
+
+# Editor Keybindings (ProseMirror)
+# Override rich text editor shortcuts using ProseMirror key notation.
+# Mod- = Ctrl on Linux/Windows, Cmd on Mac. Only include keys to override.
+# See hotkeys-template.toml for all available editor keybinding IDs.
+# [editor]
+# bold = "Mod-b"
+# bulletList = "Alt-l"

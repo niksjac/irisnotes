@@ -1,7 +1,7 @@
 import type { Schema, NodeType, Node } from "prosemirror-model";
 import type { Plugin, Command, EditorState, Transaction } from "prosemirror-state";
 import { keymap } from "prosemirror-keymap";
-import { history } from "prosemirror-history";
+import { history, undo, redo } from "prosemirror-history";
 import {
 	baseKeymap,
 	toggleMark,
@@ -16,13 +16,13 @@ import { wrapInList, liftListItem, sinkListItem, splitListItem } from "prosemirr
 import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
 import { buildInputRules } from "prosemirror-example-setup";
-import { buildKeymap } from "prosemirror-example-setup";
 import { autolinkPlugin, linkifySelection } from "./plugins/autolink";
 import { tightSelectionPlugin } from "./plugins/tight-selection";
 import { customCursorPlugin } from "./plugins/custom-cursor";
 import { activeLinePlugin } from "./plugins/active-line";
-import { lineCommandsKeymap } from "./plugins/line-commands";
+import { buildLineCommandsKeymap } from "./plugins/line-commands";
 import { searchPlugin } from "./plugins/search";
+import { DEFAULT_EDITOR_KEYBINDINGS, type EditorKeybindings } from "@/config/default-editor-keybindings";
 
 /**
  * Toggle list command - wraps in list if not in one, or lifts out if already in one
@@ -150,6 +150,8 @@ interface SetupOptions {
 	history?: boolean;
 	// App shortcuts that should be handled by the app, not the editor
 	appShortcuts?: string[];
+	// User-overridable editor keybindings (merged defaults + TOML overrides)
+	editorKeybindings?: EditorKeybindings;
 }
 
 /**
@@ -157,6 +159,7 @@ interface SetupOptions {
  */
 export function customSetup(options: SetupOptions): Plugin[] {
 	const plugins: Plugin[] = [];
+	const kb = options.editorKeybindings || DEFAULT_EDITOR_KEYBINDINGS;
 
 	// App-aware keymap (must come first to intercept app shortcuts)
 	const appShortcuts = options.appShortcuts || [
@@ -177,7 +180,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 
 	// Line commands FIRST - must come before base keymap to override Mod-a
 	// (Alt+Up/Down to move lines, Alt+Shift+Up/Down to copy, Ctrl+A smart select, etc.)
-	plugins.push(keymap(lineCommandsKeymap));
+	plugins.push(keymap(buildLineCommandsKeymap(kb)));
 
 	// Line-based model: Both Enter and Shift+Enter create new blocks with preserved formatting
 	// This enforces the concept that each "paragraph" is really a "line"
@@ -200,29 +203,6 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		),
 	};
 	plugins.push(keymap(enterKeymap));
-
-	// Editor keybindings (but excluding app shortcuts and list shortcuts we override)
-	const editorKeymap = buildKeymap(options.schema, {});
-
-	// Shortcuts to exclude from the example-setup keymap
-	// - App shortcuts are handled by the app, not the editor
-	// - List shortcuts are overridden with our toggle behavior (exclude all variants)
-	const excludedShortcuts = [
-		...appShortcuts,
-		"Shift-Ctrl-7",
-		"Shift-Ctrl-8",
-		"Shift-Ctrl-9",
-		"Escape", // We override Escape with our own handler (blur/toolbar focus)
-	];
-
-	// Remove excluded shortcuts from editor keymap
-	const filteredKeymap: { [key: string]: any } = {};
-	Object.keys(editorKeymap).forEach((key) => {
-		if (!excludedShortcuts.includes(key)) {
-			filteredKeymap[key] = editorKeymap[key];
-		}
-	});
-	plugins.push(keymap(filteredKeymap));
 
 	// Base keymap (arrows, enter, backspace, etc.)
 	// Remove Escape → selectParentNode so our custom Escape handler (blur/toolbar) takes priority
@@ -255,45 +235,49 @@ export function customSetup(options: SetupOptions): Plugin[] {
 	// Search plugin for Ctrl+F find in note
 	plugins.push(searchPlugin());
 
-	// Custom keybindings for extended marks
-	const customKeybindings: { [key: string]: any } = {
-		// Linkify URL at cursor
-		"Mod-Shift-l": linkifySelection(options.schema),
-	};
+	// Custom keybindings - all user-overridable via [editor] TOML section
+	const customKeybindings: { [key: string]: any } = {};
 
-	// Add underline shortcut if mark exists
+	// Text formatting marks
+	if (options.schema.marks.strong) {
+		customKeybindings[kb.bold.key] = toggleMark(options.schema.marks.strong);
+	}
+	if (options.schema.marks.em) {
+		customKeybindings[kb.italic.key] = toggleMark(options.schema.marks.em);
+	}
+	if (options.schema.marks.code) {
+		customKeybindings[kb.code.key] = toggleMark(options.schema.marks.code);
+	}
 	if (options.schema.marks.underline) {
-		customKeybindings["Mod-u"] = toggleMark(options.schema.marks.underline);
+		customKeybindings[kb.underline.key] = toggleMark(options.schema.marks.underline);
 	}
-
-	// Add strikethrough shortcut if mark exists
 	if (options.schema.marks.strikethrough) {
-		customKeybindings["Mod-Shift-s"] = toggleMark(
-			options.schema.marks.strikethrough
-		);
+		customKeybindings[kb.strikethrough.key] = toggleMark(options.schema.marks.strikethrough);
 	}
+	customKeybindings[kb.linkify.key] = linkifySelection(options.schema);
 
-	// Block formatting shortcuts
-	// Note: No heading shortcuts - headings are just fontSize marks in our line-based model
-
-	// Paragraph: Ctrl+Shift+0
+	// Block formatting
 	if (nodes.paragraph) {
-		customKeybindings["Mod-Shift-0"] = setBlockType(nodes.paragraph);
+		customKeybindings[kb.paragraph.key] = setBlockType(nodes.paragraph);
 	}
-
-	// Lists: Alt+L (bullet), Alt+O (ordered) - layout-independent shortcuts
-	// Note: Ctrl+Shift+number keys don't work reliably on non-US keyboards
 	if (nodes.ordered_list && nodes.list_item) {
-		customKeybindings["Alt-o"] = toggleList(nodes.ordered_list, nodes.list_item);
+		customKeybindings[kb.orderedList.key] = toggleList(nodes.ordered_list, nodes.list_item);
 	}
 	if (nodes.bullet_list && nodes.list_item) {
-		customKeybindings["Alt-l"] = toggleList(nodes.bullet_list, nodes.list_item);
+		customKeybindings[kb.bulletList.key] = toggleList(nodes.bullet_list, nodes.list_item);
 	}
 
-	// List indent/outdent: Ctrl+] / Ctrl+[ AND Tab / Shift+Tab
+	// History (undo/redo) — also always bind Mod-Shift-z as secondary redo
+	customKeybindings[kb.undo.key] = undo;
+	customKeybindings[kb.redo.key] = redo;
+	if (kb.redo.key !== "Mod-Shift-z") {
+		customKeybindings["Mod-Shift-z"] = redo;
+	}
+
+	// List indent/outdent: user-configurable Mod key shortcuts + structural Tab/Shift-Tab
 	if (nodes.list_item) {
-		customKeybindings["Mod-]"] = sinkListItem(nodes.list_item);
-		customKeybindings["Mod-["] = liftListItem(nodes.list_item);
+		customKeybindings[kb.indent.key] = sinkListItem(nodes.list_item);
+		customKeybindings[kb.outdent.key] = liftListItem(nodes.list_item);
 		
 		// Tab in list = indent, Shift+Tab = outdent
 		// For non-list context with selection: indent/outdent all lines
@@ -475,14 +459,14 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		return true;
 	};
 
-	// Blockquote: Ctrl+Shift+. - now toggleable
+	// Blockquote - toggleable
 	if (nodes.blockquote) {
-		customKeybindings["Mod-Shift-."] = toggleBlockquote(nodes.blockquote);
+		customKeybindings[kb.blockquote.key] = toggleBlockquote(nodes.blockquote);
 	}
 
-	// Code block: Ctrl+Shift+C
+	// Code block
 	if (nodes.code_block) {
-		customKeybindings["Mod-Shift-c"] = setBlockType(nodes.code_block);
+		customKeybindings[kb.codeBlock.key] = setBlockType(nodes.code_block);
 	}
 
 	plugins.push(keymap(customKeybindings));

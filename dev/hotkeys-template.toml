@@ -3,7 +3,7 @@
 # Copy this file to 'hotkeys.toml' and customize only the hotkeys you want to change.
 # You don't need to include all hotkeys - missing entries will use defaults.
 #
-# Key format:
+# Key format for app hotkeys:
 #   - Modifiers: ctrl, shift, alt, meta (Command on Mac)
 #   - Special keys: comma, period, tab, enter, escape, space, delete, backspace
 #   - Arrow keys: up, down, left, right (or arrowup, arrowdown, etc.)
@@ -14,6 +14,17 @@
 #   key = "ctrl+shift+n"     # Ctrl+Shift+N
 #   key = "alt+comma"        # Alt+,
 #   key = "ctrl+alt+1"       # Ctrl+Alt+1
+#
+# Key format for [editor] section (ProseMirror keybindings):
+#   Uses ProseMirror key notation where Mod = Ctrl (Linux/Win) or Cmd (Mac)
+#   - Modifiers: Mod-, Shift-, Alt-  (hyphen-separated)
+#   - Arrow keys: ArrowUp, ArrowDown, ArrowLeft, ArrowRight
+#   - Special: Delete, Backspace, Enter, Escape, Tab, Space
+#
+# Examples:
+#   bold = "Mod-b"               # Ctrl+B / Cmd+B
+#   strikethrough = "Mod-Shift-s"  # Ctrl+Shift+S
+#   moveLineUp = "Alt-ArrowUp"    # Alt+↑
 
 # =============================================================================
 # Layout
@@ -320,3 +331,47 @@ key = "ctrl+shift+r"
 description = "Reload Window"
 category = "App"
 global = true
+
+# =============================================================================
+# Editor Keybindings (ProseMirror)
+# =============================================================================
+#
+# Override rich text editor shortcuts. Only include keys you want to change.
+# Uses ProseMirror key notation (Mod- = Ctrl/Cmd, hyphen-separated).
+#
+# [editor]
+# # Formatting
+# bold = "Mod-b"
+# italic = "Mod-i"
+# code = "Mod-`"
+# underline = "Mod-u"
+# strikethrough = "Mod-Shift-s"
+# linkify = "Mod-Shift-l"
+#
+# # Blocks
+# paragraph = "Mod-Shift-0"
+# bulletList = "Alt-l"
+# orderedList = "Alt-o"
+# blockquote = "Mod-Shift-."
+# codeBlock = "Mod-Shift-c"
+#
+# # Indentation (Mod key shortcuts; Tab/Shift-Tab always work too)
+# indent = "Mod-]"
+# outdent = "Mod-["
+#
+# # Line Operations
+# moveLineUp = "Alt-ArrowUp"
+# moveLineDown = "Alt-ArrowDown"
+# copyLineUp = "Shift-Alt-ArrowUp"
+# copyLineDown = "Shift-Alt-ArrowDown"
+# selectWord = "Mod-d"
+# selectPrevious = "Mod-Shift-d"
+# deleteLine = "Shift-Delete"
+# smartSelectAll = "Mod-a"
+#
+# # History
+# undo = "Mod-z"
+# redo = "Mod-y"
+#
+# # Search
+# findInNote = "Mod-f"

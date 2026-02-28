@@ -1,9 +1,16 @@
 /**
  * Editor Hotkeys Configuration
  *
- * This file exports all ProseMirror editor hotkeys for display in the HotkeysView.
- * These are keyboard shortcuts that work within the rich text editor.
+ * This file exports ProseMirror editor hotkeys for display in the HotkeysView.
+ * Overridable keybindings are derived from DEFAULT_EDITOR_KEYBINDINGS.
+ * Non-overridable structural bindings are listed separately.
  */
+
+import {
+	DEFAULT_EDITOR_KEYBINDINGS,
+	pmKeyToDisplay,
+	type EditorKeybindings,
+} from "./default-editor-keybindings";
 
 export interface EditorHotkeyConfig {
 	key: string; // Display-friendly key combination
@@ -12,92 +19,34 @@ export interface EditorHotkeyConfig {
 }
 
 /**
- * ProseMirror editor hotkeys - formatting and editing commands
+ * Non-overridable structural editor hotkeys (always the same key)
  */
-export const PROSEMIRROR_HOTKEYS: EditorHotkeyConfig[] = [
-	// Text formatting (marks)
-	{ key: "Ctrl+B", description: "Bold", category: "Formatting" },
-	{ key: "Ctrl+I", description: "Italic", category: "Formatting" },
-	{ key: "Ctrl+`", description: "Inline Code", category: "Formatting" },
-	{ key: "Ctrl+U", description: "Underline", category: "Formatting" },
-	{ key: "Ctrl+Shift+S", description: "Strikethrough", category: "Formatting" },
-	{
-		key: "Ctrl+Shift+L",
-		description: "Convert URL to Link",
-		category: "Formatting",
-	},
-
-	// Block formatting
-	// Note: No heading shortcuts - use font size instead
-	{ key: "Ctrl+Shift+0", description: "Paragraph", category: "Blocks" },
-	{ key: "Alt+L", description: "Bullet List", category: "Blocks" },
-	{ key: "Alt+O", description: "Numbered List", category: "Blocks" },
-	{ key: "Ctrl+Shift+.", description: "Blockquote", category: "Blocks" },
-	{ key: "Ctrl+Shift+C", description: "Code Block", category: "Blocks" },
-
-	// Search
-	{ key: "Ctrl+F", description: "Find in Note", category: "Search" },
-
-	// Line operations
-	{ key: "Alt+↑", description: "Move Line Up", category: "Line Operations" },
-	{ key: "Alt+↓", description: "Move Line Down", category: "Line Operations" },
-	{
-		key: "Alt+Shift+↑",
-		description: "Copy Line Up",
-		category: "Line Operations",
-	},
-	{
-		key: "Alt+Shift+↓",
-		description: "Copy Line Down",
-		category: "Line Operations",
-	},
-	{
-		key: "Shift+Delete",
-		description: "Delete Line",
-		category: "Line Operations",
-	},
-	{
-		key: "Ctrl+D",
-		description: "Select Word / Next Occurrence",
-		category: "Line Operations",
-	},
-	{
-		key: "Ctrl+Shift+D",
-		description: "Select Previous Occurrence",
-		category: "Line Operations",
-	},
-	{
-		key: "Ctrl+A",
-		description: "Smart Select All (progressive)",
-		category: "Line Operations",
-	},
-
-	// History
-	{ key: "Ctrl+Z", description: "Undo", category: "History" },
-	{ key: "Ctrl+Y", description: "Redo", category: "History" },
-	{
-		key: "Ctrl+Shift+Z",
-		description: "Redo (alternative)",
-		category: "History",
-	},
-
-	// Lists & Indentation
+const STRUCTURAL_HOTKEYS: EditorHotkeyConfig[] = [
 	{ key: "Tab", description: "Indent (list item or text)", category: "Indentation" },
 	{ key: "Shift+Tab", description: "Outdent (list item or text)", category: "Indentation" },
-	{
-		key: "Enter",
-		description: "New List Item / Split Block",
-		category: "Lists",
-	},
-
-	// Links
+	{ key: "Enter", description: "New List Item / Split Block", category: "Lists" },
 	{ key: "Ctrl+Click", description: "Open Link in Browser", category: "Links" },
-	{
-		key: "Ctrl+Enter",
-		description: "Open Link (when cursor on link)",
-		category: "Links",
-	},
+	{ key: "Ctrl+Enter", description: "Open Link (when cursor on link)", category: "Links" },
 ];
+
+/**
+ * Build the ProseMirror hotkey display list from an EditorKeybindings config.
+ * This allows the hotkeys view to show user-overridden keys.
+ */
+export function buildProsemirrorHotkeys(kb: EditorKeybindings): EditorHotkeyConfig[] {
+	const overridable = Object.values(kb).map((def) => ({
+		key: pmKeyToDisplay(def.key),
+		description: def.description,
+		category: def.category,
+	}));
+	return [...overridable, ...STRUCTURAL_HOTKEYS];
+}
+
+/**
+ * ProseMirror editor hotkeys - default configuration for display
+ */
+export const PROSEMIRROR_HOTKEYS: EditorHotkeyConfig[] =
+	buildProsemirrorHotkeys(DEFAULT_EDITOR_KEYBINDINGS);
 
 /**
  * CodeMirror source editor hotkeys

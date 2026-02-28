@@ -1,11 +1,13 @@
 import * as Icons from "lucide-react";
 import { Fragment, useMemo, useState } from "react";
+import { useAtomValue } from "jotai";
 import { useHotkeysConfig } from "@/hooks/use-hotkeys-config";
 import {
-	PROSEMIRROR_HOTKEYS,
+	buildProsemirrorHotkeys,
 	CODEMIRROR_HOTKEYS,
 	SYSTEM_HOTKEYS,
 } from "@/config/editor-hotkeys";
+import { editorKeybindingsAtom } from "@/atoms/editor-keybindings";
 import type { HotkeyConfig } from "@/types";
 
 interface HotkeyEntry {
@@ -104,6 +106,11 @@ function getCategoryIcon(category: string): React.ReactNode {
 
 export function HotkeysView() {
 	const { hotkeys: appHotkeys } = useHotkeysConfig();
+	const editorKeybindings = useAtomValue(editorKeybindingsAtom);
+	const prosemirrorHotkeys = useMemo(
+		() => buildProsemirrorHotkeys(editorKeybindings),
+		[editorKeybindings],
+	);
 	const [searchQuery, setSearchQuery] = useState("");
 
 	// Build flat list of all hotkeys
@@ -126,8 +133,8 @@ export function HotkeysView() {
 			});
 		}
 
-		// 2. ProseMirror editor hotkeys
-		for (const h of PROSEMIRROR_HOTKEYS) {
+		// 2. ProseMirror editor hotkeys (derived from atom for live overrides)
+		for (const h of prosemirrorHotkeys) {
 			entries.push({
 				keys: h.key,
 				description: h.description,
@@ -167,7 +174,7 @@ export function HotkeysView() {
 		});
 
 		return entries;
-	}, [appHotkeys]);
+	}, [appHotkeys, prosemirrorHotkeys]);
 
 	// Filter hotkeys based on search query
 	const filteredHotkeys = useMemo(() => {

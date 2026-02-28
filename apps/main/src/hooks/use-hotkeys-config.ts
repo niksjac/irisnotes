@@ -1,7 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useCallback, useEffect, useState } from "react";
+import { useSetAtom } from "jotai";
 import { DEFAULT_HOTKEYS } from "@/config/default-hotkeys";
+import { mergeEditorKeybindings } from "@/config/default-editor-keybindings";
+import type { EditorKeybindingOverrides } from "@/config/default-editor-keybindings";
+import { editorKeybindingsAtom } from "@/atoms/editor-keybindings";
 import { updateAppHotkeyPatterns } from "@/utils/app-hotkeys";
 import type { HotkeyMapping } from "@/types";
 
@@ -15,6 +19,7 @@ export function useHotkeysConfig() {
 		return DEFAULT_HOTKEYS;
 	});
 	const [loading, setLoading] = useState(true);
+	const setEditorKeybindings = useSetAtom(editorKeybindingsAtom);
 
 	const loadHotkeys = useCallback(async () => {
 		try {
@@ -22,7 +27,18 @@ export function useHotkeysConfig() {
 			const hotkeyString = await invoke<string>("read_config", {
 				filename: "hotkeys",
 			});
-			const parsedHotkeys = JSON.parse(hotkeyString) as Partial<HotkeyMapping>;
+			const parsed = JSON.parse(hotkeyString);
+
+			// Extract [editor] section for ProseMirror keybinding overrides
+			const editorOverrides = (parsed.editor || {}) as EditorKeybindingOverrides;
+			delete parsed.editor;
+
+			// Apply editor keybinding overrides
+			if (Object.keys(editorOverrides).length > 0) {
+				setEditorKeybindings(mergeEditorKeybindings(editorOverrides));
+			}
+
+			const parsedHotkeys = parsed as Partial<HotkeyMapping>;
 
 			// Merge user hotkeys with defaults
 			const mergedHotkeys: HotkeyMapping = {

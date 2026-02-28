@@ -19,6 +19,7 @@
 
 import { type Command, TextSelection, AllSelection } from "prosemirror-state";
 import { Fragment, type Node as PMNode } from "prosemirror-model";
+import { DEFAULT_EDITOR_KEYBINDINGS, type EditorKeybindings } from "@/config/default-editor-keybindings";
 
 /**
  * Get the range of top-level blocks that overlap with the current selection.
@@ -624,13 +625,25 @@ export const smartSelectAll: Command = (state, dispatch) => {
 /**
  * Keymap for line-based commands
  */
-export const lineCommandsKeymap = {
-	"Alt-ArrowUp": moveLineUp,
-	"Alt-ArrowDown": moveLineDown,
-	"Shift-Alt-ArrowUp": copyLineUp,
-	"Shift-Alt-ArrowDown": copyLineDown,
-	"Mod-d": selectWord,
-	"Mod-Shift-d": selectPreviousOccurrence,
-	"Shift-Delete": deleteLine,
-	"Mod-a": smartSelectAll,
-};
+/**
+ * Build a keymap for line-based commands, using keys from the given EditorKeybindings.
+ * Falls back to DEFAULT_EDITOR_KEYBINDINGS if not provided.
+ */
+export function buildLineCommandsKeymap(kb?: EditorKeybindings): Record<string, Command> {
+	const k = kb || DEFAULT_EDITOR_KEYBINDINGS;
+	return {
+		[k.moveLineUp.key]: moveLineUp,
+		[k.moveLineDown.key]: moveLineDown,
+		[k.copyLineUp.key]: copyLineUp,
+		[k.copyLineDown.key]: copyLineDown,
+		[k.selectWord.key]: selectWord,
+		[k.selectPrevious.key]: selectPreviousOccurrence,
+		[k.deleteLine.key]: deleteLine,
+		[k.smartSelectAll.key]: smartSelectAll,
+	};
+}
+
+/**
+ * Static default keymap (for backward compatibility)
+ */
+export const lineCommandsKeymap = buildLineCommandsKeymap();
