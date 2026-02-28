@@ -3,13 +3,14 @@ import { EditorState, TextSelection, Selection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { DOMParser, DOMSerializer } from "prosemirror-model";
 import { useSetAtom } from "jotai";
+import { invoke } from "@tauri-apps/api/core";
 import { useLineWrapping } from "@/hooks";
 import { editorCursorPositionStore } from "@/hooks/use-editor-view-toggle";
 import { editorStatsAtom } from "@/atoms/editor-stats";
 import { customSetup } from "./prosemirror-setup";
 import { EditorToolbar } from "./editor-toolbar";
 import { SearchBar } from "./search-bar";
-import { CodeBlockView } from "./codemirror-nodeview";
+import { CodeBlockView,  detectLanguage } from "./codemirror-nodeview";
 import { editorSchema } from "./schema";
 import "prosemirror-view/style/prosemirror.css";
 import "@/styles/prosemirror.css";
@@ -117,6 +118,10 @@ export function ProseMirrorEditor({
 				"Mod-j", // Toggle activity bar
 				"Mod-w", // Close tab
 				"Mod-e", // Toggle editor view
+				"Shift-Mod-,", // Open settings
+				"Shift-Mod-.", // Open keyboard shortcuts
+				"Mod-,", // Sidebar resize left
+				"Mod-.", // Sidebar resize right
 			],
 		});
 
@@ -133,76 +138,74 @@ export function ProseMirrorEditor({
 			selection: initialSelection,
 		});
 
-		// Track Ctrl+Shift+V for "paste as code block" special paste
-		let pasteAsCodeBlock = false;
-		const handlePasteKeyDown = (e: KeyboardEvent) => {
-			if (e.key === "v" && (e.ctrlKey || e.metaKey) && e.shiftKey) {
-				pasteAsCodeBlock = true;
-				// Reset after a short delay (in case paste event doesn't fire)
-				setTimeout(() => { pasteAsCodeBlock = false; }, 200);
+		// Ctrl+Alt+V: Paste as code block with VS Code language detection
+		const handlePasteAsCodeBlock = async (e: KeyboardEvent) => {
+			if ((e.key === "v" || e.key === "V") && (e.ctrlKey || e.metaKey) && e.altKey) {
+				e.preventDefault();
+				e.stopPropagation();
+
+				try {
+					// Read plain text from clipboard
+					const text = await invoke<string>("read_clipboard_target", { target: "UTF8_STRING" });
+					if (!text) return;
+
+					// Try to get VS Code language from clipboard metadata
+					let language = "text";
+					try {
+						const vscodeData = await invoke<string>("read_vscode_editor_data");
+						console.log("vscode-editor-data:", vscodeData);
+						const { mode } = JSON.parse(vscodeData);
+						// Map VS Code mode to our language names
+						const languageMap: Record<string, string> = {
+							typescript: "typescript",
+							typescriptreact: "tsx",
+							javascript: "javascript",
+							javascriptreact: "jsx",
+							python: "python",
+							rust: "rust",
+							java: "java",
+							cpp: "cpp",
+							c: "c",
+							html: "html",
+							css: "css",
+							json: "json",
+							jsonc: "json",
+							sql: "sql",
+							xml: "xml",
+							php: "php",
+							markdown: "markdown",
+							shellscript: "shell",
+							bash: "shell",
+						};
+						language = languageMap[mode] || mode || "text";
+					} catch {
+						// Fall back to auto-detection
+						language = detectLanguage(text);
+					}
+
+					// Create and insert code block
+					const codeBlockType = mySchema.nodes.code_block;
+					if (!codeBlockType || !viewRef.current) return;
+
+					const codeBlock = codeBlockType.create(
+						{ language },
+						mySchema.text(text),
+					);
+
+					const tr = viewRef.current.state.tr.replaceSelectionWith(codeBlock);
+					viewRef.current.dispatch(tr.scrollIntoView());
+				} catch (err) {
+					console.error("Paste as code block failed:", err);
+				}
 			}
 		};
-		editorRef.current.addEventListener("keydown", handlePasteKeyDown);
+		document.addEventListener("keydown", handlePasteAsCodeBlock, true);
 
 		const view = new EditorView(editorRef.current, {
 			state,
 			editable: () => !readOnly,
 			nodeViews: {
 				code_block: (node, view, getPos) => new CodeBlockView(node, view, getPos),
-			},
-			handlePaste(view, event) {
-				// Only intercept when Ctrl+Shift+V was used (special paste)
-				if (!pasteAsCodeBlock) return false;
-				pasteAsCodeBlock = false;
-
-				const cd = event.clipboardData;
-				if (!cd) return false;
-
-				// Detect VS Code paste via the special clipboard type
-				const vscodeData = cd.getData("vscode-editor-data");
-				if (!vscodeData) return false;
-
-				try {
-					const { mode } = JSON.parse(vscodeData);
-					const text = cd.getData("text/plain");
-					if (!text) return false;
-
-					// Map VS Code language modes to our language identifiers
-					const languageMap: Record<string, string> = {
-						typescript: "typescript",
-						typescriptreact: "tsx",
-						javascript: "javascript",
-						javascriptreact: "jsx",
-						python: "python",
-						rust: "rust",
-						java: "java",
-						cpp: "cpp",
-						c: "c",
-						html: "html",
-						css: "css",
-						json: "json",
-						jsonc: "json",
-						sql: "sql",
-						xml: "xml",
-						php: "php",
-						markdown: "markdown",
-						shellscript: "shell",
-						bash: "shell",
-					};
-					const language = languageMap[mode] || mode || "text";
-
-					// Create a code_block node with the detected language
-					const codeBlock = mySchema.nodes.code_block.create(
-						{ language },
-						text ? mySchema.text(text) : undefined,
-					);
-
-					const tr = view.state.tr.replaceSelectionWith(codeBlock);
-					view.dispatch(tr.scrollIntoView());
-					return true;
-				} catch {
-					return false;
-				}
 			},
 			transformPastedHTML(html) {
 				// Line-based model: convert <br> to paragraph breaks instead of
@@ -294,7 +297,7 @@ export function ProseMirrorEditor({
 					viewRef.current.state.selection.from
 				);
 			}
-			editorRef.current?.removeEventListener("keydown", handlePasteKeyDown);
+			document.removeEventListener("keydown", handlePasteAsCodeBlock, true);
 			view.dom.removeEventListener("keydown", handleKeyDown);
 			view.destroy();
 			viewRef.current = null;
