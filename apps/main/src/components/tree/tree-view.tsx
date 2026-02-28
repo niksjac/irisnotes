@@ -1112,34 +1112,6 @@ export function TreeView() {
 			)}
 			{/* Tree Content - flex container to fill available space */}
 			<div className="flex-1 min-h-0 overflow-auto p-2 flex flex-col">
-				{/* Root drop zone - subtle placeholder style */}
-				<div
-					className="flex-shrink-0 mb-2 py-1.5 border border-dashed border-gray-200 dark:border-gray-700 rounded text-center text-[11px] text-gray-400 dark:text-gray-600 hover:border-blue-300 dark:hover:border-blue-700 hover:text-gray-500 dark:hover:text-gray-500 transition-colors"
-					onDragOver={(e) => {
-						e.preventDefault();
-						e.currentTarget.classList.add("border-blue-500", "bg-blue-100", "dark:bg-blue-900/40");
-					}}
-					onDragLeave={(e) => {
-						e.currentTarget.classList.remove("border-blue-500", "bg-blue-100", "dark:bg-blue-900/40");
-					}}
-					onDrop={async (e) => {
-						e.preventDefault();
-						e.currentTarget.classList.remove("border-blue-500", "bg-blue-100", "dark:bg-blue-900/40");
-						// Get the dragged item from the tree's drag state
-						const draggedItems = tree.getState().dnd?.draggedItems;
-						if (draggedItems && draggedItems.length > 0) {
-							const firstDragged = draggedItems[0];
-							if (!firstDragged) return;
-							const draggedData = firstDragged.getItemData();
-							// Only allow notes and books at root (not sections)
-							if (draggedData.type === "note" || draggedData.type === "book") {
-								await moveItem(draggedData.id, null);
-							}
-						}
-					}}
-				>
-					Drop here for root level
-				</div>
 				<div 
 					{...tree.getContainerProps()} 
 					data-tree-container="true"
