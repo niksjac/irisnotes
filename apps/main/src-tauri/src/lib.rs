@@ -154,6 +154,165 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
+/// Check if running on Wayland
+fn is_wayland() -> bool {
+    std::env::var("WAYLAND_DISPLAY").is_ok() || std::env::var("XDG_SESSION_TYPE").as_deref() == Ok("wayland")
+}
+
+/// Read clipboard content with a specific MIME type/target
+/// Uses wl-paste on Wayland, xclip on X11
+#[tauri::command]
+fn read_clipboard_target(target: String) -> Result<String, String> {
+    use std::process::Command;
+
+    let output = if is_wayland() {
+        // Wayland: use wl-paste with -t for type
+        Command::new("wl-paste")
+            .args(["--no-newline", "-t", &target])
+            .output()
+            .map_err(|e| format!("Failed to run wl-paste: {}. Is wl-clipboard installed?", e))?
+    } else {
+        // X11: use xclip
+        Command::new("xclip")
+            .args(["-selection", "clipboard", "-target", &target, "-o"])
+            .output()
+            .map_err(|e| format!("Failed to run xclip: {}. Is xclip installed?", e))?
+    };
+
+    if output.status.success() {
+        String::from_utf8(output.stdout)
+            .map_err(|e| format!("Clipboard content is not valid UTF-8: {}", e))
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        Err(format!("Clipboard read failed: {}", stderr))
+    }
+}
+
+/// List all available clipboard targets (MIME types)
+#[tauri::command]
+fn list_clipboard_targets() -> Result<Vec<String>, String> {
+    use std::process::Command;
+
+    let output = if is_wayland() {
+        // Wayland: use wl-paste -l to list types
+        Command::new("wl-paste")
+            .args(["--list-types"])
+            .output()
+            .map_err(|e| format!("Failed to run wl-paste: {}. Is wl-clipboard installed?", e))?
+    } else {
+        // X11: use xclip with TARGETS
+        Command::new("xclip")
+            .args(["-selection", "clipboard", "-target", "TARGETS", "-o"])
+            .output()
+            .map_err(|e| format!("Failed to run xclip: {}. Is xclip installed?", e))?
+    };
+
+    if output.status.success() {
+        let content = String::from_utf8_lossy(&output.stdout);
+        Ok(content.lines().map(|s| s.to_string()).collect())
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        Err(format!("Clipboard list failed: {}", stderr))
+    }
+}
+
+/// Read VS Code editor data from clipboard
+/// Handles both direct vscode-editor-data (X11) and embedded in chromium/x-web-custom-data (Wayland)
+#[tauri::command]
+fn read_vscode_editor_data() -> Result<String, String> {
+    use std::process::Command;
+    
+    // First, try to read vscode-editor-data directly
+    let targets = list_clipboard_targets()?;
+    
+    if targets.iter().any(|t| t == "vscode-editor-data") {
+        return read_clipboard_target("vscode-editor-data".to_string());
+    }
+    
+    // On Wayland/Chromium, vscode-editor-data is embedded in chromium/x-web-custom-data as UTF-16LE
+    if targets.iter().any(|t| t == "chromium/x-web-custom-data") {
+        let output = if is_wayland() {
+            Command::new("wl-paste")
+                .args(["--no-newline", "-t", "chromium/x-web-custom-data"])
+                .output()
+                .map_err(|e| format!("Failed to run wl-paste: {}", e))?
+        } else {
+            Command::new("xclip")
+                .args(["-selection", "clipboard", "-target", "chromium/x-web-custom-data", "-o"])
+                .output()
+                .map_err(|e| format!("Failed to run xclip: {}", e))?
+        };
+        
+        if output.status.success() {
+            // The data is UTF-16LE encoded, decode it
+            let bytes = &output.stdout;
+            
+            // Find "vscode-editor-data" marker and extract the JSON after it
+            // The format is: ... "vscode-editor-data" (UTF-16LE) then length byte then JSON (UTF-16LE)
+            let needle = "vscode-editor-data";
+            
+            // Convert bytes to UTF-16LE string for searching
+            if bytes.len() >= 2 {
+                let utf16_chars: Vec<u16> = bytes
+                    .chunks_exact(2)
+                    .filter_map(|chunk| {
+                        if chunk.len() == 2 {
+                            Some(u16::from_le_bytes([chunk[0], chunk[1]]))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+                
+                let decoded = String::from_utf16_lossy(&utf16_chars);
+                
+                // Find the vscode-editor-data JSON - it starts with {"version":
+                if let Some(start_idx) = decoded.find("vscode-editor-data") {
+                    // Look for the JSON after the marker
+                    let after_marker = &decoded[start_idx + needle.len()..];
+                    if let Some(json_start) = after_marker.find("{\"version\":") {
+                        let json_part = &after_marker[json_start..];
+                        // Find the end of the JSON object
+                        if let Some(end) = find_json_object_end(json_part) {
+                            return Ok(json_part[..end].to_string());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    Err("vscode-editor-data not found in clipboard".to_string())
+}
+
+/// Find the end of a JSON object by counting braces
+fn find_json_object_end(s: &str) -> Option<usize> {
+    let mut depth = 0;
+    let mut in_string = false;
+    let mut escape_next = false;
+    
+    for (i, c) in s.chars().enumerate() {
+        if escape_next {
+            escape_next = false;
+            continue;
+        }
+        
+        match c {
+            '\\' if in_string => escape_next = true,
+            '"' => in_string = !in_string,
+            '{' if !in_string => depth += 1,
+            '}' if !in_string => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(i + 1);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
 #[tauri::command]
 async fn open_app_config_folder(app_handle: tauri::AppHandle) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt;
@@ -363,7 +522,10 @@ pub fn run() {
             setup_config_watcher,
             open_app_config_folder,
             get_database_path,
-            get_app_info
+            get_app_info,
+            read_clipboard_target,
+            list_clipboard_targets,
+            read_vscode_editor_data
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
