@@ -12,13 +12,53 @@ import { customSetup } from "./prosemirror-setup";
 import { EditorToolbar } from "./editor-toolbar";
 import { SearchBar } from "./search-bar";
 import { FormatPicker, type FormatPickerType } from "./format-picker";
+import {
+	applyTextColor,
+	applyHighlight,
+	removeHighlight,
+	clearAllFormatting,
+} from "./format-commands";
+import { DIRECT_TEXT_COLORS, DIRECT_HIGHLIGHT_COLORS } from "./format-constants";
 import { CodeBlockView,  detectLanguage } from "./codemirror-nodeview";
 import { editorSchema } from "./schema";
+import type { EditorKeybindings } from "@/config/default-editor-keybindings";
 import "prosemirror-view/style/prosemirror.css";
 import "@/styles/prosemirror.css";
 
 // Use the extended schema from schema.ts
 const mySchema = editorSchema;
+
+/**
+ * Match a DOM KeyboardEvent against a ProseMirror key notation string.
+ * Uses event.code for digit keys to handle Shift+digit correctly
+ * (e.g. Shift+2 reports event.key="@" but event.code="Digit2").
+ */
+function matchesPmKey(event: KeyboardEvent, pmKey: string): boolean {
+	const parts = pmKey.split(/-(?!$)/);
+	const key = parts[parts.length - 1] || "";
+	const mods = new Set(parts.slice(0, -1));
+
+	const needCtrl = mods.has("Mod") || mods.has("Ctrl");
+	const needShift = mods.has("Shift");
+	const needAlt = mods.has("Alt");
+
+	if ((event.ctrlKey || event.metaKey) !== needCtrl) return false;
+	if (event.shiftKey !== needShift) return false;
+	if (event.altKey !== needAlt) return false;
+
+	// For digit keys, use event.code (layout-independent)
+	if (/^[0-9]$/.test(key)) {
+		return event.code === `Digit${key}`;
+	}
+	// For letter keys, compare case-insensitively
+	if (/^[a-zA-Z]$/.test(key)) {
+		return event.key.toLowerCase() === key.toLowerCase();
+	}
+	// Special characters
+	if (key === "\\") return event.key === "\\" || event.code === "Backslash";
+
+	return event.key === key;
+}
 
 interface ProseMirrorEditorProps {
 	content: string;
@@ -45,6 +85,7 @@ export function ProseMirrorEditor({
 	const setEditorStats = useSetAtom(editorStatsAtom);
 	const setEditorStatsRef = useRef(setEditorStats);
 	const editorKeybindings = useAtomValue(editorKeybindingsAtom);
+	const editorKeybindingsRef = useRef<EditorKeybindings>(editorKeybindings);
 	const [showSearch, setShowSearch] = useState(false);
 	const [activePicker, setActivePicker] = useState<FormatPickerType | null>(null);
 	const openPickerRef = useRef<(type: FormatPickerType) => void>(undefined);
@@ -63,6 +104,11 @@ export function ProseMirrorEditor({
 	useEffect(() => {
 		setEditorStatsRef.current = setEditorStats;
 	}, [setEditorStats]);
+
+	// Keep keybindings ref current for DOM handler
+	useEffect(() => {
+		editorKeybindingsRef.current = editorKeybindings;
+	}, [editorKeybindings]);
 
 	// Helper to calculate editor stats from state
 	const calculateAndUpdateStats = (state: EditorState) => {
@@ -120,7 +166,6 @@ export function ProseMirrorEditor({
 			schema: mySchema,
 			history: true,
 			editorKeybindings,
-			onOpenPicker: (type) => openPickerRef.current?.(type),
 			appShortcuts: [
 				"Mod-g", // Toggle sidebar
 				"Mod-j", // Toggle activity bar
@@ -288,12 +333,74 @@ export function ProseMirrorEditor({
 			setTimeout(() => view.focus(), 0);
 		}
 
-		// Handle Ctrl+F for search
+		// Handle Ctrl+F for search + all format shortcuts (digit-based)
+		// DOM keydown handler is used instead of ProseMirror keymap for digit keys
+		// because ProseMirror uses event.key which gives shifted characters
+		// (e.g. Shift+2 → '@'), making Mod-Shift-2 unreliable across layouts.
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if ((e.ctrlKey || e.metaKey) && e.key === "f") {
 				e.preventDefault();
 				e.stopPropagation();
 				handleSearchOpen();
+				return;
+			}
+
+			const kb = editorKeybindingsRef.current;
+			const v = viewRef.current;
+			if (!v) return;
+
+			// Format pickers (Ctrl+Shift+1-4)
+			if (matchesPmKey(e, kb.textColorPicker.key)) {
+				e.preventDefault(); e.stopPropagation();
+				openPickerRef.current?.("textColor");
+				return;
+			}
+			if (matchesPmKey(e, kb.highlightPicker.key)) {
+				e.preventDefault(); e.stopPropagation();
+				openPickerRef.current?.("highlight");
+				return;
+			}
+			if (matchesPmKey(e, kb.fontSizePicker.key)) {
+				e.preventDefault(); e.stopPropagation();
+				openPickerRef.current?.("fontSize");
+				return;
+			}
+			if (matchesPmKey(e, kb.fontFamilyPicker.key)) {
+				e.preventDefault(); e.stopPropagation();
+				openPickerRef.current?.("fontFamily");
+				return;
+			}
+
+			// Direct text colors (Alt+1-7)
+			for (const [num, preset] of Object.entries(DIRECT_TEXT_COLORS)) {
+				const id = `textColor${["", "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Black"][Number(num)]}` as keyof EditorKeybindings;
+				if (kb[id] && matchesPmKey(e, kb[id].key)) {
+					e.preventDefault(); e.stopPropagation();
+					applyTextColor(mySchema, preset.color)(v.state, v.dispatch);
+					return;
+				}
+			}
+			// Alt+0: Clear ALL formatting (same as toolbar "Clear Custom Formatting" button)
+			if (matchesPmKey(e, kb.textColorReset.key)) {
+				e.preventDefault(); e.stopPropagation();
+				clearAllFormatting(mySchema)(v.state, v.dispatch);
+				return;
+			}
+
+			// Direct highlights (Shift+Alt+1-6)
+			for (const [num, preset] of Object.entries(DIRECT_HIGHLIGHT_COLORS)) {
+				const id = `highlight${["", "Yellow", "Orange", "Pink", "Purple", "Blue", "Green"][Number(num)]}` as keyof EditorKeybindings;
+				if (kb[id] && matchesPmKey(e, kb[id].key)) {
+					e.preventDefault(); e.stopPropagation();
+					applyHighlight(mySchema, preset.color)(v.state, v.dispatch);
+					return;
+				}
+			}
+			// Highlight reset (Shift+Alt+0)
+			if (matchesPmKey(e, kb.highlightReset.key)) {
+				e.preventDefault(); e.stopPropagation();
+				removeHighlight(mySchema)(v.state, v.dispatch);
+				return;
 			}
 		};
 		view.dom.addEventListener("keydown", handleKeyDown);

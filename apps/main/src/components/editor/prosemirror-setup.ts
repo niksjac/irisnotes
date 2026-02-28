@@ -22,15 +22,7 @@ import { customCursorPlugin } from "./plugins/custom-cursor";
 import { activeLinePlugin } from "./plugins/active-line";
 import { buildLineCommandsKeymap } from "./plugins/line-commands";
 import { searchPlugin } from "./plugins/search";
-import {
-	applyTextColor,
-	removeTextColor,
-	applyHighlight,
-	removeHighlight,
-	clearAllFormatting,
-} from "./format-commands";
-import { DIRECT_TEXT_COLORS, DIRECT_HIGHLIGHT_COLORS } from "./format-constants";
-import type { FormatPickerType } from "./format-picker";
+import { clearAllFormatting } from "./format-commands";
 import { DEFAULT_EDITOR_KEYBINDINGS, type EditorKeybindings } from "@/config/default-editor-keybindings";
 
 /**
@@ -161,8 +153,6 @@ interface SetupOptions {
 	appShortcuts?: string[];
 	// User-overridable editor keybindings (merged defaults + TOML overrides)
 	editorKeybindings?: EditorKeybindings;
-	// Callback to open a format picker (textColor, highlight, fontSize, fontFamily)
-	onOpenPicker?: (type: FormatPickerType) => void;
 }
 
 /**
@@ -480,35 +470,14 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		customKeybindings[kb.codeBlock.key] = setBlockType(nodes.code_block);
 	}
 
-	// ── Format Pickers (open floating picker UI via callback) ──
-	if (options.onOpenPicker) {
-		const openPicker = options.onOpenPicker;
-		customKeybindings[kb.textColorPicker.key] = () => { openPicker("textColor"); return true; };
-		customKeybindings[kb.highlightPicker.key] = () => { openPicker("highlight"); return true; };
-		customKeybindings[kb.fontSizePicker.key] = () => { openPicker("fontSize"); return true; };
-		customKeybindings[kb.fontFamilyPicker.key] = () => { openPicker("fontFamily"); return true; };
-	}
-
-	// ── Clear All Formatting ──
+	// ── Clear All Formatting (Ctrl+\ — no digit-key issues) ──
 	customKeybindings[kb.clearFormatting.key] = clearAllFormatting(options.schema);
 
-	// ── Direct Text Colors (Alt+1-6, Alt+0) ──
-	for (const [num, preset] of Object.entries(DIRECT_TEXT_COLORS)) {
-		const bindingId = `textColor${["", "Red", "Orange", "Yellow", "Green", "Blue", "Purple"][Number(num)]}` as keyof typeof kb;
-		if (kb[bindingId]) {
-			customKeybindings[kb[bindingId].key] = applyTextColor(options.schema, preset.color);
-		}
-	}
-	customKeybindings[kb.textColorReset.key] = removeTextColor(options.schema);
-
-	// ── Direct Highlight Colors (Shift+Alt+1-6, Shift+Alt+0) ──
-	for (const [num, preset] of Object.entries(DIRECT_HIGHLIGHT_COLORS)) {
-		const bindingId = `highlight${["", "Yellow", "Orange", "Pink", "Purple", "Blue", "Green"][Number(num)]}` as keyof typeof kb;
-		if (kb[bindingId]) {
-			customKeybindings[kb[bindingId].key] = applyHighlight(options.schema, preset.color);
-		}
-	}
-	customKeybindings[kb.highlightReset.key] = removeHighlight(options.schema);
+	// NOTE: Format pickers (Ctrl+Shift+1-4), direct colors (Alt+0-6),
+	// and direct highlights (Shift+Alt+0-6) are handled via DOM keydown
+	// handlers in prosemirror-editor.tsx because ProseMirror's keymap
+	// uses event.key which gives shifted characters for Shift+digit
+	// (e.g. Shift+2 → '@'), making Mod-Shift-2 unreliable.
 
 	plugins.push(keymap(customKeybindings));
 

@@ -77,7 +77,7 @@ export const FONT_FAMILIES = [
 
 // ============ Direct Hotkey Color Presets ============
 
-/** Quick-access text colors for Alt+1 through Alt+6 hotkeys */
+/** Quick-access text colors for Alt+1 through Alt+7 hotkeys */
 export const DIRECT_TEXT_COLORS: Record<number, { color: string; name: string }> = {
 	1: { color: "#ef4444", name: "Red" },
 	2: { color: "#f97316", name: "Orange" },
@@ -85,6 +85,7 @@ export const DIRECT_TEXT_COLORS: Record<number, { color: string; name: string }>
 	4: { color: "#22c55e", name: "Green" },
 	5: { color: "#3b82f6", name: "Blue" },
 	6: { color: "#8b5cf6", name: "Purple" },
+	7: { color: "#000000", name: "Black" },
 };
 
 /** Quick-access highlight colors for Shift+Alt+1 through Shift+Alt+6 hotkeys */
@@ -96,3 +97,15 @@ export const DIRECT_HIGHLIGHT_COLORS: Record<number, { color: string; name: stri
 	5: { color: "#a5b4fc", name: "Blue" },
 	6: { color: "#86efac", name: "Green" },
 };
+
+// ============ Key Hint Reverse Maps (color → shortcut digit) ============
+
+/** Map from text color hex → shortcut digit for display in pickers */
+export const TEXT_COLOR_KEY_HINTS: Record<string, string> = Object.fromEntries(
+	Object.entries(DIRECT_TEXT_COLORS).map(([num, { color }]) => [color, num]),
+);
+
+/** Map from highlight color hex → shortcut digit for display in pickers */
+export const HIGHLIGHT_COLOR_KEY_HINTS: Record<string, string> = Object.fromEntries(
+	Object.entries(DIRECT_HIGHLIGHT_COLORS).map(([num, { color }]) => [color, num]),
+);

@@ -64,6 +64,7 @@ export type EditorKeybindingId =
 	| "textColorGreen"
 	| "textColorBlue"
 	| "textColorPurple"
+	| "textColorBlack"
 	| "textColorReset"
 	// Direct Highlight Colors (Shift+Alt+number)
 	| "highlightYellow"
@@ -240,9 +241,14 @@ export const DEFAULT_EDITOR_KEYBINDINGS: EditorKeybindings = {
 		description: "Text Color: Purple",
 		category: "Quick Colors",
 	},
+	textColorBlack: {
+		key: "Alt-7",
+		description: "Text Color: Black",
+		category: "Quick Colors",
+	},
 	textColorReset: {
 		key: "Alt-0",
-		description: "Remove Text Color",
+		description: "Clear All Formatting",
 		category: "Quick Colors",
 	},
 

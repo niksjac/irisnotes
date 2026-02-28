@@ -19,6 +19,8 @@ import {
 	HIGHLIGHT_COLORS,
 	FONT_SIZE_SCALES,
 	FONT_FAMILIES,
+	TEXT_COLOR_KEY_HINTS,
+	HIGHLIGHT_COLOR_KEY_HINTS,
 } from "./format-constants";
 
 export type FormatPickerType = "textColor" | "highlight" | "fontSize" | "fontFamily";
@@ -114,6 +116,8 @@ export function FormatPicker({ type, editorView, schema, onClose }: FormatPicker
 						removeLabel="Remove text color"
 						editorView={editorView}
 						onClose={onClose}
+						keyHints={TEXT_COLOR_KEY_HINTS}
+						hintPrefix="Alt"
 					/>
 				);
 			case "highlight":
@@ -125,6 +129,8 @@ export function FormatPicker({ type, editorView, schema, onClose }: FormatPicker
 						removeLabel="Remove highlight"
 						editorView={editorView}
 						onClose={onClose}
+						keyHints={HIGHLIGHT_COLOR_KEY_HINTS}
+						hintPrefix="⇧Alt"
 					/>
 				);
 			case "fontSize":
@@ -176,9 +182,13 @@ interface ColorPickerPanelProps {
 	removeLabel: string;
 	editorView: EditorView;
 	onClose: () => void;
+	/** Map from color hex → shortcut digit (e.g. "#ef4444" → "1") */
+	keyHints?: Record<string, string>;
+	/** Modifier prefix for hint display (e.g. "Alt" or "⇧Alt") */
+	hintPrefix?: string;
 }
 
-function ColorPickerPanel({ colors, markType, attrKey, removeLabel, editorView, onClose }: ColorPickerPanelProps) {
+function ColorPickerPanel({ colors, markType, attrKey, removeLabel, editorView, onClose, keyHints, hintPrefix }: ColorPickerPanelProps) {
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 	const columns = 4;
@@ -205,6 +215,23 @@ function ColorPickerPanel({ colors, markType, attrKey, removeLabel, editorView, 
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		let newIndex = selectedIndex;
+
+		// Digit keys: quick-apply color by shortcut number (1-6 apply, 0 removes)
+		if (/^[0-9]$/.test(e.key) && keyHints) {
+			e.preventDefault();
+			if (e.key === "0") {
+				// 0 = remove
+				selectAndClose(colors.length);
+			} else {
+				// Find the color that maps to this digit
+				const targetColor = Object.entries(keyHints).find(([, digit]) => digit === e.key)?.[0];
+				if (targetColor) {
+					const idx = colors.indexOf(targetColor);
+					if (idx >= 0) selectAndClose(idx);
+				}
+			}
+			return;
+		}
 
 		switch (e.key) {
 			case "ArrowRight":
@@ -258,25 +285,39 @@ function ColorPickerPanel({ colors, markType, attrKey, removeLabel, editorView, 
 	return (
 		<div className="p-2" onKeyDown={handleKeyDown}>
 			<div className="grid grid-cols-4 gap-1.5 mb-2" role="grid">
-				{colors.map((color, index) => (
-					<button
-						key={color}
-						ref={(el) => { buttonRefs.current[index] = el; }}
-						type="button"
-						tabIndex={index === selectedIndex ? 0 : -1}
-						className={`w-7 h-7 rounded border-2 transition-all cursor-pointer ${
-							index === selectedIndex
-								? "border-blue-500 ring-2 ring-blue-300 scale-110"
-								: "border-gray-300 dark:border-gray-600 hover:border-blue-500 hover:scale-110"
-						}`}
-						style={{ backgroundColor: color }}
-						onClick={() => selectAndClose(index)}
-						onFocus={() => setSelectedIndex(index)}
-						title={color}
-						role="gridcell"
-					/>
-				))}
+				{colors.map((color, index) => {
+					const hint = keyHints?.[color];
+					return (
+						<button
+							key={color}
+							ref={(el) => { buttonRefs.current[index] = el; }}
+							type="button"
+							tabIndex={index === selectedIndex ? 0 : -1}
+							className={`relative w-7 h-7 rounded border-2 transition-all cursor-pointer ${
+								index === selectedIndex
+									? "border-blue-500 ring-2 ring-blue-300 scale-110"
+									: "border-gray-300 dark:border-gray-600 hover:border-blue-500 hover:scale-110"
+							}`}
+							style={{ backgroundColor: color }}
+							onClick={() => selectAndClose(index)}
+							onFocus={() => setSelectedIndex(index)}
+							title={hint ? `${color} (${hintPrefix}+${hint})` : color}
+							role="gridcell"
+						>
+							{hint && (
+								<span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 text-[8px] font-bold rounded-full flex items-center justify-center pointer-events-none shadow-sm">
+									{hint}
+								</span>
+							)}
+						</button>
+					);
+				})}
 			</div>
+			{hintPrefix && keyHints && Object.keys(keyHints).length > 0 && (
+				<div className="text-[9px] text-gray-400 dark:text-gray-500 text-center mb-1 select-none">
+					Press 1-7 quick apply &middot; 0 remove
+				</div>
+			)}
 			<button
 				ref={(el) => { buttonRefs.current[colors.length] = el; }}
 				type="button"

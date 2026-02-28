@@ -390,7 +390,8 @@ global = true
 # textColorGreen = "Alt-4"
 # textColorBlue = "Alt-5"
 # textColorPurple = "Alt-6"
-# textColorReset = "Alt-0"           # Remove text color
+# textColorBlack = "Alt-7"             # Black text color
+# textColorReset = "Alt-0"             # Clear all formatting
 #
 # # Quick Highlights (Shift+Alt+number)
 # highlightYellow = "Shift-Alt-1"
