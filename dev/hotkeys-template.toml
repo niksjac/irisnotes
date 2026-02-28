@@ -375,3 +375,28 @@ global = true
 #
 # # Search
 # findInNote = "Mod-f"
+#
+# # Format Pickers (open floating picker near cursor)
+# textColorPicker = "Mod-Shift-1"    # Text color picker
+# highlightPicker = "Mod-Shift-2"    # Highlight color picker
+# fontSizePicker = "Mod-Shift-3"     # Font size picker
+# fontFamilyPicker = "Mod-Shift-4"   # Font family picker
+# clearFormatting = "Mod-\\"          # Clear all formatting (Ctrl+\)
+#
+# # Quick Text Colors (Alt+number)
+# textColorRed = "Alt-1"
+# textColorOrange = "Alt-2"
+# textColorYellow = "Alt-3"
+# textColorGreen = "Alt-4"
+# textColorBlue = "Alt-5"
+# textColorPurple = "Alt-6"
+# textColorReset = "Alt-0"           # Remove text color
+#
+# # Quick Highlights (Shift+Alt+number)
+# highlightYellow = "Shift-Alt-1"
+# highlightOrange = "Shift-Alt-2"
+# highlightPink = "Shift-Alt-3"
+# highlightPurple = "Shift-Alt-4"
+# highlightBlue = "Shift-Alt-5"
+# highlightGreen = "Shift-Alt-6"
+# highlightReset = "Shift-Alt-0"     # Remove highlight

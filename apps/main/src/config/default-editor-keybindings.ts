@@ -50,7 +50,29 @@ export type EditorKeybindingId =
 	| "undo"
 	| "redo"
 	// Search
-	| "findInNote";
+	| "findInNote"
+	// Format Pickers
+	| "textColorPicker"
+	| "highlightPicker"
+	| "fontSizePicker"
+	| "fontFamilyPicker"
+	| "clearFormatting"
+	// Direct Text Colors (Alt+number)
+	| "textColorRed"
+	| "textColorOrange"
+	| "textColorYellow"
+	| "textColorGreen"
+	| "textColorBlue"
+	| "textColorPurple"
+	| "textColorReset"
+	// Direct Highlight Colors (Shift+Alt+number)
+	| "highlightYellow"
+	| "highlightOrange"
+	| "highlightPink"
+	| "highlightPurple"
+	| "highlightBlue"
+	| "highlightGreen"
+	| "highlightReset";
 
 export type EditorKeybindings = Record<EditorKeybindingId, EditorKeybindingDef>;
 export type EditorKeybindingOverrides = Partial<Record<EditorKeybindingId, string>>;
@@ -159,6 +181,107 @@ export const DEFAULT_EDITOR_KEYBINDINGS: EditorKeybindings = {
 		description: "Find in Note",
 		category: "Search",
 	},
+
+	// Format Pickers
+	textColorPicker: {
+		key: "Mod-Shift-1",
+		description: "Open Text Color Picker",
+		category: "Format Pickers",
+	},
+	highlightPicker: {
+		key: "Mod-Shift-2",
+		description: "Open Highlight Picker",
+		category: "Format Pickers",
+	},
+	fontSizePicker: {
+		key: "Mod-Shift-3",
+		description: "Open Font Size Picker",
+		category: "Format Pickers",
+	},
+	fontFamilyPicker: {
+		key: "Mod-Shift-4",
+		description: "Open Font Family Picker",
+		category: "Format Pickers",
+	},
+	clearFormatting: {
+		key: "Mod-\\",
+		description: "Clear All Formatting",
+		category: "Format Pickers",
+	},
+
+	// Direct Text Colors
+	textColorRed: {
+		key: "Alt-1",
+		description: "Text Color: Red",
+		category: "Quick Colors",
+	},
+	textColorOrange: {
+		key: "Alt-2",
+		description: "Text Color: Orange",
+		category: "Quick Colors",
+	},
+	textColorYellow: {
+		key: "Alt-3",
+		description: "Text Color: Yellow",
+		category: "Quick Colors",
+	},
+	textColorGreen: {
+		key: "Alt-4",
+		description: "Text Color: Green",
+		category: "Quick Colors",
+	},
+	textColorBlue: {
+		key: "Alt-5",
+		description: "Text Color: Blue",
+		category: "Quick Colors",
+	},
+	textColorPurple: {
+		key: "Alt-6",
+		description: "Text Color: Purple",
+		category: "Quick Colors",
+	},
+	textColorReset: {
+		key: "Alt-0",
+		description: "Remove Text Color",
+		category: "Quick Colors",
+	},
+
+	// Direct Highlight Colors
+	highlightYellow: {
+		key: "Shift-Alt-1",
+		description: "Highlight: Yellow",
+		category: "Quick Highlights",
+	},
+	highlightOrange: {
+		key: "Shift-Alt-2",
+		description: "Highlight: Orange",
+		category: "Quick Highlights",
+	},
+	highlightPink: {
+		key: "Shift-Alt-3",
+		description: "Highlight: Pink",
+		category: "Quick Highlights",
+	},
+	highlightPurple: {
+		key: "Shift-Alt-4",
+		description: "Highlight: Purple",
+		category: "Quick Highlights",
+	},
+	highlightBlue: {
+		key: "Shift-Alt-5",
+		description: "Highlight: Blue",
+		category: "Quick Highlights",
+	},
+	highlightGreen: {
+		key: "Shift-Alt-6",
+		description: "Highlight: Green",
+		category: "Quick Highlights",
+	},
+	highlightReset: {
+		key: "Shift-Alt-0",
+		description: "Remove Highlight",
+		category: "Quick Highlights",
+	},
 };
 
 /**
@@ -181,6 +304,7 @@ export function pmKeyToDisplay(pmKey: string): string {
 		if (part === "Escape") return "Escape";
 		if (part === "Tab") return "Tab";
 		if (part === "Space") return "Space";
+		if (part === "\\") return "\\";
 		// Single letter keys → uppercase
 		if (part.length === 1 && /[a-z]/i.test(part)) return part.toUpperCase();
 		return part;

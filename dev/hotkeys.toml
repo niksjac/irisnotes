@@ -272,6 +272,15 @@ global = true
 # Override rich text editor shortcuts using ProseMirror key notation.
 # Mod- = Ctrl on Linux/Windows, Cmd on Mac. Only include keys to override.
 # See hotkeys-template.toml for all available editor keybinding IDs.
+#
+# New formatting shortcuts (defaults):
+#   Ctrl+Shift+1-4 = Open color/font pickers
+#   Ctrl+\        = Clear all formatting
+#   Alt+1-6       = Quick text colors (Red,Orange,Yellow,Green,Blue,Purple)
+#   Alt+0         = Remove text color
+#   Shift+Alt+1-6 = Quick highlights (Yellow,Orange,Pink,Purple,Blue,Green)
+#   Shift+Alt+0   = Remove highlight
+#
 # [editor]
 # bold = "Mod-b"
 # bulletList = "Alt-l"

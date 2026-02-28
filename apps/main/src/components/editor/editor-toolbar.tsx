@@ -6,6 +6,12 @@ import type { MarkType, NodeType } from "prosemirror-model";
 import { useAtomValue } from "jotai";
 import { editorSettingsAtom } from "@/atoms/settings";
 import {
+	PRESET_COLORS,
+	HIGHLIGHT_COLORS,
+	FONT_SIZE_SCALES,
+	FONT_FAMILIES,
+} from "./format-constants";
+import {
 	Bold,
 	Italic,
 	Code,
@@ -25,65 +31,6 @@ interface EditorToolbarProps {
 	editorView: EditorView | null;
 	schema: any;
 }
-
-// Preset colors for color pickers
-const PRESET_COLORS = [
-	"#000000", "#374151", "#6b7280", "#9ca3af",
-	"#ef4444", "#f97316", "#eab308", "#22c55e",
-	"#3b82f6", "#8b5cf6", "#ec4899", "#14b8a6",
-];
-
-const HIGHLIGHT_COLORS = [
-	"#fef08a", "#fde047", "#fbbf24", "#fb923c",
-	"#fca5a5", "#f9a8d4", "#c4b5fd", "#a5b4fc",
-	"#99f6e4", "#86efac", "#d9f99d", "#ffffff",
-];
-
-// Font size scale factors (em values) - these scale relative to base font size
-// When base is 14px: 0.5em = 7px, 1em = 14px, 2em = 28px, etc.
-const FONT_SIZE_SCALES = [
-	0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.75, 2.0, 2.5, 3.0, 4.0
-];
-
-const FONT_FAMILIES = [
-	// System defaults
-	{ label: "System Default", value: "system-ui, -apple-system, sans-serif" },
-	
-	// Sans-serif fonts
-	{ label: "Sans Serif", value: "Arial, Helvetica, sans-serif" },
-	{ label: "Inter", value: "Inter, system-ui, sans-serif" },
-	{ label: "Roboto", value: "Roboto, Arial, sans-serif" },
-	{ label: "Open Sans", value: "'Open Sans', Arial, sans-serif" },
-	{ label: "Lato", value: "Lato, Arial, sans-serif" },
-	{ label: "Noto Sans", value: "'Noto Sans', Arial, sans-serif" },
-	{ label: "Ubuntu", value: "Ubuntu, Arial, sans-serif" },
-	{ label: "Segoe UI", value: "'Segoe UI', Tahoma, sans-serif" },
-	{ label: "Helvetica Neue", value: "'Helvetica Neue', Helvetica, Arial, sans-serif" },
-	
-	// Serif fonts
-	{ label: "Serif", value: "Georgia, 'Times New Roman', serif" },
-	{ label: "Times New Roman", value: "'Times New Roman', Times, serif" },
-	{ label: "Noto Serif", value: "'Noto Serif', Georgia, serif" },
-	{ label: "Merriweather", value: "Merriweather, Georgia, serif" },
-	{ label: "Playfair Display", value: "'Playfair Display', Georgia, serif" },
-	
-	// Monospace fonts
-	{ label: "Monospace", value: "'Courier New', Consolas, monospace" },
-	{ label: "JetBrains Mono", value: "'JetBrains Mono', 'Fira Code', monospace" },
-	{ label: "Fira Code", value: "'Fira Code', 'JetBrains Mono', monospace" },
-	{ label: "Source Code Pro", value: "'Source Code Pro', Consolas, monospace" },
-	{ label: "Consolas", value: "Consolas, 'Courier New', monospace" },
-	{ label: "JetBrainsMonoNL NF", value: "'JetBrainsMonoNL NF', 'JetBrains Mono', monospace" },
-	{ label: "Cascadia Code", value: "'Cascadia Code', Consolas, monospace" },
-	{ label: "Ubuntu Mono", value: "'Ubuntu Mono', 'Courier New', monospace" },
-	{ label: "Hack", value: "Hack, 'DejaVu Sans Mono', monospace" },
-	{ label: "DejaVu Sans Mono", value: "'DejaVu Sans Mono', Consolas, monospace" },
-	{ label: "Iosevka", value: "Iosevka, 'Fira Code', monospace" },
-	{ label: "Nerd Font Mono", value: "'JetBrainsMono Nerd Font', 'FiraCode Nerd Font', 'Hack Nerd Font', monospace" },
-	
-	// Display/Fun fonts  
-	{ label: "Comic Sans", value: "'Comic Sans MS', cursive" },
-];
 
 // Color Grid component with keyboard navigation
 interface ColorGridProps {

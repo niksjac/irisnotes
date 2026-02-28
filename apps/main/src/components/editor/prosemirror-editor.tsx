@@ -11,6 +11,7 @@ import { editorKeybindingsAtom } from "@/atoms/editor-keybindings";
 import { customSetup } from "./prosemirror-setup";
 import { EditorToolbar } from "./editor-toolbar";
 import { SearchBar } from "./search-bar";
+import { FormatPicker, type FormatPickerType } from "./format-picker";
 import { CodeBlockView,  detectLanguage } from "./codemirror-nodeview";
 import { editorSchema } from "./schema";
 import "prosemirror-view/style/prosemirror.css";
@@ -45,6 +46,9 @@ export function ProseMirrorEditor({
 	const setEditorStatsRef = useRef(setEditorStats);
 	const editorKeybindings = useAtomValue(editorKeybindingsAtom);
 	const [showSearch, setShowSearch] = useState(false);
+	const [activePicker, setActivePicker] = useState<FormatPickerType | null>(null);
+	const openPickerRef = useRef<(type: FormatPickerType) => void>(undefined);
+	openPickerRef.current = (type) => setActivePicker(type);
 
 	// Handle Ctrl+F to open search
 	const handleSearchOpen = useCallback(() => {
@@ -116,6 +120,7 @@ export function ProseMirrorEditor({
 			schema: mySchema,
 			history: true,
 			editorKeybindings,
+			onOpenPicker: (type) => openPickerRef.current?.(type),
 			appShortcuts: [
 				"Mod-g", // Toggle sidebar
 				"Mod-j", // Toggle activity bar
@@ -382,6 +387,17 @@ export function ProseMirrorEditor({
 				className="editor-content-zoom flex-1 prose dark:prose-invert max-w-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-inset overflow-auto"
 
 			/>
+			{activePicker && viewRef.current && (
+				<FormatPicker
+					type={activePicker}
+					editorView={viewRef.current}
+					schema={mySchema}
+					onClose={() => {
+						setActivePicker(null);
+						viewRef.current?.focus();
+					}}
+				/>
+			)}
 		</div>
 	);
 }
