@@ -371,9 +371,9 @@ export function ProseMirrorEditor({
 				return;
 			}
 
-			// Direct text colors (Alt+1-7)
+			// Direct text colors (Alt+1-9, positional)
 			for (const [num, preset] of Object.entries(DIRECT_TEXT_COLORS)) {
-				const id = `textColor${["", "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Black"][Number(num)]}` as keyof EditorKeybindings;
+				const id = `textColor${num}` as keyof EditorKeybindings;
 				if (kb[id] && matchesPmKey(e, kb[id].key)) {
 					e.preventDefault(); e.stopPropagation();
 					applyTextColor(mySchema, preset.color)(v.state, v.dispatch);
@@ -387,9 +387,9 @@ export function ProseMirrorEditor({
 				return;
 			}
 
-			// Direct highlights (Shift+Alt+1-6)
+			// Direct highlights (Shift+Alt+1-9, positional)
 			for (const [num, preset] of Object.entries(DIRECT_HIGHLIGHT_COLORS)) {
-				const id = `highlight${["", "Yellow", "Orange", "Pink", "Purple", "Blue", "Green"][Number(num)]}` as keyof EditorKeybindings;
+				const id = `highlight${num}` as keyof EditorKeybindings;
 				if (kb[id] && matchesPmKey(e, kb[id].key)) {
 					e.preventDefault(); e.stopPropagation();
 					applyHighlight(mySchema, preset.color)(v.state, v.dispatch);

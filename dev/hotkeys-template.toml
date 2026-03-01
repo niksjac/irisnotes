@@ -383,21 +383,26 @@ global = true
 # fontFamilyPicker = "Mod-Shift-4"   # Font family picker
 # clearFormatting = "Mod-\\"          # Clear all formatting (Ctrl+\)
 #
-# # Quick Text Colors (Alt+number)
-# textColorRed = "Alt-1"
-# textColorOrange = "Alt-2"
-# textColorYellow = "Alt-3"
-# textColorGreen = "Alt-4"
-# textColorBlue = "Alt-5"
-# textColorPurple = "Alt-6"
-# textColorBlack = "Alt-7"             # Black text color
+# # Quick Text Colors (Alt+number, positional matching grid order)
+# textColor1 = "Alt-1"               # Black
+# textColor2 = "Alt-2"               # Dark Gray
+# textColor3 = "Alt-3"               # Gray
+# textColor4 = "Alt-4"               # Light Gray
+# textColor5 = "Alt-5"               # Red
+# textColor6 = "Alt-6"               # Orange
+# textColor7 = "Alt-7"               # Yellow
+# textColor8 = "Alt-8"               # Green
+# textColor9 = "Alt-9"               # Blue
 # textColorReset = "Alt-0"             # Clear all formatting
 #
-# # Quick Highlights (Shift+Alt+number)
-# highlightYellow = "Shift-Alt-1"
-# highlightOrange = "Shift-Alt-2"
-# highlightPink = "Shift-Alt-3"
-# highlightPurple = "Shift-Alt-4"
-# highlightBlue = "Shift-Alt-5"
-# highlightGreen = "Shift-Alt-6"
+# # Quick Highlights (Shift+Alt+number, positional matching grid order)
+# highlight1 = "Shift-Alt-1"          # Light Yellow
+# highlight2 = "Shift-Alt-2"          # Yellow
+# highlight3 = "Shift-Alt-3"          # Amber
+# highlight4 = "Shift-Alt-4"          # Orange
+# highlight5 = "Shift-Alt-5"          # Pink
+# highlight6 = "Shift-Alt-6"          # Rose
+# highlight7 = "Shift-Alt-7"          # Lavender
+# highlight8 = "Shift-Alt-8"          # Blue
+# highlight9 = "Shift-Alt-9"          # Mint
 # highlightReset = "Shift-Alt-0"     # Remove highlight

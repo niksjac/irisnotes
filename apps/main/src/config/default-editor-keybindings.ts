@@ -57,22 +57,27 @@ export type EditorKeybindingId =
 	| "fontSizePicker"
 	| "fontFamilyPicker"
 	| "clearFormatting"
-	// Direct Text Colors (Alt+number)
-	| "textColorRed"
-	| "textColorOrange"
-	| "textColorYellow"
-	| "textColorGreen"
-	| "textColorBlue"
-	| "textColorPurple"
-	| "textColorBlack"
+	// Direct Text Colors (Alt+1-9, positional matching grid order)
+	| "textColor1"
+	| "textColor2"
+	| "textColor3"
+	| "textColor4"
+	| "textColor5"
+	| "textColor6"
+	| "textColor7"
+	| "textColor8"
+	| "textColor9"
 	| "textColorReset"
-	// Direct Highlight Colors (Shift+Alt+number)
-	| "highlightYellow"
-	| "highlightOrange"
-	| "highlightPink"
-	| "highlightPurple"
-	| "highlightBlue"
-	| "highlightGreen"
+	// Direct Highlight Colors (Shift+Alt+1-9, positional matching grid order)
+	| "highlight1"
+	| "highlight2"
+	| "highlight3"
+	| "highlight4"
+	| "highlight5"
+	| "highlight6"
+	| "highlight7"
+	| "highlight8"
+	| "highlight9"
 	| "highlightReset";
 
 export type EditorKeybindings = Record<EditorKeybindingId, EditorKeybindingDef>;
@@ -210,40 +215,50 @@ export const DEFAULT_EDITOR_KEYBINDINGS: EditorKeybindings = {
 		category: "Format Pickers",
 	},
 
-	// Direct Text Colors
-	textColorRed: {
+	// Direct Text Colors (positional, matching grid order)
+	textColor1: {
 		key: "Alt-1",
-		description: "Text Color: Red",
+		description: "Text Color 1: Black",
 		category: "Quick Colors",
 	},
-	textColorOrange: {
+	textColor2: {
 		key: "Alt-2",
-		description: "Text Color: Orange",
+		description: "Text Color 2: Dark Gray",
 		category: "Quick Colors",
 	},
-	textColorYellow: {
+	textColor3: {
 		key: "Alt-3",
-		description: "Text Color: Yellow",
+		description: "Text Color 3: Gray",
 		category: "Quick Colors",
 	},
-	textColorGreen: {
+	textColor4: {
 		key: "Alt-4",
-		description: "Text Color: Green",
+		description: "Text Color 4: Light Gray",
 		category: "Quick Colors",
 	},
-	textColorBlue: {
+	textColor5: {
 		key: "Alt-5",
-		description: "Text Color: Blue",
+		description: "Text Color 5: Red",
 		category: "Quick Colors",
 	},
-	textColorPurple: {
+	textColor6: {
 		key: "Alt-6",
-		description: "Text Color: Purple",
+		description: "Text Color 6: Orange",
 		category: "Quick Colors",
 	},
-	textColorBlack: {
+	textColor7: {
 		key: "Alt-7",
-		description: "Text Color: Black",
+		description: "Text Color 7: Yellow",
+		category: "Quick Colors",
+	},
+	textColor8: {
+		key: "Alt-8",
+		description: "Text Color 8: Green",
+		category: "Quick Colors",
+	},
+	textColor9: {
+		key: "Alt-9",
+		description: "Text Color 9: Blue",
 		category: "Quick Colors",
 	},
 	textColorReset: {
@@ -252,35 +267,50 @@ export const DEFAULT_EDITOR_KEYBINDINGS: EditorKeybindings = {
 		category: "Quick Colors",
 	},
 
-	// Direct Highlight Colors
-	highlightYellow: {
+	// Direct Highlight Colors (positional, matching grid order)
+	highlight1: {
 		key: "Shift-Alt-1",
-		description: "Highlight: Yellow",
+		description: "Highlight 1: Light Yellow",
 		category: "Quick Highlights",
 	},
-	highlightOrange: {
+	highlight2: {
 		key: "Shift-Alt-2",
-		description: "Highlight: Orange",
+		description: "Highlight 2: Yellow",
 		category: "Quick Highlights",
 	},
-	highlightPink: {
+	highlight3: {
 		key: "Shift-Alt-3",
-		description: "Highlight: Pink",
+		description: "Highlight 3: Amber",
 		category: "Quick Highlights",
 	},
-	highlightPurple: {
+	highlight4: {
 		key: "Shift-Alt-4",
-		description: "Highlight: Purple",
+		description: "Highlight 4: Orange",
 		category: "Quick Highlights",
 	},
-	highlightBlue: {
+	highlight5: {
 		key: "Shift-Alt-5",
-		description: "Highlight: Blue",
+		description: "Highlight 5: Pink",
 		category: "Quick Highlights",
 	},
-	highlightGreen: {
+	highlight6: {
 		key: "Shift-Alt-6",
-		description: "Highlight: Green",
+		description: "Highlight 6: Rose",
+		category: "Quick Highlights",
+	},
+	highlight7: {
+		key: "Shift-Alt-7",
+		description: "Highlight 7: Lavender",
+		category: "Quick Highlights",
+	},
+	highlight8: {
+		key: "Shift-Alt-8",
+		description: "Highlight 8: Blue",
+		category: "Quick Highlights",
+	},
+	highlight9: {
+		key: "Shift-Alt-9",
+		description: "Highlight 9: Mint",
 		category: "Quick Highlights",
 	},
 	highlightReset: {

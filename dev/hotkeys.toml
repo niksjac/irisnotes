@@ -276,9 +276,9 @@ global = true
 # New formatting shortcuts (defaults):
 #   Ctrl+Shift+1-4 = Open color/font pickers
 #   Ctrl+\        = Clear all formatting
-#   Alt+1-7       = Quick text colors (Red,Orange,Yellow,Green,Blue,Purple,Black)
+#   Alt+1-9       = Quick text colors (matches grid position: Black,DkGray,Gray,LtGray,Red,Orange,Yellow,Green,Blue)
 #   Alt+0         = Clear all formatting
-#   Shift+Alt+1-6 = Quick highlights (Yellow,Orange,Pink,Purple,Blue,Green)
+#   Shift+Alt+1-9 = Quick highlights (matches grid position: LtYellow,Yellow,Amber,Orange,Pink,Rose,Lavender,Blue,Mint)
 #   Shift+Alt+0   = Remove highlight
 #
 # [editor]

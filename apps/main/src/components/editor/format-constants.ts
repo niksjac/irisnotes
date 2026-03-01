@@ -75,37 +75,32 @@ export const FONT_FAMILIES = [
 	{ label: "Comic Sans", value: "'Comic Sans MS', cursive" },
 ];
 
-// ============ Direct Hotkey Color Presets ============
+// ============ Direct Hotkey Color Presets (Positional) ============
+// These map digit 1-9 to the first 9 items of the corresponding preset
+// array, so the shortcut number matches the grid position.
 
-/** Quick-access text colors for Alt+1 through Alt+7 hotkeys */
+/** Quick-access text colors for Alt+1 through Alt+9 hotkeys (matches PRESET_COLORS grid order) */
 export const DIRECT_TEXT_COLORS: Record<number, { color: string; name: string }> = {
-	1: { color: "#ef4444", name: "Red" },
-	2: { color: "#f97316", name: "Orange" },
-	3: { color: "#eab308", name: "Yellow" },
-	4: { color: "#22c55e", name: "Green" },
-	5: { color: "#3b82f6", name: "Blue" },
-	6: { color: "#8b5cf6", name: "Purple" },
-	7: { color: "#000000", name: "Black" },
+	1: { color: "#000000", name: "Black" },
+	2: { color: "#374151", name: "Dark Gray" },
+	3: { color: "#6b7280", name: "Gray" },
+	4: { color: "#9ca3af", name: "Light Gray" },
+	5: { color: "#ef4444", name: "Red" },
+	6: { color: "#f97316", name: "Orange" },
+	7: { color: "#eab308", name: "Yellow" },
+	8: { color: "#22c55e", name: "Green" },
+	9: { color: "#3b82f6", name: "Blue" },
 };
 
-/** Quick-access highlight colors for Shift+Alt+1 through Shift+Alt+6 hotkeys */
+/** Quick-access highlight colors for Shift+Alt+1 through Shift+Alt+9 hotkeys (matches HIGHLIGHT_COLORS grid order) */
 export const DIRECT_HIGHLIGHT_COLORS: Record<number, { color: string; name: string }> = {
-	1: { color: "#fef08a", name: "Yellow" },
-	2: { color: "#fb923c", name: "Orange" },
-	3: { color: "#fca5a5", name: "Pink" },
-	4: { color: "#c4b5fd", name: "Purple" },
-	5: { color: "#a5b4fc", name: "Blue" },
-	6: { color: "#86efac", name: "Green" },
+	1: { color: "#fef08a", name: "Light Yellow" },
+	2: { color: "#fde047", name: "Yellow" },
+	3: { color: "#fbbf24", name: "Amber" },
+	4: { color: "#fb923c", name: "Orange" },
+	5: { color: "#fca5a5", name: "Pink" },
+	6: { color: "#f9a8d4", name: "Rose" },
+	7: { color: "#c4b5fd", name: "Lavender" },
+	8: { color: "#a5b4fc", name: "Blue" },
+	9: { color: "#99f6e4", name: "Mint" },
 };
-
-// ============ Key Hint Reverse Maps (color → shortcut digit) ============
-
-/** Map from text color hex → shortcut digit for display in pickers */
-export const TEXT_COLOR_KEY_HINTS: Record<string, string> = Object.fromEntries(
-	Object.entries(DIRECT_TEXT_COLORS).map(([num, { color }]) => [color, num]),
-);
-
-/** Map from highlight color hex → shortcut digit for display in pickers */
-export const HIGHLIGHT_COLOR_KEY_HINTS: Record<string, string> = Object.fromEntries(
-	Object.entries(DIRECT_HIGHLIGHT_COLORS).map(([num, { color }]) => [color, num]),
-);
