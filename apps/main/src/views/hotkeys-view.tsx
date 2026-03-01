@@ -99,6 +99,14 @@ function getCategoryIcon(category: string): React.ReactNode {
 			return <Icons.Pencil className={iconClass} />;
 		case "search":
 			return <Icons.Search className={iconClass} />;
+		case "format pickers":
+			return <Icons.Palette className={iconClass} />;
+		case "quick colors":
+			return <Icons.Paintbrush className={iconClass} />;
+		case "quick highlights":
+			return <Icons.Highlighter className={iconClass} />;
+		case "indentation":
+			return <Icons.IndentIncrease className={iconClass} />;
 		default:
 			return <Icons.Keyboard className={iconClass} />;
 	}
