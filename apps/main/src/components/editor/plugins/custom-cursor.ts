@@ -57,9 +57,13 @@ export function customCursorPlugin(): Plugin {
 		if (!wrapper) return;
 		const wrapperRect = wrapper.getBoundingClientRect();
 		
-		// Position cursor relative to wrapper
-		const left = coords.left - wrapperRect.left;
-		const top = coords.top - wrapperRect.top;
+		// coords are viewport-relative. The cursor is position:absolute inside
+		// the scroll container (wrapper), so we must add the scroll offset to
+		// get the correct position in content-space. Without this the cursor
+		// drifts by scrollLeft/scrollTop whenever the container is scrolled
+		// (e.g. long lines in no-wrap mode, or after padding changes).
+		const left = coords.left - wrapperRect.left + wrapper.scrollLeft;
+		const top = coords.top - wrapperRect.top + wrapper.scrollTop;
 		const height = coords.bottom - coords.top;
 
 		cursorElement.style.display = "block";

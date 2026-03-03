@@ -19,6 +19,8 @@ import {
 	HIGHLIGHT_COLORS,
 	FONT_SIZE_SCALES,
 	FONT_FAMILIES,
+	getFontsByGroup,
+	getContrastTextColor,
 } from "./format-constants";
 
 export type FormatPickerType = "textColor" | "highlight" | "fontSize" | "fontFamily";
@@ -125,6 +127,7 @@ export function FormatPicker({ type, editorView, schema, onClose }: FormatPicker
 						removeLabel="Remove highlight"
 						editorView={editorView}
 						onClose={onClose}
+						autoContrastTextColorMark={schema.marks.textColor}
 					/>
 				);
 			case "fontSize":
@@ -176,9 +179,11 @@ interface ColorPickerPanelProps {
 	removeLabel: string;
 	editorView: EditorView;
 	onClose: () => void;
+	/** When set, auto-applies a contrasting text color on highlight selection */
+	autoContrastTextColorMark?: MarkType;
 }
 
-function ColorPickerPanel({ colors, markType, attrKey, removeLabel, editorView, onClose }: ColorPickerPanelProps) {
+function ColorPickerPanel({ colors, markType, attrKey, removeLabel, editorView, onClose, autoContrastTextColorMark }: ColorPickerPanelProps) {
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 	const columns = 4;
@@ -191,22 +196,30 @@ function ColorPickerPanel({ colors, markType, attrKey, removeLabel, editorView, 
 
 	const selectAndClose = useCallback((index: number) => {
 		if (index === colors.length) {
-			// Remove button
+			// Remove button — also remove auto-applied text color
 			removeMark(editorView, markType);
+			if (autoContrastTextColorMark) {
+				removeMark(editorView, autoContrastTextColorMark);
+			}
 		} else {
 			const color = colors[index];
 			if (color) {
 				applyMark(editorView, markType, { [attrKey]: color });
+				// Auto-apply contrasting text color for readability
+				if (autoContrastTextColorMark) {
+					const contrastColor = getContrastTextColor(color);
+					applyMark(editorView, autoContrastTextColorMark, { color: contrastColor });
+				}
 			}
 		}
 		onClose();
 		editorView.focus();
-	}, [colors, markType, attrKey, editorView, onClose]);
+	}, [colors, markType, attrKey, editorView, onClose, autoContrastTextColorMark]);
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		let newIndex = selectedIndex;
 
-		// Digit keys: positional quick-apply (1-9 = grid position, 0 = remove)
+		// Quick-apply keys: 1-9 for positions 1-9, a-z for positions 10+, 0 = remove
 		if (/^[0-9]$/.test(e.key)) {
 			e.preventDefault();
 			if (e.key === "0") {
@@ -214,6 +227,14 @@ function ColorPickerPanel({ colors, markType, attrKey, removeLabel, editorView, 
 			} else {
 				const idx = Number(e.key) - 1;
 				if (idx < colors.length) selectAndClose(idx);
+			}
+			return;
+		}
+		if (/^[a-z]$/i.test(e.key)) {
+			const idx = 9 + (e.key.toLowerCase().charCodeAt(0) - 97); // a=9, b=10, ...
+			if (idx < colors.length) {
+				e.preventDefault();
+				selectAndClose(idx);
 			}
 			return;
 		}
@@ -271,7 +292,11 @@ function ColorPickerPanel({ colors, markType, attrKey, removeLabel, editorView, 
 		<div className="p-2" onKeyDown={handleKeyDown}>
 			<div className="grid grid-cols-4 gap-1.5 mb-2" role="grid">
 				{colors.map((color, index) => {
-					const badge = index < 9 ? String(index + 1) : null;
+					const badge = index < 9
+						? String(index + 1)
+						: index < 9 + 26
+							? String.fromCharCode(97 + index - 9) // a, b, c, ...
+							: null;
 					return (
 						<button
 							key={color}
@@ -299,7 +324,7 @@ function ColorPickerPanel({ colors, markType, attrKey, removeLabel, editorView, 
 				})}
 			</div>
 			<div className="text-[9px] text-gray-400 dark:text-gray-500 text-center mb-1 select-none">
-				1-9 quick apply &middot; 0 remove
+				1-9, a-z quick apply &middot; 0 remove
 			</div>
 			<button
 				ref={(el) => { buttonRefs.current[colors.length] = el; }}
@@ -329,10 +354,21 @@ interface FontSizePickerPanelProps {
 
 function FontSizePickerPanel({ schema, editorView, onClose }: FontSizePickerPanelProps) {
 	const [selectedIndex, setSelectedIndex] = useState(0);
+	const [inputValue, setInputValue] = useState("");
 	const listRef = useRef<HTMLDivElement>(null);
+	const inputRef = useRef<HTMLInputElement>(null);
 	const settings = useAtomValue(editorSettingsAtom);
 	const baseFontSize = settings?.fontSize ?? 14;
-	const totalItems = FONT_SIZE_SCALES.length + 1; // +1 for reset
+
+	// Filter scales based on input
+	const filteredScales = inputValue
+		? FONT_SIZE_SCALES.filter((scale) => {
+				const px = Math.round(scale * baseFontSize);
+				return String(px).includes(inputValue) || String(scale).includes(inputValue);
+		  })
+		: FONT_SIZE_SCALES;
+
+	const totalItems = filteredScales.length + 1; // +1 for reset
 
 	// Get current scale from selection
 	const getCurrentScale = useCallback((): number | null => {
@@ -362,16 +398,15 @@ function FontSizePickerPanel({ schema, editorView, onClose }: FontSizePickerPane
 		return null;
 	}, [editorView, schema, baseFontSize]);
 
-	// Initialize selection to current scale
+	// Auto-focus input
 	useEffect(() => {
-		const current = getCurrentScale();
-		if (current !== null) {
-			const idx = FONT_SIZE_SCALES.findIndex((s) => Math.abs(s - current) < 0.01);
-			if (idx >= 0) setSelectedIndex(idx);
-		}
-		// Focus into list
-		listRef.current?.focus();
-	}, [getCurrentScale]);
+		inputRef.current?.focus();
+	}, []);
+
+	// Reset selection when input changes
+	useEffect(() => {
+		setSelectedIndex(0);
+	}, [inputValue]);
 
 	// Scroll selected into view
 	useEffect(() => {
@@ -382,17 +417,26 @@ function FontSizePickerPanel({ schema, editorView, onClose }: FontSizePickerPane
 	}, [selectedIndex]);
 
 	const applySize = useCallback((index: number) => {
-		if (index === FONT_SIZE_SCALES.length) {
+		if (index === filteredScales.length) {
 			removeMark(editorView, schema.marks.fontSize);
 		} else {
-			const scale = FONT_SIZE_SCALES[index];
+			const scale = filteredScales[index];
 			if (scale !== undefined) {
 				applyMark(editorView, schema.marks.fontSize, { size: `${scale}em` });
 			}
 		}
 		onClose();
 		editorView.focus();
-	}, [schema, editorView, onClose]);
+	}, [schema, editorView, onClose, filteredScales]);
+
+	const applyCustomSize = useCallback((pxValue: number) => {
+		if (pxValue > 0) {
+			const scale = pxValue / baseFontSize;
+			applyMark(editorView, schema.marks.fontSize, { size: `${scale}em` });
+		}
+		onClose();
+		editorView.focus();
+	}, [schema, editorView, onClose, baseFontSize]);
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		switch (e.key) {
@@ -413,8 +457,15 @@ function FontSizePickerPanel({ schema, editorView, onClose }: FontSizePickerPane
 				setSelectedIndex(totalItems - 1);
 				break;
 			case "Enter":
-			case " ":
 				e.preventDefault();
+				// If input has a custom number that doesn't match any filtered item exactly, apply it directly
+				if (inputValue) {
+					const px = Number.parseFloat(inputValue);
+					if (!Number.isNaN(px) && px > 0 && filteredScales.length === 0) {
+						applyCustomSize(px);
+						return;
+					}
+				}
 				applySize(selectedIndex);
 				return;
 			case "Escape":
@@ -428,51 +479,71 @@ function FontSizePickerPanel({ schema, editorView, onClose }: FontSizePickerPane
 	const currentScale = getCurrentScale();
 
 	return (
-		<div
-			ref={listRef}
-			className="max-h-[240px] overflow-y-auto min-w-[100px] outline-none"
-			tabIndex={0}
-			onKeyDown={handleKeyDown}
-			role="listbox"
-		>
-			{FONT_SIZE_SCALES.map((scale, index) => {
-				const px = Math.round(scale * baseFontSize);
-				const isCurrent = currentScale !== null && Math.abs(currentScale - scale) < 0.01;
-				return (
-					<button
-						key={scale}
-						type="button"
-						data-index={index}
-						role="option"
-						aria-selected={index === selectedIndex}
-						className={`w-full flex items-center justify-between px-3 py-1 text-xs transition-colors ${
-							index === selectedIndex
-								? "bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100"
-								: "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-						} ${isCurrent ? "font-semibold" : ""}`}
-						onClick={() => applySize(index)}
-						onMouseEnter={() => setSelectedIndex(index)}
-					>
-						<span>{px}px</span>
-						<span className="text-[10px] text-gray-400 ml-2">{scale}&times;</span>
-					</button>
-				);
-			})}
-			<button
-				type="button"
-				data-index={FONT_SIZE_SCALES.length}
-				role="option"
-				aria-selected={selectedIndex === FONT_SIZE_SCALES.length}
-				className={`w-full text-[10px] py-1.5 border-t border-gray-200 dark:border-gray-700 transition-colors ${
-					selectedIndex === FONT_SIZE_SCALES.length
-						? "bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100"
-						: "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-				}`}
-				onClick={() => applySize(FONT_SIZE_SCALES.length)}
-				onMouseEnter={() => setSelectedIndex(FONT_SIZE_SCALES.length)}
+		<div className="min-w-[100px]" onKeyDown={handleKeyDown}>
+			{/* Size input */}
+			<div className="px-2 pt-1 pb-1">
+				<input
+					ref={inputRef}
+					type="text"
+					value={inputValue}
+					onChange={(e) => setInputValue(e.target.value)}
+					placeholder="Type size in px..."
+					className="w-full px-2 py-1 text-xs rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+				/>
+			</div>
+
+			{/* Size list */}
+			<div
+				ref={listRef}
+				className="max-h-[220px] overflow-y-auto"
+				role="listbox"
 			>
-				Reset ({baseFontSize}px)
-			</button>
+				{filteredScales.map((scale, index) => {
+					const px = Math.round(scale * baseFontSize);
+					const isCurrent = currentScale !== null && Math.abs(currentScale - scale) < 0.01;
+					return (
+						<button
+							key={scale}
+							type="button"
+							data-index={index}
+							role="option"
+							aria-selected={index === selectedIndex}
+							className={`w-full flex items-center justify-between px-3 py-1 text-xs transition-colors ${
+								index === selectedIndex
+									? "bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100"
+									: "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+							} ${isCurrent ? "font-semibold" : ""}`}
+							onClick={() => applySize(index)}
+							onMouseEnter={() => setSelectedIndex(index)}
+						>
+							<span>{px}px</span>
+							<span className="text-[10px] text-gray-400 ml-2">{scale}&times;</span>
+						</button>
+					);
+				})}
+				{filteredScales.length === 0 && inputValue && (
+					<div className="px-3 py-2 text-xs text-gray-400 dark:text-gray-500 italic">
+						{Number.parseFloat(inputValue) > 0
+							? `Press Enter to apply ${inputValue}px`
+							: `No sizes match "${inputValue}"`}
+					</div>
+				)}
+				<button
+					type="button"
+					data-index={filteredScales.length}
+					role="option"
+					aria-selected={selectedIndex === filteredScales.length}
+					className={`w-full text-[10px] py-1.5 border-t border-gray-200 dark:border-gray-700 transition-colors ${
+						selectedIndex === filteredScales.length
+							? "bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100"
+							: "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+					}`}
+					onClick={() => applySize(filteredScales.length)}
+					onMouseEnter={() => setSelectedIndex(filteredScales.length)}
+				>
+					Reset ({baseFontSize}px)
+				</button>
+			</div>
 		</div>
 	);
 }
@@ -496,6 +567,8 @@ function FontFamilyPickerPanel({ schema, editorView, onClose }: FontFamilyPicker
 		: FONT_FAMILIES;
 
 	const totalItems = filteredFonts.length + 1; // +1 for reset
+	const isFiltering = filter.length > 0;
+	const groupedFonts = getFontsByGroup();
 
 	// Auto-focus input
 	useEffect(() => {
@@ -581,6 +654,36 @@ function FontFamilyPickerPanel({ schema, editorView, onClose }: FontFamilyPicker
 
 	const currentFamily = getCurrentFamily();
 
+	// Render a single font button row
+	const renderFontButton = (font: typeof FONT_FAMILIES[number], index: number) => {
+		const isCurrent = currentFamily === font.value;
+		const isMono = font.group === "monospace";
+		return (
+			<button
+				key={font.value}
+				type="button"
+				data-index={index}
+				role="option"
+				aria-selected={index === selectedIndex}
+				className={`w-full flex items-center justify-between px-3 py-1 text-xs transition-colors ${
+					index === selectedIndex
+						? "bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100"
+						: "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+				} ${isCurrent ? "font-semibold" : ""}`}
+				style={{ fontFamily: font.value }}
+				onClick={() => applyFont(index)}
+				onMouseEnter={() => setSelectedIndex(index)}
+			>
+				<span>{font.label}</span>
+				{isMono && (
+					<span className="ml-1.5 text-[9px] px-1 py-0 rounded bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400 font-normal font-sans leading-tight">
+						mono
+					</span>
+				)}
+			</button>
+		);
+	};
+
 	return (
 		<div className="min-w-[200px]" onKeyDown={handleKeyDown}>
 			{/* Filter input */}
@@ -601,28 +704,29 @@ function FontFamilyPickerPanel({ schema, editorView, onClose }: FontFamilyPicker
 				className="max-h-[220px] overflow-y-auto"
 				role="listbox"
 			>
-				{filteredFonts.map((font, index) => {
-					const isCurrent = currentFamily === font.value;
-					return (
-						<button
-							key={font.value}
-							type="button"
-							data-index={index}
-							role="option"
-							aria-selected={index === selectedIndex}
-							className={`w-full flex items-center px-3 py-1 text-xs transition-colors ${
-								index === selectedIndex
-									? "bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100"
-									: "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-							} ${isCurrent ? "font-semibold" : ""}`}
-							style={{ fontFamily: font.value }}
-							onClick={() => applyFont(index)}
-							onMouseEnter={() => setSelectedIndex(index)}
-						>
-							{font.label}
-						</button>
-					);
-				})}
+				{isFiltering ? (
+					<>
+						{filteredFonts.map((font, index) => renderFontButton(font, index))}
+					</>
+				) : (
+					<>
+						{groupedFonts.map((g, gIdx) => (
+							<div key={g.group}>
+								<div
+									className={`px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 select-none ${
+										gIdx > 0 ? "border-t border-gray-200 dark:border-gray-700 mt-0.5" : ""
+									}`}
+								>
+									{g.label}
+								</div>
+								{g.fonts.map((font) => {
+									const globalIndex = FONT_FAMILIES.indexOf(font);
+									return renderFontButton(font, globalIndex);
+								})}
+							</div>
+						))}
+					</>
+				)}
 				{filteredFonts.length === 0 && (
 					<div className="px-3 py-2 text-xs text-gray-400 dark:text-gray-500 italic">
 						No fonts match "{filter}"

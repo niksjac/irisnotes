@@ -66,6 +66,7 @@
   font-family: var(--pm-font-family);
   font-size: var(--pm-font-size);
   line-height: var(--pm-line-height);
+  letter-spacing: var(--pm-letter-spacing, 0);
   color: var(--pm-text-color);
   caret-color: var(--pm-caret-color);
   word-wrap: break-word;
@@ -81,7 +82,11 @@
 
 .ProseMirror.wrap-disabled {
   white-space: pre;
-  overflow-x: auto;
+  /* Ensure element fills container width even if content is shorter;
+     prevents unwanted horizontal scroll and keeps box-shadow/outlines visible */
+  min-width: 100%;
+  /* Horizontal scroll is handled by the parent .editor-content-zoom container,
+     which naturally includes the ProseMirror padding in its scrollable area. */
 }
 
 /* Hide cursor when editor is not focused */
@@ -405,6 +410,20 @@ li.pm-tight-selection-list-item .pm-tight-selection:first-child::before {
   font-style: italic;
 }
 
+/* Code sections - multi-line code background wrapper */
+.ProseMirror .code-section {
+  background-color: var(--pm-code-bg);
+  border-radius: 4px;
+  padding: 0.5em 0.75em;
+  margin: var(--pm-block-spacing) 0;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* Paragraphs inside code-section have no extra margin */
+.ProseMirror .code-section > p {
+  margin: 0;
+}
+
 /* Horizontal rules */
 .ProseMirror hr {
   border: none;
@@ -492,11 +511,20 @@ li.pm-tight-selection-list-item .pm-tight-selection:first-child::before {
 .ProseMirror .code-block-container {
   overflow: hidden;
   margin: var(--pm-block-spacing) 0;
-  border-radius: 6px;
 }
 
 .ProseMirror .code-block-container .cm-editor {
   background: transparent !important;
+}
+
+/* CodeMirror line numbers - smaller and subdued */
+.ProseMirror .code-block-container .cm-lineNumbers {
+  font-size: 0.75em;
+  min-width: 2.5em;
+}
+
+.ProseMirror .code-block-container .cm-gutterElement {
+  padding: 0 4px 0 8px;
 }
 
 .ProseMirror .code-block-container .cm-gutters {
@@ -682,5 +710,61 @@ li.pm-tight-selection-list-item .pm-tight-selection:first-child::before {
 .dark .search-close-btn:hover {
   background-color: #374151;
   color: #f3f4f6;
+}
+
+/* ==========================================================================
+   Box Model Inspector (toggled via .pm-box-debug class on .ProseMirror)
+   Visualises the CSS box model for editor elements — padding region,
+   block boundaries, lists, blockquotes, and code blocks.
+   ========================================================================== */
+
+/* Editor padding region — inset shadow fills the padding area in orange */
+.ProseMirror.pm-box-debug {
+  box-shadow: inset 0 0 0 var(--pm-padding, 16px) rgba(251, 146, 60, 0.18);
+  outline: 2px solid rgba(251, 146, 60, 0.6) !important;
+}
+
+/* Paragraphs / text blocks → blue */
+.ProseMirror.pm-box-debug > p {
+  outline: 1px dashed rgba(59, 130, 246, 0.7);
+  outline-offset: 1px;
+}
+
+/* Lists → green */
+.ProseMirror.pm-box-debug > ul,
+.ProseMirror.pm-box-debug > ol {
+  outline: 1px dashed rgba(34, 197, 94, 0.7);
+  outline-offset: 1px;
+}
+
+/* List items → lighter green */
+.ProseMirror.pm-box-debug li {
+  outline: 1px dashed rgba(34, 197, 94, 0.45);
+  outline-offset: 0px;
+}
+
+/* Blockquotes → purple */
+.ProseMirror.pm-box-debug > blockquote {
+  outline: 1px dashed rgba(168, 85, 247, 0.7);
+  outline-offset: 1px;
+}
+
+/* Code sections → cyan */
+.ProseMirror.pm-box-debug > .code-section {
+  outline: 1px dashed rgba(6, 182, 212, 0.7);
+  outline-offset: 1px;
+}
+
+/* Code blocks (ProseMirror node + embedded CodeMirror) → amber */
+.ProseMirror.pm-box-debug > pre,
+.ProseMirror.pm-box-debug .cm-editor {
+  outline: 1px dashed rgba(245, 158, 11, 0.8);
+  outline-offset: 1px;
+}
+
+/* Horizontal rules → pink */
+.ProseMirror.pm-box-debug > hr {
+  outline: 1px dashed rgba(236, 72, 153, 0.7);
+  outline-offset: 2px;
 }
 

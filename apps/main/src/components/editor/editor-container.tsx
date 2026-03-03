@@ -18,6 +18,7 @@ interface EditorContainerProps {
 	initialCursorPosition?: number;
 	toolbarVisible?: boolean;
 	autoFocus?: boolean;
+	titleBar?: React.ReactNode;
 }
 
 export const EditorContainer: React.FC<EditorContainerProps> = ({
@@ -31,6 +32,7 @@ export const EditorContainer: React.FC<EditorContainerProps> = ({
 	initialCursorPosition,
 	toolbarVisible = false,
 	autoFocus = false,
+	titleBar,
 }) => {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const { rightClickMenu, handleRightClickMenu, hideRightClickMenu } =
@@ -79,6 +81,7 @@ export const EditorContainer: React.FC<EditorContainerProps> = ({
 						initialCursorPosition={initialCursorPosition}
 						toolbarVisible={toolbarVisible}
 						autoFocus={autoFocus}
+						titleBar={titleBar}
 					/>
 				)}
 				<ZoomIndicator />

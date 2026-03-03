@@ -1,5 +1,6 @@
 import type { Schema, NodeType, Node } from "prosemirror-model";
 import type { Plugin, Command, EditorState, Transaction } from "prosemirror-state";
+import { TextSelection } from "prosemirror-state";
 import { keymap } from "prosemirror-keymap";
 import { history, undo, redo } from "prosemirror-history";
 import {
@@ -20,9 +21,9 @@ import { autolinkPlugin, linkifySelection } from "./plugins/autolink";
 import { tightSelectionPlugin } from "./plugins/tight-selection";
 import { customCursorPlugin } from "./plugins/custom-cursor";
 import { activeLinePlugin } from "./plugins/active-line";
-import { buildLineCommandsKeymap } from "./plugins/line-commands";
+import { buildLineCommandsKeymap, resetSmartSelectLevel } from "./plugins/line-commands";
 import { searchPlugin } from "./plugins/search";
-import { clearAllFormatting } from "./format-commands";
+import { clearAllFormatting, increaseFontSizeMark, decreaseFontSizeMark } from "./format-commands";
 import { DEFAULT_EDITOR_KEYBINDINGS, type EditorKeybindings } from "@/config/default-editor-keybindings";
 
 /**
@@ -296,28 +297,20 @@ export function customSetup(options: SetupOptions): Plugin[] {
 				const { from, to, empty } = state.selection;
 				
 				if (empty) {
-					// No selection - just insert spaces at cursor
-					dispatch(state.tr.insertText("  ").scrollIntoView());
+					// No selection - insert real tab character at cursor
+					dispatch(state.tr.insertText("\t").scrollIntoView());
 				} else {
-					// Selection exists - indent all lines in selection
+					// Selection exists - indent all covered lines with a real tab
 					const tr = state.tr;
-					const doc = state.doc;
-					
-					// Find all block positions that overlap with selection
 					const positions: number[] = [];
-					doc.nodesBetween(from, to, (node: Node, pos: number) => {
-						if (node.isTextblock) {
-							positions.push(pos + 1); // +1 to get inside the block
-						}
+					state.doc.nodesBetween(from, to, (node: Node, pos: number) => {
+						if (node.isTextblock) positions.push(pos + 1);
 					});
-					
-					// Insert spaces at the start of each line (reverse order to maintain positions)
 					let offset = 0;
 					for (const pos of positions) {
-						tr.insertText("  ", pos + offset);
-						offset += 2;
+						tr.insertText("\t", pos + offset);
+						offset += 1;
 					}
-					
 					dispatch(tr.scrollIntoView());
 				}
 			}
@@ -334,67 +327,50 @@ export function customSetup(options: SetupOptions): Plugin[] {
 				const { from, to, empty } = state.selection;
 				
 				if (empty) {
-					// No selection - remove leading spaces from current line
+					// Remove leading tab or up to 2 spaces from current line
 					const { $from } = state.selection;
 					const lineStart = $from.start();
 					const lineText = $from.parent.textContent;
-					const match = lineText.match(/^( {1,2})/);
+					const match = lineText.match(/^(\t| {1,2})/);
 					if (match?.[1]) {
-						const spacesToRemove = match[1].length;
-						dispatch(state.tr.delete(lineStart, lineStart + spacesToRemove).scrollIntoView());
+						dispatch(state.tr.delete(lineStart, lineStart + match[1].length).scrollIntoView());
 					}
 				} else {
-					// Selection exists - outdent all lines in selection
+					// Outdent all covered lines — remove leading tab or up to 2 spaces
 					const tr = state.tr;
-					const doc = state.doc;
-					
-					// Collect blocks and their leading spaces
 					const edits: { pos: number; remove: number }[] = [];
-					doc.nodesBetween(from, to, (node: Node, pos: number) => {
+					state.doc.nodesBetween(from, to, (node: Node, pos: number) => {
 						if (node.isTextblock && node.textContent) {
-							const match = node.textContent.match(/^( {1,2})/);
-							if (match?.[1]) {
-								edits.push({ pos: pos + 1, remove: match[1].length });
-							}
+							const match = node.textContent.match(/^(\t| {1,2})/);
+							if (match?.[1]) edits.push({ pos: pos + 1, remove: match[1].length });
 						}
 					});
-					
-					// Remove spaces (reverse order to maintain positions)
 					for (let i = edits.length - 1; i >= 0; i--) {
-						const edit = edits[i];
-						if (edit) {
-							tr.delete(edit.pos, edit.pos + edit.remove);
-						}
+						const e = edits[i];
+						if (e) tr.delete(e.pos, e.pos + e.remove);
 					}
-					
-					if (edits.length > 0) {
-						dispatch(tr.scrollIntoView());
-					}
+					if (edits.length > 0) dispatch(tr.scrollIntoView());
 				}
 			}
-			return true; // Still consume the event to prevent focus change
+			return true; // consume event — prevent DOM focus shift
 		};
 	} else {
 		// No list support, just handle tab characters
 		customKeybindings["Tab"] = (state: EditorState, dispatch?: (tr: Transaction) => void) => {
 			if (dispatch) {
 				const { from, to, empty } = state.selection;
-				
 				if (empty) {
-					dispatch(state.tr.insertText("  ").scrollIntoView());
+					dispatch(state.tr.insertText("\t").scrollIntoView());
 				} else {
 					const tr = state.tr;
-					const doc = state.doc;
 					const positions: number[] = [];
-					doc.nodesBetween(from, to, (node: Node, pos: number) => {
-						if (node.isTextblock) {
-							positions.push(pos + 1);
-						}
+					state.doc.nodesBetween(from, to, (node: Node, pos: number) => {
+						if (node.isTextblock) positions.push(pos + 1);
 					});
 					let offset = 0;
 					for (const pos of positions) {
-						tr.insertText("  ", pos + offset);
-						offset += 2;
+						tr.insertText("\t", pos + offset);
+						offset += 1;
 					}
 					dispatch(tr.scrollIntoView());
 				}
@@ -404,47 +380,47 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		customKeybindings["Shift-Tab"] = (state: EditorState, dispatch?: (tr: Transaction) => void) => {
 			if (dispatch) {
 				const { from, to, empty } = state.selection;
-				
 				if (empty) {
 					const { $from } = state.selection;
 					const lineStart = $from.start();
-					const lineText = $from.parent.textContent;
-					const match = lineText.match(/^( {1,2})/);
-					if (match?.[1]) {
-						const spacesToRemove = match[1].length;
-						dispatch(state.tr.delete(lineStart, lineStart + spacesToRemove).scrollIntoView());
-					}
+					const match = $from.parent.textContent.match(/^(\t| {1,2})/);
+					if (match?.[1]) dispatch(state.tr.delete(lineStart, lineStart + match[1].length).scrollIntoView());
 				} else {
 					const tr = state.tr;
-					const doc = state.doc;
 					const edits: { pos: number; remove: number }[] = [];
-					doc.nodesBetween(from, to, (node: Node, pos: number) => {
+					state.doc.nodesBetween(from, to, (node: Node, pos: number) => {
 						if (node.isTextblock && node.textContent) {
-							const match = node.textContent.match(/^( {1,2})/);
-							if (match?.[1]) {
-								edits.push({ pos: pos + 1, remove: match[1].length });
-							}
+							const match = node.textContent.match(/^(\t| {1,2})/);
+							if (match?.[1]) edits.push({ pos: pos + 1, remove: match[1].length });
 						}
 					});
 					for (let i = edits.length - 1; i >= 0; i--) {
-						const edit = edits[i];
-						if (edit) {
-							tr.delete(edit.pos, edit.pos + edit.remove);
-						}
+						const e = edits[i];
+						if (e) tr.delete(e.pos, e.pos + e.remove);
 					}
-					if (edits.length > 0) {
-						dispatch(tr.scrollIntoView());
-					}
+					if (edits.length > 0) dispatch(tr.scrollIntoView());
 				}
 			}
 			return true;
 		};
 	}
 
-	// Escape: Exit editor focus and move to toolbar
-	// This allows keyboard-only navigation back to UI elements
-	customKeybindings["Escape"] = (_state: EditorState, _dispatch?: (tr: Transaction) => void, view?: any) => {
-		// Find the toolbar in the DOM and focus its first focusable element
+	// Escape: two-stage like VS Code
+	// Stage 1 (selection active): collapse to cursor, reset Ctrl+A cycle
+	// Stage 2 (cursor only): exit editor focus to toolbar
+	customKeybindings["Escape"] = (state: EditorState, dispatch?: (tr: Transaction) => void, view?: any) => {
+		// If there's an active selection, collapse it to a cursor — don't jump away
+		if (!state.selection.empty) {
+			if (dispatch) {
+				const { anchor } = state.selection;
+				dispatch(state.tr.setSelection(TextSelection.create(state.doc, anchor)));
+			}
+			// Reset the smart-select cycle so next Ctrl+A starts fresh from line
+			resetSmartSelectLevel();
+			return true;
+		}
+
+		// No selection — exit editor focus to toolbar (or just blur)
 		const toolbar = document.querySelector('[data-editor-toolbar]');
 		if (toolbar) {
 			const firstFocusable = toolbar.querySelector('button, input, [tabindex="0"]') as HTMLElement | null;
@@ -453,7 +429,6 @@ export function customSetup(options: SetupOptions): Plugin[] {
 				return true;
 			}
 		}
-		// If no toolbar, just blur the editor
 		if (view) {
 			(view.dom as HTMLElement).blur();
 		}
@@ -472,6 +447,12 @@ export function customSetup(options: SetupOptions): Plugin[] {
 
 	// ── Clear All Formatting (Ctrl+\ — no digit-key issues) ──
 	customKeybindings[kb.clearFormatting.key] = clearAllFormatting(options.schema);
+
+	// ── Inline font size step (Ctrl+Alt+↑/↓) ──
+	if (options.schema.marks.fontSize) {
+		customKeybindings["Mod-Alt-ArrowUp"] = increaseFontSizeMark(options.schema);
+		customKeybindings["Mod-Alt-ArrowDown"] = decreaseFontSizeMark(options.schema);
+	}
 
 	// NOTE: Format pickers (Ctrl+Shift+1-4), direct colors (Alt+0-6),
 	// and direct highlights (Shift+Alt+0-6) are handled via DOM keydown

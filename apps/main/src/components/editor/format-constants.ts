@@ -7,6 +7,22 @@
  * - format-commands.ts (ProseMirror commands for direct color hotkeys)
  */
 
+// ============ Contrast Utility ============
+
+/**
+ * Returns a readable text color (black or white) for a given background hex color.
+ * Uses relative luminance per WCAG 2.0.
+ */
+export function getContrastTextColor(hex: string): string {
+	const h = hex.replace("#", "");
+	const r = Number.parseInt(h.substring(0, 2), 16) / 255;
+	const g = Number.parseInt(h.substring(2, 4), 16) / 255;
+	const b = Number.parseInt(h.substring(4, 6), 16) / 255;
+	const toLinear = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+	const luminance = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+	return luminance > 0.4 ? "#000000" : "#ffffff";
+}
+
 // ============ Color Presets ============
 
 /** Preset text colors for the color picker (4×3 grid) */
@@ -18,9 +34,9 @@ export const PRESET_COLORS = [
 
 /** Preset highlight (background) colors for the highlight picker (4×3 grid) */
 export const HIGHLIGHT_COLORS = [
-	"#fef08a", "#fde047", "#fbbf24", "#fb923c",
-	"#fca5a5", "#f9a8d4", "#c4b5fd", "#a5b4fc",
-	"#99f6e4", "#86efac", "#d9f99d", "#ffffff",
+	"#facc15", "#f59e0b", "#fb923c", "#f87171",
+	"#e879f9", "#a78bfa", "#60a5fa", "#38bdf8",
+	"#34d399", "#4ade80", "#a3e635", "#ffffff",
 ];
 
 // ============ Font Size ============
@@ -35,45 +51,70 @@ export const FONT_SIZE_SCALES = [
 
 // ============ Font Families ============
 
-export const FONT_FAMILIES = [
-	// System defaults
-	{ label: "System Default", value: "system-ui, -apple-system, sans-serif" },
+export type FontGroup = "sans-serif" | "serif" | "monospace" | "display";
 
+export interface FontFamilyEntry {
+	label: string;
+	value: string;
+	group: FontGroup;
+}
+
+export const FONT_GROUP_LABELS: Record<FontGroup, string> = {
+	"sans-serif": "Sans Serif",
+	"serif": "Serif",
+	"monospace": "Monospace",
+	"display": "Display",
+};
+
+export const FONT_GROUP_ORDER: FontGroup[] = ["sans-serif", "serif", "monospace", "display"];
+
+export const FONT_FAMILIES: FontFamilyEntry[] = [
 	// Sans-serif fonts
-	{ label: "Sans Serif", value: "Arial, Helvetica, sans-serif" },
-	{ label: "Inter", value: "Inter, system-ui, sans-serif" },
-	{ label: "Roboto", value: "Roboto, Arial, sans-serif" },
-	{ label: "Open Sans", value: "'Open Sans', Arial, sans-serif" },
-	{ label: "Lato", value: "Lato, Arial, sans-serif" },
-	{ label: "Noto Sans", value: "'Noto Sans', Arial, sans-serif" },
-	{ label: "Ubuntu", value: "Ubuntu, Arial, sans-serif" },
-	{ label: "Segoe UI", value: "'Segoe UI', Tahoma, sans-serif" },
-	{ label: "Helvetica Neue", value: "'Helvetica Neue', Helvetica, Arial, sans-serif" },
+	{ label: "Sans Serif", value: "Arial, Helvetica, sans-serif", group: "sans-serif" },
+	{ label: "Inter", value: "Inter, system-ui, sans-serif", group: "sans-serif" },
+	{ label: "Roboto", value: "Roboto, Arial, sans-serif", group: "sans-serif" },
+	{ label: "Open Sans", value: "'Open Sans', Arial, sans-serif", group: "sans-serif" },
+	{ label: "Lato", value: "Lato, Arial, sans-serif", group: "sans-serif" },
+	{ label: "Noto Sans", value: "'Noto Sans', Arial, sans-serif", group: "sans-serif" },
+	{ label: "Ubuntu", value: "Ubuntu, Arial, sans-serif", group: "sans-serif" },
+	{ label: "Segoe UI", value: "'Segoe UI', Tahoma, sans-serif", group: "sans-serif" },
+	{ label: "Helvetica Neue", value: "'Helvetica Neue', Helvetica, Arial, sans-serif", group: "sans-serif" },
 
 	// Serif fonts
-	{ label: "Serif", value: "Georgia, 'Times New Roman', serif" },
-	{ label: "Times New Roman", value: "'Times New Roman', Times, serif" },
-	{ label: "Noto Serif", value: "'Noto Serif', Georgia, serif" },
-	{ label: "Merriweather", value: "Merriweather, Georgia, serif" },
-	{ label: "Playfair Display", value: "'Playfair Display', Georgia, serif" },
+	{ label: "Serif", value: "Georgia, 'Times New Roman', serif", group: "serif" },
+	{ label: "Times New Roman", value: "'Times New Roman', Times, serif", group: "serif" },
+	{ label: "Noto Serif", value: "'Noto Serif', Georgia, serif", group: "serif" },
+	{ label: "Merriweather", value: "Merriweather, Georgia, serif", group: "serif" },
+	{ label: "Playfair Display", value: "'Playfair Display', Georgia, serif", group: "serif" },
 
 	// Monospace fonts
-	{ label: "Monospace", value: "'Courier New', Consolas, monospace" },
-	{ label: "JetBrains Mono", value: "'JetBrains Mono', 'Fira Code', monospace" },
-	{ label: "Fira Code", value: "'Fira Code', 'JetBrains Mono', monospace" },
-	{ label: "Source Code Pro", value: "'Source Code Pro', Consolas, monospace" },
-	{ label: "Consolas", value: "Consolas, 'Courier New', monospace" },
-	{ label: "JetBrainsMonoNL NF", value: "'JetBrainsMonoNL NF', 'JetBrains Mono', monospace" },
-	{ label: "Cascadia Code", value: "'Cascadia Code', Consolas, monospace" },
-	{ label: "Ubuntu Mono", value: "'Ubuntu Mono', 'Courier New', monospace" },
-	{ label: "Hack", value: "Hack, 'DejaVu Sans Mono', monospace" },
-	{ label: "DejaVu Sans Mono", value: "'DejaVu Sans Mono', Consolas, monospace" },
-	{ label: "Iosevka", value: "Iosevka, 'Fira Code', monospace" },
-	{ label: "Nerd Font Mono", value: "'JetBrainsMono Nerd Font', 'FiraCode Nerd Font', 'Hack Nerd Font', monospace" },
+	{ label: "Monospace", value: "'Courier New', Consolas, monospace", group: "monospace" },
+	{ label: "JetBrains Mono", value: "'JetBrains Mono', 'Fira Code', monospace", group: "monospace" },
+	{ label: "Fira Code", value: "'Fira Code', 'JetBrains Mono', monospace", group: "monospace" },
+	{ label: "Source Code Pro", value: "'Source Code Pro', Consolas, monospace", group: "monospace" },
+	{ label: "Consolas", value: "Consolas, 'Courier New', monospace", group: "monospace" },
+	{ label: "JetBrainsMonoNL NF", value: "'JetBrainsMonoNL NF', 'JetBrains Mono', monospace", group: "monospace" },
+	{ label: "Cascadia Code", value: "'Cascadia Code', Consolas, monospace", group: "monospace" },
+	{ label: "Ubuntu Mono", value: "'Ubuntu Mono', 'Courier New', monospace", group: "monospace" },
+	{ label: "Hack", value: "Hack, 'DejaVu Sans Mono', monospace", group: "monospace" },
+	{ label: "DejaVu Sans Mono", value: "'DejaVu Sans Mono', Consolas, monospace", group: "monospace" },
+	{ label: "Iosevka", value: "Iosevka, 'Fira Code', monospace", group: "monospace" },
+	{ label: "Nerd Font Mono", value: "'JetBrainsMono Nerd Font', 'FiraCode Nerd Font', 'Hack Nerd Font', monospace", group: "monospace" },
 
 	// Display/Fun fonts
-	{ label: "Comic Sans", value: "'Comic Sans MS', cursive" },
+	{ label: "Comic Sans", value: "'Comic Sans MS', cursive", group: "display" },
 ];
+
+/** Get fonts grouped by category, in display order */
+export function getFontsByGroup(): { group: FontGroup; label: string; fonts: FontFamilyEntry[] }[] {
+	return FONT_GROUP_ORDER
+		.map((group) => ({
+			group,
+			label: FONT_GROUP_LABELS[group],
+			fonts: FONT_FAMILIES.filter((f) => f.group === group),
+		}))
+		.filter((g) => g.fonts.length > 0);
+}
 
 // ============ Direct Hotkey Color Presets (Positional) ============
 // These map digit 1-9 to the first 9 items of the corresponding preset
@@ -94,13 +135,13 @@ export const DIRECT_TEXT_COLORS: Record<number, { color: string; name: string }>
 
 /** Quick-access highlight colors for Shift+Alt+1 through Shift+Alt+9 hotkeys (matches HIGHLIGHT_COLORS grid order) */
 export const DIRECT_HIGHLIGHT_COLORS: Record<number, { color: string; name: string }> = {
-	1: { color: "#fef08a", name: "Light Yellow" },
-	2: { color: "#fde047", name: "Yellow" },
-	3: { color: "#fbbf24", name: "Amber" },
-	4: { color: "#fb923c", name: "Orange" },
-	5: { color: "#fca5a5", name: "Pink" },
-	6: { color: "#f9a8d4", name: "Rose" },
-	7: { color: "#c4b5fd", name: "Lavender" },
-	8: { color: "#a5b4fc", name: "Blue" },
-	9: { color: "#99f6e4", name: "Mint" },
+	1: { color: "#facc15", name: "Yellow" },
+	2: { color: "#f59e0b", name: "Amber" },
+	3: { color: "#fb923c", name: "Orange" },
+	4: { color: "#f87171", name: "Red" },
+	5: { color: "#e879f9", name: "Fuchsia" },
+	6: { color: "#a78bfa", name: "Violet" },
+	7: { color: "#60a5fa", name: "Blue" },
+	8: { color: "#38bdf8", name: "Sky" },
+	9: { color: "#34d399", name: "Emerald" },
 };

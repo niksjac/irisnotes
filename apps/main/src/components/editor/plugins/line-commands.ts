@@ -508,6 +508,14 @@ export const deleteLine: Command = (state, dispatch) => {
 let smartSelectLevel = 0;
 let lastSmartSelectTime = 0;
 let lastSmartSelectRange: { from: number; to: number } | null = null;
+/** The cursor position (pre-selection) where the cycle started. */
+let smartSelectOriginPos = 0;
+
+/** Reset the smart-select cycle state (call when Escape collapses the selection). */
+export function resetSmartSelectLevel(): void {
+	smartSelectLevel = 0;
+	lastSmartSelectRange = null;
+}
 
 /**
  * Check if a block is "empty" (only whitespace or truly empty)
@@ -523,18 +531,27 @@ function isBlockEmpty(block: PMNode): boolean {
  */
 export const smartSelectAll: Command = (state, dispatch) => {
 	const { doc, selection } = state;
-	const { $from } = selection;
 	const now = Date.now();
 
 	// Reset level if too much time has passed or cursor moved to different position
-	if (
+	const shouldReset =
 		now - lastSmartSelectTime > 2000 ||
 		(lastSmartSelectRange &&
 			(selection.from !== lastSmartSelectRange.from ||
-				selection.to !== lastSmartSelectRange.to))
-	) {
+				selection.to !== lastSmartSelectRange.to));
+
+	if (shouldReset) {
 		smartSelectLevel = 0;
+		// Store the actual cursor anchor as the cycle origin so level 1 always
+		// refers back to the line where the user was, even when cycling from
+		// level 3 (AllSelection) — AllSelection's $from is at doc position 0,
+		// not the user's cursor.
+		smartSelectOriginPos = selection.anchor ?? selection.from;
 	}
+
+	// Always resolve the $from from the stored origin so cycling back to level 1
+	// targets the correct block rather than the beginning of the document.
+	const $from = doc.resolve(smartSelectOriginPos);
 
 	// Find the block depth
 	let blockDepth = $from.depth;

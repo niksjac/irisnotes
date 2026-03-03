@@ -10,10 +10,75 @@ import { json } from "@codemirror/lang-json";
 import { markdown } from "@codemirror/lang-markdown";
 import { oneDark } from "@codemirror/theme-one-dark";
 import type { Node as ProseMirrorNode } from "prosemirror-model";
-import type { EditorView, NodeView } from "prosemirror-view";
-import type { Decoration } from "prosemirror-view";
+import type { EditorView as ProseMirrorEditorView, NodeView, Decoration } from "prosemirror-view";
 import { Selection, TextSelection } from "prosemirror-state";
 import { isAppHotkey } from "@/utils/app-hotkeys";
+
+/**
+ * Custom Tab keymap for code blocks.
+ * Tab inserts a literal "\t" at cursor (or at start of each selected line),
+ * matching the ProseMirror prose Tab behavior.
+ * Shift+Tab removes a leading tab (or up to 2 leading spaces) from current line.
+ */
+const tabKeymap = keymap.of([
+	{
+		key: "Tab",
+		run(view: CodeMirrorView): boolean {
+			const { state } = view;
+			const changes: { from: number; to?: number; insert: string }[] = [];
+
+			if (state.selection.ranges.every(r => r.empty)) {
+				// No selection: insert a tab at each cursor
+				for (const range of state.selection.ranges) {
+					changes.push({ from: range.from, insert: "\t" });
+				}
+			} else {
+				// Selection: insert a tab at the start of each covered line
+				const seenLines = new Set<number>();
+				for (const range of state.selection.ranges) {
+					const startLine = state.doc.lineAt(range.from).number;
+					const endLine = state.doc.lineAt(range.to).number;
+					for (let ln = startLine; ln <= endLine; ln++) {
+						if (!seenLines.has(ln)) {
+							seenLines.add(ln);
+							changes.push({ from: state.doc.line(ln).from, insert: "\t" });
+						}
+					}
+				}
+			}
+
+			view.dispatch(state.update({ changes, scrollIntoView: true, userEvent: "input" }));
+			return true;
+		},
+	},
+	{
+		key: "Shift-Tab",
+		run(view: CodeMirrorView): boolean {
+			const { state } = view;
+			const changes: { from: number; to: number; insert: string }[] = [];
+			const seenLines = new Set<number>();
+
+			for (const range of state.selection.ranges) {
+				const startLine = state.doc.lineAt(range.from).number;
+				const endLine = state.doc.lineAt(range.to).number;
+				for (let ln = startLine; ln <= endLine; ln++) {
+					if (!seenLines.has(ln)) {
+						seenLines.add(ln);
+						const line = state.doc.line(ln);
+						const match = line.text.match(/^(\t| {1,2})/);
+						if (match?.[1]) {
+							changes.push({ from: line.from, to: line.from + match[1].length, insert: "" });
+						}
+					}
+				}
+			}
+
+			if (changes.length === 0) return false;
+			view.dispatch(state.update({ changes, scrollIntoView: true, userEvent: "delete" }));
+			return true;
+		},
+	},
+]);
 
 // Basic setup without importing from 'codemirror' package
 const basicExtensions = [
@@ -24,6 +89,7 @@ const basicExtensions = [
 	bracketMatching(),
 	syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
 	keymap.of([...defaultKeymap, ...historyKeymap]),
+	tabKeymap,
 ];
 
 const languageExtensions: Record<string, any> = {
@@ -141,7 +207,7 @@ export class CodeBlockView implements NodeView {
 	dom: HTMLElement;
 	codeMirror: CodeMirrorView;
 	node: ProseMirrorNode;
-	view: EditorView;
+	view: ProseMirrorEditorView;
 	getPos: () => number | undefined;
 	updating: boolean = false;
 	langButton: HTMLButtonElement;
@@ -150,7 +216,7 @@ export class CodeBlockView implements NodeView {
 
 	constructor(
 		node: ProseMirrorNode,
-		view: EditorView,
+		view: ProseMirrorEditorView,
 		getPos: () => number | undefined
 	) {
 		this.node = node;
@@ -163,7 +229,6 @@ export class CodeBlockView implements NodeView {
 		// Create outer container with customizable styling
 		this.dom = document.createElement("div");
 		this.dom.className = "code-block-container relative my-3";
-		this.dom.style.borderRadius = "8px";
 		this.dom.style.border = `1px solid ${isDark ? "#374151" : "#d1d5db"}`;
 		this.dom.style.backgroundColor = isDark ? "#0d1117" : "#f6f8fa";
 		this.dom.style.overflow = "hidden";
@@ -182,7 +247,7 @@ export class CodeBlockView implements NodeView {
 
 		// Create language button (clickable badge)
 		this.langButton = document.createElement("button");
-		this.langButton.className = "absolute top-2 right-2 z-10 text-xs rounded-md px-2 py-1 font-medium transition-colors";
+		this.langButton.className = "absolute bottom-1 right-2 z-10 text-[10px] rounded px-1.5 py-0.5 font-medium transition-colors opacity-60 hover:opacity-100";
 		this.langButton.style.backgroundColor = isDark ? "#21262d" : "#eaeef2";
 		this.langButton.style.border = `1px solid ${isDark ? "#30363d" : "#d0d7de"}`;
 		this.langButton.style.color = isDark ? "#c9d1d9" : "#24292f";
@@ -207,7 +272,7 @@ export class CodeBlockView implements NodeView {
 		// Create CodeMirror container
 		const cmContainer = document.createElement("div");
 		cmContainer.className = "codemirror-wrapper";
-		cmContainer.style.padding = "8px 0";
+		cmContainer.style.padding = "4px 0";
 		this.dom.appendChild(cmContainer);
 
 		// Get language extension
@@ -285,6 +350,7 @@ export class CodeBlockView implements NodeView {
 				),
 				...basicExtensions,
 				this.languageCompartment.of(langExtension ? [langExtension] : []),
+				CodeMirrorView.lineWrapping,
 				...(isDark ? [oneDark] : []),
 				CodeMirrorView.updateListener.of((update) => {
 					if (!this.updating && update.docChanged) {

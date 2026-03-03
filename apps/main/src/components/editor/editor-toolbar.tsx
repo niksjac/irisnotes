@@ -1,15 +1,17 @@
 import { EditorView } from "prosemirror-view";
 import { toggleMark, setBlockType, wrapIn, lift } from "prosemirror-commands";
 import { wrapInList, liftListItem } from "prosemirror-schema-list";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import type { MarkType, NodeType } from "prosemirror-model";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { editorSettingsAtom } from "@/atoms/settings";
+import { EDITOR_SETTINGS_CONSTRAINTS } from "@/types/editor-settings";
 import {
 	PRESET_COLORS,
 	HIGHLIGHT_COLORS,
 	FONT_SIZE_SCALES,
 	FONT_FAMILIES,
+	getFontsByGroup,
 } from "./format-constants";
 import {
 	Bold,
@@ -25,6 +27,9 @@ import {
 	Palette,
 	Highlighter,
 	RemoveFormatting,
+	BoxSelect,
+	ALargeSmall,
+	SquareCode,
 } from "lucide-react";
 
 interface EditorToolbarProps {
@@ -145,6 +150,23 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 	const highlightRef = useRef<HTMLDivElement>(null);
 	const fontSizeInputRef = useRef<HTMLInputElement>(null);
 	const fontFamilyInputRef = useRef<HTMLInputElement>(null);
+
+	// Editor settings for spacing controls
+	const [editorSettings, setEditorSettings] = useAtom(editorSettingsAtom);
+	const [boxDebug, setBoxDebug] = useState(false);
+
+	// Sync box-model debug class directly onto the ProseMirror DOM element
+	useEffect(() => {
+		const dom = editorView?.dom as HTMLElement | undefined;
+		if (!dom) return;
+		if (boxDebug) {
+			dom.classList.add("pm-box-debug");
+		} else {
+			dom.classList.remove("pm-box-debug");
+		}
+		// Clean up when toolbar unmounts
+		return () => dom.classList.remove("pm-box-debug");
+	}, [editorView, boxDebug]);
 
 	// Helper to check if a mark is active
 	const isMarkActive = (markType: MarkType) => {
@@ -423,6 +445,19 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					className: "toolbar-blockquote",
 				},
 				{
+					icon: SquareCode,
+					label: "Code Section",
+					shortcut: "Ctrl+Shift+`",
+					command: (state: any, dispatch: any) => {
+						if (isBlockActive(schema.nodes.code_section)) {
+							return lift(state, dispatch);
+						}
+						return wrapIn(schema.nodes.code_section)(state, dispatch);
+					},
+					isActive: () => isBlockActive(schema.nodes.code_section),
+					className: "toolbar-code-section",
+				},
+				{
 					icon: FileCode,
 					label: "Code Block",
 					shortcut: "Ctrl+Shift+C",
@@ -673,6 +708,234 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 					inputRef={fontFamilyInputRef}
 				/>
 			</div>
+
+			<div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
+
+			{/* Spacing controls group */}
+			<div className="flex items-center gap-0.5">
+				<SpacingDropdown
+					label="Line Height"
+					value={editorSettings?.lineHeight ?? 1.6}
+					onChange={(v) => setEditorSettings((prev) => ({ ...prev!, lineHeight: v }))}
+					presets={[1.2, 1.4, 1.5, 1.6, 1.8, 2.0, 2.5]}
+					format={(v) => v.toFixed(1)}
+					defaultValue={1.6}
+					step={EDITOR_SETTINGS_CONSTRAINTS.lineHeight.step}
+					min={EDITOR_SETTINGS_CONSTRAINTS.lineHeight.min}
+					max={EDITOR_SETTINGS_CONSTRAINTS.lineHeight.max}
+					icon="↕"
+				/>
+				<SpacingDropdown
+					label="Letter Spacing"
+					value={editorSettings?.letterSpacing ?? 0}
+					onChange={(v) => setEditorSettings((prev) => ({ ...prev!, letterSpacing: v }))}
+					presets={[-0.05, 0, 0.02, 0.05, 0.1, 0.15, 0.2]}
+					format={(v) => v === 0 ? "0" : `${v > 0 ? "+" : ""}${v.toFixed(2)}`}
+					defaultValue={0}
+					step={EDITOR_SETTINGS_CONSTRAINTS.letterSpacing.step}
+					min={EDITOR_SETTINGS_CONSTRAINTS.letterSpacing.min}
+					max={EDITOR_SETTINGS_CONSTRAINTS.letterSpacing.max}
+					icon="↔"
+				/>
+				<SpacingDropdown
+					label="Paragraph Spacing"
+					value={editorSettings?.paragraphSpacing ?? 0.5}
+					onChange={(v) => setEditorSettings((prev) => ({ ...prev!, paragraphSpacing: v }))}
+					presets={[0, 0.3, 0.5, 0.8, 1.0, 1.5]}
+					format={(v) => `${v.toFixed(1)}em`}
+					defaultValue={0.5}
+					step={EDITOR_SETTINGS_CONSTRAINTS.paragraphSpacing.step}
+					min={EDITOR_SETTINGS_CONSTRAINTS.paragraphSpacing.min}
+					max={EDITOR_SETTINGS_CONSTRAINTS.paragraphSpacing.max}
+					icon="¶"
+				/>
+				<SpacingDropdown
+					label="Editor Padding"
+					value={editorSettings?.editorPadding ?? 16}
+					onChange={(v) => setEditorSettings((prev) => ({ ...prev!, editorPadding: v }))}
+					presets={[8, 12, 16, 24, 32, 48, 64]}
+					format={(v) => `${v}px`}
+					defaultValue={16}
+					step={EDITOR_SETTINGS_CONSTRAINTS.editorPadding.step}
+					min={EDITOR_SETTINGS_CONSTRAINTS.editorPadding.min}
+					max={EDITOR_SETTINGS_CONSTRAINTS.editorPadding.max}
+					icon="⬚"
+				/>
+			</div>
+
+			<div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
+
+			{/* Box model debug toggle */}
+			<button
+				type="button"
+				className={`relative flex-shrink-0 w-7 h-7 flex items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ${
+					boxDebug
+						? "bg-amber-200 dark:bg-amber-700 text-amber-800 dark:text-amber-200"
+						: "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+				}`}
+				onClick={() => setBoxDebug((v) => !v)}
+				title="Toggle box model inspector"
+			>
+				<BoxSelect size={14} />
+			</button>
+		</div>
+	);
+}
+
+// Spacing Dropdown Component (dropdown-style for global editor settings, like FontSizeDropdown)
+interface SpacingDropdownProps {
+	label: string;
+	value: number;
+	onChange: (value: number) => void;
+	presets: number[];
+	format: (value: number) => string;
+	defaultValue: number;
+	step: number;
+	min: number;
+	max: number;
+	icon: string;
+}
+
+function SpacingDropdown({ label, value, onChange, presets, format, defaultValue, step, min, max, icon }: SpacingDropdownProps) {
+	const [isOpen, setIsOpen] = useState(false);
+	const [selectedIndex, setSelectedIndex] = useState(0);
+	const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
+	const containerRef = useRef<HTMLDivElement>(null);
+	const dropdownRef = useRef<HTMLDivElement>(null);
+
+	const clamp = (v: number) => Math.round(Math.max(min, Math.min(max, v)) * 1000) / 1000;
+
+	const allItems = [...presets, "reset"] as const;
+
+	const openDropdown = useCallback(() => {
+		if (containerRef.current) {
+			const rect = containerRef.current.getBoundingClientRect();
+			setDropdownPos({ top: rect.bottom + 4, left: rect.left });
+		}
+		const idx = presets.findIndex((p) => Math.abs(p - value) < step * 0.5);
+		setSelectedIndex(idx >= 0 ? idx : 0);
+		setIsOpen(true);
+	}, [presets, value, step]);
+
+	useEffect(() => {
+		if (!isOpen) return;
+		const handler = (e: MouseEvent) => {
+			if (
+				containerRef.current && !containerRef.current.contains(e.target as Node) &&
+				!(dropdownRef.current && dropdownRef.current.contains(e.target as Node))
+			) {
+				setIsOpen(false);
+			}
+		};
+		document.addEventListener("mousedown", handler);
+		return () => document.removeEventListener("mousedown", handler);
+	}, [isOpen]);
+
+	useEffect(() => {
+		if (isOpen && dropdownRef.current) {
+			const el = dropdownRef.current.querySelector(`[data-index="${selectedIndex}"]`);
+			el?.scrollIntoView({ block: "nearest" });
+		}
+	}, [isOpen, selectedIndex]);
+
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (!isOpen) {
+			if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter" || e.key === " ") {
+				e.preventDefault();
+				openDropdown();
+			} else if (e.key === "ArrowRight") {
+				e.preventDefault();
+				onChange(clamp(value + step));
+			} else if (e.key === "ArrowLeft") {
+				e.preventDefault();
+				onChange(clamp(value - step));
+			}
+			return;
+		}
+		switch (e.key) {
+			case "ArrowDown":
+				e.preventDefault();
+				setSelectedIndex((i) => Math.min(i + 1, allItems.length - 1));
+				break;
+			case "ArrowUp":
+				e.preventDefault();
+				setSelectedIndex((i) => Math.max(i - 1, 0));
+				break;
+			case "Enter":
+			case " ": {
+				e.preventDefault();
+				const item = allItems[selectedIndex];
+				if (item === "reset") {
+					onChange(defaultValue);
+				} else if (typeof item === "number") {
+					onChange(item);
+				}
+				setIsOpen(false);
+				break;
+			}
+			case "Escape":
+			case "Tab":
+				setIsOpen(false);
+				if (e.key === "Escape") e.preventDefault();
+				break;
+		}
+	};
+
+	return (
+		<div className="relative flex-shrink-0" ref={containerRef}>
+			<button
+				type="button"
+				className={`relative flex-shrink-0 w-7 h-7 flex items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ${
+					isOpen ? "bg-gray-200 dark:bg-gray-600" : "hover:bg-gray-200 dark:hover:bg-gray-700"
+				} text-gray-700 dark:text-gray-300`}
+				onClick={() => (isOpen ? setIsOpen(false) : openDropdown())}
+				onKeyDown={handleKeyDown}
+				title={`${label}: ${format(value)}`}
+			>
+				<span className="text-[13px] leading-none select-none">{icon}</span>
+				<ChevronDown size={7} className={`absolute bottom-0.5 right-0.5 opacity-30 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+			</button>
+			{isOpen && dropdownPos && (
+				<div
+					ref={dropdownRef}
+					className="fixed bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-lg z-[100] min-w-[100px] max-h-[200px] overflow-y-auto"
+					style={{ top: dropdownPos.top, left: dropdownPos.left }}
+				>
+					{presets.map((preset, index) => {
+						const isCurrentValue = Math.abs(preset - value) < step * 0.5;
+						return (
+							<button
+								key={preset}
+								type="button"
+								data-index={index}
+								className={`w-full text-left px-3 py-1.5 text-xs tabular-nums ${
+									selectedIndex === index
+										? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
+										: "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+								} ${isCurrentValue ? "font-semibold" : ""}`}
+								onClick={() => { onChange(preset); setIsOpen(false); }}
+								onMouseEnter={() => setSelectedIndex(index)}
+							>
+								{format(preset)}
+							</button>
+						);
+					})}
+					<div className="border-t border-gray-200 dark:border-gray-600" />
+					<button
+						type="button"
+						data-index={presets.length}
+						className={`w-full text-left px-3 py-1.5 text-[10px] text-gray-500 dark:text-gray-400 ${
+							selectedIndex === presets.length
+								? "bg-blue-100 dark:bg-blue-900"
+								: "hover:bg-gray-100 dark:hover:bg-gray-700"
+						}`}
+						onClick={() => { onChange(defaultValue); setIsOpen(false); }}
+						onMouseEnter={() => setSelectedIndex(presets.length)}
+					>
+						Reset ({format(defaultValue)})
+					</button>
+				</div>
+			)}
 		</div>
 	);
 }
@@ -830,15 +1093,15 @@ function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, 
 			<button
 				ref={inputRef as React.RefObject<HTMLButtonElement>}
 				type="button"
-				className={`flex items-center h-6 px-1.5 gap-0.5 rounded transition-colors min-w-[42px] text-[11px] text-gray-700 dark:text-gray-300 ${
+				className={`relative flex-shrink-0 w-7 h-7 flex items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ${
 					isOpen ? "bg-gray-200 dark:bg-gray-600" : "hover:bg-gray-200 dark:hover:bg-gray-700"
 				}`}
 				onClick={() => setIsOpen(!isOpen)}
 				onKeyDown={handleKeyDown}
-				title="Font Size"
+				title={`Font Size: ${displaySize}px`}
 			>
-				<span className="flex-1 text-center tabular-nums">{displaySize}</span>
-				<ChevronDown size={10} className={`flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+				<ALargeSmall size={16} className="text-gray-700 dark:text-gray-300" />
+				<ChevronDown size={7} className={`absolute bottom-0.5 right-0.5 text-gray-500 dark:text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
 			</button>
 			{isOpen && dropdownPos && (
 				<div 
@@ -908,9 +1171,27 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 		return () => clearInterval(interval);
 	}, [editorView]);
 
+	// Build flat list of items: group headers (non-selectable) + font entries + reset
+	const groupedFonts = getFontsByGroup();
+	const flatItems = useMemo(() => {
+		const items: { type: "header"; label: string; group: string }[] | { type: "font"; font: typeof FONT_FAMILIES[number]; flatIndex: number }[] | { type: "reset"; flatIndex: number }[] = [];
+		let selectableIndex = 0;
+		for (const g of groupedFonts) {
+			(items as any[]).push({ type: "header", label: g.label, group: g.group });
+			for (const font of g.fonts) {
+				(items as any[]).push({ type: "font", font, flatIndex: selectableIndex });
+				selectableIndex++;
+			}
+		}
+		(items as any[]).push({ type: "reset", flatIndex: selectableIndex });
+		return items as ({ type: "header"; label: string; group: string } | { type: "font"; font: typeof FONT_FAMILIES[number]; flatIndex: number } | { type: "reset"; flatIndex: number })[];
+	}, [groupedFonts]);
+
+	const selectableCount = FONT_FAMILIES.length + 1; // fonts + reset
+
 	// Get current font family from selection
 	const getCurrentFontFamily = useCallback(() => {
-		if (!editorView) return "System Default";
+		if (!editorView) return "Sans Serif";
 		const { from, $from, to, empty } = editorView.state.selection;
 		let fontFamilyMark: any = null;
 		if (empty) {
@@ -928,19 +1209,18 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 				return true;
 			});
 		}
-		if (!fontFamilyMark) return "System Default";
+		if (!fontFamilyMark) return "Sans Serif";
 		const family = fontFamilyMark.attrs?.family;
 		const found = FONT_FAMILIES.find((f) => f.value === family);
 		return found?.label || "Custom";
 	}, [editorView, schema]);
 
 	const currentFamily = getCurrentFontFamily();
-	const totalItems = FONT_FAMILIES.length + 1; // +1 for reset
 
 	// Scroll selected item into view
 	useEffect(() => {
 		if (isOpen && dropdownRef.current) {
-			const selectedEl = dropdownRef.current.querySelector(`[data-index="${selectedIndex}"]`);
+			const selectedEl = dropdownRef.current.querySelector(`[data-selectable-index="${selectedIndex}"]`);
 			selectedEl?.scrollIntoView({ block: "nearest" });
 		}
 	}, [isOpen, selectedIndex]);
@@ -960,7 +1240,7 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 		switch (e.key) {
 			case "ArrowDown":
 				e.preventDefault();
-				setSelectedIndex((prev) => Math.min(prev + 1, totalItems - 1));
+				setSelectedIndex((prev) => Math.min(prev + 1, selectableCount - 1));
 				break;
 			case "ArrowUp":
 				e.preventDefault();
@@ -1031,43 +1311,69 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 			{isOpen && dropdownPos && (
 				<div 
 					ref={dropdownRef}
-					className="fixed bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-lg z-[100] min-w-[140px] max-h-[200px] overflow-y-auto"
+					className="fixed bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-lg z-[100] min-w-[180px] max-h-[280px] overflow-y-auto"
 					style={{ top: dropdownPos.top, left: dropdownPos.left }}
 				>
-					{FONT_FAMILIES.map((font, index) => (
-						<button
-							key={font.value}
-							type="button"
-							data-index={index}
-							className={`w-full flex items-center px-2 py-1 text-xs text-gray-700 dark:text-gray-300 ${
-								selectedIndex === index ? "bg-blue-100 dark:bg-blue-900" : "hover:bg-gray-100 dark:hover:bg-gray-700"
-							} ${currentFamily === font.label ? "font-semibold" : ""}`}
-							style={{ fontFamily: font.value }}
-							onClick={() => {
-								applyMarkWithAttrs(schema.marks.fontFamily, { family: font.value });
-								setIsOpen(false);
-								editorView?.focus();
-							}}
-							onMouseEnter={() => setSelectedIndex(index)}
-						>
-							{font.label}
-						</button>
-					))}
-					<button
-						type="button"
-						data-index={FONT_FAMILIES.length}
-						className={`w-full text-[10px] text-gray-600 dark:text-gray-400 py-1.5 border-t border-gray-200 dark:border-gray-700 ${
-							selectedIndex === FONT_FAMILIES.length ? "bg-blue-100 dark:bg-blue-900" : "hover:bg-gray-100 dark:hover:bg-gray-700"
-						}`}
-						onClick={() => {
-							removeMark(schema.marks.fontFamily);
-							setIsOpen(false);
-							editorView?.focus();
-						}}
-						onMouseEnter={() => setSelectedIndex(FONT_FAMILIES.length)}
-					>
-						Reset to default
-					</button>
+					{flatItems.map((item, idx) => {
+						if (item.type === "header") {
+							return (
+								<div
+									key={`header-${item.group}`}
+									className={`px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 select-none ${
+										idx > 0 ? "border-t border-gray-200 dark:border-gray-700 mt-0.5" : ""
+									}`}
+								>
+									{item.label}
+								</div>
+							);
+						}
+						if (item.type === "font") {
+							const isMono = item.font.group === "monospace";
+							return (
+								<button
+									key={item.font.value}
+									type="button"
+									data-selectable-index={item.flatIndex}
+									className={`w-full flex items-center justify-between px-2 py-1 text-xs text-gray-700 dark:text-gray-300 ${
+										selectedIndex === item.flatIndex ? "bg-blue-100 dark:bg-blue-900" : "hover:bg-gray-100 dark:hover:bg-gray-700"
+									} ${currentFamily === item.font.label ? "font-semibold" : ""}`}
+									style={{ fontFamily: item.font.value }}
+									onClick={() => {
+										applyMarkWithAttrs(schema.marks.fontFamily, { family: item.font.value });
+										setIsOpen(false);
+										editorView?.focus();
+									}}
+									onMouseEnter={() => setSelectedIndex(item.flatIndex)}
+								>
+									<span>{item.font.label}</span>
+									{isMono && (
+										<span className="ml-1.5 text-[9px] px-1 py-0 rounded bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400 font-normal font-sans leading-tight">
+											mono
+										</span>
+									)}
+								</button>
+							);
+						}
+						// reset item
+						return (
+							<button
+								key="reset"
+								type="button"
+								data-selectable-index={item.flatIndex}
+								className={`w-full text-[10px] text-gray-600 dark:text-gray-400 py-1.5 border-t border-gray-200 dark:border-gray-700 ${
+									selectedIndex === item.flatIndex ? "bg-blue-100 dark:bg-blue-900" : "hover:bg-gray-100 dark:hover:bg-gray-700"
+								}`}
+								onClick={() => {
+									removeMark(schema.marks.fontFamily);
+									setIsOpen(false);
+									editorView?.focus();
+								}}
+								onMouseEnter={() => setSelectedIndex(item.flatIndex)}
+							>
+								Reset to default
+							</button>
+						);
+					})}
 				</div>
 			)}
 		</div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import type { ReactNode } from "react";
 import { EditorState, TextSelection, Selection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { DOMParser, DOMSerializer } from "prosemirror-model";
@@ -67,6 +68,7 @@ interface ProseMirrorEditorProps {
 	toolbarVisible?: boolean;
 	initialCursorPosition?: number;
 	autoFocus?: boolean;
+	titleBar?: ReactNode;
 }
 
 export function ProseMirrorEditor({
@@ -76,6 +78,7 @@ export function ProseMirrorEditor({
 	toolbarVisible = false,
 	initialCursorPosition,
 	autoFocus = false,
+	titleBar,
 }: ProseMirrorEditorProps) {
 	const editorRef = useRef<HTMLDivElement>(null);
 	const viewRef = useRef<EditorView | null>(null);
@@ -280,6 +283,27 @@ export function ProseMirrorEditor({
 			dispatchTransaction(transaction) {
 				const newState = view.state.apply(transaction);
 				view.updateState(newState);
+
+				// When cursor moves to the start of a line (Home key, etc.) in
+				// no-wrap mode, ProseMirror's scroll-into-view aligns the cursor
+				// flush with the container's left edge, hiding the editor padding.
+				// Snap scrollLeft to 0 so the left padding becomes visible again.
+				const $head = newState.selection.$head;
+				if (transaction.selectionSet && $head.parentOffset === 0) {
+					const scrollEl = view.dom.parentElement;
+					if (scrollEl) requestAnimationFrame(() => { scrollEl.scrollLeft = 0; });
+				}
+
+				// Mirror fix for End key: when cursor is at the end of a line,
+				// scroll to reveal the right padding edge.
+				if (transaction.selectionSet && $head.parentOffset === $head.parent.content.size) {
+					const scrollEl = view.dom.parentElement;
+					if (scrollEl) {
+						requestAnimationFrame(() => {
+							scrollEl.scrollLeft = scrollEl.scrollWidth - scrollEl.clientWidth;
+						});
+					}
+				}
 
 				// Update cursor position in store on selection changes
 				if (transaction.selectionSet) {
@@ -489,6 +513,7 @@ export function ProseMirrorEditor({
 			{toolbarVisible && (
 				<EditorToolbar editorView={viewRef.current} schema={mySchema} />
 			)}
+			{titleBar}
 			<div
 				ref={editorRef}
 				className="editor-content-zoom flex-1 prose dark:prose-invert max-w-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-inset overflow-auto"

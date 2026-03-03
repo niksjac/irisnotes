@@ -70,6 +70,19 @@ const horizontalRuleSpec = {
 };
 
 /**
+ * Code section - a wrapper block for multi-line code-styled content.
+ * Unlike code_block (which uses CodeMirror), this preserves the paragraph
+ * structure and formatting marks while applying a continuous code background.
+ */
+const codeSectionSpec = {
+	content: "block+",
+	group: "block",
+	defining: true,
+	parseDOM: [{ tag: "div.code-section" }],
+	toDOM: () => ["div", { class: "code-section" }, 0] as const,
+};
+
+/**
  * Code block
  */
 const codeBlockSpec = {
@@ -315,6 +328,7 @@ const baseNodes = OrderedMap.from({
 	doc: docSpec,
 	paragraph: paragraphSpec,
 	blockquote: blockquoteSpec,
+	code_section: codeSectionSpec,
 	horizontal_rule: horizontalRuleSpec,
 	code_block: codeBlockSpec,
 	text: textSpec,
