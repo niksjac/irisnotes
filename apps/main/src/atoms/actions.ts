@@ -3,8 +3,11 @@ import {
 	activityBarVisible,
 	sidebarCollapsed,
 	toolbarVisibleAtom,
+	zenModeAtom,
+	zenModePreviousStateAtom,
+	statusBarVisibleAtom,
 } from "./index";
-import { editorSettingsAtom } from "./settings";
+import { tabBarVisibleAtom } from "./panes";
 
 // Layout actions
 export const toggleSidebarAtom = atom(null, (get, set) => {
@@ -22,24 +25,39 @@ export const toggleToolbarAtom = atom(null, (get, set) => {
 	set(toolbarVisibleAtom, !current);
 });
 
-// Editor font size actions (scales base font, inline em sizes scale proportionally)
-// Note: Line wrapping is now handled directly via useLineWrapping hook
-
-export const increaseFontSizeAtom = atom(null, (get, set) => {
-	const settings = get(editorSettingsAtom);
-	const newSize = Math.min((settings.fontSize || 14) + 1, 32);
-	set(editorSettingsAtom, { ...settings, fontSize: newSize });
-});
-
-export const decreaseFontSizeAtom = atom(null, (get, set) => {
-	const settings = get(editorSettingsAtom);
-	const newSize = Math.max((settings.fontSize || 14) - 1, 8);
-	set(editorSettingsAtom, { ...settings, fontSize: newSize });
-});
-
-export const resetFontSizeAtom = atom(null, (get, set) => {
-	const settings = get(editorSettingsAtom);
-	set(editorSettingsAtom, { ...settings, fontSize: 14 });
+// Zen mode toggle - hides all UI for distraction-free writing
+// Note: Title bar (note name) remains visible in zen mode
+export const toggleZenModeAtom = atom(null, (get, set) => {
+	const isZenMode = get(zenModeAtom);
+	
+	if (!isZenMode) {
+		// Entering zen mode - save current state and hide everything except title
+		const previousState = {
+			sidebarCollapsed: get(sidebarCollapsed),
+			activityBarVisible: get(activityBarVisible),
+			toolbarVisible: get(toolbarVisibleAtom),
+			tabBarVisible: get(tabBarVisibleAtom),
+			statusBarVisible: get(statusBarVisibleAtom),
+		};
+		set(zenModePreviousStateAtom, previousState);
+		
+		// Hide UI elements (keep title bar visible)
+		set(sidebarCollapsed, true);
+		set(activityBarVisible, false);
+		set(toolbarVisibleAtom, false);
+		set(tabBarVisibleAtom, false);
+		set(statusBarVisibleAtom, false);
+		set(zenModeAtom, true);
+	} else {
+		// Exiting zen mode - always restore full visibility so everything comes back on
+		set(sidebarCollapsed, false);
+		set(activityBarVisible, true);
+		set(toolbarVisibleAtom, true);
+		set(tabBarVisibleAtom, true);
+		set(statusBarVisibleAtom, true);
+		set(zenModePreviousStateAtom, null);
+		set(zenModeAtom, false);
+	}
 });
 
 export const handleSidebarCollapsedChangeAtom = atom(
@@ -48,6 +66,9 @@ export const handleSidebarCollapsedChangeAtom = atom(
 		set(sidebarCollapsed, collapsed);
 	}
 );
+
+// New note (root) name dialog state
+export const newNoteDialogOpenAtom = atom<boolean>(false);
 
 // Note location dialog state
 export const locationDialogOpenAtom = atom<boolean>(false);

@@ -408,6 +408,7 @@ function MobileLayout({
 					isCollapsed ? "opacity-0" : "opacity-100"
 				)}
 				style={{ height: height }}
+				inert={isCollapsed ? true : undefined}
 			>
 				{children}
 			</div>
@@ -493,6 +494,7 @@ function DesktopLayout({
 					isCollapsed ? "opacity-0" : "opacity-100"
 				)}
 				style={{ width: width }}
+				inert={isCollapsed ? true : undefined}
 			>
 				{children}
 			</div>
