@@ -1,6 +1,10 @@
 import { useAtomValue } from "jotai";
 import { useEffect, useRef } from "react";
-import { sidebarWidth, activityBarVisible, sidebarCollapsed, titleBarVisibleAtom, toolbarVisibleAtom } from "@/atoms";
+import {
+	sidebarWidth, activityBarVisible, sidebarCollapsed, titleBarVisibleAtom, toolbarVisibleAtom,
+	paneStateAtom, pane0TabsAtom, pane1TabsAtom, pane0ActiveTabAtom, pane1ActiveTabAtom, tabBarVisibleAtom,
+	PANE_STORAGE_KEY,
+} from "@/atoms";
 
 interface LayoutState {
 	sidebarWidth: number;
@@ -105,4 +109,47 @@ export const useLayoutPersistence = () => {
 	useEffect(() => {
 		saveLayoutState({ toolbarVisible: toolbarVisibleValue });
 	}, [toolbarVisibleValue]);
+
+	// ============ Pane/Tab State Persistence ============
+
+	const paneState = useAtomValue(paneStateAtom);
+	const pane0Tabs = useAtomValue(pane0TabsAtom);
+	const pane1Tabs = useAtomValue(pane1TabsAtom);
+	const pane0ActiveTab = useAtomValue(pane0ActiveTabAtom);
+	const pane1ActiveTab = useAtomValue(pane1ActiveTabAtom);
+	const tabBarVisible = useAtomValue(tabBarVisibleAtom);
+
+	const paneDebounceRef = useRef<number | null>(null);
+
+	useEffect(() => {
+		if (paneDebounceRef.current) {
+			clearTimeout(paneDebounceRef.current);
+		}
+		paneDebounceRef.current = setTimeout(() => {
+			try {
+				// Strip isDirty from tabs before persisting
+				const clean = (tabs: typeof pane0Tabs) =>
+					tabs.map(({ isDirty, ...rest }) => rest);
+				localStorage.setItem(
+					PANE_STORAGE_KEY,
+					JSON.stringify({
+						paneState,
+						pane0Tabs: clean(pane0Tabs),
+						pane1Tabs: clean(pane1Tabs),
+						pane0ActiveTab,
+						pane1ActiveTab,
+						tabBarVisible,
+					}),
+				);
+			} catch (error) {
+				console.warn("Failed to save pane state:", error);
+			}
+		}, 300);
+
+		return () => {
+			if (paneDebounceRef.current) {
+				clearTimeout(paneDebounceRef.current);
+			}
+		};
+	}, [paneState, pane0Tabs, pane1Tabs, pane0ActiveTab, pane1ActiveTab, tabBarVisible]);
 };

@@ -1,25 +1,22 @@
 import { atom } from "jotai";
 import type { PaneState, Tab } from "@/types";
 import { sidebarWidth, sidebarCollapsed, focusAreaAtom } from "./index";
+import { initialPaneStorage } from "./pane-storage";
 
-// Pane configuration
-export const paneStateAtom = atom<PaneState>({
-	count: 1,
-	activePane: 0,
-	splitDirection: "horizontal",
-});
+// Pane configuration (initialized from localStorage)
+export const paneStateAtom = atom<PaneState>(initialPaneStorage.paneState);
 
 // Tab bar visibility
-export const tabBarVisibleAtom = atom<boolean>(true);
+export const tabBarVisibleAtom = atom<boolean>(initialPaneStorage.tabBarVisible);
 
 // Toggle tab bar visibility
 export const toggleTabBarAtom = atom(null, (get, set) => {
 	set(tabBarVisibleAtom, !get(tabBarVisibleAtom));
 });
 
-// Tab state per pane
-export const pane0TabsAtom = atom<Tab[]>([]);
-export const pane1TabsAtom = atom<Tab[]>([]);
+// Tab state per pane (initialized from localStorage)
+export const pane0TabsAtom = atom<Tab[]>(initialPaneStorage.pane0Tabs);
+export const pane1TabsAtom = atom<Tab[]>(initialPaneStorage.pane1Tabs);
 
 // Recently closed tabs stack (for Ctrl+Shift+T reopen)
 interface ClosedTabEntry {
@@ -29,9 +26,9 @@ interface ClosedTabEntry {
 export const recentlyClosedTabsAtom = atom<ClosedTabEntry[]>([]);
 const MAX_RECENTLY_CLOSED = 20; // Keep at most 20 recently closed tabs
 
-// Active tab per pane
-export const pane0ActiveTabAtom = atom<string | null>(null);
-export const pane1ActiveTabAtom = atom<string | null>(null);
+// Active tab per pane (initialized from localStorage)
+export const pane0ActiveTabAtom = atom<string | null>(initialPaneStorage.pane0ActiveTab);
+export const pane1ActiveTabAtom = atom<string | null>(initialPaneStorage.pane1ActiveTab);
 
 // Helper derived atoms
 export const activePaneTabsAtom = atom((get) => {
@@ -212,6 +209,32 @@ export const toggleDualPaneModeAtom = atom(null, (get, set) => {
 		const focusArea = get(focusAreaAtom);
 		if (focusArea === "pane-1") {
 			set(focusAreaAtom, "pane-0");
+		}
+	}
+	
+	// When opening dual pane mode, move active tab to the new pane
+	if (newCount === 2 && paneState.count === 1) {
+		const pane0Tabs = get(pane0TabsAtom);
+		const pane0ActiveTab = get(pane0ActiveTabAtom);
+		
+		// Only move if there are at least 2 tabs in pane0
+		if (pane0Tabs.length >= 2 && pane0ActiveTab) {
+			const activeTab = pane0Tabs.find((t) => t.id === pane0ActiveTab);
+			if (activeTab) {
+				// Remove active tab from pane0
+				const remaining = pane0Tabs.filter((t) => t.id !== pane0ActiveTab);
+				set(pane0TabsAtom, remaining);
+				// Select the next available tab in pane0
+				const activeIdx = pane0Tabs.findIndex((t) => t.id === pane0ActiveTab);
+				const nextIdx = Math.min(activeIdx, remaining.length - 1);
+				set(pane0ActiveTabAtom, remaining[nextIdx]?.id ?? null);
+				// Move to pane1
+				set(pane1TabsAtom, [activeTab]);
+				set(pane1ActiveTabAtom, activeTab.id);
+				set(paneStateAtom, { ...paneState, count: newCount, activePane: 1 });
+				set(focusAreaAtom, "pane-1");
+				return;
+			}
 		}
 	}
 	
