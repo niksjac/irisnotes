@@ -9,6 +9,7 @@ interface ActivityBarButtonProps {
 	label?: string;
 	expanded?: boolean;
 	iconSize?: number;
+	iconClassName?: string;
 	keyTip?: string;
 	showKeyTip?: boolean;
 }
@@ -21,6 +22,7 @@ export function ActivityBarButton({
 	label,
 	expanded = false,
 	iconSize = 18,
+	iconClassName = "md:w-5 md:h-5",
 	keyTip,
 	showKeyTip = false,
 }: ActivityBarButtonProps) {
@@ -56,7 +58,7 @@ export function ActivityBarButton({
 
 	return (
 		<button className={buttonClasses} onClick={onClick} title={title} tabIndex={-1}>
-			<Icon size={iconSize} className="md:w-5 md:h-5 flex-shrink-0" />
+			<Icon size={iconSize} className={`${iconClassName} flex-shrink-0`} />
 			{/* Label only visible on desktop when expanded */}
 			{expanded && label && (
 				<span className="hidden md:inline text-xs truncate">{label}</span>

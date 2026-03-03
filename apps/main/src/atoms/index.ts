@@ -39,6 +39,9 @@ const loadInitialLayout = (): LayoutState => {
 // Load layout once at module initialization (synchronous, before first render)
 const initialLayout = loadInitialLayout();
 
+// Re-export pane storage (loaded in separate file to avoid circular deps)
+export { initialPaneStorage, PANE_STORAGE_KEY } from "./pane-storage";
+
 // Layout atoms - initialized from localStorage to prevent flicker
 export const sidebarCollapsed = atom<boolean>(initialLayout.sidebarCollapsed);
 export const sidebarWidth = atom<number>(initialLayout.sidebarWidth);
@@ -52,6 +55,23 @@ export const focusAreaAtom = atom<FocusArea>(null);
 
 export const toolbarVisibleAtom = atom<boolean>(initialLayout.toolbarVisible);
 export const titleBarVisibleAtom = atom<boolean>(initialLayout.titleBarVisible);
+
+// Zen mode - when true, hides all UI elements for distraction-free writing
+export const zenModeAtom = atom<boolean>(false);
+// Store previous state to restore when exiting zen mode (title bar not included - stays visible)
+export const zenModePreviousStateAtom = atom<{
+	sidebarCollapsed: boolean;
+	activityBarVisible: boolean;
+	toolbarVisible: boolean;
+	tabBarVisible: boolean;
+	statusBarVisible: boolean;
+} | null>(null);
+
+// Status bar visibility
+export const statusBarVisibleAtom = atom<boolean>(true);
+export const toggleStatusBarAtom = atom(null, (get, set) => {
+	set(statusBarVisibleAtom, !get(statusBarVisibleAtom));
+});
 
 // Editor atoms
 export const isWrappingAtom = atom<boolean>(false);

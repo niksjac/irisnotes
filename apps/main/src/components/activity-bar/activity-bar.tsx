@@ -12,9 +12,13 @@ import {
 	pane1TabsAtom,
 	pane0ActiveTabAtom,
 	pane1ActiveTabAtom,
+	zenModeAtom,
+	toggleZenModeAtom,
+	statusBarVisibleAtom,
+	toggleStatusBarAtom,
 } from "@/atoms";
+import { tabBarVisibleAtom, toggleTabBarAtom } from "@/atoms/panes";
 import { ActivityBarButton } from "./activity-bar-button";
-import { IrisLogo } from "@/components/iris-logo";
 import { useEffect, useRef, useCallback, useMemo } from "react";
 
 export function ActivityBar() {
@@ -62,6 +66,12 @@ export function ActivityBar() {
 	const { isWrapping, toggleLineWrapping } = useLineWrapping();
 	const { darkMode, toggleDarkMode } = useTheme();
 	const [paneState, setPaneState] = useAtom(paneStateAtom);
+	const isZenMode = useAtomValue(zenModeAtom);
+	const toggleZenMode = useSetAtom(toggleZenModeAtom);
+	const tabBarVisible = useAtomValue(tabBarVisibleAtom);
+	const toggleTabBar = useSetAtom(toggleTabBarAtom);
+	const statusBarVisible = useAtomValue(statusBarVisibleAtom);
+	const toggleStatusBar = useSetAtom(toggleStatusBarAtom);
 
 	const togglePaneMode = useCallback(() => {
 		setPaneState((prev) => ({
@@ -78,10 +88,13 @@ export function ActivityBar() {
 		{ key: "4", action: togglePaneMode, label: "Toggle Pane" },
 		{ key: "5", action: toggleToolbar, label: "Toolbar" },
 		{ key: "6", action: toggleTitleBar, label: "Title Bar" },
+		{ key: "0", action: toggleTabBar, label: "Tab Bar" },
+		{ key: "s", action: toggleStatusBar, label: "Status Bar" },
 		{ key: "7", action: toggleLineWrapping, label: "Wrap" },
 		{ key: "8", action: toggleDarkMode, label: "Theme" },
+		{ key: "9", action: toggleZenMode, label: "Zen Mode" },
 		{ key: "e", action: toggleActivityBarExpanded, label: "Expand/Collapse" },
-	], [toggleSidebar, openSettingsTab, openHotkeysTab, togglePaneMode, toggleToolbar, toggleTitleBar, toggleLineWrapping, toggleDarkMode, toggleActivityBarExpanded]);
+	], [toggleSidebar, openSettingsTab, openHotkeysTab, togglePaneMode, toggleToolbar, toggleTitleBar, toggleTabBar, toggleStatusBar, toggleLineWrapping, toggleDarkMode, toggleZenMode, toggleActivityBarExpanded]);
 
 	// Use the KeyTip system for Alt+key shortcuts
 	const { altKeyHeld } = useKeyTipActions(keyTipActions);
@@ -131,17 +144,7 @@ export function ActivityBar() {
 					: "md:w-9 md:h-auto md:flex-col md:justify-start md:py-2 md:gap-2 md:border-r md:border-b-0"
 			)}
 		>
-			{/* Logo - desktop only, at top of activity bar */}
-			<div className={clsx(
-				"hidden md:flex md:w-full md:justify-center md:mb-2",
-				activityBarExpanded ? "md:py-2 md:border-b md:border-gray-200 dark:md:border-gray-700" : ""
-			)}>
-				<IrisLogo 
-					size={activityBarExpanded ? 28 : 22} 
-					showText={activityBarExpanded}
-					className={activityBarExpanded ? "py-1" : ""}
-				/>
-			</div>
+
 
 			{/* Expand/Collapse toggle - desktop only */}
 			<div className={clsx("hidden md:flex md:w-full", activityBarExpanded ? "md:justify-end md:mb-1" : "md:justify-center md:mb-2")}>
@@ -223,14 +226,20 @@ export function ActivityBar() {
 				</div>
 			</div>
 
+			{/* Separator between upper and lower groups - desktop only */}
+			<div className={clsx(
+				"hidden md:block border-t border-gray-200 dark:border-gray-600",
+				activityBarExpanded ? "md:my-1 md:w-full" : "md:my-1 md:mx-1"
+			)} />
+
 			{/* Editor controls section */}
 			<div
 				className={clsx(
 					"flex items-center gap-2",
 					"flex-row",
 					activityBarExpanded
-						? "md:flex-col md:mt-auto md:pt-2 md:border-t md:border-gray-300 dark:md:border-gray-600 md:gap-1 md:w-full"
-						: "md:flex-col md:mt-auto md:pt-2 md:border-t md:border-gray-300 dark:md:border-gray-600 md:gap-2"
+						? "md:flex-col md:gap-1 md:w-full"
+						: "md:flex-col md:gap-2"
 				)}
 			>
 				<ActivityBarButton
@@ -242,6 +251,8 @@ export function ActivityBar() {
 					expanded={activityBarExpanded}
 					keyTip="5"
 					showKeyTip={altKeyHeld}
+					iconSize={16}
+					iconClassName="md:w-4 md:h-4"
 				/>
 
 				<ActivityBarButton
@@ -253,6 +264,34 @@ export function ActivityBar() {
 					expanded={activityBarExpanded}
 					keyTip="6"
 					showKeyTip={altKeyHeld}
+					iconSize={16}
+					iconClassName="md:w-4 md:h-4"
+				/>
+
+				<ActivityBarButton
+					icon={tabBarVisible ? Icons.Rows2 : Icons.Rows3}
+					isActive={tabBarVisible}
+					onClick={toggleTabBar}
+					title={`${tabBarVisible ? "Hide" : "Show"} tab bar (Alt+0)`}
+					label="Tab Bar"
+					expanded={activityBarExpanded}
+					keyTip="0"
+					showKeyTip={altKeyHeld}
+					iconSize={16}
+					iconClassName="md:w-4 md:h-4"
+				/>
+
+				<ActivityBarButton
+					icon={statusBarVisible ? Icons.PanelBottom : Icons.PanelBottomClose}
+					isActive={statusBarVisible}
+					onClick={toggleStatusBar}
+					title={`${statusBarVisible ? "Hide" : "Show"} status bar (Alt+S)`}
+					label="Status Bar"
+					expanded={activityBarExpanded}
+					keyTip="s"
+					showKeyTip={altKeyHeld}
+					iconSize={16}
+					iconClassName="md:w-4 md:h-4"
 				/>
 
 				<ActivityBarButton
@@ -264,6 +303,8 @@ export function ActivityBar() {
 					expanded={activityBarExpanded}
 					keyTip="7"
 					showKeyTip={altKeyHeld}
+					iconSize={16}
+					iconClassName="md:w-4 md:h-4"
 				/>
 
 				<ActivityBarButton
@@ -275,6 +316,21 @@ export function ActivityBar() {
 					expanded={activityBarExpanded}
 					keyTip="8"
 					showKeyTip={altKeyHeld}
+					iconSize={16}
+					iconClassName="md:w-4 md:h-4"
+				/>
+
+				<ActivityBarButton
+					icon={isZenMode ? Icons.Minimize2 : Icons.Maximize2}
+					isActive={isZenMode}
+					onClick={toggleZenMode}
+					title={`${isZenMode ? "Exit" : "Enter"} Zen Mode (F11 or Alt+9)`}
+					label={isZenMode ? "Exit Zen" : "Zen Mode"}
+					expanded={activityBarExpanded}
+					keyTip="9"
+					showKeyTip={altKeyHeld}
+					iconSize={16}
+					iconClassName="md:w-4 md:h-4"
 				/>
 			</div>
 		</div>
