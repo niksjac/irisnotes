@@ -45,6 +45,9 @@ export interface EditorSettings {
 	/** Paragraph spacing in em units (0-2) */
 	paragraphSpacing: number;
 
+	/** Letter spacing in em units (-0.1 to 0.5) */
+	letterSpacing: number;
+
 	/** Editor internal padding in pixels (8-64) */
 	editorPadding: number;
 
@@ -76,9 +79,10 @@ export interface EditorSettings {
 export const DEFAULT_EDITOR_SETTINGS: EditorSettings = {
 	fontSize: 14,
 	zoom: 1,
-	fontFamily: "system",
+	fontFamily: "Arial, Helvetica, sans-serif",
 	lineHeight: 1.6,
 	paragraphSpacing: 0.5,
+	letterSpacing: 0,
 	editorPadding: 16,
 	caretColor: "#22c55e",
 	cursorWidth: 2,
@@ -90,13 +94,15 @@ export const DEFAULT_EDITOR_SETTINGS: EditorSettings = {
 };
 
 /**
- * Font family CSS values for presets
+ * Legacy font family preset keys → CSS values.
+ * Used for backward compat when fontFamily is a short key from older settings.
+ * New settings store the full CSS font-family string directly.
  */
 export const FONT_FAMILY_MAP: Record<string, string> = {
-	system: "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-	serif: 'Georgia, "Times New Roman", serif',
-	mono: 'Monaco, Menlo, "Consolas", monospace',
-	inter: '"Inter", system-ui, -apple-system, sans-serif',
+	system: "Arial, Helvetica, sans-serif",
+	serif: "Georgia, 'Times New Roman', serif",
+	mono: "'Courier New', Consolas, monospace",
+	inter: "Inter, system-ui, sans-serif",
 };
 
 /**
@@ -107,6 +113,7 @@ export const EDITOR_SETTINGS_CONSTRAINTS = {
 	zoom: { min: 0.5, max: 3, step: 0.1 },
 	lineHeight: { min: 1.2, max: 2.5, step: 0.1 },
 	paragraphSpacing: { min: 0, max: 2, step: 0.1 },
+	letterSpacing: { min: -0.1, max: 0.5, step: 0.01 },
 	editorPadding: { min: 8, max: 64, step: 4 },
 	cursorWidth: { options: [1, 2, 3, "block"] as const },
 } as const;
@@ -141,6 +148,7 @@ export function applyEditorSettings(settings: EditorSettings): void {
 		`${settings.paragraphSpacing}em`,
 	);
 	root.style.setProperty("--pm-block-spacing", `${settings.paragraphSpacing}em`);
+	root.style.setProperty("--pm-letter-spacing", `${settings.letterSpacing}em`);
 	root.style.setProperty("--pm-padding", `${settings.editorPadding}px`);
 	root.style.setProperty("--pm-caret-color", settings.caretColor);
 

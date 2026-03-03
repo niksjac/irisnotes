@@ -12,6 +12,7 @@ import {
 	applyEditorSettings,
 	DEFAULT_EDITOR_SETTINGS,
 	EDITOR_SETTINGS_CONSTRAINTS,
+	FONT_FAMILY_MAP,
 	type EditorSettings,
 	type EditorFontFamily,
 } from "@/types/editor-settings";
@@ -52,9 +53,15 @@ export function useEditorSettings(): UseEditorSettingsReturn {
 	const [settings, setSettings] = useAtom(editorSettingsAtom);
 
 	// Merge stored settings with defaults to handle new fields
+	// Also migrate legacy font family preset keys to full CSS strings
 	const mergedSettings = useMemo(() => {
 		if (settings && typeof settings === "object") {
-			return { ...DEFAULT_EDITOR_SETTINGS, ...settings };
+			const merged = { ...DEFAULT_EDITOR_SETTINGS, ...settings };
+			// Migrate legacy short keys (e.g. "system", "serif", "mono", "inter") to CSS strings
+			if (merged.fontFamily in FONT_FAMILY_MAP) {
+				merged.fontFamily = FONT_FAMILY_MAP[merged.fontFamily]!;
+			}
+			return merged;
 		}
 		return DEFAULT_EDITOR_SETTINGS;
 	}, [settings]);

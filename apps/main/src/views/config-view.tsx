@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useTheme } from "@/hooks";
 import { useConfig } from "@/hooks/use-config";
 import { useEditorSettings } from "@/hooks/use-editor-settings";
@@ -6,10 +6,10 @@ import { useAtomValue } from "jotai";
 import { itemsAtom, notesAtom, booksAtom, sectionsAtom } from "@/atoms/items";
 import { exportSettings, importSettings } from "@/storage/settings";
 import type {
-	EditorFontFamily,
 	CursorWidth,
 	CursorBlinkStyle,
 } from "@/types/editor-settings";
+import { FONT_FAMILIES, getFontsByGroup } from "@/components/editor/format-constants";
 import * as Icons from "lucide-react";
 
 export function ConfigView() {
@@ -243,16 +243,10 @@ export function ConfigView() {
 									Editor text font
 								</div>
 							</div>
-							<select
+							<SettingsFontPicker
 								value={editorSettings.fontFamily}
-								onChange={(e) => updateSetting("fontFamily", e.target.value as EditorFontFamily)}
-								className="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 text-sm cursor-pointer hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M6%208L1%203h10z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_0.75rem_center] bg-no-repeat pr-8"
-							>
-								<option value="system" className="bg-gray-100 dark:bg-gray-700">System Default</option>
-								<option value="serif" className="bg-gray-100 dark:bg-gray-700">Serif (Georgia)</option>
-								<option value="mono" className="bg-gray-100 dark:bg-gray-700">Monospace</option>
-								<option value="inter" className="bg-gray-100 dark:bg-gray-700">Inter</option>
-							</select>
+								onChange={(v) => updateSetting("fontFamily", v)}
+							/>
 						</div>
 
 						{/* Line Height */}
@@ -293,6 +287,29 @@ export function ConfigView() {
 								step={constraints.paragraphSpacing.step}
 								value={editorSettings.paragraphSpacing}
 								onChange={(e) => updateSetting("paragraphSpacing", Number(e.target.value))}
+								className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer"
+							/>
+						</div>
+
+						{/* Letter Spacing */}
+						<div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+							<div className="flex items-center justify-between">
+								<div className="font-medium text-gray-900 dark:text-gray-100">
+									Letter Spacing
+								</div>
+								<div className="text-sm text-gray-600 dark:text-gray-300">
+									{editorSettings.letterSpacing !== undefined
+										? `${editorSettings.letterSpacing >= 0 ? "+" : ""}${editorSettings.letterSpacing.toFixed(2)}em`
+										: "0.00em"}
+								</div>
+							</div>
+							<input
+								type="range"
+								min={constraints.letterSpacing.min}
+								max={constraints.letterSpacing.max}
+								step={constraints.letterSpacing.step}
+								value={editorSettings.letterSpacing ?? 0}
+								onChange={(e) => updateSetting("letterSpacing", Number(e.target.value))}
 								className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer"
 							/>
 						</div>
@@ -520,6 +537,176 @@ export function ConfigView() {
 					</section>
 				)}
 			</div>
+		</div>
+	);
+}
+
+// Custom font picker dropdown for settings view (matches toolbar/picker dialog UI)
+function SettingsFontPicker({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+	const [isOpen, setIsOpen] = useState(false);
+	const [selectedIndex, setSelectedIndex] = useState(0);
+	const [filter, setFilter] = useState("");
+	const containerRef = useRef<HTMLDivElement>(null);
+	const dropdownRef = useRef<HTMLDivElement>(null);
+	const inputRef = useRef<HTMLInputElement>(null);
+
+	const currentFont = FONT_FAMILIES.find((f) => f.value === value);
+	const currentLabel = currentFont?.label || "Sans Serif";
+
+	const isFiltering = filter.length > 0;
+	const filteredFonts = isFiltering
+		? FONT_FAMILIES.filter((f) => f.label.toLowerCase().includes(filter.toLowerCase()))
+		: FONT_FAMILIES;
+	const groupedFonts = getFontsByGroup();
+	const totalItems = filteredFonts.length;
+
+	// Focus filter input when dropdown opens
+	useEffect(() => {
+		if (isOpen) {
+			setFilter("");
+			setSelectedIndex(0);
+			requestAnimationFrame(() => inputRef.current?.focus());
+		}
+	}, [isOpen]);
+
+	useEffect(() => {
+		setSelectedIndex(0);
+	}, [filter]);
+
+	// Scroll selected into view
+	useEffect(() => {
+		if (isOpen && dropdownRef.current) {
+			const el = dropdownRef.current.querySelector(`[data-index="${selectedIndex}"]`);
+			el?.scrollIntoView({ block: "nearest" });
+		}
+	}, [isOpen, selectedIndex]);
+
+	// Close on outside click
+	useEffect(() => {
+		if (!isOpen) return;
+		const handle = (e: MouseEvent) => {
+			if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+				setIsOpen(false);
+			}
+		};
+		document.addEventListener("mousedown", handle);
+		return () => document.removeEventListener("mousedown", handle);
+	}, [isOpen]);
+
+	const applyFont = useCallback((font: typeof FONT_FAMILIES[number]) => {
+		onChange(font.value);
+		setIsOpen(false);
+	}, [onChange]);
+
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (!isOpen) return;
+		switch (e.key) {
+			case "ArrowDown":
+				e.preventDefault();
+				setSelectedIndex((prev) => Math.min(prev + 1, totalItems - 1));
+				break;
+			case "ArrowUp":
+				e.preventDefault();
+				setSelectedIndex((prev) => Math.max(prev - 1, 0));
+				break;
+			case "Enter":
+				e.preventDefault();
+				if (filteredFonts[selectedIndex]) applyFont(filteredFonts[selectedIndex]);
+				break;
+			case "Escape":
+				e.preventDefault();
+				setIsOpen(false);
+				break;
+		}
+	};
+
+	const renderFontButton = (font: typeof FONT_FAMILIES[number], index: number) => {
+		const isCurrent = value === font.value;
+		const isMono = font.group === "monospace";
+		return (
+			<button
+				key={font.value}
+				type="button"
+				data-index={index}
+				className={`w-full flex items-center justify-between px-3 py-1.5 text-sm transition-colors ${
+					index === selectedIndex
+						? "bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100"
+						: "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+				} ${isCurrent ? "font-semibold" : ""}`}
+				style={{ fontFamily: font.value }}
+				onClick={() => applyFont(font)}
+				onMouseEnter={() => setSelectedIndex(index)}
+			>
+				<span>{font.label}</span>
+				{isMono && (
+					<span className="ml-2 text-[10px] px-1 py-0 rounded bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400 font-normal font-sans leading-tight">
+						mono
+					</span>
+				)}
+			</button>
+		);
+	};
+
+	return (
+		<div className="relative" ref={containerRef}>
+			<button
+				type="button"
+				className={`flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 border text-gray-900 dark:text-gray-100 text-sm cursor-pointer transition-colors ${
+					isOpen ? "border-blue-500 ring-2 ring-blue-500" : "border-gray-200 dark:border-gray-600 hover:border-blue-500"
+				}`}
+				style={{ fontFamily: value }}
+				onClick={() => setIsOpen(!isOpen)}
+			>
+				<span>{currentLabel}</span>
+				<Icons.ChevronDown size={14} className={`text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+			</button>
+			{isOpen && (
+				<div
+					ref={dropdownRef}
+					className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg z-50 min-w-[220px] max-h-[300px] overflow-hidden flex flex-col"
+					onKeyDown={handleKeyDown}
+				>
+					{/* Filter input */}
+					<div className="px-2 pt-2 pb-1 border-b border-gray-200 dark:border-gray-700">
+						<input
+							ref={inputRef}
+							type="text"
+							value={filter}
+							onChange={(e) => setFilter(e.target.value)}
+							placeholder="Type to filter..."
+							className="w-full px-2 py-1 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+						/>
+					</div>
+					<div className="overflow-y-auto">
+						{isFiltering ? (
+							<>
+								{filteredFonts.map((font, index) => renderFontButton(font, index))}
+								{filteredFonts.length === 0 && (
+									<div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-500 italic">
+										No fonts match &quot;{filter}&quot;
+									</div>
+								)}
+							</>
+						) : (
+							groupedFonts.map((g, gIdx) => (
+								<div key={g.group}>
+									<div
+										className={`px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 select-none ${
+											gIdx > 0 ? "border-t border-gray-200 dark:border-gray-700 mt-0.5" : ""
+										}`}
+									>
+										{g.label}
+									</div>
+									{g.fonts.map((font) => {
+										const globalIndex = FONT_FAMILIES.indexOf(font);
+										return renderFontButton(font, globalIndex);
+									})}
+								</div>
+							))
+						)}
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }
