@@ -227,8 +227,9 @@ fn search_notes(query: String, state: State<DbState>) -> Result<Vec<SearchResult
 
             // Create content preview from raw content (strip HTML, take first ~80 chars)
             let plain_content = strip_html(&raw_content);
-            let content_preview = if plain_content.len() > 80 {
-                format!("{}...", &plain_content[..80])
+            let content_preview = if plain_content.chars().count() > 80 {
+                let preview: String = plain_content.chars().take(80).collect();
+                format!("{}...", preview)
             } else if plain_content.is_empty() {
                 "Empty note".to_string()
             } else {
