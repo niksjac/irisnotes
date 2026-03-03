@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { useItems } from "./use-items";
 import { useTabManagement } from "./use-tab-management";
-import { locationDialogOpenAtom, closeLocationDialogAtom } from "@/atoms/actions";
+import { locationDialogOpenAtom, closeLocationDialogAtom, newNoteDialogOpenAtom } from "@/atoms/actions";
 
 /**
  * Hook for note creation actions with tab management integration.
@@ -13,13 +13,22 @@ export function useNoteActions() {
 	const { openItemInTab } = useTabManagement();
 	const [isLocationDialogOpen, setIsLocationDialogOpen] = useAtom(locationDialogOpenAtom);
 	const closeDialogAction = useSetAtom(closeLocationDialogAtom);
+	const [isNewNoteDialogOpen, setIsNewNoteDialogOpen] = useAtom(newNoteDialogOpenAtom);
 
 	/**
-	 * Create a new note in the root and open it in a tab
+	 * Open the new-note name dialog (Ctrl+N)
 	 */
-	const createNoteInRoot = useCallback(async () => {
+	const createNoteInRoot = useCallback(() => {
+		setIsNewNoteDialogOpen(true);
+	}, [setIsNewNoteDialogOpen]);
+
+	/**
+	 * Actually create a new note in the root with the given title and open it in a tab.
+	 * Called by the NewNoteDialog on confirm.
+	 */
+	const createNoteInRootWithTitle = useCallback(async (title: string) => {
 		const result = await createNote({
-			title: "Untitled Note",
+			title: title.trim() || "Untitled Note",
 			content: "",
 			parent_id: undefined,
 		});
@@ -194,10 +203,13 @@ export function useNoteActions() {
 
 	return {
 		createNoteInRoot,
+		createNoteInRootWithTitle,
 		createNoteInLocation,
 		createNoteWithLocation,
 		createNewBook,
 		createNewSection,
+		isNewNoteDialogOpen,
+		closeNewNoteDialog: () => setIsNewNoteDialogOpen(false),
 		isLocationDialogOpen,
 		openLocationDialog,
 		closeLocationDialog,

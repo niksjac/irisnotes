@@ -7,6 +7,7 @@ import {
 	Sidebar,
 	PaneContainer,
 	NoteLocationDialog,
+	NewNoteDialog,
 	QuickSearchDialog,
 	StatusBar,
 } from "@/components";
@@ -38,6 +39,9 @@ export const Layout: React.FC = () => {
 	const { sidebar, views } = useLayout();
 	const hotkeyHandlers = useHotkeyHandlers();
 	const {
+		isNewNoteDialogOpen,
+		closeNewNoteDialog,
+		createNoteInRootWithTitle,
 		isLocationDialogOpen,
 		closeLocationDialog,
 		createNoteWithLocation,
@@ -118,6 +122,13 @@ export const Layout: React.FC = () => {
 
 			{/* Status Bar */}
 			<StatusBar />
+
+			{/* New Note Name Dialog */}
+			<NewNoteDialog
+				isOpen={isNewNoteDialogOpen}
+				onClose={closeNewNoteDialog}
+				onCreate={createNoteInRootWithTitle}
+			/>
 
 			{/* Note Location Dialog */}
 			<NoteLocationDialog
