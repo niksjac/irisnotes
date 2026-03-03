@@ -1,27 +1,25 @@
+import { useAtom } from "jotai";
+import { editorSettingsAtom } from "@/atoms/settings";
 import { useConfig } from "./use-config";
 
 export function useLineWrapping() {
+	const [editorSettings, setEditorSettings] = useAtom(editorSettingsAtom);
 	const { config, updateConfig } = useConfig();
 
-	const isWrapping = config?.editor?.lineWrapping ?? false;
+	// Read from editorSettingsAtom (SQLite-backed, instant) with config fallback
+	const isWrapping = editorSettings?.lineWrapping ?? config?.editor?.lineWrapping ?? false;
 
-	const toggleLineWrapping = async () => {
+	const toggleLineWrapping = () => {
 		const newValue = !isWrapping;
-		await updateConfig({
-			editor: {
-				...config.editor,
-				lineWrapping: newValue,
-			},
-		});
+		// Instant UI update via Jotai — no await, no IPC round-trip
+		setEditorSettings((prev) => prev ? { ...prev, lineWrapping: newValue } : prev);
+		// Fire-and-forget config.toml sync (non-blocking)
+		void updateConfig({ editor: { ...config?.editor, lineWrapping: newValue } });
 	};
 
-	const setIsWrapping = async (value: boolean) => {
-		await updateConfig({
-			editor: {
-				...config.editor,
-				lineWrapping: value,
-			},
-		});
+	const setIsWrapping = (value: boolean) => {
+		setEditorSettings((prev) => prev ? { ...prev, lineWrapping: value } : prev);
+		void updateConfig({ editor: { ...config?.editor, lineWrapping: value } });
 	};
 
 	return {

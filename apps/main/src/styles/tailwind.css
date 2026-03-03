@@ -3,6 +3,25 @@
 /* Enable dark mode via class (for manual toggle) instead of media query */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ==========================================================================
+   Global keyboard focus indicator
+   Uses :focus-visible so it only shows for keyboard/sequential navigation,
+   not mouse clicks. Applied in @layer base so component-level ring utilities
+   (which live in @layer utilities) take precedence where needed.
+   ========================================================================== */
+@layer base {
+  :focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Suppress the native :focus outline — we use :focus-visible only */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
 /* Streamlined Tailwind CSS v4 Configuration for IrisNotes */
 @theme {
   /* Essential layout dimensions */

@@ -13,12 +13,14 @@ import { useAtomValue } from "jotai";
 import { editorSettingsAtom } from "@/atoms/settings";
 import { editorStatsAtom } from "@/atoms/editor-stats";
 import { pane0ActiveTabAtom, pane1TabsAtom, pane0TabsAtom, pane1ActiveTabAtom, paneStateAtom } from "@/atoms/panes";
+import { statusBarVisibleAtom } from "@/atoms";
 import { useMemo, useCallback } from "react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
 const isDev = import.meta.env.DEV;
 
 export function StatusBar() {
+	const statusBarVisible = useAtomValue(statusBarVisibleAtom);
 	const settings = useAtomValue(editorSettingsAtom);
 	const editorStats = useAtomValue(editorStatsAtom);
 	const fontSize = settings?.fontSize ?? 14;
@@ -73,16 +75,19 @@ export function StatusBar() {
 	// Format word count with commas
 	const formatNumber = (num: number) => num.toLocaleString();
 
+	// Hide status bar when not visible (e.g., in zen mode)
+	if (!statusBarVisible) return null;
+
 	return (
-		<div className="flex-shrink-0 h-5 px-3 flex items-center justify-between gap-4 text-[11px] text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 select-none">
+		<div className="flex-shrink-0 h-5 px-3 flex items-center justify-between gap-4 text-[11px] text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 select-none overflow-hidden">
 			{/* Left side - editor stats */}
-			<div className="flex items-center gap-3 tabular-nums">
+			<div className="flex items-center gap-3 tabular-nums overflow-hidden min-w-0">
 				{isDev && (
 					<>
-						<span className="px-1.5 rounded font-semibold text-[10px] bg-amber-400 text-amber-900 dark:bg-amber-500 dark:text-amber-950">
+						<span className="px-1.5 rounded font-semibold text-[10px] bg-amber-400 text-amber-900 dark:bg-amber-500 dark:text-amber-950 flex-shrink-0">
 							DEV
 						</span>
-						<span className="text-gray-300 dark:text-gray-600">|</span>
+						<span className="text-gray-300 dark:text-gray-600 flex-shrink-0">|</span>
 					</>
 				)}
 				{isEditorActive && activeNoteId && (
@@ -90,21 +95,21 @@ export function StatusBar() {
 						<button
 							type="button"
 							onClick={handleCopyId}
-							className="hover:text-gray-700 dark:hover:text-gray-200 select-text cursor-pointer"
+							className="hover:text-gray-700 dark:hover:text-gray-200 select-text cursor-pointer truncate max-w-[120px] flex-shrink min-w-0 hidden sm:inline"
 							title="Click to copy note ID"
 						>
 							ID: {activeNoteId}
 						</button>
-						<span className="text-gray-300 dark:text-gray-600">|</span>
+						<span className="text-gray-300 dark:text-gray-600 flex-shrink-0 hidden sm:inline">|</span>
 					</>
 				)}
 				{isEditorActive && (
 					<>
-						<span title="Cursor position">
+						<span title="Cursor position" className="whitespace-nowrap flex-shrink-0">
 							Ln {editorStats.line}, Col {editorStats.column}
 						</span>
-						<span className="text-gray-300 dark:text-gray-600">|</span>
-						<span title="Word count">
+						<span className="text-gray-300 dark:text-gray-600 flex-shrink-0">|</span>
+						<span title="Word count" className="whitespace-nowrap flex-shrink-0">
 							Words: {formatNumber(editorStats.wordCount)}
 						</span>
 					</>
@@ -112,7 +117,7 @@ export function StatusBar() {
 			</div>
 
 			{/* Right side - display settings */}
-			<div className="flex items-center gap-3 tabular-nums">
+			<div className="flex items-center gap-3 tabular-nums flex-shrink-0">
 				<span title="Base font size (Ctrl+Alt+Up/Down to adjust)">
 					{fontSize}px
 				</span>

@@ -54,7 +54,7 @@ export function TreeHeader() {
 
 	return (
 		<div
-			className={`flex items-center justify-between gap-2 px-3 min-h-[40px] text-xs border-b border-gray-200 dark:border-gray-700 ${
+			className={`flex items-center justify-between gap-2 px-3 min-h-[32px] text-xs border-b border-gray-200 dark:border-gray-700 ${
 				treeHasFocus
 					? "bg-blue-100 dark:bg-[#132247]"
 					: "bg-gray-50 dark:bg-gray-800"
