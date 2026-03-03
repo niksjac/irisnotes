@@ -75,6 +75,7 @@ const codeAliases: Record<string, string> = {
 	MetaLeft: "meta", MetaRight: "meta",
 	OSLeft: "meta", OSRight: "meta",
 	ControlLeft: "ctrl", ControlRight: "ctrl",
+	ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right",
 };
 
 function normalizeCode(code: string): string {

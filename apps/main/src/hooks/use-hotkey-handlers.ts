@@ -28,13 +28,12 @@ import {
 	focusPreviousSpawnedTabAtom,
 	openSettingsTabAtom,
 	openHotkeysTabAtom,
-	increaseFontSizeAtom,
-	decreaseFontSizeAtom,
 	openQuickSearchAtom,
 	openSearchSidebarAtom,
 	sidebarCollapsed,
 	toggleTabBarAtom,
 	showQuickHotkeysAtom,
+	toggleZenModeAtom,
 } from "@/atoms";
 import { useEditorViewToggle } from "./use-editor-view-toggle";
 import { useLineWrapping } from "./use-line-wrapping";
@@ -145,9 +144,8 @@ export function useHotkeyHandlers() {
 		// Tab bar visibility
 		toggleTabBar: useSetAtom(toggleTabBarAtom),
 
-		// Font size actions (scales base font, inline em sizes scale proportionally)
-		increaseFontSize: useSetAtom(increaseFontSizeAtom),
-		decreaseFontSize: useSetAtom(decreaseFontSizeAtom),
+		// Zen mode
+		toggleZenMode: useSetAtom(toggleZenModeAtom),
 
 		// Note actions
 		createNoteInRoot,

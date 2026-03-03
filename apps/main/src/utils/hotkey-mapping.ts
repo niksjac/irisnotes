@@ -41,8 +41,7 @@ export function mapHotkeyHandlers(
 		toggleTitleBar: () => void;
 		toggleActivityBarExpanded: () => void;
 		toggleTabBar: () => void;
-		increaseFontSize: () => void;
-		decreaseFontSize: () => void;
+		toggleZenMode: () => void;
 		createNoteInRoot: () => void;
 		openLocationDialog: () => void;
 		openSettings: () => void;
@@ -57,6 +56,7 @@ export function mapHotkeyHandlers(
 		onToggleSidebar: sidebar.toggle,
 		onToggleActivityBar: views.toggleActivityBar,
 		onExpandActivityBar: handlers.toggleActivityBarExpanded,
+		onToggleZenMode: handlers.toggleZenMode,
 		// Tab hotkeys
 		onCloseTab: handlers.closeActiveTab,
 		onReopenLastClosedTab: handlers.reopenLastClosedTab,
@@ -225,8 +225,7 @@ export function mapHotkeyHandlers(
 		onToggleLineWrapping: handlers.toggleLineWrapping,
 		onToggleToolbar: handlers.toggleToolbar,
 		onToggleTitleBar: handlers.toggleTitleBar,
-		onIncreaseFontSize: handlers.increaseFontSize,
-		onDecreaseFontSize: handlers.decreaseFontSize,
+
 		// Views hotkeys
 		onOpenSettings: handlers.openSettings,
 		onOpenHotkeys: handlers.openHotkeys,

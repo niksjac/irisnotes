@@ -109,10 +109,6 @@ export interface HotkeyMapping {
 	newNote: HotkeyConfig;
 	newNoteWithLocation: HotkeyConfig;
 
-	// Font size hotkeys
-	increaseFontSize: HotkeyConfig;
-	decreaseFontSize: HotkeyConfig;
-
 	// Search hotkeys
 	quickSearch: HotkeyConfig;
 	fullTextSearch: HotkeyConfig;
@@ -120,6 +116,17 @@ export interface HotkeyMapping {
 	// Tree view hotkeys
 	revealActiveInTree: HotkeyConfig;
 	toggleHoist: HotkeyConfig;
+
+	// Editor spacing hotkeys
+	increaseLineHeight: HotkeyConfig;
+	decreaseLineHeight: HotkeyConfig;
+	increaseLetterSpacing: HotkeyConfig;
+	decreaseLetterSpacing: HotkeyConfig;
+	increaseParagraphSpacing: HotkeyConfig;
+	decreaseParagraphSpacing: HotkeyConfig;
+
+	// Zen mode
+	toggleZenMode: HotkeyConfig;
 }
 
 export interface AppHotkeysProps {
@@ -127,6 +134,7 @@ export interface AppHotkeysProps {
 	onToggleSidebar?: () => void;
 	onToggleActivityBar?: () => void;
 	onExpandActivityBar?: () => void;
+	onToggleZenMode?: () => void;
 
 	// Tab hotkeys
 	onCloseTab?: () => void;
@@ -187,8 +195,6 @@ export interface AppHotkeysProps {
 	onToggleLineWrapping?: () => void;
 	onToggleToolbar?: () => void;
 	onToggleTitleBar?: () => void;
-	onIncreaseFontSize?: () => void;
-	onDecreaseFontSize?: () => void;
 
 	// Editor hotkeys (future)
 	// onSave?: () => void;

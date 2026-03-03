@@ -84,18 +84,6 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		category: "Editor",
 		global: true,
 	},
-	increaseFontSize: {
-		key: "ctrl+alt+up",
-		description: "Increase Editor Font Size",
-		category: "Editor",
-		global: true,
-	},
-	decreaseFontSize: {
-		key: "ctrl+alt+down",
-		description: "Decrease Editor Font Size",
-		category: "Editor",
-		global: true,
-	},
 	paneResizeLeft: {
 		key: "alt+comma",
 		description: "Resize Pane Left",
@@ -346,6 +334,52 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		key: "ctrl+h",
 		description: "Hoist/Unhoist Selected Book or Section",
 		category: "Tree View",
+		global: true,
+	},
+
+	// Editor spacing hotkeys
+	increaseLineHeight: {
+		key: "ctrl+shift+alt+up",
+		description: "Increase Line Height",
+		category: "Editor Spacing",
+		global: true,
+	},
+	decreaseLineHeight: {
+		key: "ctrl+shift+alt+down",
+		description: "Decrease Line Height",
+		category: "Editor Spacing",
+		global: true,
+	},
+	increaseLetterSpacing: {
+		key: "ctrl+shift+alt+]",
+		description: "Increase Letter Spacing",
+		category: "Editor Spacing",
+		global: true,
+	},
+	decreaseLetterSpacing: {
+		key: "ctrl+shift+alt+[",
+		description: "Decrease Letter Spacing",
+		category: "Editor Spacing",
+		global: true,
+	},
+	increaseParagraphSpacing: {
+		key: "ctrl+shift+alt+pageup",
+		description: "Increase Paragraph Spacing",
+		category: "Editor Spacing",
+		global: true,
+	},
+	decreaseParagraphSpacing: {
+		key: "ctrl+shift+alt+pagedown",
+		description: "Decrease Paragraph Spacing",
+		category: "Editor Spacing",
+		global: true,
+	},
+
+	// Zen mode
+	toggleZenMode: {
+		key: "f11",
+		description: "Toggle Zen Mode (hide all UI)",
+		category: "Layout",
 		global: true,
 	},
 };

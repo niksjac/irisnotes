@@ -1,6 +1,9 @@
 import { useHotkeys } from "react-hotkeys-hook";
+import { useAtom } from "jotai";
 import { useHotkeysConfig } from "./use-hotkeys-config";
 import type { AppHotkeysProps } from "@/types";
+import { editorSettingsAtom } from "@/atoms/settings";
+import { EDITOR_SETTINGS_CONSTRAINTS } from "@/types/editor-settings";
 
 /**
  * Centralized app-wide hotkeys hook
@@ -44,6 +47,11 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		hotkeyMapping.expandActivityBar.key,
 		createHandler(handlers.onExpandActivityBar),
 		createHotkeyOptions(hotkeyMapping.expandActivityBar.global)
+	);
+	useHotkeys(
+		hotkeyMapping.toggleZenMode.key,
+		createHandler(handlers.onToggleZenMode),
+		createHotkeyOptions(hotkeyMapping.toggleZenMode.global)
 	);
 
 	// Tab hotkeys
@@ -218,17 +226,6 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHandler(handlers.onToggleTitleBar),
 		createHotkeyOptions(hotkeyMapping.toggleTitleBar.global)
 	);
-	useHotkeys(
-		hotkeyMapping.increaseFontSize.key,
-		createHandler(handlers.onIncreaseFontSize),
-		createHotkeyOptions(hotkeyMapping.increaseFontSize.global)
-	);
-	useHotkeys(
-		hotkeyMapping.decreaseFontSize.key,
-		createHandler(handlers.onDecreaseFontSize),
-		createHotkeyOptions(hotkeyMapping.decreaseFontSize.global)
-	);
-
 	// Focus hotkeys
 	useHotkeys(
 		hotkeyMapping.focusTreeView.key,
@@ -319,5 +316,42 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		hotkeyMapping.toggleHoist.key,
 		createHandler(handlers.onToggleHoist),
 		createHotkeyOptions(hotkeyMapping.toggleHoist.global)
+	);
+
+	// Editor spacing hotkeys (directly mutate editorSettingsAtom)
+	const [, setEditorSettings] = useAtom(editorSettingsAtom);
+	const c = EDITOR_SETTINGS_CONSTRAINTS;
+	const clamp = (v: number, min: number, max: number) =>
+		Math.round(Math.max(min, Math.min(max, v)) * 1000) / 1000;
+
+	useHotkeys(
+		hotkeyMapping.increaseLineHeight.key,
+		() => setEditorSettings((s) => s ? { ...s, lineHeight: clamp(s.lineHeight + c.lineHeight.step, c.lineHeight.min, c.lineHeight.max) } : s),
+		createHotkeyOptions(hotkeyMapping.increaseLineHeight.global)
+	);
+	useHotkeys(
+		hotkeyMapping.decreaseLineHeight.key,
+		() => setEditorSettings((s) => s ? { ...s, lineHeight: clamp(s.lineHeight - c.lineHeight.step, c.lineHeight.min, c.lineHeight.max) } : s),
+		createHotkeyOptions(hotkeyMapping.decreaseLineHeight.global)
+	);
+	useHotkeys(
+		hotkeyMapping.increaseLetterSpacing.key,
+		() => setEditorSettings((s) => s ? { ...s, letterSpacing: clamp(s.letterSpacing + c.letterSpacing.step, c.letterSpacing.min, c.letterSpacing.max) } : s),
+		createHotkeyOptions(hotkeyMapping.increaseLetterSpacing.global)
+	);
+	useHotkeys(
+		hotkeyMapping.decreaseLetterSpacing.key,
+		() => setEditorSettings((s) => s ? { ...s, letterSpacing: clamp(s.letterSpacing - c.letterSpacing.step, c.letterSpacing.min, c.letterSpacing.max) } : s),
+		createHotkeyOptions(hotkeyMapping.decreaseLetterSpacing.global)
+	);
+	useHotkeys(
+		hotkeyMapping.increaseParagraphSpacing.key,
+		() => setEditorSettings((s) => s ? { ...s, paragraphSpacing: clamp(s.paragraphSpacing + c.paragraphSpacing.step, c.paragraphSpacing.min, c.paragraphSpacing.max) } : s),
+		createHotkeyOptions(hotkeyMapping.increaseParagraphSpacing.global)
+	);
+	useHotkeys(
+		hotkeyMapping.decreaseParagraphSpacing.key,
+		() => setEditorSettings((s) => s ? { ...s, paragraphSpacing: clamp(s.paragraphSpacing - c.paragraphSpacing.step, c.paragraphSpacing.min, c.paragraphSpacing.max) } : s),
+		createHotkeyOptions(hotkeyMapping.decreaseParagraphSpacing.global)
 	);
 }
