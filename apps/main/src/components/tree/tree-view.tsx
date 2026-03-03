@@ -256,16 +256,30 @@ export function TreeView() {
 	// Workaround for WebKit bug in Tauri on Linux
 	// See: https://github.com/tauri-apps/tauri/issues/6695
 	// WebKit requires dataTransfer.setData() to be called for drag events to work
+	// Scoped to tree container only so it doesn't break tab drag-n-drop
+	const treeContainerRef = useRef<HTMLDivElement>(null);
 	useEffect(() => {
+		const container = treeContainerRef.current;
+		if (!container) return;
 		const handleDragStart = (e: DragEvent) => {
 			if (e.target instanceof HTMLElement && e.dataTransfer) {
-				// Set data to enable drag events on WebKit/Linux
-				e.dataTransfer.setData("text/plain", e.target.id || "draggedElement");
+				// Find the tree item button with our custom data attributes
+				const button = e.target.closest('button[data-item-id]') as HTMLElement | null;
+				const itemId = button?.getAttribute('data-item-id') || e.target.id || "draggedElement";
+				const itemType = button?.getAttribute('data-item-type') || "note";
+				const itemTitle = button?.getAttribute('data-item-title') || "";
+				e.dataTransfer.setData("text/plain", itemId);
+				// Set tree item data for cross-component drops (tree → pane)
+				e.dataTransfer.setData("application/x-tree-item", JSON.stringify({
+					id: itemId,
+					type: itemType,
+					title: itemTitle,
+				}));
 			}
 		};
-		document.addEventListener("dragstart", handleDragStart);
+		container.addEventListener("dragstart", handleDragStart);
 		return () => {
-			document.removeEventListener("dragstart", handleDragStart);
+			container.removeEventListener("dragstart", handleDragStart);
 		};
 	}, []);
 
@@ -1093,7 +1107,7 @@ export function TreeView() {
 	}
 
 	return (
-		<div className="w-full h-full flex flex-col">
+		<div ref={treeContainerRef} className="w-full h-full flex flex-col">
 			{/* Hoist indicator bar - shows when in hoist mode */}
 			{hoistedRootId && hoistedRootName && (
 				<div className="flex-shrink-0 px-2 py-1.5 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 flex items-center gap-2">
@@ -1163,6 +1177,9 @@ export function TreeView() {
 								// Our singleClickSelectFeature overrides onClick to NOT call primaryAction
 								{...itemProps}
 
+								data-item-id={itemData.id}
+								data-item-type={itemData.type}
+								data-item-title={itemData.title}
 								type="button"
 								className={`
                   w-full flex items-center gap-1 py-0.5 px-1 rounded cursor-pointer transition-colors text-left

@@ -10,6 +10,8 @@ interface PaneProps {
 	onTabSelect: (tabId: string) => void;
 	onTabClose?: (tabId: string) => void;
 	onTabReorder?: (draggedTabId: string, targetTabId: string) => void;
+	onCrossPaneDrop?: (draggedTabId: string, sourcePaneIndex: number, targetTabId?: string) => void;
+	onTreeItemDrop?: (item: { id: string; type: string; title: string }) => void;
 	onPaneClick?: () => void;
 	isDualPaneMode?: boolean;
 	paneIndex: 0 | 1;
@@ -21,6 +23,8 @@ export const Pane: FC<PaneProps> = ({
 	onTabSelect,
 	onTabClose,
 	onTabReorder,
+	onCrossPaneDrop,
+	onTreeItemDrop,
 	onPaneClick,
 	isDualPaneMode = false,
 	paneIndex,
@@ -42,6 +46,30 @@ export const Pane: FC<PaneProps> = ({
 		}
 	};
 
+	const handleDragOver = (e: React.DragEvent) => {
+		// Accept tree item drops on the pane content area
+		if (e.dataTransfer.types.includes("application/x-tree-item")) {
+			e.preventDefault();
+			e.dataTransfer.dropEffect = "copy";
+		}
+	};
+
+	const handleDrop = (e: React.DragEvent) => {
+		const treeItemData = e.dataTransfer.getData("application/x-tree-item");
+		if (treeItemData && onTreeItemDrop) {
+			e.preventDefault();
+			e.stopPropagation();
+			try {
+				const item = JSON.parse(treeItemData);
+				if (item.id) {
+					onTreeItemDrop(item);
+				}
+			} catch {
+				// Not valid JSON, ignore
+			}
+		}
+	};
+
 	return (
 		<div
 			className={`
@@ -51,6 +79,8 @@ export const Pane: FC<PaneProps> = ({
 			data-pane-index={paneIndex}
 			onClick={handlePaneClick}
 			onFocusCapture={() => setFocusArea(myFocusArea)}
+			onDragOver={handleDragOver}
+			onDrop={handleDrop}
 		>
 			{tabBarVisible && (
 				<TabBar
@@ -59,7 +89,9 @@ export const Pane: FC<PaneProps> = ({
 					onTabSelect={onTabSelect}
 					onTabClose={onTabClose}
 					onTabReorder={onTabReorder}
+					onCrossPaneDrop={onCrossPaneDrop}
 					hasFocus={hasFocus}
+					paneIndex={paneIndex}
 				/>
 			)}
 			<TabContent tab={activeTab} />

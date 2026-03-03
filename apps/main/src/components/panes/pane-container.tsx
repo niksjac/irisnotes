@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
 	paneStateAtom,
 	pane0TabsAtom,
@@ -7,11 +7,14 @@ import {
 	pane0ActiveTabAtom,
 	pane1ActiveTabAtom,
 	itemsAtom,
+	focusAreaAtom,
 } from "@/atoms";
+import type { FocusArea } from "@/atoms";
 import { Pane } from "./pane";
 import { PaneResizer } from "./pane-resizer";
 import { useEffect } from "react";
 import type { Tab } from "@/types";
+import { useTabManagement } from "@/hooks/use-tab-management";
 
 /** Extract the item ID a tab is displaying */
 const getItemIdFromTab = (tab: Tab): string | null =>
@@ -23,6 +26,8 @@ export const PaneContainer: FC = () => {
 	const [pane1Tabs, setPane1Tabs] = useAtom(pane1TabsAtom);
 	const [pane0ActiveTab, setPane0ActiveTab] = useAtom(pane0ActiveTabAtom);
 	const [pane1ActiveTab, setPane1ActiveTab] = useAtom(pane1ActiveTabAtom);
+	const { openItemInTab } = useTabManagement();
+	const setFocusArea = useSetAtom(focusAreaAtom);
 
 	// Keep tab titles in sync when items are renamed
 	const items = useAtomValue(itemsAtom);
@@ -154,6 +159,67 @@ export const PaneContainer: FC = () => {
 		setTabs(newTabs);
 	};
 
+	const handleCrossPaneDrop = (
+		targetPaneIndex: 0 | 1,
+		draggedTabId: string,
+		sourcePaneIndex: number,
+		targetTabId?: string
+	) => {
+		const srcPane = sourcePaneIndex as 0 | 1;
+		const srcTabs = srcPane === 0 ? pane0Tabs : pane1Tabs;
+		const setSrcTabs = srcPane === 0 ? setPane0Tabs : setPane1Tabs;
+		const srcActiveTab = srcPane === 0 ? pane0ActiveTab : pane1ActiveTab;
+		const setSrcActiveTab = srcPane === 0 ? setPane0ActiveTab : setPane1ActiveTab;
+		const dstTabs = targetPaneIndex === 0 ? pane0Tabs : pane1Tabs;
+		const setDstTabs = targetPaneIndex === 0 ? setPane0Tabs : setPane1Tabs;
+		const setDstActiveTab = targetPaneIndex === 0 ? setPane0ActiveTab : setPane1ActiveTab;
+
+		const tab = srcTabs.find((t) => t.id === draggedTabId);
+		if (!tab) return;
+
+		// Remove from source pane
+		const remainingSrc = srcTabs.filter((t) => t.id !== draggedTabId);
+		setSrcTabs(remainingSrc);
+
+		// Fix source pane active tab if needed
+		if (srcActiveTab === draggedTabId) {
+			const oldIdx = srcTabs.findIndex((t) => t.id === draggedTabId);
+			const nextIdx = Math.min(oldIdx, remainingSrc.length - 1);
+			setSrcActiveTab(remainingSrc[nextIdx]?.id ?? null);
+		}
+
+		// Insert into destination pane
+		if (targetTabId) {
+			const targetIdx = dstTabs.findIndex((t) => t.id === targetTabId);
+			if (targetIdx >= 0) {
+				const newDst = [...dstTabs];
+				newDst.splice(targetIdx, 0, tab);
+				setDstTabs(newDst);
+			} else {
+				setDstTabs([...dstTabs, tab]);
+			}
+		} else {
+			setDstTabs([...dstTabs, tab]);
+		}
+
+		// Make the moved tab active in the destination pane and focus it
+		setDstActiveTab(tab.id);
+		setPaneState((prev) => ({ ...prev, activePane: targetPaneIndex }));
+		setFocusArea(`pane-${targetPaneIndex}` as FocusArea);
+	};
+
+	const handleTreeItemDrop = (
+		targetPaneIndex: 0 | 1,
+		item: { id: string; type: string; title: string },
+	) => {
+		openItemInTab({
+			id: item.id,
+			title: item.title,
+			type: item.type as "note" | "book" | "section",
+			targetPane: targetPaneIndex,
+		});
+	};
+
 	// No automatic tab creation when switching to dual pane mode
 
 	if (paneState.count === 1) {
@@ -167,6 +233,10 @@ export const PaneContainer: FC = () => {
 				onTabReorder={(draggedTabId, targetTabId) =>
 					handleTabReorder(0, draggedTabId, targetTabId)
 				}
+				onCrossPaneDrop={(draggedTabId, sourcePaneIndex, targetTabId) =>
+					handleCrossPaneDrop(0, draggedTabId, sourcePaneIndex, targetTabId)
+				}
+				onTreeItemDrop={(item) => handleTreeItemDrop(0, item)}
 				onPaneClick={() => handlePaneClick(0)}
 				isDualPaneMode={false}
 			/>
@@ -188,6 +258,10 @@ export const PaneContainer: FC = () => {
 					onTabReorder={(draggedTabId, targetTabId) =>
 						handleTabReorder(0, draggedTabId, targetTabId)
 					}
+					onCrossPaneDrop={(draggedTabId, sourcePaneIndex, targetTabId) =>
+						handleCrossPaneDrop(0, draggedTabId, sourcePaneIndex, targetTabId)
+					}
+					onTreeItemDrop={(item) => handleTreeItemDrop(0, item)}
 					onPaneClick={() => handlePaneClick(0)}
 					isDualPaneMode={true}
 				/>
@@ -208,6 +282,10 @@ export const PaneContainer: FC = () => {
 					onTabReorder={(draggedTabId, targetTabId) =>
 						handleTabReorder(1, draggedTabId, targetTabId)
 					}
+					onCrossPaneDrop={(draggedTabId, sourcePaneIndex, targetTabId) =>
+						handleCrossPaneDrop(1, draggedTabId, sourcePaneIndex, targetTabId)
+					}
+					onTreeItemDrop={(item) => handleTreeItemDrop(1, item)}
 					onPaneClick={() => handlePaneClick(1)}
 					isDualPaneMode={true}
 				/>
