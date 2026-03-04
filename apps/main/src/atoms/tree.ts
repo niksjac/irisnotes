@@ -11,6 +11,25 @@ export const treeViewTypeAtom = atom<TreeViewType>("complex");
  */
 export const hoistedRootIdAtom = atom<string | null>(null);
 
+/**
+ * Tree filter text for searching/filtering notes
+ * When non-empty, tree shows only notes (no books/sections) matching the filter
+ */
+export const treeFilterAtom = atom<string>("");
+
+/**
+ * Tree view mode: hierarchical (default) or flat (all notes at root with parent prefixes)
+ */
+export type TreeViewMode = "hierarchical" | "flat";
+export const treeViewModeAtom = atom<TreeViewMode>("hierarchical");
+
+/**
+ * Date sort direction for tree items
+ * null = not sorting by date (use manual/alphabetical sort_order)
+ */
+export type DateSortDirection = "asc" | "desc" | null;
+export const dateSortDirectionAtom = atom<DateSortDirection>(null);
+
 // ============================================================================
 // Global callback registry for tree view actions
 // Using window object to avoid Jotai store mismatch issues
