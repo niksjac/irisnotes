@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import * as Icons from "lucide-react";
-import { useEditorLayout, useSidebar, useView, useTheme, useKeyTipActions } from "@/hooks";
+import { useEditorLayout, useSidebar, useView, useKeyTipActions } from "@/hooks";
+import { useHotkeyLabel } from "@/hooks/use-hotkey-label";
 import { useLineWrapping } from "@/hooks";
 import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import {
@@ -64,7 +65,6 @@ export function ActivityBar() {
 
 	const { toolbarVisible, toggleToolbar, titleBarVisible, toggleTitleBar } = useEditorLayout();
 	const { isWrapping, toggleLineWrapping } = useLineWrapping();
-	const { darkMode, toggleDarkMode } = useTheme();
 	const [paneState, setPaneState] = useAtom(paneStateAtom);
 	const isZenMode = useAtomValue(zenModeAtom);
 	const toggleZenMode = useSetAtom(toggleZenModeAtom);
@@ -72,6 +72,18 @@ export function ActivityBar() {
 	const toggleTabBar = useSetAtom(toggleTabBarAtom);
 	const statusBarVisible = useAtomValue(statusBarVisibleAtom);
 	const toggleStatusBar = useSetAtom(toggleStatusBarAtom);
+
+	// Live hotkey labels (reflect user overrides from hotkeys.toml)
+	const labelToggleSidebar = useHotkeyLabel("toggleSidebar");
+	const labelOpenSettings = useHotkeyLabel("openSettings");
+	const labelOpenHotkeys = useHotkeyLabel("openHotkeys");
+	const labelToggleDualPane = useHotkeyLabel("toggleDualPane");
+	const labelToggleToolbar = useHotkeyLabel("toggleToolbar");
+	const labelToggleTitleBar = useHotkeyLabel("toggleTitleBar");
+	const labelToggleTabBar = useHotkeyLabel("toggleTabBar");
+	const labelToggleLineWrapping = useHotkeyLabel("toggleLineWrapping");
+	const labelToggleZenMode = useHotkeyLabel("toggleZenMode");
+	const labelExpandActivityBar = useHotkeyLabel("expandActivityBar");
 
 	const togglePaneMode = useCallback(() => {
 		setPaneState((prev) => ({
@@ -91,10 +103,9 @@ export function ActivityBar() {
 		{ key: "0", action: toggleTabBar, label: "Tab Bar" },
 		{ key: "s", action: toggleStatusBar, label: "Status Bar" },
 		{ key: "7", action: toggleLineWrapping, label: "Wrap" },
-		{ key: "8", action: toggleDarkMode, label: "Theme" },
 		{ key: "9", action: toggleZenMode, label: "Zen Mode" },
 		{ key: "e", action: toggleActivityBarExpanded, label: "Expand/Collapse" },
-	], [toggleSidebar, openSettingsTab, openHotkeysTab, togglePaneMode, toggleToolbar, toggleTitleBar, toggleTabBar, toggleStatusBar, toggleLineWrapping, toggleDarkMode, toggleZenMode, toggleActivityBarExpanded]);
+	], [toggleSidebar, openSettingsTab, openHotkeysTab, togglePaneMode, toggleToolbar, toggleTitleBar, toggleTabBar, toggleStatusBar, toggleLineWrapping, toggleZenMode, toggleActivityBarExpanded]);
 
 	// Use the KeyTip system for Alt+key shortcuts
 	const { altKeyHeld } = useKeyTipActions(keyTipActions);
@@ -157,7 +168,7 @@ export function ActivityBar() {
 							: "w-6 h-6 hover:scale-110"
 					)}
 					onClick={toggleActivityBarExpanded}
-					title={activityBarExpanded ? "Collapse activity bar (Alt+E)" : "Expand activity bar (Alt+E)"}
+				title={activityBarExpanded ? `Collapse activity bar (${labelExpandActivityBar})` : `Expand activity bar (${labelExpandActivityBar})`}
 					tabIndex={-1}
 				>
 					{activityBarExpanded ? (
@@ -179,7 +190,7 @@ export function ActivityBar() {
 					icon={Icons.FileText}
 					isActive={!sidebarCollapsed}
 					onClick={toggleSidebar}
-					title="Toggle Notes Sidebar (Alt+1)"
+					title={`Toggle Notes Sidebar (${labelToggleSidebar})`}
 					label="Notes"
 					expanded={activityBarExpanded}
 					keyTip="1"
@@ -190,7 +201,7 @@ export function ActivityBar() {
 					icon={Icons.Settings}
 					isActive={isSettingsActive}
 					onClick={openSettingsTab}
-					title="Settings (Alt+2)"
+					title={`Settings (${labelOpenSettings})`}
 					label="Settings"
 					expanded={activityBarExpanded}
 					keyTip="2"
@@ -201,7 +212,7 @@ export function ActivityBar() {
 					icon={Icons.Keyboard}
 					isActive={isHotkeysActive}
 					onClick={openHotkeysTab}
-					title="Keyboard Shortcuts (Alt+3)"
+					title={`Keyboard Shortcuts (${labelOpenHotkeys})`}
 					label="Hotkeys"
 					expanded={activityBarExpanded}
 					keyTip="3"
@@ -215,8 +226,8 @@ export function ActivityBar() {
 						onClick={togglePaneMode}
 						title={
 							paneState.count === 1
-								? "Split into two panes (Alt+4)"
-								: "Merge to single pane (Alt+4)"
+								? `Split into two panes (${labelToggleDualPane})`
+								: `Merge to single pane (${labelToggleDualPane})`
 						}
 						label={paneState.count === 1 ? "Split Pane" : "Single Pane"}
 						expanded={activityBarExpanded}
@@ -246,7 +257,7 @@ export function ActivityBar() {
 					icon={toolbarVisible ? Icons.PanelTop : Icons.PanelTopDashed}
 					isActive={toolbarVisible}
 					onClick={toggleToolbar}
-					title={`${toolbarVisible ? "Hide" : "Show"} editor toolbar (Alt+5)`}
+					title={`${toolbarVisible ? "Hide" : "Show"} editor toolbar (${labelToggleToolbar})`}
 					label="Toolbar"
 					expanded={activityBarExpanded}
 					keyTip="5"
@@ -256,10 +267,10 @@ export function ActivityBar() {
 				/>
 
 				<ActivityBarButton
-					icon={titleBarVisible ? Icons.Heading : Icons.HeadingIcon}
+					icon={titleBarVisible ? Icons.Type : Icons.TypeOutline}
 					isActive={titleBarVisible}
 					onClick={toggleTitleBar}
-					title={`${titleBarVisible ? "Hide" : "Show"} title bar (Alt+6)`}
+					title={`${titleBarVisible ? "Hide" : "Show"} title bar (${labelToggleTitleBar})`}
 					label="Title Bar"
 					expanded={activityBarExpanded}
 					keyTip="6"
@@ -272,7 +283,7 @@ export function ActivityBar() {
 					icon={tabBarVisible ? Icons.Rows2 : Icons.Rows3}
 					isActive={tabBarVisible}
 					onClick={toggleTabBar}
-					title={`${tabBarVisible ? "Hide" : "Show"} tab bar (Alt+0)`}
+					title={`${tabBarVisible ? "Hide" : "Show"} tab bar (${labelToggleTabBar})`}
 					label="Tab Bar"
 					expanded={activityBarExpanded}
 					keyTip="0"
@@ -285,7 +296,7 @@ export function ActivityBar() {
 					icon={statusBarVisible ? Icons.PanelBottom : Icons.PanelBottomClose}
 					isActive={statusBarVisible}
 					onClick={toggleStatusBar}
-					title={`${statusBarVisible ? "Hide" : "Show"} status bar (Alt+S)`}
+					title={`${statusBarVisible ? "Hide" : "Show"} status bar`}
 					label="Status Bar"
 					expanded={activityBarExpanded}
 					keyTip="s"
@@ -298,7 +309,7 @@ export function ActivityBar() {
 					icon={isWrapping ? Icons.WrapText : Icons.ArrowRight}
 					isActive={isWrapping}
 					onClick={toggleLineWrapping}
-					title={`${isWrapping ? "Disable" : "Enable"} line wrapping (Alt+7)`}
+					title={`${isWrapping ? "Disable" : "Enable"} line wrapping (${labelToggleLineWrapping})`}
 					label="Wrap Text"
 					expanded={activityBarExpanded}
 					keyTip="7"
@@ -308,23 +319,10 @@ export function ActivityBar() {
 				/>
 
 				<ActivityBarButton
-					icon={darkMode ? Icons.Sun : Icons.Moon}
-					isActive={false}
-					onClick={toggleDarkMode}
-					title={`Switch to ${darkMode ? "light" : "dark"} mode (Alt+8)`}
-					label={darkMode ? "Light Mode" : "Dark Mode"}
-					expanded={activityBarExpanded}
-					keyTip="8"
-					showKeyTip={altKeyHeld}
-					iconSize={16}
-					iconClassName="md:w-4 md:h-4"
-				/>
-
-				<ActivityBarButton
 					icon={isZenMode ? Icons.Minimize2 : Icons.Maximize2}
 					isActive={isZenMode}
 					onClick={toggleZenMode}
-					title={`${isZenMode ? "Exit" : "Enter"} Zen Mode (F11 or Alt+9)`}
+					title={`${isZenMode ? "Exit" : "Enter"} Zen Mode (${labelToggleZenMode})`}
 					label={isZenMode ? "Exit Zen" : "Zen Mode"}
 					expanded={activityBarExpanded}
 					keyTip="9"

@@ -12,6 +12,7 @@ import {
 	StatusBar,
 } from "@/components";
 import { QuickHotkeysModal } from "@/components/dialogs/quick-hotkeys-modal";
+import { ThemeSwitcherDialog } from "@/components/dialogs/theme-switcher-dialog";
 import { quickHotkeysOpenAtom, hideQuickHotkeysAtom } from "@/atoms";
 import {
 	useLayout,
@@ -142,6 +143,9 @@ export const Layout: React.FC = () => {
 
 			{/* Quick Hotkeys Modal */}
 			<QuickHotkeysModal isOpen={isQuickHotkeysOpen} onClose={hideQuickHotkeys} />
+
+			{/* Theme Switcher Dialog */}
+			<ThemeSwitcherDialog />
 		</div>
 	);
 };

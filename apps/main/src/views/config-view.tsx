@@ -11,9 +11,10 @@ import type {
 } from "@/types/editor-settings";
 import { FONT_FAMILIES, getFontsByGroup } from "@/components/editor/format-constants";
 import * as Icons from "lucide-react";
+import { THEMES } from "@/config/themes";
 
 export function ConfigView() {
-	const { darkMode, toggleDarkMode } = useTheme();
+	const { themeName, setTheme } = useTheme();
 	const { config } = useConfig();
 	const { settings: editorSettings, updateSetting, resetSettings, constraints } = useEditorSettings();
 
@@ -71,33 +72,80 @@ export function ConfigView() {
 						Appearance
 					</h2>
 
-					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
-						{/* Theme Toggle */}
-						<div className="flex items-center justify-between">
-							<div>
-								<div className="font-medium text-gray-900 dark:text-gray-100">
-									Theme
-								</div>
-								<div className="text-sm text-gray-500 dark:text-gray-400">
-									Switch between light and dark mode
-								</div>
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3">
+						<div>
+							<div className="font-medium text-gray-900 dark:text-gray-100 mb-1">Theme</div>
+							<div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+								Pick a theme — surface colors, text, and accent all change together
 							</div>
-							<button
-								onClick={toggleDarkMode}
-								className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-							>
-								{darkMode ? (
-									<>
-										<Icons.Moon className="w-4 h-4" />
-										<span>Dark</span>
-									</>
-								) : (
-									<>
-										<Icons.Sun className="w-4 h-4" />
-										<span>Light</span>
-									</>
-								)}
-							</button>
+							{/* Light themes row */}
+							<div className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Light</div>
+							<div className="grid grid-cols-3 gap-2 mb-4">
+								{THEMES.filter((t) => !t.isDark).map((t) => (
+									<button
+										key={t.id}
+										onClick={() => setTheme(t.id)}
+										className={`relative rounded-lg overflow-hidden border-2 transition-all ${
+											themeName === t.id
+												? "border-blue-500 ring-2 ring-blue-500/30"
+												: "border-transparent hover:border-gray-400 dark:hover:border-gray-500"
+										}`}
+									>
+										{/* Swatch preview */}
+										<div className="h-12 flex" style={{ backgroundColor: t.swatch.bg }}>
+											<div className="w-1/4 h-full" style={{ backgroundColor: t.swatch.panel }} />
+											<div className="flex-1 flex items-center justify-center gap-1 px-1">
+												<div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.swatch.accent }} />
+												<div className="h-1 flex-1 rounded-full opacity-60" style={{ backgroundColor: t.swatch.text }} />
+											</div>
+										</div>
+										{/* Label */}
+										<div
+											className="px-2 py-1 text-xs font-medium truncate"
+											style={{ backgroundColor: t.swatch.panel, color: t.swatch.text }}
+										>
+											{t.label}
+											{themeName === t.id && (
+												<Icons.Check className="inline w-3 h-3 ml-1" style={{ color: t.swatch.accent }} />
+											)}
+										</div>
+									</button>
+								))}
+							</div>
+							{/* Dark themes rows */}
+							<div className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Dark</div>
+							<div className="grid grid-cols-3 gap-2">
+								{THEMES.filter((t) => t.isDark).map((t) => (
+									<button
+										key={t.id}
+										onClick={() => setTheme(t.id)}
+										className={`relative rounded-lg overflow-hidden border-2 transition-all ${
+											themeName === t.id
+												? "border-blue-500 ring-2 ring-blue-500/30"
+												: "border-transparent hover:border-gray-400 dark:hover:border-gray-500"
+										}`}
+									>
+										{/* Swatch preview */}
+										<div className="h-12 flex" style={{ backgroundColor: t.swatch.bg }}>
+											<div className="w-1/4 h-full" style={{ backgroundColor: t.swatch.panel }} />
+											<div className="flex-1 flex items-center justify-center gap-1 px-1">
+												<div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.swatch.accent }} />
+												<div className="h-1 flex-1 rounded-full opacity-60" style={{ backgroundColor: t.swatch.text }} />
+											</div>
+										</div>
+										{/* Label */}
+										<div
+											className="px-2 py-1 text-xs font-medium truncate"
+											style={{ backgroundColor: t.swatch.panel, color: t.swatch.text }}
+										>
+											{t.label}
+											{themeName === t.id && (
+												<Icons.Check className="inline w-3 h-3 ml-1" style={{ color: t.swatch.accent }} />
+											)}
+										</div>
+									</button>
+								))}
+							</div>
 						</div>
 					</div>
 				</section>

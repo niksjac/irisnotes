@@ -1,45 +1,350 @@
 /*
- * IrisNotes Essential Theme Variables
+ * IrisNotes Full Theme System
  *
- * This file contains only essential CSS variables that cannot be replaced by Tailwind:
- * - Editor-specific variables for dynamic font sizing (set by use-font-size.ts hook)
- * - Core primary color for backward compatibility
+ * Each block overrides the Tailwind v4 CSS custom properties that utilities
+ * reference (e.g. `bg-gray-900` → `var(--color-gray-900)`).  Setting the
+ * `data-theme` attribute on <html> triggers one O(1) style-recalculation on
+ * the root element — the fastest possible theme switch at the browser level.
  *
- * Most styles have been migrated to Tailwind CSS classes.
+ * Themes:
+ *   Light:  default-light · catppuccin-latte · solarized-light
+ *   Dark:   default-dark  · nord · catppuccin-mocha · tokyo-night · gruvbox · rose-pine
+ *
+ * Variables overridden per theme:
+ *   --color-gray-{50..950}   - Surface / text scale  (drives all Tailwind bg/text/border utils)
+ *   --color-blue-{50..950}   - Accent color scale     (drives all Tailwind bg-blue / text-blue utils)
+ *   --accent-{100,200,400,500,600,900} - Semantic accent refs (focus ring, tree selection)
+ *   --editor-bg              - Editor canvas background
  */
 
+/* ─── Shared semantic aliases ─────────────────────────────────────────────── */
 :root {
-  /* Core primary color - used by some components for compatibility */
-  --primary: #2563eb;
+  --tree-hover-bg:           var(--color-gray-100);
+  --tree-selected-bg:        var(--accent-100);
+  --tree-selected-hover-bg:  var(--accent-200);
+  --primary:                 var(--accent-500);
 
-  /* Editor background - used by CodeMirror and ProseMirror components */
-  --editor-bg: #f9fafb;
-
-  /* Tree theming variables */
-  --tree-hover-bg: rgb(243 244 246);
-  --tree-selected-bg: rgb(219 234 254);
-  --tree-selected-hover-bg: rgb(191 219 254);
-
-  /* Editor-specific font size variables - dynamically updated by use-font-size.ts */
-  /* These cannot be replaced by Tailwind as they change at runtime */
-  --editor-font-size: 14px;
-  --editor-font-size-h1: 28px;
-  --editor-font-size-h2: 21px;
-  --editor-font-size-h3: 17px;
-  --editor-font-size-h4: 15px;
-  --editor-font-size-h5: 14px;
-  --editor-font-size-h6: 12px;
+  /* Editor-specific font size variables — set dynamically by use-font-size.ts */
+  --editor-font-size:      14px;
+  --editor-font-size-h1:   28px;
+  --editor-font-size-h2:   21px;
+  --editor-font-size-h3:   17px;
+  --editor-font-size-h4:   15px;
+  --editor-font-size-h5:   14px;
+  --editor-font-size-h6:   12px;
   --editor-font-size-code: 12px;
 }
 
-/* Dark theme */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --editor-bg: #111827;
+.dark {
+  --tree-hover-bg:           var(--color-gray-800);
+  --tree-selected-bg:        var(--accent-900);
+  --tree-selected-hover-bg:  var(--accent-600);
+  --editor-bg:               var(--color-gray-900);
+}
 
-    /* Dark theme tree variables */
-    --tree-hover-bg: rgb(31 41 55);
-    --tree-selected-bg: rgb(30 58 138);
-    --tree-selected-hover-bg: rgb(29 78 216);
-  }
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* DEFAULT DARK  (Tailwind gray + blue — explicit so switching back clears any  */
+/*                overrides from another theme)                                 */
+/* ─────────────────────────────────────────────────────────────────────────── */
+html[data-theme="default-dark"] {
+  --color-gray-50:   #f9fafb;
+  --color-gray-100:  #f3f4f6;
+  --color-gray-200:  #e5e7eb;
+  --color-gray-300:  #d1d5db;
+  --color-gray-400:  #9ca3af;
+  --color-gray-500:  #6b7280;
+  --color-gray-600:  #4b5563;
+  --color-gray-700:  #374151;
+  --color-gray-800:  #1f2937;
+  --color-gray-900:  #111827;
+  --color-gray-950:  #030712;
+
+  --color-blue-50:   #eff6ff;
+  --color-blue-100:  #dbeafe;
+  --color-blue-200:  #bfdbfe;
+  --color-blue-300:  #93c5fd;
+  --color-blue-400:  #60a5fa;
+  --color-blue-500:  #3b82f6;
+  --color-blue-600:  #2563eb;
+  --color-blue-700:  #1d4ed8;
+  --color-blue-800:  #1e40af;
+  --color-blue-900:  #1e3a8a;
+  --color-blue-950:  #172554;
+
+  --accent-100: #dbeafe; --accent-200: #bfdbfe;
+  --accent-400: #60a5fa; --accent-500: #3b82f6;
+  --accent-600: #2563eb; --accent-900: #1e3a8a;
+  --editor-bg: #111827;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* DEFAULT LIGHT                                                                */
+/* ─────────────────────────────────────────────────────────────────────────── */
+html[data-theme="default-light"] {
+  --color-gray-50:   #f9fafb;
+  --color-gray-100:  #f3f4f6;
+  --color-gray-200:  #e5e7eb;
+  --color-gray-300:  #d1d5db;
+  --color-gray-400:  #9ca3af;
+  --color-gray-500:  #6b7280;
+  --color-gray-600:  #4b5563;
+  --color-gray-700:  #374151;
+  --color-gray-800:  #1f2937;
+  --color-gray-900:  #111827;
+  --color-gray-950:  #030712;
+
+  --color-blue-50:   #eff6ff;
+  --color-blue-100:  #dbeafe;
+  --color-blue-200:  #bfdbfe;
+  --color-blue-300:  #93c5fd;
+  --color-blue-400:  #60a5fa;
+  --color-blue-500:  #3b82f6;
+  --color-blue-600:  #2563eb;
+  --color-blue-700:  #1d4ed8;
+  --color-blue-800:  #1e40af;
+  --color-blue-900:  #1e3a8a;
+  --color-blue-950:  #172554;
+
+  --accent-100: #dbeafe; --accent-200: #bfdbfe;
+  --accent-400: #60a5fa; --accent-500: #3b82f6;
+  --accent-600: #2563eb; --accent-900: #1e3a8a;
+  --editor-bg: #f9fafb;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* NORD — Polar Night surfaces · Frost blue accent                             */
+/* ─────────────────────────────────────────────────────────────────────────── */
+html[data-theme="nord"] {
+  --color-gray-50:   #eceff4;
+  --color-gray-100:  #e5e9f0;
+  --color-gray-200:  #d8dee9;
+  --color-gray-300:  #b0bec8;
+  --color-gray-400:  #8a97aa;
+  --color-gray-500:  #6e7d8e;
+  --color-gray-600:  #4c566a;
+  --color-gray-700:  #434c5e;
+  --color-gray-800:  #3b4252;
+  --color-gray-900:  #2e3440;
+  --color-gray-950:  #1a1f28;
+
+  --color-blue-50:   #e8f3f8;
+  --color-blue-100:  #cfe3ee;
+  --color-blue-200:  #a5c8df;
+  --color-blue-300:  #88c0d0;
+  --color-blue-400:  #89afc7;
+  --color-blue-500:  #81a1c1;
+  --color-blue-600:  #5e81ac;
+  --color-blue-700:  #4d6e96;
+  --color-blue-800:  #3a527a;
+  --color-blue-900:  #263b5a;
+  --color-blue-950:  #162438;
+
+  --accent-100: #cfe3ee; --accent-200: #a5c8df;
+  --accent-400: #88c0d0; --accent-500: #81a1c1;
+  --accent-600: #5e81ac; --accent-900: #263b5a;
+  --editor-bg: #2e3440;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* CATPPUCCIN MOCHA — Dark crust/mantle · Mauve accent                         */
+/* ─────────────────────────────────────────────────────────────────────────── */
+html[data-theme="catppuccin-mocha"] {
+  --color-gray-50:   #e8ecfa;
+  --color-gray-100:  #cdd6f4;
+  --color-gray-200:  #bac2de;
+  --color-gray-300:  #a6adc8;
+  --color-gray-400:  #9399b2;
+  --color-gray-500:  #7f849c;
+  --color-gray-600:  #585b70;
+  --color-gray-700:  #45475a;
+  --color-gray-800:  #313244;
+  --color-gray-900:  #1e1e2e;
+  --color-gray-950:  #11111b;
+
+  --color-blue-50:   #f3eeff;
+  --color-blue-100:  #e5dafd;
+  --color-blue-200:  #d0bdf9;
+  --color-blue-300:  #b7a0f5;
+  --color-blue-400:  #b4befe;
+  --color-blue-500:  #cba6f7;
+  --color-blue-600:  #b38ef5;
+  --color-blue-700:  #9876e0;
+  --color-blue-800:  #7b5cca;
+  --color-blue-900:  #3d2d58;
+  --color-blue-950:  #1a1428;
+
+  --accent-100: #3d2d58; --accent-200: #5a3f80;
+  --accent-400: #b4befe; --accent-500: #cba6f7;
+  --accent-600: #b38ef5; --accent-900: #1a1428;
+  --editor-bg: #1e1e2e;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* CATPPUCCIN LATTE — Warm light · Mauve accent                                */
+/* ─────────────────────────────────────────────────────────────────────────── */
+html[data-theme="catppuccin-latte"] {
+  --color-gray-50:   #eff1f5;
+  --color-gray-100:  #e6e9ef;
+  --color-gray-200:  #dce0e8;
+  --color-gray-300:  #bcc0cc;
+  --color-gray-400:  #acb0be;
+  --color-gray-500:  #8c8fa1;
+  --color-gray-600:  #6c6f85;
+  --color-gray-700:  #5c5f77;
+  --color-gray-800:  #4c4f69;
+  --color-gray-900:  #4c4f69;
+  --color-gray-950:  #1e1e2e;
+
+  --color-blue-50:   #f5f0ff;
+  --color-blue-100:  #e8d8ff;
+  --color-blue-200:  #d0bcfd;
+  --color-blue-300:  #b39ef9;
+  --color-blue-400:  #9780f5;
+  --color-blue-500:  #8839ef;
+  --color-blue-600:  #7028d4;
+  --color-blue-700:  #5a1db8;
+  --color-blue-800:  #44149a;
+  --color-blue-900:  #2e0d7a;
+  --color-blue-950:  #1a0855;
+
+  --accent-100: #e8d8ff; --accent-200: #d0bcfd;
+  --accent-400: #9780f5; --accent-500: #8839ef;
+  --accent-600: #7028d4; --accent-900: #2e0d7a;
+  --editor-bg: #eff1f5;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* TOKYO NIGHT — Deep blue-black · Soft blue accent                            */
+/* ─────────────────────────────────────────────────────────────────────────── */
+html[data-theme="tokyo-night"] {
+  --color-gray-50:   #e8eeff;
+  --color-gray-100:  #d5def7;
+  --color-gray-200:  #c0caf5;
+  --color-gray-300:  #a9b1d6;
+  --color-gray-400:  #787e9e;
+  --color-gray-500:  #545c7e;
+  --color-gray-600:  #32344a;
+  --color-gray-700:  #292e42;
+  --color-gray-800:  #1f2335;
+  --color-gray-900:  #1a1b26;
+  --color-gray-950:  #16161e;
+
+  --color-blue-50:   #e8f0ff;
+  --color-blue-100:  #c5d4ff;
+  --color-blue-200:  #9db6ff;
+  --color-blue-300:  #89b4ff;
+  --color-blue-400:  #7aa2f7;
+  --color-blue-500:  #6d93e8;
+  --color-blue-600:  #5e81d6;
+  --color-blue-700:  #4d6fba;
+  --color-blue-800:  #3d5a9c;
+  --color-blue-900:  #1c2a58;
+  --color-blue-950:  #0e1834;
+
+  --accent-100: #1c2a58; --accent-200: #2a3c72;
+  --accent-400: #89b4ff; --accent-500: #7aa2f7;
+  --accent-600: #5e81d6; --accent-900: #0e1834;
+  --editor-bg: #1a1b26;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* GRUVBOX — Warm retro contrast · Yellow/amber accent                         */
+/* ─────────────────────────────────────────────────────────────────────────── */
+html[data-theme="gruvbox"] {
+  --color-gray-50:   #fbf1c7;
+  --color-gray-100:  #ebdbb2;
+  --color-gray-200:  #d5c4a1;
+  --color-gray-300:  #bdae93;
+  --color-gray-400:  #a89984;
+  --color-gray-500:  #928374;
+  --color-gray-600:  #7c6f64;
+  --color-gray-700:  #665c54;
+  --color-gray-800:  #3c3836;
+  --color-gray-900:  #282828;
+  --color-gray-950:  #1d2021;
+
+  --color-blue-50:   #fff8e0;
+  --color-blue-100:  #fee8b0;
+  --color-blue-200:  #fcd679;
+  --color-blue-300:  #fabd2f;
+  --color-blue-400:  #fe8019;
+  --color-blue-500:  #fabd2f;
+  --color-blue-600:  #d79921;
+  --color-blue-700:  #b57614;
+  --color-blue-800:  #8f5506;
+  --color-blue-900:  #473800;
+  --color-blue-950:  #2d2300;
+
+  --accent-100: #473800; --accent-200: #6b5400;
+  --accent-400: #fcd679; --accent-500: #fabd2f;
+  --accent-600: #d79921; --accent-900: #2d2300;
+  --editor-bg: #282828;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* ROSÉ PINE — Dusty dark purple · Iris accent                                 */
+/* ─────────────────────────────────────────────────────────────────────────── */
+html[data-theme="rose-pine"] {
+  --color-gray-50:   #f0effa;
+  --color-gray-100:  #e0def4;
+  --color-gray-200:  #d4d1e6;
+  --color-gray-300:  #b8b4cd;
+  --color-gray-400:  #908caa;
+  --color-gray-500:  #6e6a86;
+  --color-gray-600:  #393552;
+  --color-gray-700:  #26233a;
+  --color-gray-800:  #1f1d2e;
+  --color-gray-900:  #191724;
+  --color-gray-950:  #120f1e;
+
+  --color-blue-50:   #f5f2ff;
+  --color-blue-100:  #ece5ff;
+  --color-blue-200:  #d8ccff;
+  --color-blue-300:  #c4a7e7;
+  --color-blue-400:  #d4bcf5;
+  --color-blue-500:  #c4a7e7;
+  --color-blue-600:  #a987d4;
+  --color-blue-700:  #9569c0;
+  --color-blue-800:  #7b4daa;
+  --color-blue-900:  #3d2463;
+  --color-blue-950:  #1f1040;
+
+  --accent-100: #3d2463; --accent-200: #552e80;
+  --accent-400: #d4bcf5; --accent-500: #c4a7e7;
+  --accent-600: #a987d4; --accent-900: #1f1040;
+  --editor-bg: #191724;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* SOLARIZED LIGHT — Warm tan surfaces · Solarized blue                        */
+/* ─────────────────────────────────────────────────────────────────────────── */
+html[data-theme="solarized-light"] {
+  --color-gray-50:   #fdf6e3;
+  --color-gray-100:  #eee8d5;
+  --color-gray-200:  #d0cab8;
+  --color-gray-300:  #93a1a1;
+  --color-gray-400:  #839496;
+  --color-gray-500:  #657b83;
+  --color-gray-600:  #586e75;
+  --color-gray-700:  #3e5660;
+  --color-gray-800:  #073642;
+  --color-gray-900:  #002b36;
+  --color-gray-950:  #001b22;
+
+  --color-blue-50:   #e8f4fc;
+  --color-blue-100:  #c5e3f7;
+  --color-blue-200:  #93ccf2;
+  --color-blue-300:  #5eb4e9;
+  --color-blue-400:  #3aa0dd;
+  --color-blue-500:  #268bd2;
+  --color-blue-600:  #1e78bf;
+  --color-blue-700:  #1862a3;
+  --color-blue-800:  #124d87;
+  --color-blue-900:  #0c3769;
+  --color-blue-950:  #072550;
+
+  --accent-100: #c5e3f7; --accent-200: #93ccf2;
+  --accent-400: #3aa0dd; --accent-500: #268bd2;
+  --accent-600: #1e78bf; --accent-900: #0c3769;
+  --editor-bg: #fdf6e3;
 }

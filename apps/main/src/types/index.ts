@@ -113,6 +113,9 @@ export interface HotkeyMapping {
 	quickSearch: HotkeyConfig;
 	fullTextSearch: HotkeyConfig;
 
+	// Theme switcher
+	openThemeSwitcher: HotkeyConfig;
+
 	// Tree view hotkeys
 	revealActiveInTree: HotkeyConfig;
 	toggleHoist: HotkeyConfig;
@@ -218,6 +221,9 @@ export interface AppHotkeysProps {
 	onQuickSearch?: () => void;
 	onFullTextSearch?: () => void;
 
+	// Theme switcher
+	onOpenThemeSwitcher?: () => void;
+
 	// Tree view hotkeys
 	onRevealActiveInTree?: () => void;
 	onToggleHoist?: () => void;
@@ -231,8 +237,10 @@ export interface StorageSettings {
 	};
 }
 
+export type { ThemeName } from "@/config/themes";
+
 export interface AppConfig {
-	theme?: "light" | "dark" | "system"; // Theme mode setting
+	theme?: import("@/config/themes").ThemeName; // Active theme
 	editor: {
 		lineWrapping: boolean;
 		toolbarVisible: boolean;
