@@ -42,6 +42,8 @@ export {
 
 // Theme hook
 export { useTheme } from "./use-theme";
+// Hotkey label display
+export { useHotkeyLabel } from "./use-hotkey-label";
 
 // Unified items system (replaces notes/categories)
 export { useItems } from "./use-items";

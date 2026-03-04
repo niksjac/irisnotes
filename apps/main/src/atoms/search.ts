@@ -22,6 +22,15 @@ export const closeQuickSearchAtom = atom(null, (_get, set) => {
 	set(quickSearchQueryAtom, "");
 });
 
+// Theme switcher dialog
+export const themeSwitcherOpenAtom = atom<boolean>(false);
+export const openThemeSwitcherAtom = atom(null, (_get, set) => {
+	set(themeSwitcherOpenAtom, true);
+});
+export const closeThemeSwitcherAtom = atom(null, (_get, set) => {
+	set(themeSwitcherOpenAtom, false);
+});
+
 export const openSearchSidebarAtom = atom(null, (_get, set) => {
 	set(sidebarViewModeAtom, "search");
 });

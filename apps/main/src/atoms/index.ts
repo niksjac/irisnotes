@@ -41,6 +41,8 @@ const initialLayout = loadInitialLayout();
 
 // Re-export pane storage (loaded in separate file to avoid circular deps)
 export { initialPaneStorage, PANE_STORAGE_KEY } from "./pane-storage";
+// Hotkeys atom (live merged hotkeys: defaults + user overrides)
+export { hotkeysAtom } from "./hotkeys";
 
 // Layout atoms - initialized from localStorage to prevent flicker
 export const sidebarCollapsed = atom<boolean>(initialLayout.sidebarCollapsed);
