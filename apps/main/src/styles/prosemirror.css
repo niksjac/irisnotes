@@ -82,11 +82,24 @@
 
 .ProseMirror.wrap-disabled {
   white-space: pre;
-  /* Ensure element fills container width even if content is shorter;
-     prevents unwanted horizontal scroll and keeps box-shadow/outlines visible */
+  /* Use fit-content sizing so the element expands to contain long lines,
+     with min-width: 100% as a floor when content is narrower than container.
+     This ensures the editor background/padding extend to the full scrollable width. */
+  width: fit-content;
   min-width: 100%;
   /* Horizontal scroll is handled by the parent .editor-content-zoom container,
      which naturally includes the ProseMirror padding in its scrollable area. */
+}
+
+/* In wrap-disabled mode, make all block elements stretch to fill the editor width.
+   This ensures the active line highlight spans the full scrollable width. */
+.ProseMirror.wrap-disabled > p,
+.ProseMirror.wrap-disabled > blockquote,
+.ProseMirror.wrap-disabled > ul,
+.ProseMirror.wrap-disabled > ol,
+.ProseMirror.wrap-disabled > pre {
+  width: 100%;
+  min-width: fit-content;
 }
 
 /* Hide cursor when editor is not focused */
@@ -195,10 +208,10 @@ li.pm-tight-selection-list-item .pm-tight-selection:first-child::before {
   position: absolute;
   top: 0;
   bottom: 0;
-  /* Use viewport width centered, clipped by parent overflow */
-  left: 50%;
-  width: 100vw;
-  transform: translateX(-50%);
+  /* Extend from left edge of editor (into padding) */
+  left: calc(-1 * var(--pm-padding));
+  /* Use very large width to cover any scroll extent, clipped by overflow */
+  width: max(calc(100% + 2 * var(--pm-padding)), 100vw);
   background-color: var(--pm-active-line-bg);
   border-radius: 0;
   pointer-events: none;

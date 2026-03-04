@@ -263,6 +263,32 @@ export function ProseMirrorEditor({
 			nodeViews: {
 				code_block: (node, view, getPos) => new CodeBlockView(node, view, getPos),
 			},
+			// Custom scroll handling: allow vertical scrolling but prevent automatic
+			// horizontal scrolling in no-wrap mode (which would hide left content)
+			handleScrollToSelection(view) {
+				// Get the scroll container
+				const scrollEl = view.dom.parentElement;
+				if (!scrollEl) return false; // Let default handle it
+				
+				// Get cursor coordinates
+				const { head } = view.state.selection;
+				const coords = view.coordsAtPos(head);
+				const containerRect = scrollEl.getBoundingClientRect();
+				
+				// Only handle vertical scrolling - keep cursor vertically visible
+				const margin = 50; // pixels from top/bottom edge
+				if (coords.top < containerRect.top + margin) {
+					// Cursor above visible area - scroll up
+					scrollEl.scrollTop -= (containerRect.top + margin - coords.top);
+				} else if (coords.bottom > containerRect.bottom - margin) {
+					// Cursor below visible area - scroll down
+					scrollEl.scrollTop += (coords.bottom - containerRect.bottom + margin);
+				}
+				
+				// Return true to prevent default horizontal scrolling behavior
+				// This keeps the left side of content visible while typing long lines
+				return true;
+			},
 			transformPastedHTML(html) {
 				// Line-based model: convert <br> to paragraph breaks instead of
 				// relying on ProseMirror's hard_break (which doesn't exist in our schema).
@@ -294,13 +320,23 @@ export function ProseMirrorEditor({
 					if (scrollEl) requestAnimationFrame(() => { scrollEl.scrollLeft = 0; });
 				}
 
-				// Mirror fix for End key: when cursor is at the end of a line,
-				// scroll to reveal the right padding edge.
-				if (transaction.selectionSet && $head.parentOffset === $head.parent.content.size) {
+				// Fix for End key: when cursor is at the end of a line and
+				// past the visible area, scroll just enough to make it visible.
+				// Only apply on selection-only changes (navigation), not when typing.
+				if (transaction.selectionSet && !transaction.docChanged && $head.parentOffset === $head.parent.content.size) {
 					const scrollEl = view.dom.parentElement;
 					if (scrollEl) {
 						requestAnimationFrame(() => {
-							scrollEl.scrollLeft = scrollEl.scrollWidth - scrollEl.clientWidth;
+							// Get cursor coordinates and check if it's past the visible right edge
+							const coords = view.coordsAtPos(newState.selection.head);
+							const containerRect = scrollEl.getBoundingClientRect();
+							const margin = 20; // pixels of breathing room
+							
+							if (coords.right > containerRect.right - margin) {
+								// Scroll just enough to bring cursor into view
+								const scrollNeeded = coords.right - containerRect.right + margin;
+								scrollEl.scrollLeft += scrollNeeded;
+							}
 						});
 					}
 				}
