@@ -6,6 +6,7 @@ import { DEFAULT_HOTKEYS } from "@/config/default-hotkeys";
 import { mergeEditorKeybindings } from "@/config/default-editor-keybindings";
 import type { EditorKeybindingOverrides } from "@/config/default-editor-keybindings";
 import { editorKeybindingsAtom } from "@/atoms/editor-keybindings";
+import { hotkeysAtom } from "@/atoms/hotkeys";
 import { updateAppHotkeyPatterns } from "@/utils/app-hotkeys";
 import type { HotkeyMapping } from "@/types";
 
@@ -20,6 +21,7 @@ export function useHotkeysConfig() {
 	});
 	const [loading, setLoading] = useState(true);
 	const setEditorKeybindings = useSetAtom(editorKeybindingsAtom);
+	const setHotkeysAtom = useSetAtom(hotkeysAtom);
 
 	const loadHotkeys = useCallback(async () => {
 		try {
@@ -49,10 +51,12 @@ export function useHotkeysConfig() {
 			// Update CodeMirror app hotkey patterns
 			updateAppHotkeyPatterns(mergedHotkeys);
 			setHotkeys(mergedHotkeys);
+			setHotkeysAtom(mergedHotkeys);
 		} catch {
 			// Failed to load hotkeys.toml - use defaults
 			updateAppHotkeyPatterns(DEFAULT_HOTKEYS);
 			setHotkeys(DEFAULT_HOTKEYS);
+			setHotkeysAtom(DEFAULT_HOTKEYS);
 		} finally {
 			setLoading(false);
 		}
@@ -75,6 +79,7 @@ export function useHotkeysConfig() {
 				// Update CodeMirror app hotkey patterns
 				updateAppHotkeyPatterns(mergedHotkeys);
 				setHotkeys(mergedHotkeys);
+				setHotkeysAtom(mergedHotkeys);
 			} catch (error) {
 				console.error("Failed to save hotkeys:", error);
 			}

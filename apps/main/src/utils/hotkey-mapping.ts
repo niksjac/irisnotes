@@ -49,6 +49,7 @@ export function mapHotkeyHandlers(
 		showQuickHotkeys: () => void;
 		openQuickSearch: () => void;
 		openSearchSidebar: () => void;
+		openThemeSwitcher: () => void;
 	}
 ): AppHotkeysProps {
 	return {
@@ -233,6 +234,10 @@ export function mapHotkeyHandlers(
 		// Search hotkeys
 		onQuickSearch: handlers.openQuickSearch,
 		onFullTextSearch: handlers.openSearchSidebar,
+
+		// Theme switcher
+		onOpenThemeSwitcher: handlers.openThemeSwitcher,
+
 		// Tree view hotkeys
 		onRevealActiveInTree: () => {
 			const callbacks = getTreeViewCallbacks();
