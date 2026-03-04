@@ -876,7 +876,10 @@ function SpacingDropdown({ label, value, onChange, presets, format, defaultValue
 			case "Escape":
 			case "Tab":
 				setIsOpen(false);
-				if (e.key === "Escape") e.preventDefault();
+				if (e.key === "Escape") {
+					e.preventDefault();
+					e.stopPropagation(); // Prevent toolbar's Escape handler from stealing focus
+				}
 				break;
 		}
 	};
@@ -885,15 +888,16 @@ function SpacingDropdown({ label, value, onChange, presets, format, defaultValue
 		<div className="relative flex-shrink-0" ref={containerRef}>
 			<button
 				type="button"
-				className={`relative flex-shrink-0 w-7 h-7 flex items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ${
+				className={`flex-shrink-0 flex items-center gap-0.5 h-6 px-1 rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ${
 					isOpen ? "bg-gray-200 dark:bg-gray-600" : "hover:bg-gray-200 dark:hover:bg-gray-700"
 				} text-gray-700 dark:text-gray-300`}
 				onClick={() => (isOpen ? setIsOpen(false) : openDropdown())}
 				onKeyDown={handleKeyDown}
 				title={`${label}: ${format(value)}`}
 			>
-				<span className="text-[13px] leading-none select-none">{icon}</span>
-				<ChevronDown size={7} className={`absolute bottom-0.5 right-0.5 opacity-30 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+				<span className="text-[11px] leading-none select-none flex-shrink-0">{icon}</span>
+				<span className="text-[10px] tabular-nums leading-none min-w-[22px] text-center">{format(value)}</span>
+				<ChevronDown size={7} className={`flex-shrink-0 opacity-40 transition-transform ${isOpen ? "rotate-180" : ""}`} />
 			</button>
 			{isOpen && dropdownPos && (
 				<div
@@ -1059,7 +1063,10 @@ function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, 
 			case "Escape":
 			case "Tab":
 				setIsOpen(false);
-				if (e.key === "Escape") e.preventDefault();
+				if (e.key === "Escape") {
+					e.preventDefault();
+					e.stopPropagation(); // Prevent toolbar's Escape handler from stealing focus
+				}
 				break;
 		}
 	};
@@ -1093,15 +1100,16 @@ function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, 
 			<button
 				ref={inputRef as React.RefObject<HTMLButtonElement>}
 				type="button"
-				className={`relative flex-shrink-0 w-7 h-7 flex items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ${
+				className={`flex-shrink-0 flex items-center gap-0.5 h-6 px-1 rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ${
 					isOpen ? "bg-gray-200 dark:bg-gray-600" : "hover:bg-gray-200 dark:hover:bg-gray-700"
-				}`}
+				} text-gray-700 dark:text-gray-300`}
 				onClick={() => setIsOpen(!isOpen)}
 				onKeyDown={handleKeyDown}
 				title={`Font Size: ${displaySize}px`}
 			>
-				<ALargeSmall size={16} className="text-gray-700 dark:text-gray-300" />
-				<ChevronDown size={7} className={`absolute bottom-0.5 right-0.5 text-gray-500 dark:text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+				<ALargeSmall size={13} className="flex-shrink-0" />
+				<span className="text-[10px] tabular-nums leading-none min-w-[18px] text-center">{displaySize}</span>
+				<ChevronDown size={7} className={`flex-shrink-0 text-gray-500 dark:text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
 			</button>
 			{isOpen && dropdownPos && (
 				<div 
@@ -1191,7 +1199,7 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 
 	// Get current font family from selection
 	const getCurrentFontFamily = useCallback(() => {
-		if (!editorView) return "Sans Serif";
+		if (!editorView) return "Default";
 		const { from, $from, to, empty } = editorView.state.selection;
 		let fontFamilyMark: any = null;
 		if (empty) {
@@ -1209,10 +1217,12 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 				return true;
 			});
 		}
-		if (!fontFamilyMark) return "Sans Serif";
+		if (!fontFamilyMark) return "Default";
 		const family = fontFamilyMark.attrs?.family;
 		const found = FONT_FAMILIES.find((f) => f.value === family);
-		return found?.label || "Custom";
+		// Show first font name in stack for unknown fonts (e.g. pasted content)
+		const firstFontName = (family as string)?.split(",")[0]?.trim().replace(/["']/g, "") || "Custom";
+		return found?.label || firstFontName;
 	}, [editorView, schema]);
 
 	const currentFamily = getCurrentFontFamily();
@@ -1264,7 +1274,10 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 			case "Escape":
 			case "Tab":
 				setIsOpen(false);
-				if (e.key === "Escape") e.preventDefault();
+				if (e.key === "Escape") {
+					e.preventDefault();
+					e.stopPropagation(); // Prevent toolbar's Escape handler from stealing focus
+				}
 				break;
 		}
 	};
