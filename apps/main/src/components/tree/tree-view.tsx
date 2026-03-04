@@ -1,4 +1,4 @@
-import { useAtomValue, useSetAtom, useAtom } from "jotai";
+import { useAtomValue, useAtom } from "jotai";
 import { useTree } from "@headless-tree/react";
 import {
 	syncDataLoaderFeature,
@@ -11,7 +11,7 @@ import {
 } from "@headless-tree/core";
 import { itemsAtom, selectedItemIdAtom } from "@/atoms/items";
 import { focusAreaAtom, pane0TabsAtom, pane1TabsAtom, pane0ActiveTabAtom, pane1ActiveTabAtom, hoistedRootIdAtom } from "@/atoms";
-import { registerTreeViewCallbacks, unregisterTreeViewCallbacks } from "@/atoms/tree";
+import { registerTreeViewCallbacks, unregisterTreeViewCallbacks, treeFilterAtom, treeViewModeAtom, dateSortDirectionAtom } from "@/atoms/tree";
 import type { FlexibleItem } from "@/types/items";
 import { compareSortOrder } from "@/utils/sort-order";
 import {
@@ -210,7 +210,12 @@ export function TreeView() {
 	// Hoisted root for focusing on a subtree
 	const [hoistedRootId, setHoistedRootId] = useAtom(hoistedRootIdAtom);
 	
-	const setSelectedItemId = useSetAtom(selectedItemIdAtom);
+	// Tree view state atoms (filter, view mode, date sort)
+	const filterText = useAtomValue(treeFilterAtom);
+	const viewMode = useAtomValue(treeViewModeAtom);
+	const dateSortDir = useAtomValue(dateSortDirectionAtom);
+	
+	const [selectedItemId, setSelectedItemId] = useAtom(selectedItemIdAtom);
 	const { openItemInTab } = useTabManagement();
 	const { moveItem, updateItemTitle, deleteItem } = useItems();
 
@@ -292,10 +297,50 @@ export function TreeView() {
 		return map;
 	}, [items]);
 
+	// Helper to build parent path for flat view display
+	const getParentPath = useCallback((itemId: string): string => {
+		const item = itemMap.get(itemId);
+		if (!item?.parent_id) return "root";
+		
+		const parts: string[] = [];
+		let current = itemMap.get(item.parent_id);
+		while (current) {
+			parts.unshift(current.title);
+			if (!current.parent_id) break;
+			current = itemMap.get(current.parent_id);
+		}
+		return parts.join(" → ") || "root";
+	}, [itemMap]);
+
+	// Check if filtering or in flat mode (affects tree structure)
+	const isFiltering = filterText.trim().length > 0;
+	const isFlat = viewMode === "flat" || isFiltering;
+
+	// Build list of filtered notes (only notes, matching filter)
+	const filteredNotes = useMemo(() => {
+		const notes = items.filter((item) => item.type === "note");
+		if (!isFiltering) return notes;
+		
+		const searchLower = filterText.toLowerCase();
+		return notes.filter((item) => 
+			item.title.toLowerCase().includes(searchLower)
+		);
+	}, [items, isFiltering, filterText]);
+
 	// Create children lookup map
 	const childrenMap = useMemo(() => {
 		const map = new Map<string, string[]>();
 
+		// In flat or filtering mode: no hierarchy, all notes at root
+		if (isFlat) {
+			// Initialize empty arrays
+			for (const item of items) {
+				map.set(item.id, []);
+			}
+			return map;
+		}
+
+		// Normal hierarchical mode
 		// Initialize with empty arrays for all items
 		for (const item of items) {
 			map.set(item.id, []);
@@ -323,26 +368,65 @@ export function TreeView() {
 		}
 
 		return map;
-	}, [items, itemMap]);
+	}, [items, itemMap, isFlat]);
 
-	// Find root items - use hoisted root's children if hoisted, otherwise top-level items
+	// Find root items - depends on hoist, filter, view mode, and date sort
 	const rootItemIds = useMemo(() => {
-		if (hoistedRootId) {
+		let noteIds: string[];
+
+		if (isFlat) {
+			// Flat mode or filtering: show only notes at root
+			noteIds = filteredNotes.map((n) => n.id);
+		} else if (hoistedRootId) {
 			// When hoisted, show children of the hoisted item as root
 			const children = childrenMap.get(hoistedRootId) || [];
+			// Apply date sorting if active
+			if (dateSortDir) {
+				const sorted = [...children].sort((a, b) => {
+					const itemA = itemMap.get(a);
+					const itemB = itemMap.get(b);
+					const dateA = new Date(itemA?.created_at || 0).getTime();
+					const dateB = new Date(itemB?.created_at || 0).getTime();
+					return dateSortDir === "desc" ? dateB - dateA : dateA - dateB;
+				});
+				return sorted;
+			}
 			return children; // Already sorted by childrenMap
+		} else {
+			// Normal mode: show items without parent
+			const rootItems = items.filter((item) => !item.parent_id);
+			// Apply date sorting if active
+			if (dateSortDir) {
+				const sorted = [...rootItems].sort((a, b) => {
+					const dateA = new Date(a.created_at).getTime();
+					const dateB = new Date(b.created_at).getTime();
+					return dateSortDir === "desc" ? dateB - dateA : dateA - dateB;
+				});
+				return sorted.map((item) => item.id);
+			}
+			return rootItems
+				.sort((a, b) => compareSortOrder(a.sort_order, b.sort_order))
+				.map((item) => item.id);
 		}
-		// Normal mode: show items without parent
-		return items
-			.filter((item) => !item.parent_id)
-			.sort((a, b) => compareSortOrder(a.sort_order, b.sort_order))
-			.map((item) => item.id);
-	}, [items, hoistedRootId, childrenMap]);
+
+		// Apply date sorting to flat/filtered notes
+		if (dateSortDir) {
+			const sorted = [...filteredNotes].sort((a, b) => {
+				const dateA = new Date(a.created_at).getTime();
+				const dateB = new Date(b.created_at).getTime();
+				return dateSortDir === "desc" ? dateB - dateA : dateA - dateB;
+			});
+			return sorted.map((n) => n.id);
+		}
+
+		return noteIds;
+	}, [items, hoistedRootId, childrenMap, isFlat, filteredNotes, dateSortDir, itemMap]);
 
 	// Create a version key based on parent relationships to force tree rebuild
 	const dataVersion = useMemo(() => {
-		return items.map((i) => `${i.id}:${i.parent_id || "root"}:${i.sort_order}`).join(",");
-	}, [items]);
+		const baseVersion = items.map((i) => `${i.id}:${i.parent_id || "root"}:${i.sort_order}`).join(",");
+		return `${baseVersion}|filter:${filterText}|mode:${viewMode}|dateSort:${dateSortDir}`;
+	}, [items, filterText, viewMode, dateSortDir]);
 
 	// Get all book and section IDs for initial expanded state
 	const folderIds = useMemo(() => {
@@ -357,6 +441,26 @@ export function TreeView() {
 			setTreeState((prev) => ({ ...prev, expandedItems: folderIds }));
 		}
 	}, [folderIds, treeState.expandedItems]);
+
+	// Keep a ref so rebuild effect can restore selection without adding selectedItemId as dep
+	const selectedItemIdRef = useRef(selectedItemId);
+	useEffect(() => {
+		selectedItemIdRef.current = selectedItemId;
+	});
+
+	// Sync tree selection outline to whichever item is active in the focused pane
+	useEffect(() => {
+		if (focusArea !== "pane-0" && focusArea !== "pane-1") return;
+		if (!activeItemId) return;
+		setTreeState((prev) => ({ ...prev, selectedItems: [activeItemId], focusedItem: activeItemId }));
+	}, [focusArea, activeItemId]);
+
+	// Sync tree selection immediately when an item is programmatically selected
+	// (e.g. right after a new note is created, before the editor receives focus)
+	useEffect(() => {
+		if (!selectedItemId) return;
+		setTreeState((prev) => ({ ...prev, selectedItems: [selectedItemId], focusedItem: selectedItemId }));
+	}, [selectedItemId]);
 
 	// ============================================================================
 	// Tree Navigation Helpers
@@ -859,6 +963,20 @@ export function TreeView() {
 		}
 		// Tell headless-tree to rebuild with new data
 		tree.rebuildTree();
+		// Restore selection after rebuild — rebuildTree may call setState and wipe selectedItems
+		// Only restore focusedItem if the tree container actually has DOM focus,
+		// otherwise we'd steal focus from the search input or other UI elements
+		const id = selectedItemIdRef.current;
+		if (id) {
+			const treeContainer = document.querySelector('[data-tree-container="true"]');
+			const treeHasDomFocus = treeContainer?.contains(document.activeElement);
+			if (treeHasDomFocus) {
+				setTreeState((prev) => ({ ...prev, selectedItems: [id], focusedItem: id }));
+			} else {
+				// Keep selection but don't steal focus
+				setTreeState((prev) => ({ ...prev, selectedItems: [id] }));
+			}
+		}
 	}, [dataVersion, tree]);
 
 	// Rebuild tree when hoist state changes
@@ -1125,11 +1243,11 @@ export function TreeView() {
 				</div>
 			)}
 			{/* Tree Content - flex container to fill available space */}
-			<div className="flex-1 min-h-0 overflow-auto p-2 flex flex-col">
+			<div className={`flex-1 min-h-0 overflow-auto p-2 mr-1 flex flex-col rounded-sm ${treeHasFocus ? "outline outline-2 outline-blue-500 -outline-offset-2" : ""}`}>
 				<div 
 					{...tree.getContainerProps()} 
 					data-tree-container="true"
-					className="relative font-mono flex-1 min-h-[100px] focus:outline-none rounded-sm cursor-default"
+					className="relative font-mono flex-1 min-h-[100px] focus:outline-none cursor-default"
 					onFocus={() => setFocusArea("tree")}
 					onClick={(e) => {
 						// If clicking on empty space in container (not on an item)
@@ -1237,6 +1355,11 @@ export function TreeView() {
 									{getItemIcon(itemData, item.isExpanded())}
 								</span>
 								<span className="flex-1 truncate text-xs text-gray-800 dark:text-gray-200">
+									{isFlat && itemData.type === "note" && (
+										<span className="text-gray-400 dark:text-gray-500 mr-1">
+											[{getParentPath(itemData.id)}]
+										</span>
+									)}
 									{itemData.title}
 								</span>
 								{isActiveItem ? (

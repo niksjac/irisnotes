@@ -8,6 +8,7 @@ import {
 	pane1ActiveTabAtom,
 	itemsAtom,
 	focusAreaAtom,
+	selectedItemIdAtom,
 } from "@/atoms";
 import type { FocusArea } from "@/atoms";
 import { Pane } from "./pane";
@@ -28,6 +29,20 @@ export const PaneContainer: FC = () => {
 	const [pane1ActiveTab, setPane1ActiveTab] = useAtom(pane1ActiveTabAtom);
 	const { openItemInTab } = useTabManagement();
 	const setFocusArea = useSetAtom(focusAreaAtom);
+	const focusArea = useAtomValue(focusAreaAtom);
+	const setSelectedItemId = useSetAtom(selectedItemIdAtom);
+
+	// Sync tree selection to the note open in the focused editor pane
+	useEffect(() => {
+		const activeTab =
+			focusArea === "pane-0"
+				? pane0Tabs.find((t) => t.id === pane0ActiveTab)
+				: focusArea === "pane-1"
+					? pane1Tabs.find((t) => t.id === pane1ActiveTab)
+					: null;
+		const noteId = activeTab?.viewData?.noteId ?? null;
+		if (noteId) setSelectedItemId(noteId);
+	}, [focusArea, pane0ActiveTab, pane1ActiveTab, pane0Tabs, pane1Tabs, setSelectedItemId]);
 
 	// Keep tab titles in sync when items are renamed
 	const items = useAtomValue(itemsAtom);

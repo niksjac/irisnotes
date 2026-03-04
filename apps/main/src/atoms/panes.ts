@@ -664,6 +664,39 @@ export const closeActiveTabAtom = atom(null, (get, set) => {
 	}
 });
 
+// Close all tabs in both panes that belong to a given item ID
+// Called after deleting a note/section/book so the tab disappears immediately.
+export const closeTabsByItemIdAtom = atom(null, (get, set, itemId: string) => {
+	const tabMatchesId = (tab: Tab) => {
+		if (!tab.viewData) return false;
+		return (
+			tab.viewData.noteId === itemId ||
+			tab.viewData.sectionId === itemId ||
+			tab.viewData.bookId === itemId
+		);
+	};
+
+	for (const [tabsAtom, activeAtom] of [
+		[pane0TabsAtom, pane0ActiveTabAtom] as const,
+		[pane1TabsAtom, pane1ActiveTabAtom] as const,
+	]) {
+		const tabs = get(tabsAtom);
+		const activeId = get(activeAtom);
+		const matching = tabs.filter(tabMatchesId);
+		if (matching.length === 0) continue;
+
+		const newTabs = tabs.filter((t) => !tabMatchesId(t));
+		set(tabsAtom, newTabs);
+
+		// If the active tab was one of the removed ones, pick the nearest remaining
+		if (activeId && matching.some((t) => t.id === activeId)) {
+			const closingIdx = tabs.findIndex((t) => t.id === activeId);
+			const nextIdx = Math.min(closingIdx, newTabs.length - 1);
+			set(activeAtom, newTabs[nextIdx]?.id ?? null);
+		}
+	}
+});
+
 // Reopen last closed tab
 export const reopenLastClosedTabAtom = atom(null, (get, set) => {
 	const recentlyClosed = get(recentlyClosedTabsAtom);

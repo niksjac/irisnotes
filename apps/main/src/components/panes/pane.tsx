@@ -82,7 +82,7 @@ export const Pane: FC<PaneProps> = ({
 			onDragOver={handleDragOver}
 			onDrop={handleDrop}
 		>
-			{tabBarVisible && (
+			{tabBarVisible && tabs.length > 0 && (
 				<TabBar
 					tabs={tabs}
 					activeTabId={activeTabId}

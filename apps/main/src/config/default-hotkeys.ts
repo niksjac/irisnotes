@@ -223,7 +223,7 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 
 	// Focus hotkeys
 	focusTreeView: {
-		key: "f8",
+		key: "ctrl+shift+e",
 		description: "Focus Tree View",
 		category: "Focus",
 		global: true,
@@ -314,6 +314,12 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		key: "ctrl+p",
 		description: "Quick Search (by note name)",
 		category: "Search",
+		global: true,
+	},
+	openThemeSwitcher: {
+		key: "ctrl+t",
+		description: "Open Theme Switcher",
+		category: "Views",
 		global: true,
 	},
 	fullTextSearch: {

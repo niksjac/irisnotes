@@ -34,6 +34,7 @@ import {
 	toggleTabBarAtom,
 	showQuickHotkeysAtom,
 	toggleZenModeAtom,
+	openThemeSwitcherAtom,
 } from "@/atoms";
 import { useEditorViewToggle } from "./use-editor-view-toggle";
 import { useLineWrapping } from "./use-line-wrapping";
@@ -155,6 +156,7 @@ export function useHotkeyHandlers() {
 		openSettings: useSetAtom(openSettingsTabAtom),
 		openHotkeys: useSetAtom(openHotkeysTabAtom),
 		showQuickHotkeys: useSetAtom(showQuickHotkeysAtom),
+		openThemeSwitcher: useSetAtom(openThemeSwitcherAtom),
 
 		// Search actions
 		openQuickSearch: useSetAtom(openQuickSearchAtom),

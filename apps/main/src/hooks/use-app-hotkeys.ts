@@ -305,6 +305,11 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHandler(handlers.onFullTextSearch),
 		createHotkeyOptions(hotkeyMapping.fullTextSearch.global)
 	);
+	useHotkeys(
+		hotkeyMapping.openThemeSwitcher.key,
+		createHandler(handlers.onOpenThemeSwitcher),
+		createHotkeyOptions(hotkeyMapping.openThemeSwitcher.global)
+	);
 
 	// Tree view hotkeys
 	useHotkeys(
