@@ -1,24 +1,24 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { atom, useAtom } from "jotai";
+import { useCallback } from "react";
 import type { AppConfig } from "../types";
+import { DEFAULT_THEME } from "@/config/themes";
 
 /**
- * Configuration Hook
+ * Configuration Hook — Singleton via Jotai atom
+ *
+ * Config state lives in a module-level atom so ALL consumers share a single
+ * instance. One load on boot, one re-render pass on any update — no redundant
+ * disk reads or cascading state updates across hooks.
  *
  * The Rust backend handles config file format transparently:
  * - Primary: config.toml (human-readable, preferred)
  * - Fallback: config.json (only if TOML doesn't exist)
- *
- * The backend automatically:
- * - Reads TOML and converts to JSON for the frontend
- * - Converts JSON back to TOML when writing
- *
- * So while this hook uses JSON for data exchange, the actual
- * config file on disk is TOML (dev/config.toml in development).
  */
 
-const DEFAULT_CONFIG: AppConfig = {
+export const DEFAULT_CONFIG: AppConfig = {
+	theme: DEFAULT_THEME,
 	editor: {
 		lineWrapping: false,
 		toolbarVisible: true,
@@ -38,128 +38,111 @@ const DEFAULT_CONFIG: AppConfig = {
 		configPath: "./dev/",
 	},
 	production: {},
-	theme: "dark",
 };
 
+// ─── Module-level singletons ───────────────────────────────────────────────
+
+const configAtom = atom<AppConfig>(DEFAULT_CONFIG);
+const loadingAtom = atom<boolean>(true);
+
+// True while we are writing so the file-watcher can ignore our own events.
+let isWriting = false;
+let writeTimeoutId: number | null = null;
+
+// Initialised once (first useConfig mount).
+let initialized = false;
+
+// ─── Helpers ──────────────────────────────────────────────────────────────
+
+function mergeWithDefaults(parsed: AppConfig): AppConfig {
+	return {
+		...DEFAULT_CONFIG,
+		...parsed,
+		editor: { ...DEFAULT_CONFIG.editor, ...parsed.editor },
+		debug: { ...DEFAULT_CONFIG.debug, ...parsed.debug },
+		storage: { ...DEFAULT_CONFIG.storage, ...parsed.storage },
+		hotkeys: parsed.hotkeys ?? DEFAULT_CONFIG.hotkeys,
+		development: { ...DEFAULT_CONFIG.development, ...parsed.development },
+		production: { ...DEFAULT_CONFIG.production, ...parsed.production },
+	};
+}
+
+async function loadConfigFromDisk(): Promise<AppConfig> {
+	const isDevelopment = import.meta.env.DEV;
+	if (isDevelopment) {
+		try {
+			const raw = await invoke<string>("read_config", { filename: "config" });
+			return mergeWithDefaults(JSON.parse(raw) as AppConfig);
+		} catch {
+			// fall through to system config
+		}
+	}
+	try {
+		const raw = await invoke<string>("read_config", { filename: "config" });
+		return mergeWithDefaults(JSON.parse(raw) as AppConfig);
+	} catch {
+		const isDev = import.meta.env.DEV;
+		return isDev
+			? { ...DEFAULT_CONFIG, development: { useLocalConfig: true, configPath: "./dev/" } }
+			: DEFAULT_CONFIG;
+	}
+}
+
+// ─── Hook ─────────────────────────────────────────────────────────────────
+
 export const useConfig = () => {
-	const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
-	const [loading, setLoading] = useState(true);
-	
-	// Track if we triggered the last write (to ignore our own file watcher events)
-	const isWritingRef = useRef(false);
-	const writeTimeoutRef = useRef<number | null>(null);
+	const [config, setConfig] = useAtom(configAtom);
+	const [loading, setLoading] = useAtom(loadingAtom);
 
 	const loadConfig = useCallback(async () => {
-		try {
-			const isDevelopment = import.meta.env.DEV;
+		const merged = await loadConfigFromDisk();
+		setConfig(merged);
+		setLoading(false);
+	}, [setConfig, setLoading]);
 
-			if (isDevelopment) {
-				// In dev mode, config is at ./dev/config.toml
-				// Backend handles .toml/.json extension - just pass base name
-				try {
-					const localConfigString = await invoke<string>("read_config", {
-						filename: "config",
-					});
-					const parsedConfig = JSON.parse(localConfigString) as AppConfig;
+	// Initialise once on first mount.
+	if (!initialized) {
+		initialized = true;
 
-					// Merge with defaults to ensure all required fields exist
-					const mergedConfig: AppConfig = {
-						...DEFAULT_CONFIG,
-						...parsedConfig,
-						editor: { ...DEFAULT_CONFIG.editor, ...parsedConfig.editor },
-
-						debug: { ...DEFAULT_CONFIG.debug, ...parsedConfig.debug },
-						storage: { ...DEFAULT_CONFIG.storage, ...parsedConfig.storage },
-						hotkeys: parsedConfig.hotkeys, // Use user hotkeys if provided, otherwise undefined (falls back to defaults)
-						development: {
-							...parsedConfig.development,
-						},
-						production: {
-							...DEFAULT_CONFIG.production,
-							...parsedConfig.production,
-						},
-					};
-
-					setConfig(mergedConfig);
-					return;
-				} catch {
-					// Fall back to system config in dev mode
-				}
-			}
-
-			const configString = await invoke<string>("read_config", {
-				filename: "config",
-			});
-			const parsedConfig = JSON.parse(configString) as AppConfig;
-
-			// Merge with defaults to ensure all required fields exist
-			const mergedConfig: AppConfig = {
-				...DEFAULT_CONFIG,
-				...parsedConfig,
-				editor: { ...DEFAULT_CONFIG.editor, ...parsedConfig.editor },
-				debug: { ...DEFAULT_CONFIG.debug, ...parsedConfig.debug },
-				storage: { ...DEFAULT_CONFIG.storage, ...parsedConfig.storage },
-				hotkeys: parsedConfig.hotkeys, // Use user hotkeys if provided, otherwise undefined (falls back to defaults)
-				development: {
-					...DEFAULT_CONFIG.development,
-					...parsedConfig.development,
-				},
-				production: {
-					...DEFAULT_CONFIG.production,
-					...parsedConfig.production,
-				},
-			};
-
-			setConfig(mergedConfig);
-		} catch {
-			// Failed to load config - use defaults
-			const isDevelopment = import.meta.env.DEV;
-			const defaultConfig: AppConfig = isDevelopment
-				? {
-						...DEFAULT_CONFIG,
-						development: {
-							useLocalConfig: true,
-							configPath: "./dev/",
-						},
-					}
-				: DEFAULT_CONFIG;
-
-			setConfig(defaultConfig);
-		} finally {
+		// Load config immediately (no useEffect delay).
+		loadConfigFromDisk().then((merged) => {
+			setConfig(merged);
 			setLoading(false);
-		}
-	}, []);
+		});
+
+		// Set up file watcher once (singleton — never unlistens).
+		invoke("setup_config_watcher")
+			.then(() =>
+				listen("config-file-changed", () => {
+					if (isWriting) return; // our own write — skip
+					loadConfigFromDisk().then((merged) => setConfig(merged));
+				}),
+			)
+			.catch((err) => console.error("Failed to setup config watcher:", err));
+	}
 
 	const saveConfig = useCallback(async (newConfig: AppConfig) => {
 		try {
-			// Mark that we're writing (to ignore our own file watcher event)
-			isWritingRef.current = true;
-			
-			// Clear any pending timeout
-			if (writeTimeoutRef.current) {
-				clearTimeout(writeTimeoutRef.current);
-			}
-			
-			// Backend converts JSON to TOML and saves as config.toml
+			isWriting = true;
+			if (writeTimeoutId !== null) clearTimeout(writeTimeoutId);
+
 			await invoke("write_config", {
 				filename: "config",
 				content: JSON.stringify(newConfig, null, 2),
 			});
-			
-			// Reset the writing flag after a delay (longer than file watcher debounce)
-			writeTimeoutRef.current = window.setTimeout(() => {
-				isWritingRef.current = false;
+
+			writeTimeoutId = window.setTimeout(() => {
+				isWriting = false;
 			}, 200);
 		} catch (error) {
 			console.error("Failed to save config:", error);
-			// On error, reload from file to restore correct state
-			loadConfig();
+			loadConfigFromDisk().then((merged) => setConfig(merged));
 		}
-	}, [loadConfig]);
+	}, [setConfig]);
 
 	const updateConfig = useCallback(
 		async (updates: Partial<AppConfig>) => {
-			const newConfig = {
+			const newConfig: AppConfig = {
 				...config,
 				...updates,
 				editor: { ...config.editor, ...updates.editor },
@@ -174,62 +157,15 @@ export const useConfig = () => {
 				development: { ...config.development, ...updates.development },
 				production: { ...config.production, ...updates.production },
 			};
-			
-			// OPTIMISTIC UPDATE: Update state immediately for instant UI response
+
+			// Optimistic update — all consumers re-render in one pass.
 			setConfig(newConfig);
-			
-			// Then persist to file in background
-			await saveConfig(newConfig);
+
+			// Persist in background — does NOT trigger re-renders on completion.
+			saveConfig(newConfig);
 		},
-		[config, saveConfig]
+		[config, setConfig, saveConfig],
 	);
 
-	useEffect(() => {
-		loadConfig();
-
-		// Set up file watcher
-		const setupWatcher = async () => {
-			try {
-				// Initialize the file watcher
-				await invoke("setup_config_watcher");
-
-				// Listen for config file changes
-				const unlisten = await listen("config-file-changed", () => {
-					// Ignore events triggered by our own writes
-					if (isWritingRef.current) {
-						return;
-					}
-					// External change - reload config
-					loadConfig();
-				});
-
-				return unlisten;
-			} catch (error) {
-				console.error("Failed to setup config file watcher:", error);
-				return null;
-			}
-		};
-
-		let unlisten: (() => void) | null = null;
-		setupWatcher().then((unlistenFn) => {
-			unlisten = unlistenFn;
-		});
-
-		return () => {
-			if (unlisten) {
-				unlisten();
-			}
-			// Clean up timeout on unmount
-			if (writeTimeoutRef.current) {
-				clearTimeout(writeTimeoutRef.current);
-			}
-		};
-	}, [loadConfig]);
-
-	return {
-		config,
-		loading,
-		updateConfig,
-		loadConfig,
-	};
+	return { config, loading, updateConfig, loadConfig };
 };
