@@ -71,6 +71,10 @@ export const FONT_GROUP_ORDER: FontGroup[] = ["sans-serif", "serif", "monospace"
 export const FONT_FAMILIES: FontFamilyEntry[] = [
 	// Sans-serif fonts
 	{ label: "Sans Serif", value: "Arial, Helvetica, sans-serif", group: "sans-serif" },
+	{ label: "Arial", value: "Arial, Helvetica, sans-serif", group: "sans-serif" },
+	{ label: "Calibri", value: "Calibri, 'Gill Sans', sans-serif", group: "sans-serif" },
+	{ label: "Verdana", value: "Verdana, Geneva, sans-serif", group: "sans-serif" },
+	{ label: "Trebuchet MS", value: "'Trebuchet MS', Helvetica, sans-serif", group: "sans-serif" },
 	{ label: "Inter", value: "Inter, system-ui, sans-serif", group: "sans-serif" },
 	{ label: "Roboto", value: "Roboto, Arial, sans-serif", group: "sans-serif" },
 	{ label: "Open Sans", value: "'Open Sans', Arial, sans-serif", group: "sans-serif" },
@@ -82,6 +86,8 @@ export const FONT_FAMILIES: FontFamilyEntry[] = [
 
 	// Serif fonts
 	{ label: "Serif", value: "Georgia, 'Times New Roman', serif", group: "serif" },
+	{ label: "Georgia", value: "Georgia, 'Times New Roman', serif", group: "serif" },
+	{ label: "Cambria", value: "Cambria, Georgia, serif", group: "serif" },
 	{ label: "Times New Roman", value: "'Times New Roman', Times, serif", group: "serif" },
 	{ label: "Noto Serif", value: "'Noto Serif', Georgia, serif", group: "serif" },
 	{ label: "Merriweather", value: "Merriweather, Georgia, serif", group: "serif" },
@@ -102,6 +108,7 @@ export const FONT_FAMILIES: FontFamilyEntry[] = [
 	{ label: "Nerd Font Mono", value: "'JetBrainsMono Nerd Font', 'FiraCode Nerd Font', 'Hack Nerd Font', monospace", group: "monospace" },
 
 	// Display/Fun fonts
+	{ label: "Impact", value: "Impact, 'Arial Narrow', sans-serif", group: "display" },
 	{ label: "Comic Sans", value: "'Comic Sans MS', cursive", group: "display" },
 ];
 

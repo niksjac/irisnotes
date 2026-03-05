@@ -1,4 +1,4 @@
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useState } from "react";
 import {
 	itemsAtom,
@@ -6,6 +6,7 @@ import {
 	selectedItemAtom,
 	treeDataAtom,
 } from "@/atoms/items";
+import { closeTabsByItemIdAtom } from "@/atoms/panes";
 import { useNotesStorage } from "./use-notes-storage";
 import { canBeChildOf } from "@/storage/hierarchy";
 import type { FlexibleItem, CreateItemParams } from "@/types/items";
@@ -21,6 +22,7 @@ export const useItems = () => {
 	const [error, setError] = useState<string | null>(null);
 
 	const { storageAdapter, isInitialized } = useNotesStorage();
+	const closeTabsByItemId = useSetAtom(closeTabsByItemIdAtom);
 
 	// ========================================
 	// LOAD OPERATIONS
@@ -224,6 +226,9 @@ export const useItems = () => {
 						setSelectedItemId(null);
 					}
 
+					// Close any open tabs for this item
+					closeTabsByItemId(id);
+
 					// Reload to get updated tree data
 					await loadAllItems();
 					return { success: true };
@@ -237,7 +242,7 @@ export const useItems = () => {
 				return { success: false, error: errorMsg };
 			}
 		},
-		[storageAdapter, items, selectedItemId, setSelectedItemId, loadAllItems]
+		[storageAdapter, items, selectedItemId, setSelectedItemId, loadAllItems, closeTabsByItemId]
 	);
 
 	// ========================================

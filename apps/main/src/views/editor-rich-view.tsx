@@ -44,7 +44,7 @@ export function EditorRichView({ viewData }: EditorRichViewProps) {
 					defaultView="rich"
 					initialCursorPosition={viewData?.cursorPosition}
 					toolbarVisible={toolbarVisible}
-					autoFocus={viewData?.cursorPosition !== undefined}
+					autoFocus={true}
 					titleBar={
 						titleBarVisible ? (
 							<div className="flex-shrink-0 px-3 py-1 border-b border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-inset">

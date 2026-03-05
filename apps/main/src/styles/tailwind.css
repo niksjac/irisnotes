@@ -11,7 +11,7 @@
    ========================================================================== */
 @layer base {
   :focus-visible {
-    outline: 2px solid #3b82f6;
+    outline: 2px solid var(--accent-500);
     outline-offset: 2px;
     border-radius: 2px;
   }
@@ -185,9 +185,9 @@ select option {
     --rct-item-padding-horizontal: 8px;
     --rct-color-tree-bg: transparent;
 
-    /* Light mode colors */
-    --rct-color-focustree-item-selected-bg: rgb(239 246 255);
-    --rct-color-focustree-item-selected-text: rgb(30 58 138);
+    /* Light mode colors — selection wired to color scheme */
+    --rct-color-focustree-item-selected-bg: var(--accent-100);
+    --rct-color-focustree-item-selected-text: var(--accent-900);
     --rct-color-focustree-item-focused-bg: rgb(254 249 195);
     --rct-color-focustree-item-focused-text: rgb(120 53 15);
     --rct-color-focustree-item-focused-border: rgb(245 158 11);
@@ -200,15 +200,15 @@ select option {
     --rct-color-arrow: rgb(107 114 128);
     --rct-color-arrow-hover: rgb(55 65 81);
 
-    /* Drag and drop */
-    --rct-color-drag-between-line: rgb(59 130 246);
-    --rct-color-drop-target: rgba(59, 130, 246, 0.1);
+    /* Drag and drop — wired to color scheme */
+    --rct-color-drag-between-line: var(--accent-500);
+    --rct-color-drop-target: color-mix(in srgb, var(--accent-500) 10%, transparent);
   }
 
-  /* Dark mode overrides */
+  /* Dark mode overrides — selection wired to color scheme dark variants */
   .dark .rct-tree-root {
-    --rct-color-focustree-item-selected-bg: rgb(30 58 138);
-    --rct-color-focustree-item-selected-text: rgb(239 246 255);
+    --rct-color-focustree-item-selected-bg: var(--accent-900);
+    --rct-color-focustree-item-selected-text: var(--accent-100);
     --rct-color-focustree-item-focused-bg: rgb(120 53 15);
     --rct-color-focustree-item-focused-text: rgb(254 249 195);
     --rct-color-focustree-item-focused-border: rgb(245 158 11);
