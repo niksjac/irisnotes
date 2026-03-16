@@ -30,12 +30,6 @@ description = "Close Active Tab"
 category = "Tabs"
 global = true
 
-[newTab]
-key = "ctrl+t"
-description = "New Tab"
-category = "Tabs"
-global = true
-
 [moveTabLeft]
 key = "ctrl+shift+alt+left"
 description = "Move Tab Left"
@@ -118,8 +112,8 @@ category = "Focus"
 global = true
 
 [focusEditorTitle]
-key = "ctrl+alt+t"
-description = "Focus Note Title"
+key = "ctrl+t"
+description = "Focus Note Title / Tree View"
 category = "Focus"
 global = true
 
