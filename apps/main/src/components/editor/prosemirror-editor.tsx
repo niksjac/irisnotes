@@ -19,6 +19,7 @@ import {
 	removeHighlight,
 	clearAllFormatting,
 } from "./format-commands";
+import { openLinkAtCursor } from "./plugins/autolink";
 import { DIRECT_TEXT_COLORS, DIRECT_HIGHLIGHT_COLORS } from "./format-constants";
 import { CodeBlockView,  detectLanguage } from "./codemirror-nodeview";
 import { editorSchema } from "./schema";
@@ -403,6 +404,16 @@ export function ProseMirrorEditor({
 				e.stopPropagation();
 				handleSearchOpen();
 				return;
+			}
+
+			// Alt+Enter: open link at cursor
+			if (e.altKey && e.key === "Enter") {
+				const v = viewRef.current;
+				if (v && openLinkAtCursor(mySchema)(v.state, v.dispatch)) {
+					e.preventDefault();
+					e.stopPropagation();
+					return;
+				}
 			}
 
 			const kb = editorKeybindingsRef.current;

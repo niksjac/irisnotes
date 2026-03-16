@@ -203,6 +203,12 @@ export function customSetup(options: SetupOptions): Plugin[] {
 			createParagraphNear,
 			splitBlockPreserveMarks
 		),
+		// Ctrl+Enter: Split block WITHOUT splitting list item (new paragraph within same list item)
+		"Mod-Enter": chainCommands(
+			liftEmptyBlock,
+			createParagraphNear,
+			splitBlockPreserveMarks
+		),
 	};
 	plugins.push(keymap(enterKeymap));
 
@@ -231,7 +237,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 	// Custom cursor (VS Code style - configurable width, color, animation)
 	plugins.push(customCursorPlugin());
 
-	// Auto-link URLs as you type + Ctrl+Click/Ctrl+Enter to open
+	// Auto-link URLs as you type + Ctrl+Click to open links
 	plugins.push(...autolinkPlugin(options.schema));
 
 	// Search plugin for Ctrl+F find in note

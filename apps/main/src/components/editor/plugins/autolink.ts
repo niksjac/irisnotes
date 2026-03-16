@@ -1,6 +1,7 @@
 import { Plugin, PluginKey } from "prosemirror-state";
 import type { EditorState, Transaction } from "prosemirror-state";
 import type { Schema, MarkType, Node as ProseMirrorNode } from "prosemirror-model";
+import { openUrl } from "@tauri-apps/plugin-opener";
 
 /**
  * Regex to match URLs in text
@@ -80,6 +81,19 @@ function findLinkMarkRange(
 	pos: number,
 	linkMark: MarkType
 ): { from: number; to: number } | null {
+	const result = findLinkAtPosition(doc, pos, linkMark);
+	return result ? { from: result.from, to: result.to } : null;
+}
+
+/**
+ * Find link mark at position, returning range and href
+ * Robust version that traverses nodes instead of relying on $pos.marks()
+ */
+function findLinkAtPosition(
+	doc: ProseMirrorNode,
+	pos: number,
+	linkMark: MarkType
+): { from: number; to: number; href: string } | null {
 	const $pos = doc.resolve(pos);
 	const parent = $pos.parent;
 	if (!parent.isTextblock) return null;
@@ -90,23 +104,27 @@ function findLinkMarkRange(
 	let linkFrom = -1;
 	let linkTo = -1;
 	let foundLink = false;
+	let linkHref = "";
 
 	parent.forEach((node, offset) => {
 		if (node.isText) {
-			const hasLink = linkMark.isInSet(node.marks);
+			const linkMarkInstance = linkMark.isInSet(node.marks);
 			const nodeStart = offset;
 			const nodeEnd = offset + node.nodeSize;
 
-			if (hasLink) {
+			if (linkMarkInstance) {
 				// If this is a continuation of the same link range
 				if (linkFrom === -1 || nodeStart === linkTo) {
 					if (linkFrom === -1) linkFrom = nodeStart;
 					linkTo = nodeEnd;
+					// Get href from the mark
+					if (linkMarkInstance.attrs.href) {
+						linkHref = linkMarkInstance.attrs.href as string;
+					}
 				}
 
-				// Check if cursor is within this link (exclusive start for backspace)
-				// cursorOffset > nodeStart ensures we don't match when cursor is before link
-				if (cursorOffset > nodeStart && cursorOffset <= nodeEnd) {
+				// Check if cursor is within this link (inclusive for open link, backspace uses separate check)
+				if (cursorOffset >= nodeStart && cursorOffset <= nodeEnd) {
 					foundLink = true;
 				}
 			} else {
@@ -114,16 +132,46 @@ function findLinkMarkRange(
 				if (!foundLink && cursorOffset > nodeEnd) {
 					linkFrom = -1;
 					linkTo = -1;
+					linkHref = "";
 				}
 			}
 		}
 	});
 
-	if (!foundLink || linkFrom === -1) return null;
+	if (!foundLink || linkFrom === -1 || !linkHref) return null;
 
 	return {
 		from: parentStart + linkFrom,
 		to: parentStart + linkTo,
+		href: linkHref,
+	};
+}
+
+/**
+ * Command to open link at cursor position
+ * Used for Alt+Enter keybinding
+ * Uses same detection logic as Ctrl+Click which is known to work
+ */
+export function openLinkAtCursor(schema: Schema) {
+	const linkMark = schema.marks.link;
+	if (!linkMark) return () => false;
+
+	return (
+		state: EditorState,
+		dispatch?: (tr: Transaction) => void
+	): boolean => {
+		const { from } = state.selection;
+		
+		// Use the same approach as handleClick which works reliably
+		const $pos = state.doc.resolve(from);
+		const marks = $pos.marks();
+		const linkMarkInstance = marks.find((m) => m.type === linkMark);
+
+		if (linkMarkInstance?.attrs.href) {
+			openUrl(linkMarkInstance.attrs.href as string).catch(() => {});
+			return true;
+		}
+		return false;
 	};
 }
 
@@ -131,7 +179,7 @@ function findLinkMarkRange(
  * Plugin that handles:
  * 1. Auto-linking URLs when you type space or enter after them (via appendTransaction)
  * 2. Removing link when you backspace at the end (first backspace removes link only)
- * 3. Making links clickable (Ctrl+Click or Ctrl+Enter)
+ * 3. Making links clickable (Ctrl+Click)
  * 
  * Uses appendTransaction pattern (recommended by ProseMirror/Tiptap) instead of
  * setTimeout in handleTextInput which can cause race conditions with stale state.
@@ -289,19 +337,6 @@ export function autolinkPlugin(schema: Schema): Plugin[] {
 							return true;
 						}
 					}
-					return false;
-				}
-
-				// Ctrl+Enter to open link at cursor
-				if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
-					const $pos = view.state.doc.resolve(from);
-					const marks = $pos.marks();
-					const linkMarkInstance = marks.find((m) => m.type === linkMark);
-
-					if (linkMarkInstance?.attrs.href) {
-						window.open(linkMarkInstance.attrs.href, "_blank", "noopener");
-						return true;
-					}
 				}
 
 				return false;
@@ -316,7 +351,7 @@ export function autolinkPlugin(schema: Schema): Plugin[] {
 				const linkMarkInstance = marks.find((m) => m.type === linkMark);
 
 				if (linkMarkInstance?.attrs.href) {
-					window.open(linkMarkInstance.attrs.href, "_blank", "noopener");
+					openUrl(linkMarkInstance.attrs.href as string).catch(() => {});
 					return true;
 				}
 
