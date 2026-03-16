@@ -9,8 +9,27 @@ interface SearchResult {
   content_preview: string;
   book_name: string | null;
   section_name: string | null;
-  match_type: "title" | "content" | "parent";
+  match_type: string;
   word_count: number;
+}
+
+interface Config {
+  theme?: string;
+}
+
+// Apply theme to document
+function applyTheme(themeName: string) {
+  const root = document.documentElement;
+  root.setAttribute("data-theme", themeName);
+  
+  // Determine if theme is dark (simple check based on known theme names)
+  const darkThemes = [
+    "default-dark", "nord", "catppuccin-mocha", 
+    "tokyo-night", "gruvbox", "rose-pine"
+  ];
+  const isDark = darkThemes.includes(themeName);
+  root.classList.toggle("dark", isDark);
+  root.style.colorScheme = isDark ? "dark" : "light";
 }
 
 export function App() {
@@ -21,16 +40,45 @@ export function App() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const resultsRef = useRef<HTMLDivElement | null>(null);
 
+  // Load theme from config on startup
+  useEffect(() => {
+    async function loadTheme() {
+      try {
+        const configJson = await invoke<string>("read_config");
+        const config: Config = JSON.parse(configJson);
+        if (config.theme) {
+          applyTheme(config.theme);
+        }
+      } catch (err) {
+        console.error("Failed to load theme config:", err);
+        // Default to dark theme
+        applyTheme("default-dark");
+      }
+    }
+    loadTheme();
+  }, []);
+
   // Focus input on mount and clear on window shown
   useEffect(() => {
     inputRef.current?.focus();
     
-    // Listen for window-shown event to clear search
-    const unlisten = listen("window-shown", () => {
+    // Listen for window-shown event to clear search and refresh theme
+    const unlisten = listen("window-shown", async () => {
       setQuery("");
       setResults([]);
       setSelectedIndex(0);
       inputRef.current?.focus();
+      
+      // Reload theme in case it changed in main app
+      try {
+        const configJson = await invoke<string>("read_config");
+        const config: Config = JSON.parse(configJson);
+        if (config.theme) {
+          applyTheme(config.theme);
+        }
+      } catch (err) {
+        console.error("Failed to reload theme:", err);
+      }
     });
     
     return () => {
@@ -123,6 +171,7 @@ export function App() {
       case "title": return "Title";
       case "content": return "Content";
       case "parent": return "Parent";
+      case "root": return "Root";
       default: return "";
     }
   };
@@ -132,6 +181,7 @@ export function App() {
       case "title": return "Matched in note title";
       case "content": return "Matched in note content";
       case "parent": return "Note is inside a matching book/section";
+      case "root": return "Note is at root level";
       default: return "";
     }
   };
@@ -141,16 +191,6 @@ export function App() {
     if (count < 100) return `~${count}w`;
     if (count < 1000) return `~${Math.round(count / 10) * 10}w`;
     return `~${(count / 1000).toFixed(1)}k`;
-  };
-
-  const getLocation = (result: SearchResult) => {
-    if (result.book_name && result.section_name) {
-      return `${result.book_name} / ${result.section_name}`;
-    }
-    if (result.book_name) {
-      return result.book_name;
-    }
-    return "—";
   };
 
   return (
@@ -169,15 +209,6 @@ export function App() {
       </div>
 
       <div className="results-table" ref={resultsRef}>
-        {results.length > 0 && (
-          <div className="table-header">
-            <span className="col-title">Title</span>
-            <span className="col-location">Location</span>
-            <span className="col-preview">Content</span>
-            <span className="col-words">Words</span>
-            <span className="col-match">Match</span>
-          </div>
-        )}
         {results.map((result, index) => (
           <div
             key={result.id}
@@ -186,8 +217,18 @@ export function App() {
             onMouseEnter={() => setSelectedIndex(index)}
           >
             <span className="col-title" title={result.title}>{result.title}</span>
-            <span className="col-location" title={getLocation(result)}>{getLocation(result)}</span>
-            <span className="col-preview" title={result.content_preview}>{result.content_preview}</span>
+            <span className="col-book">
+              {result.book_name ? (
+                <span className="tag tag-book" title={result.book_name}>{result.book_name}</span>
+              ) : (
+                <span className="tag tag-root">Root</span>
+              )}
+            </span>
+            <span className="col-section">
+              {result.section_name && (
+                <span className="tag tag-section" title={result.section_name}>{result.section_name}</span>
+              )}
+            </span>
             <span className="col-words" title={`Approximately ${result.word_count} words`}>
               {formatWordCount(result.word_count)}
             </span>
@@ -203,12 +244,6 @@ export function App() {
         {query && !isLoading && results.length === 0 && (
           <div className="no-results">No notes found</div>
         )}
-      </div>
-
-      <div className="hints">
-        <span>↑↓ navigate</span>
-        <span>↵ open</span>
-        <span>esc close</span>
       </div>
     </div>
   );

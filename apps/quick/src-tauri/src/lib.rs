@@ -133,99 +133,256 @@ fn get_database_path() -> PathBuf {
     }
 }
 
+// Get the config directory (same as main IrisNotes app)
+fn get_config_dir() -> PathBuf {
+    #[cfg(debug_assertions)]
+    {
+        // In development, use the dev directory from monorepo root
+        let exe_path = std::env::current_exe().ok();
+        let mut project_root = exe_path
+            .and_then(|p| p.parent().map(|p| p.to_path_buf()))
+            .unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
+
+        // Navigate up to find monorepo root
+        loop {
+            if project_root.join("pnpm-workspace.yaml").exists() {
+                break;
+            }
+            if !project_root.pop() {
+                let home = dirs::home_dir().unwrap_or_default();
+                project_root = home.join("repos/irisnotes");
+                break;
+            }
+        }
+
+        project_root.join("dev")
+    }
+
+    #[cfg(not(debug_assertions))]
+    {
+        // Production: use config dir (same as main app)
+        dirs::config_dir()
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join("irisnotes")
+    }
+}
+
+// Read config command - reads config.toml and returns JSON
+#[tauri::command]
+fn read_config() -> Result<String, String> {
+    let config_dir = get_config_dir();
+    let toml_path = config_dir.join("config.toml");
+    
+    if toml_path.exists() {
+        let toml_content = std::fs::read_to_string(&toml_path)
+            .map_err(|e| format!("Failed to read config.toml: {}", e))?;
+        let value: toml::Value = toml::from_str(&toml_content)
+            .map_err(|e| format!("Failed to parse TOML: {}", e))?;
+        serde_json::to_string(&value)
+            .map_err(|e| format!("Failed to convert TOML to JSON: {}", e))
+    } else {
+        // Return empty object if config doesn't exist
+        Ok("{}".to_string())
+    }
+}
+
+// Parsed search query with field-specific filters
+struct ParsedQuery {
+    /// Free text for title search
+    title: String,
+    /// ~content filter
+    content: Option<String>,
+    /// @book filter
+    book: Option<String>,
+    /// #section filter
+    section: Option<String>,
+    /// / means root notes only
+    root_only: bool,
+}
+
+fn parse_query(input: &str) -> ParsedQuery {
+    let mut title_parts = Vec::new();
+    let mut content = None;
+    let mut book = None;
+    let mut section = None;
+    let mut root_only = false;
+
+    let chars: Vec<char> = input.chars().collect();
+    let len = chars.len();
+    let mut i = 0;
+
+    while i < len {
+        // Skip whitespace
+        if chars[i].is_whitespace() {
+            i += 1;
+            continue;
+        }
+
+        if chars[i] == '/' && (i + 1 >= len || chars[i + 1].is_whitespace()) {
+            root_only = true;
+            i += 1;
+        } else if chars[i] == '@' || chars[i] == '#' || chars[i] == '~' {
+            let prefix = chars[i];
+            i += 1;
+            let value = extract_value(&chars, &mut i);
+            if !value.is_empty() {
+                match prefix {
+                    '@' => book = Some(value.to_lowercase()),
+                    '#' => section = Some(value.to_lowercase()),
+                    '~' => content = Some(value.to_lowercase()),
+                    _ => {}
+                }
+            }
+        } else {
+            // Regular text token — title search
+            let start = i;
+            while i < len && !chars[i].is_whitespace() {
+                i += 1;
+            }
+            let token: String = chars[start..i].iter().collect();
+            title_parts.push(token);
+        }
+    }
+
+    let title = title_parts.join(" ");
+    ParsedQuery { title, content, book, section, root_only }
+}
+
+/// Extract a value after @ or #, supporting quoted strings: @"my book" or @word
+fn extract_value(chars: &[char], i: &mut usize) -> String {
+    let len = chars.len();
+    if *i >= len {
+        return String::new();
+    }
+
+    if chars[*i] == '"' {
+        // Quoted value: read until closing quote
+        *i += 1; // skip opening quote
+        let start = *i;
+        while *i < len && chars[*i] != '"' {
+            *i += 1;
+        }
+        let value: String = chars[start..*i].iter().collect();
+        if *i < len {
+            *i += 1; // skip closing quote
+        }
+        value
+    } else {
+        // Unquoted: read until whitespace
+        let start = *i;
+        while *i < len && !chars[*i].is_whitespace() {
+            *i += 1;
+        }
+        chars[start..*i].iter().collect()
+    }
+}
+
+/// Escape SQL LIKE wildcards (% and _) so they match literally
+fn escape_like(s: &str) -> String {
+    s.replace('\\', "\\\\").replace('%', "\\%").replace('_', "\\_")
+}
+
 // Search notes command
 #[tauri::command]
 fn search_notes(query: String, state: State<DbState>) -> Result<Vec<SearchResult>, String> {
     let guard = state.conn.lock().unwrap();
     let conn = guard.as_ref().ok_or("Database not initialized")?;
 
-    let query_lower = query.to_lowercase();
-    
-    // Prepare FTS query - escape special characters and add wildcards
-    let fts_query = query
+    let parsed = parse_query(&query);
+
+    // If nothing to search, return empty
+    if parsed.title.is_empty() && parsed.content.is_none() && parsed.book.is_none() && parsed.section.is_none() && !parsed.root_only {
+        return Ok(vec![]);
+    }
+
+    let title_lower = escape_like(&parsed.title.to_lowercase());
+    let has_title: i32 = if !parsed.title.is_empty() { 1 } else { 0 };
+
+    // Build FTS query from content filter for content search
+    let content_filter = escape_like(&parsed.content.unwrap_or_default());
+    let content_fts = content_filter
         .split_whitespace()
         .map(|word| format!("{}*", word.replace('"', "")))
         .collect::<Vec<_>>()
         .join(" ");
+    let has_content: i32 = if !content_filter.is_empty() { 1 } else { 0 };
 
-    if fts_query.is_empty() {
-        return Ok(vec![]);
-    }
+    let book_filter = escape_like(&parsed.book.unwrap_or_default());
+    let section_filter = escape_like(&parsed.section.unwrap_or_default());
+    let has_book_filter: i32 = if !book_filter.is_empty() { 1 } else { 0 };
+    let has_section_filter: i32 = if !section_filter.is_empty() { 1 } else { 0 };
+    let root_flag: i32 = if parsed.root_only { 1 } else { 0 };
 
-    // Combined search: FTS on note content + LIKE on note/parent titles
-    // Uses UNION to combine results, with priority ordering
     let sql = r#"
-        WITH fts_results AS (
-            -- FTS matches on note title or content
-            SELECT 
-                i.id,
-                i.title,
-                i.title as note_title_for_match,
-                snippet(items_fts, 1, '<mark>', '</mark>', '...', 32) as snippet,
-                p.title as parent_title,
-                p.type as parent_type,
-                pp.title as grandparent_title,
-                1 as priority,
-                rank as sort_rank,
-                LENGTH(i.content) as content_length,
-                i.content as raw_content
-            FROM items_fts fts
-            JOIN items i ON fts.item_id = i.id
-            LEFT JOIN items p ON i.parent_id = p.id
-            LEFT JOIN items pp ON p.parent_id = pp.id
-            WHERE items_fts MATCH ?1
-              AND i.type = 'note'
-              AND i.deleted_at IS NULL
-        ),
-        parent_matches AS (
-            -- Notes inside books/sections whose title matches
-            SELECT 
-                i.id,
-                i.title,
-                i.title as note_title_for_match,
-                '' as snippet,
-                p.title as parent_title,
-                p.type as parent_type,
-                pp.title as grandparent_title,
-                2 as priority,
-                0 as sort_rank,
-                LENGTH(i.content) as content_length,
-                i.content as raw_content
-            FROM items i
-            LEFT JOIN items p ON i.parent_id = p.id
-            LEFT JOIN items pp ON p.parent_id = pp.id
-            WHERE i.type = 'note'
-              AND i.deleted_at IS NULL
-              AND (
-                  (p.type IN ('book', 'section') AND LOWER(p.title) LIKE '%' || ?2 || '%')
-                  OR (pp.type = 'book' AND LOWER(pp.title) LIKE '%' || ?2 || '%')
+        SELECT 
+            i.id,
+            i.title,
+            p.title as parent_title,
+            p.type as parent_type,
+            pp.title as grandparent_title,
+            LENGTH(i.content) as content_length,
+            i.content as raw_content
+        FROM items i
+        LEFT JOIN items p ON i.parent_id = p.id
+        LEFT JOIN items pp ON p.parent_id = pp.id
+        WHERE i.type = 'note'
+          AND i.deleted_at IS NULL
+          -- Title filter (free text = title LIKE)
+          AND (
+              ?1 = 0 OR LOWER(i.title) LIKE '%' || ?2 || '%' ESCAPE '\'
+          )
+          -- Content filter (~content: FTS on content, with LIKE fallback)
+          AND (
+              ?3 = 0 OR i.id IN (
+                  SELECT fts.item_id FROM items_fts fts
+                  WHERE items_fts MATCH ?4
               )
-              -- Exclude notes already found by FTS
-              AND i.id NOT IN (SELECT id FROM fts_results)
-        )
-        SELECT * FROM (
-            SELECT * FROM fts_results
-            UNION ALL
-            SELECT * FROM parent_matches
-        )
-        ORDER BY priority, sort_rank
-        LIMIT 15
+              OR (?3 = 1 AND LOWER(i.content) LIKE '%' || ?5 || '%' ESCAPE '\')
+          )
+          -- Book filter (@book)
+          AND (
+              ?6 = 0 OR (
+                  (p.type = 'book' AND LOWER(p.title) LIKE '%' || ?7 || '%' ESCAPE '\')
+                  OR (pp.type = 'book' AND LOWER(pp.title) LIKE '%' || ?7 || '%' ESCAPE '\')
+              )
+          )
+          -- Section filter (#section)
+          AND (
+              ?8 = 0 OR (
+                  p.type = 'section' AND LOWER(p.title) LIKE '%' || ?9 || '%' ESCAPE '\'
+              )
+          )
+          -- Root filter (/)
+          AND (
+              ?10 = 0 OR i.parent_id IS NULL
+          )
+        ORDER BY i.title
+        LIMIT 30
     "#;
 
     let mut stmt = conn.prepare(sql).map_err(|e| e.to_string())?;
 
     let results = stmt
-        .query_map(rusqlite::params![&fts_query, &query_lower], |row| {
-            let note_title: String = row.get(2)?;
-            let snippet: String = row.get::<_, Option<String>>(3)?.unwrap_or_default();
-            let parent_title: Option<String> = row.get(4)?;
-            let parent_type: Option<String> = row.get(5)?;
-            let grandparent_title: Option<String> = row.get(6)?;
-            let priority: i32 = row.get(7)?;
-            let content_length: i32 = row.get::<_, Option<i32>>(9)?.unwrap_or(0);
-            let raw_content: String = row.get::<_, Option<String>>(10)?.unwrap_or_default();
+        .query_map(
+            rusqlite::params![
+                &has_title,          // ?1
+                &title_lower,        // ?2
+                &has_content,        // ?3
+                &content_fts,        // ?4 - FTS MATCH for content
+                &content_filter,     // ?5 - LIKE fallback for content
+                &has_book_filter,    // ?6
+                &book_filter,        // ?7
+                &has_section_filter, // ?8
+                &section_filter,     // ?9
+                &root_flag,          // ?10
+            ],
+            |row| {
+            let parent_title: Option<String> = row.get(2)?;
+            let parent_type: Option<String> = row.get(3)?;
+            let grandparent_title: Option<String> = row.get(4)?;
+            let content_length: i32 = row.get::<_, Option<i32>>(5)?.unwrap_or(0);
+            let raw_content: String = row.get::<_, Option<String>>(6)?.unwrap_or_default();
 
-            // Create content preview from raw content (strip HTML, take first ~80 chars)
             let plain_content = strip_html(&raw_content);
             let content_preview = if plain_content.chars().count() > 80 {
                 let preview: String = plain_content.chars().take(80).collect();
@@ -236,30 +393,31 @@ fn search_notes(query: String, state: State<DbState>) -> Result<Vec<SearchResult
                 plain_content
             };
 
-            // Determine book_name and section_name based on hierarchy
             let (book_name, section_name) = match parent_type.as_deref() {
                 Some("section") => (grandparent_title.clone(), parent_title.clone()),
                 Some("book") => (parent_title.clone(), None),
                 _ => (None, None),
             };
 
-            // Determine match type
-            let match_type = if priority == 2 {
-                // Parent match
-                "parent".to_string()
-            } else if note_title.to_lowercase().contains(&query_lower) {
-                "title".to_string()
+            let note_title: String = row.get(1)?;
+            let match_type = if has_title == 1 && note_title.to_lowercase().contains(&title_lower) {
+                "title"
+            } else if has_content == 1 {
+                "content"
+            } else if root_flag == 1 {
+                "root"
+            } else if has_book_filter == 1 || has_section_filter == 1 {
+                "parent"
             } else {
-                "content".to_string()
-            };
+                "title"
+            }.to_string();
 
-            // Estimate word count (average ~5 chars per word for HTML content)
             let word_count = content_length / 6;
 
             Ok(SearchResult {
                 id: row.get(0)?,
-                title: row.get(1)?,
-                snippet,
+                title: note_title,
+                snippet: String::new(),
                 content_preview,
                 book_name,
                 section_name,
@@ -343,14 +501,10 @@ fn hide_window(window: tauri::WebviewWindow) -> Result<(), String> {
 
 fn toggle_window(app: &AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
-        if window.is_visible().unwrap_or(false) {
-            let _ = window.hide();
-        } else {
-            let _ = window.show();
-            let _ = window.set_focus();
-            // Emit event to clear search field
-            let _ = window.emit("window-shown", ());
-        }
+        let _ = window.show();
+        let _ = window.set_focus();
+        // Emit event to clear search field
+        let _ = window.emit("window-shown", ());
     }
 }
 
@@ -547,8 +701,9 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_window_state::Builder::default().build())
         .manage(db_state)
-        .invoke_handler(tauri::generate_handler![search_notes, open_note_in_main_app, hide_window])
+        .invoke_handler(tauri::generate_handler![search_notes, open_note_in_main_app, hide_window, read_config])
         .setup(|app| {
             // Create system tray
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
@@ -581,14 +736,12 @@ pub fn run() {
 
             let _tray = tray_builder.build(app)?;
 
-            // Handle window close event - hide instead of closing
+            // Handle window close event - hide instead of closing (tray keeps app alive)
             if let Some(window) = app.get_webview_window("main") {
                 let window_clone = window.clone();
                 window.on_window_event(move |event| {
                     if let WindowEvent::CloseRequested { api, .. } = event {
-                        // Prevent the window from actually closing
                         api.prevent_close();
-                        // Just hide it instead
                         let _ = window_clone.hide();
                     }
                 });

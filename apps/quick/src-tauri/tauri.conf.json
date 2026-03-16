@@ -21,14 +21,14 @@
         "label": "main",
         "width": 1100,
         "height": 450,
+        "minWidth": 400,
+        "minHeight": 200,
+        "resizable": true,
         "center": true,
-        "resizable": false,
         "decorations": false,
+        "transparent": false,
         "alwaysOnTop": true,
-        "skipTaskbar": true,
-        "transparent": true,
-        "visible": false,
-        "focus": true
+        "skipTaskbar": true
       }
     ]
   },
