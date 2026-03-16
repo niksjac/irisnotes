@@ -184,10 +184,60 @@ export function mapHotkeyHandlers(
 			}
 		},
 		onFocusEditorTitle: () => {
-			// Focus the note title input
+			// Focus the note title input if a note is open
+			// If title bar is hidden, show it first
 			const titleInput = document.querySelector('[data-note-title]') as HTMLElement | null;
-			if (titleInput) {
-				titleInput.focus();
+			const prosemirror = document.querySelector('.ProseMirror') as HTMLElement | null;
+			const codemirror = document.querySelector('.cm-editor .cm-content') as HTMLElement | null;
+			const hasEditor = prosemirror || codemirror;
+			
+			if (hasEditor) {
+				// A note is open - show title bar if hidden and focus it
+				if (titleInput) {
+					titleInput.focus();
+					// Select all text for easy replacement
+					if (titleInput instanceof HTMLInputElement) {
+						titleInput.select();
+					}
+				} else {
+					// Title bar is hidden - show it first, then focus on next frame
+					handlers.toggleTitleBar();
+					requestAnimationFrame(() => {
+						const input = document.querySelector('[data-note-title]') as HTMLElement | null;
+						if (input) {
+							input.focus();
+							if (input instanceof HTMLInputElement) {
+								input.select();
+							}
+						}
+					});
+				}
+			} else {
+				// No note open - show sidebar and focus tree view
+				if (sidebar.collapsed) {
+					sidebar.setCollapsed(false);
+					requestAnimationFrame(() => {
+						const container = document.querySelector('[data-tree-container="true"]');
+						if (!container) return;
+						const previouslyFocused = container.querySelector('button[role="treeitem"][tabindex="0"]') as HTMLElement | null;
+						if (previouslyFocused) {
+							previouslyFocused.focus();
+						} else {
+							const firstItem = container.querySelector('button[role="treeitem"]') as HTMLElement | null;
+							if (firstItem) firstItem.focus();
+						}
+					});
+				} else {
+					const container = document.querySelector('[data-tree-container="true"]');
+					if (!container) return;
+					const previouslyFocused = container.querySelector('button[role="treeitem"][tabindex="0"]') as HTMLElement | null;
+					if (previouslyFocused) {
+						previouslyFocused.focus();
+					} else {
+						const firstItem = container.querySelector('button[role="treeitem"]') as HTMLElement | null;
+						if (firstItem) firstItem.focus();
+					}
+				}
 			}
 		},
 		onFocusToolbar: () => {

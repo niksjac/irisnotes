@@ -247,8 +247,8 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		global: true,
 	},
 	focusEditorTitle: {
-		key: "ctrl+alt+t",
-		description: "Focus Note Title",
+		key: "ctrl+t",
+		description: "Focus Note Title / Tree View",
 		category: "Focus",
 		global: true,
 	},
@@ -317,7 +317,7 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		global: true,
 	},
 	openThemeSwitcher: {
-		key: "ctrl+t",
+		key: "ctrl+k",
 		description: "Open Theme Switcher",
 		category: "Views",
 		global: true,

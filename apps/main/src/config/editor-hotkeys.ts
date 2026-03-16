@@ -25,8 +25,9 @@ const STRUCTURAL_HOTKEYS: EditorHotkeyConfig[] = [
 	{ key: "Tab", description: "Indent (list item or text)", category: "Indentation" },
 	{ key: "Shift+Tab", description: "Outdent (list item or text)", category: "Indentation" },
 	{ key: "Enter", description: "New List Item / Split Block", category: "Lists" },
+	{ key: "Ctrl+Enter", description: "New Line in List Item (no bullet)", category: "Lists" },
 	{ key: "Ctrl+Click", description: "Open Link in Browser", category: "Links" },
-	{ key: "Ctrl+Enter", description: "Open Link (when cursor on link)", category: "Links" },
+	{ key: "Alt+Enter", description: "Open Link (when cursor on link)", category: "Links" },
 ];
 
 /**
