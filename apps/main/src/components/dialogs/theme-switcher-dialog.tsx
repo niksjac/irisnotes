@@ -93,69 +93,58 @@ export const ThemeSwitcherDialog: FC = () => {
 
 	if (!isOpen) return null;
 
-	const darkThemes = THEMES.filter((t) => t.isDark);
-	const lightThemes = THEMES.filter((t) => !t.isDark);
-
-	const renderGroup = (label: string, themes: typeof THEMES) => {
-		if (themes.length === 0) return null;
+	const renderThemeItem = (theme: typeof THEMES[number], index: number) => {
+		const isSelected = index === selectedIndex;
+		const isActive = theme.id === themeName;
 		return (
-			<div>
-				<div className="px-3 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
-					{label}
-				</div>
-				{themes.map((theme) => {
-					const globalIdx = THEMES.indexOf(theme);
-					const isSelected = globalIdx === selectedIndex;
-					const isActive = theme.id === themeName;
-					return (
-						<button
-							key={theme.id}
-							data-idx={globalIdx}
-							onClick={() => handleSelect(theme.id)}
-							onMouseEnter={() => setSelectedIndex(globalIdx)}
-							className={`w-full text-left px-3 py-1.5 flex items-center gap-3 transition-colors ${
-								isSelected
-									? "bg-blue-600 dark:bg-blue-600"
-									: "hover:bg-gray-100 dark:hover:bg-gray-700/60"
-							}`}
-						>
-							{/* Colour swatch */}
-							<span className="flex gap-0.5 flex-shrink-0 rounded overflow-hidden border border-black/10">
-								<span
-									className="w-3 h-5"
-									style={{ background: theme.swatch.bg }}
-								/>
-								<span
-									className="w-3 h-5"
-									style={{ background: theme.swatch.panel }}
-								/>
-								<span
-									className="w-3 h-5"
-									style={{ background: theme.swatch.accent }}
-								/>
-							</span>
+			<button
+				key={theme.id}
+				data-idx={index}
+				onClick={() => handleSelect(theme.id)}
+				onMouseEnter={() => setSelectedIndex(index)}
+				className={`w-full text-left px-3 py-1.5 flex items-center gap-3 transition-colors ${
+					isSelected
+						? "bg-blue-600 dark:bg-blue-600"
+						: "hover:bg-gray-100 dark:hover:bg-gray-700/60"
+				}`}
+			>
+				{/* Colour swatch */}
+				<span className="flex gap-0.5 flex-shrink-0 rounded overflow-hidden border border-black/10">
+					<span
+						className="w-3 h-5"
+						style={{ background: theme.swatch.bg }}
+					/>
+					<span
+						className="w-3 h-5"
+						style={{ background: theme.swatch.panel }}
+					/>
+					<span
+						className="w-3 h-5"
+						style={{ background: theme.swatch.accent }}
+					/>
+				</span>
 
-							{/* Theme name */}
-							<span
-								className={`flex-1 text-sm ${
-									isSelected
-										? "text-white"
-										: "text-gray-900 dark:text-gray-100"
-								}`}
-							>
-								{theme.label}
-							</span>
+				{/* Theme name with dark/light indicator */}
+				<span
+					className={`flex-1 text-sm ${
+						isSelected
+							? "text-white"
+							: "text-gray-900 dark:text-gray-100"
+					}`}
+				>
+					{theme.label}
+					<span className={`ml-1.5 text-xs ${isSelected ? "text-white/70" : "text-gray-400"}`}>
+						{theme.isDark ? "dark" : "light"}
+					</span>
+				</span>
 
-							{/* Active indicator */}
-							{isActive && (
-								<Check
-									className={`w-4 h-4 flex-shrink-0 ${isSelected ? "text-white" : "text-blue-500"}`}
-								/>
-							)}
-						</button>
-					);
-				})}
-			</div>
+				{/* Active indicator */}
+				{isActive && (
+					<Check
+						className={`w-4 h-4 flex-shrink-0 ${isSelected ? "text-white" : "text-blue-500"}`}
+					/>
+				)}
+			</button>
 		);
 	};
 
@@ -172,14 +161,13 @@ export const ThemeSwitcherDialog: FC = () => {
 						Select Color Theme
 					</span>
 					<kbd className="ml-auto text-[10px] text-gray-400 dark:text-gray-500 border border-gray-300 dark:border-gray-600 rounded px-1">
-						Ctrl+T
+						Ctrl+K
 					</kbd>
 				</div>
 
 				{/* Theme list */}
 				<div ref={listRef} className="max-h-96 overflow-y-auto py-1">
-					{renderGroup("Dark", darkThemes)}
-					{renderGroup("Light", lightThemes)}
+					{THEMES.map((theme, index) => renderThemeItem(theme, index))}
 				</div>
 			</div>
 		</div>
