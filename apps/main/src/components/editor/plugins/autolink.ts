@@ -158,7 +158,7 @@ export function openLinkAtCursor(schema: Schema) {
 
 	return (
 		state: EditorState,
-		dispatch?: (tr: Transaction) => void
+		_dispatch?: (tr: Transaction) => void
 	): boolean => {
 		const { from } = state.selection;
 		
