@@ -37,6 +37,7 @@ export function App() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [showCheatSheet, setShowCheatSheet] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const resultsRef = useRef<HTMLDivElement | null>(null);
 
@@ -139,6 +140,10 @@ export function App() {
   const handleKeyDown = useCallback(
     async (e: React.KeyboardEvent) => {
       switch (e.key) {
+        case "F1":
+          e.preventDefault();
+          setShowCheatSheet((v) => !v);
+          break;
         case "ArrowDown":
           e.preventDefault();
           setSelectedIndex((i) => Math.min(i + 1, results.length - 1));
@@ -149,21 +154,27 @@ export function App() {
           break;
         case "Enter":
           e.preventDefault();
-          if (results[selectedIndex]) {
+          if (showCheatSheet) {
+            setShowCheatSheet(false);
+          } else if (results[selectedIndex]) {
             openNote(results[selectedIndex].id);
           }
           break;
         case "Escape":
           e.preventDefault();
-          try {
-            await invoke("hide_window");
-          } catch (err) {
-            console.error("Failed to hide window:", err);
+          if (showCheatSheet) {
+            setShowCheatSheet(false);
+          } else {
+            try {
+              await invoke("hide_window");
+            } catch (err) {
+              console.error("Failed to hide window:", err);
+            }
           }
           break;
       }
     },
-    [results, selectedIndex, openNote]
+    [results, selectedIndex, openNote, showCheatSheet]
   );
 
   const getMatchTypeLabel = (matchType: string) => {
@@ -195,6 +206,42 @@ export function App() {
 
   return (
     <div className="app-container">
+      {showCheatSheet && (
+        <div className="cheat-sheet-overlay" onClick={() => setShowCheatSheet(false)}>
+          <div className="cheat-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="cheat-sheet-header">
+              <span>Search Syntax</span>
+              <kbd>F1</kbd>
+            </div>
+            <div className="cheat-sheet-body">
+              <div className="cheat-sheet-section">
+                <div className="cheat-sheet-title">Filters</div>
+                <div className="cheat-sheet-row"><kbd>hello</kbd><span>Search note titles</span></div>
+                <div className="cheat-sheet-row"><kbd>~word</kbd><span>Search note content</span></div>
+                <div className="cheat-sheet-row"><kbd>@book</kbd><span>Filter by book name</span></div>
+                <div className="cheat-sheet-row"><kbd>#section</kbd><span>Filter by section name</span></div>
+                <div className="cheat-sheet-row"><kbd>/</kbd><span>Root-level notes only</span></div>
+              </div>
+              <div className="cheat-sheet-section">
+                <div className="cheat-sheet-title">Quoting</div>
+                <div className="cheat-sheet-row"><kbd>@"My Book"</kbd><span>Use quotes for spaces</span></div>
+              </div>
+              <div className="cheat-sheet-section">
+                <div className="cheat-sheet-title">Examples</div>
+                <div className="cheat-sheet-row"><kbd>todo @work</kbd><span>"todo" in title, in "work" book</span></div>
+                <div className="cheat-sheet-row"><kbd>~python #snippets</kbd><span>Content has "python", in "snippets" section</span></div>
+                <div className="cheat-sheet-row"><kbd>/ meeting</kbd><span>"meeting" in title, root only</span></div>
+              </div>
+              <div className="cheat-sheet-section">
+                <div className="cheat-sheet-title">Navigation</div>
+                <div className="cheat-sheet-row"><kbd>↑ ↓</kbd><span>Navigate results</span></div>
+                <div className="cheat-sheet-row"><kbd>Enter</kbd><span>Open selected note</span></div>
+                <div className="cheat-sheet-row"><kbd>Esc</kbd><span>Close</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="search-box">
         <input
           ref={inputRef}
