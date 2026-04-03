@@ -5,6 +5,7 @@ import { useEditorSettings } from "@/hooks/use-editor-settings";
 import { useAtomValue } from "jotai";
 import { itemsAtom, notesAtom, booksAtom, sectionsAtom } from "@/atoms/items";
 import { exportSettings, importSettings } from "@/storage/settings";
+import { invoke } from "@tauri-apps/api/core";
 import type {
 	CursorWidth,
 	CursorBlinkStyle,
@@ -21,6 +22,8 @@ export function ConfigView() {
 	// Export/Import state
 	const [isExporting, setIsExporting] = useState(false);
 	const [isImporting, setIsImporting] = useState(false);
+	const [cleanupResult, setCleanupResult] = useState<string | null>(null);
+	const [isCleaning, setIsCleaning] = useState(false);
 
 	// Database stats
 	const items = useAtomValue(itemsAtom);
@@ -48,6 +51,23 @@ export function ConfigView() {
 			}
 		} finally {
 			setIsImporting(false);
+		}
+	};
+
+	const handleCleanupAssets = async () => {
+		setIsCleaning(true);
+		setCleanupResult(null);
+		try {
+			const deleted = await invoke<number>("cleanup_orphaned_assets");
+			setCleanupResult(
+				deleted === 0
+					? "No orphaned images found."
+					: `Deleted ${deleted} orphaned image${deleted === 1 ? "" : "s"}.`,
+			);
+		} catch (err) {
+			setCleanupResult(`Error: ${err}`);
+		} finally {
+			setIsCleaning(false);
 		}
 	};
 
@@ -537,6 +557,40 @@ export function ConfigView() {
 							<Icons.Info className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
 							<div className="text-sm text-blue-800 dark:text-blue-200">
 								Settings are automatically saved in your notes database and will persist across app reinstalls.
+							</div>
+						</div>
+					</div>
+				</section>
+
+				{/* Storage Maintenance Section */}
+				<section className="space-y-4">
+					<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+						<Icons.HardDrive className="w-5 h-5" />
+						Storage Maintenance
+					</h2>
+
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
+						<div>
+							<div className="font-medium text-gray-900 dark:text-gray-100 mb-1">
+								Clean Up Orphaned Images
+							</div>
+							<div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+								Delete image files in the assets folder that are no longer referenced by any note.
+							</div>
+							<div className="flex items-center gap-3">
+								<button
+									onClick={handleCleanupAssets}
+									disabled={isCleaning}
+									className="flex items-center gap-2 px-4 py-2 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50 transition-colors"
+								>
+									<Icons.Trash2 className="w-4 h-4" />
+									{isCleaning ? "Cleaning..." : "Clean Up Images"}
+								</button>
+								{cleanupResult && (
+									<span className="text-sm text-gray-600 dark:text-gray-400">
+										{cleanupResult}
+									</span>
+								)}
 							</div>
 						</div>
 					</div>
