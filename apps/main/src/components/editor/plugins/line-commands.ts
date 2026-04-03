@@ -17,8 +17,9 @@
  * All move/copy commands support multi-line selections.
  */
 
-import { type Command, TextSelection, AllSelection } from "prosemirror-state";
+import { type Command, TextSelection, AllSelection, NodeSelection, type Selection } from "prosemirror-state";
 import { Fragment, type Node as PMNode } from "prosemirror-model";
+import { isInTable, deleteRow, CellSelection } from "prosemirror-tables";
 import { DEFAULT_EDITOR_KEYBINDINGS, type EditorKeybindings } from "@/config/default-editor-keybindings";
 
 /**
@@ -480,6 +481,11 @@ export const selectPreviousOccurrence: Command = (state, dispatch) => {
  * Shift+Delete to delete current line(s)
  */
 export const deleteLine: Command = (state, dispatch) => {
+	// In a table, "delete line" means "delete row"
+	if (isInTable(state)) {
+		return deleteRow(state, dispatch);
+	}
+
 	const range = getSelectedBlockRange(state);
 	if (!range) return false;
 
@@ -528,6 +534,9 @@ function isBlockEmpty(block: PMNode): boolean {
 /**
  * Smart Select All - OneNote 2013 style progressive selection
  * Continuously rotates: line -> paragraph -> all -> line
+ *
+ * Inside a table cell the cycle is:
+ *   cell content -> whole table (CellSelection) -> entire document
  */
 export const smartSelectAll: Command = (state, dispatch) => {
 	const { doc, selection } = state;
@@ -542,16 +551,76 @@ export const smartSelectAll: Command = (state, dispatch) => {
 
 	if (shouldReset) {
 		smartSelectLevel = 0;
-		// Store the actual cursor anchor as the cycle origin so level 1 always
-		// refers back to the line where the user was, even when cycling from
-		// level 3 (AllSelection) — AllSelection's $from is at doc position 0,
-		// not the user's cursor.
 		smartSelectOriginPos = selection.anchor ?? selection.from;
 	}
 
-	// Always resolve the $from from the stored origin so cycling back to level 1
-	// targets the correct block rather than the beginning of the document.
 	const $from = doc.resolve(smartSelectOriginPos);
+
+	// ── Check if cursor is inside a table cell ──
+	let cellDepth = -1;
+	let tableDepth = -1;
+	for (let d = $from.depth; d > 0; d--) {
+		const name = $from.node(d).type.name;
+		if (cellDepth === -1 && (name === "table_cell" || name === "table_header")) {
+			cellDepth = d;
+		}
+		if (name === "table") {
+			tableDepth = d;
+			break;
+		}
+	}
+
+	const inTable = cellDepth > 0 && tableDepth > 0;
+
+	if (inTable) {
+		// Table-aware cycle: cell content → all cells → whole table (node) → back to cell
+		smartSelectLevel = (smartSelectLevel % 3) + 1;
+		lastSmartSelectTime = now;
+		console.log('[smartSelect] table L' + smartSelectLevel);
+
+		if (dispatch) {
+			let newSelection: Selection;
+
+			if (smartSelectLevel === 1) {
+				// L1: Select the content of the current cell
+				const cellContentStart = $from.start(cellDepth);
+				const cellContentEnd = $from.end(cellDepth);
+				newSelection = TextSelection.between(
+					doc.resolve(cellContentStart),
+					doc.resolve(cellContentEnd),
+				);
+			} else if (smartSelectLevel === 2) {
+				// L2: Select all cells in the table (CellSelection)
+				const tableNode = $from.node(tableDepth);
+				const tableStart = $from.before(tableDepth);
+				let firstCellPos = -1;
+				let lastCellPos = -1;
+				tableNode.descendants((node, pos) => {
+					if (node.type.name === "table_cell" || node.type.name === "table_header") {
+						const absPos = tableStart + 1 + pos;
+						if (firstCellPos === -1) firstCellPos = absPos;
+						lastCellPos = absPos;
+					}
+				});
+				if (firstCellPos !== -1 && lastCellPos !== -1) {
+					newSelection = CellSelection.create(doc, firstCellPos, lastCellPos);
+				} else {
+					newSelection = NodeSelection.create(doc, $from.before(tableDepth));
+				}
+			} else {
+				// L3: Select whole table as node (ready for delete)
+				const tableStart = $from.before(tableDepth);
+				newSelection = NodeSelection.create(doc, tableStart);
+			}
+
+			const tr = state.tr.setSelection(newSelection);
+			dispatch(tr.scrollIntoView());
+			lastSmartSelectRange = { from: newSelection.from, to: newSelection.to };
+		}
+		return true;
+	}
+
+	// ── Normal (non-table) cycle: line -> paragraph -> all ──
 
 	// Find the block depth
 	let blockDepth = $from.depth;
@@ -567,6 +636,7 @@ export const smartSelectAll: Command = (state, dispatch) => {
 	// Increment level and wrap around (1 -> 2 -> 3 -> 1)
 	smartSelectLevel = (smartSelectLevel % 3) + 1;
 	lastSmartSelectTime = now;
+	console.log('[smartSelect] text L' + smartSelectLevel);
 
 	if (dispatch) {
 		let newSelection: TextSelection | AllSelection;
@@ -629,6 +699,8 @@ export const smartSelectAll: Command = (state, dispatch) => {
 			newSelection = new AllSelection(doc);
 		}
 
+		console.log('[smartSelect] TEXT dispatching: from=', newSelection.from, 'to=', newSelection.to,
+			'type=', newSelection.constructor.name);
 		const tr = state.tr.setSelection(newSelection);
 		dispatch(tr.scrollIntoView());
 
