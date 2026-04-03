@@ -781,3 +781,232 @@ li.pm-tight-selection-list-item .pm-tight-selection:first-child::before {
   outline-offset: 2px;
 }
 
+/* ==========================================================================
+   Table Styles (prosemirror-tables)
+   ========================================================================== */
+
+/* Table wrapper — allows horizontal scrolling when table exceeds editor width */
+.ProseMirror .tableWrapper {
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+
+.ProseMirror table {
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* Table cells always wrap text, regardless of editor wrapping mode */
+.ProseMirror td,
+.ProseMirror th {
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Table alignment — centered or right-aligned tables shrink to content.
+   data-align is set on the .tableWrapper div via decoration (not on <table>). */
+.ProseMirror .tableWrapper[data-align="center"] > table {
+  width: auto;
+  margin-left: auto;
+  margin-right: auto;
+}
+.ProseMirror .tableWrapper[data-align="right"] > table {
+  width: auto;
+  margin-left: auto;
+  margin-right: 0;
+}
+.ProseMirror .tableWrapper[data-align="left"] > table {
+  width: auto;
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.ProseMirror td,
+.ProseMirror th {
+  min-width: 1em;
+  border: 1px solid var(--pm-blockquote-border);
+  padding: 4px 8px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+  /* Wrapping already set above — no additional white-space needed */
+}
+
+/* Collapse double borders between adjacent cells (border-separate mode) */
+.ProseMirror td + td,
+.ProseMirror th + th,
+.ProseMirror td + th,
+.ProseMirror th + td {
+  border-left-width: 0;
+}
+.ProseMirror tr + tr > td,
+.ProseMirror tr + tr > th {
+  border-top-width: 0;
+}
+
+/* When a cell has custom border color, restore all four borders */
+.ProseMirror td[data-border-color],
+.ProseMirror th[data-border-color] {
+  border-width: 1px;
+}
+/* When a cell has custom border width, it sets its own width via inline style */
+.ProseMirror td[data-border-width],
+.ProseMirror th[data-border-width] {
+  /* border-width set via inline style */
+}
+
+.ProseMirror th {
+  font-weight: bold;
+  text-align: left;
+}
+
+/* Selected cell highlight */
+.ProseMirror .selectedCell::after {
+  z-index: 2;
+  position: absolute;
+  content: "";
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--pm-selection-bg);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Column resize handle */
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background-color: var(--pm-caret-color);
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* Prevent text selection while resizing columns */
+.ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
+
+/* Active line highlight inside table cells — constrain to cell boundaries */
+:root.pm-active-line-enabled .ProseMirror td .pm-active-line::before,
+:root.pm-active-line-enabled .ProseMirror th .pm-active-line::before {
+  left: -8px;              /* match cell padding */
+  width: calc(100% + 16px);
+  border-radius: 2px;
+}
+
+/* Suppress default ProseMirror selectednode outline on table wrappers
+   (it spans full editor width — we want the outline on the <table> only) */
+.ProseMirror .tableWrapper.ProseMirror-selectednode,
+.ProseMirror .tableWrapper.pm-table-all-selected {
+  outline: none;
+}
+
+/* L2: All-cells CellSelection — content-clearing selection (blue dashed) */
+.ProseMirror .tableWrapper.pm-table-all-selected > table {
+  outline: 2px dashed var(--pm-caret-color);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
+
+/* L3: NodeSelection — whole-table selection (solid, destructive red) */
+.ProseMirror .tableWrapper.ProseMirror-selectednode > table {
+  outline: 2px solid #e74c3c;
+  outline-offset: 1px;
+  border-radius: 2px;
+}
+
+/* ==========================================================================
+   Collapsible Details Block Styles
+   ========================================================================== */
+
+.ProseMirror details {
+  border: 1px solid var(--pm-blockquote-border);
+  border-radius: 4px;
+  margin: 0.4em 0;
+  padding: 0;
+}
+
+.ProseMirror details summary {
+  cursor: pointer;
+  padding: 4px 8px;
+  font-weight: 600;
+  user-select: text;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--pm-code-bg);
+  border-radius: 3px 3px 0 0;
+}
+
+.ProseMirror details summary::before {
+  content: "▶";
+  font-size: 0.7em;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+  color: var(--pm-blockquote-text);
+}
+
+.ProseMirror details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.ProseMirror details[open] summary {
+  border-bottom: 1px solid var(--pm-blockquote-border);
+}
+
+/* Hide the native marker */
+.ProseMirror details summary::-webkit-details-marker {
+  display: none;
+}
+
+.ProseMirror details > :not(summary) {
+  padding: 4px 8px;
+}
+
+/* ==========================================================================
+   Image Styles
+   ========================================================================== */
+
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  cursor: default;
+  border-radius: 2px;
+}
+
+.ProseMirror .pm-image-wrap.ProseMirror-selectednode img {
+  outline: 2px solid var(--pm-caret-color);
+  outline-offset: 1px;
+}
+
+/* Resize handle - visible on hover and when selected */
+.ProseMirror .pm-image-resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  background: var(--pm-caret-color);
+  cursor: nwse-resize;
+  opacity: 0;
+  transition: opacity 0.15s;
+  border-radius: 2px 0 2px 0;
+  z-index: 5;
+}
+
+.ProseMirror .pm-image-wrap:hover .pm-image-resize-handle,
+.ProseMirror .pm-image-wrap.ProseMirror-selectednode .pm-image-resize-handle {
+  opacity: 0.8;
+}
+

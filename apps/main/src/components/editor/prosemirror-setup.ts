@@ -1,6 +1,8 @@
-import type { Schema, NodeType, Node } from "prosemirror-model";
-import type { Plugin, Command, EditorState, Transaction } from "prosemirror-state";
-import { TextSelection } from "prosemirror-state";
+import type { Schema, NodeType, Node as PMNode } from "prosemirror-model";
+import { Fragment, Slice } from "prosemirror-model";
+import { Plugin, PluginKey, TextSelection, NodeSelection } from "prosemirror-state";
+import type { Command, EditorState, Transaction } from "prosemirror-state";
+import { Decoration, DecorationSet } from "prosemirror-view";
 import { keymap } from "prosemirror-keymap";
 import { history, undo, redo } from "prosemirror-history";
 import {
@@ -17,13 +19,15 @@ import { wrapInList, liftListItem, sinkListItem, splitListItem } from "prosemirr
 import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
 import { buildInputRules } from "prosemirror-example-setup";
+import { tableEditing, columnResizing, goToNextCell, deleteRow, deleteColumn, deleteTable, isInTable, CellSelection, addRowAfter, addRowBefore, addColumnAfter, addColumnBefore } from "prosemirror-tables";
 import { autolinkPlugin, linkifySelection } from "./plugins/autolink";
 import { tightSelectionPlugin } from "./plugins/tight-selection";
 import { customCursorPlugin } from "./plugins/custom-cursor";
 import { activeLinePlugin } from "./plugins/active-line";
 import { buildLineCommandsKeymap, resetSmartSelectLevel } from "./plugins/line-commands";
 import { searchPlugin } from "./plugins/search";
-import { clearAllFormatting, increaseFontSizeMark, decreaseFontSizeMark } from "./format-commands";
+import { rowResizing } from "./plugins/row-resize";
+import { clearAllFormatting, increaseFontSizeMark, decreaseFontSizeMark, setTextAlign, setTableAlign, fitColumnWidths } from "./format-commands";
 import { DEFAULT_EDITOR_KEYBINDINGS, type EditorKeybindings } from "@/config/default-editor-keybindings";
 
 /**
@@ -228,6 +232,275 @@ export function customSetup(options: SetupOptions): Plugin[] {
 	// Gap cursor (allows cursor in hard-to-reach places like between blocks)
 	plugins.push(gapCursor());
 
+	// Allow Shift+Arrow selection to extend across table nodes.
+	// Without this, ProseMirror can't extend a TextSelection past a table
+	// because TextSelection endpoints must point into inline content.
+	plugins.push(new Plugin({
+		key: new PluginKey("selectAcrossTable"),
+		props: {
+			handleKeyDown(view, event) {
+				if (!event.shiftKey) return false;
+				if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return false;
+
+				const { state } = view;
+				const sel = state.selection;
+				if (!(sel instanceof TextSelection)) return false;
+
+				const doc = state.doc;
+				const $head = sel.$head;
+				const anchor = sel.anchor;
+				const dir = event.key === "ArrowDown" ? 1 : -1;
+
+				// Only act when head is at the edge of its top-level block
+				if (dir === 1 && !view.endOfTextblock("down")) return false;
+				if (dir === -1 && !view.endOfTextblock("up")) return false;
+
+				// Find the top-level block the head is in and look at the neighbor
+				const headTopIndex = $head.index(0);
+				const neighborIndex = headTopIndex + dir;
+
+				if (neighborIndex < 0 || neighborIndex >= doc.childCount) return false;
+
+				const neighbor = doc.child(neighborIndex);
+				if (neighbor.type.name !== "table") return false;
+
+				// Compute position after/before the table
+				let pos = 0;
+				for (let i = 0; i < neighborIndex; i++) {
+					pos += doc.child(i).nodeSize;
+				}
+
+				let targetPos: number;
+				if (dir === 1) {
+					// Skip past the table → start of the block after it
+					const afterTable = pos + neighbor.nodeSize;
+					if (afterTable >= doc.content.size) {
+						// Table is the last node, select to end of doc
+						targetPos = doc.content.size;
+					} else {
+						const nodeAfterTable = doc.nodeAt(afterTable);
+						targetPos = nodeAfterTable && nodeAfterTable.isTextblock
+							? afterTable + 1 // inside the textblock
+							: afterTable;
+					}
+				} else {
+					// Skip before the table → end of the block before it
+					if (pos === 0) {
+						targetPos = 0;
+					} else {
+						const prevIndex = neighborIndex - 1;
+						if (prevIndex >= 0) {
+							let prevEnd = 0;
+							for (let i = 0; i <= prevIndex; i++) {
+								prevEnd += doc.child(i).nodeSize;
+							}
+							const prevNode = doc.child(prevIndex);
+							targetPos = prevNode.isTextblock
+								? prevEnd - 1 // end of textblock content
+								: prevEnd;
+						} else {
+							targetPos = 0;
+						}
+					}
+				}
+
+				try {
+					const newSel = TextSelection.create(doc, anchor, targetPos);
+					view.dispatch(state.tr.setSelection(newSel).scrollIntoView());
+					event.preventDefault();
+					return true;
+				} catch {
+					return false;
+				}
+			},
+		},
+	}));
+
+	// Table editing support (cell selection, column resize, row resize)
+	plugins.push(columnResizing());
+	plugins.push(rowResizing());
+
+	// Table structure keys — MUST be before tableEditing() so it intercepts
+	// Delete/Backspace before tableEditing's deleteCellSelection handler,
+	// which only clears cell content instead of removing rows/columns/table.
+	//
+	// Deletion system:
+	//   Delete/Backspace          → NodeSelection on table: delete table
+	//                             → CellSelection (all rows+cols): delete table
+	//                             → CellSelection (rows): delete rows
+	//                             → CellSelection (cols): delete columns
+	//                             → otherwise: fall through to tableEditing (clear content)
+	//   Shift+Delete              → delete current row (handled by deleteLine in line-commands)
+	//   Ctrl+Shift+Delete         → delete current column (positional, always works in table)
+	//
+	// Insertion system:
+	//   Ctrl+Enter                → add row after current row
+	//   Ctrl+Shift+Enter          → add row before current row
+	//   Ctrl+Alt+Enter            → add column after current column
+	//   Ctrl+Alt+Shift+Enter      → add column before current column
+	plugins.push(new Plugin({
+		key: new PluginKey("tableDeleteKeys"),
+		props: {
+			handleKeyDown(view, event) {
+				// ── Row/column insertion ──
+				if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey) {
+					// Ctrl+Enter → add row after
+					if (isInTable(view.state)) {
+						if (addRowAfter(view.state, view.dispatch)) {
+							event.preventDefault();
+							return true;
+						}
+					}
+					return false;
+				}
+				if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && !event.altKey && event.shiftKey) {
+					// Ctrl+Shift+Enter → add row before
+					if (isInTable(view.state)) {
+						if (addRowBefore(view.state, view.dispatch)) {
+							event.preventDefault();
+							return true;
+						}
+					}
+					return false;
+				}
+				if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && event.altKey && !event.shiftKey) {
+					// Ctrl+Alt+Enter → add column after
+					if (isInTable(view.state)) {
+						if (addColumnAfter(view.state, view.dispatch)) {
+							event.preventDefault();
+							return true;
+						}
+					}
+					return false;
+				}
+				if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && event.altKey && event.shiftKey) {
+					// Ctrl+Alt+Shift+Enter → add column before
+					if (isInTable(view.state)) {
+						if (addColumnBefore(view.state, view.dispatch)) {
+							event.preventDefault();
+							return true;
+						}
+					}
+					return false;
+				}
+
+				// ── Ctrl+Shift+W → fit column widths to content ──
+				if (event.key === "W" && event.shiftKey && (event.ctrlKey || event.metaKey) && !event.altKey) {
+					if (isInTable(view.state)) {
+						if (fitColumnWidths(view.state, view.dispatch, view)) {
+							event.preventDefault();
+							return true;
+						}
+					}
+					return false;
+				}
+
+				// ── Ctrl+Shift+Delete → delete column ──
+				if (event.key === "Delete" && event.shiftKey && (event.ctrlKey || event.metaKey) && !event.altKey) {
+					if (isInTable(view.state)) {
+						if (deleteColumn(view.state, view.dispatch)) {
+							event.preventDefault();
+							return true;
+						}
+					}
+					return false;
+				}
+
+				// Plain Delete/Backspace → structural delete for NodeSelection/CellSelection
+				if ((event.key === "Backspace" || event.key === "Delete") && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey) {
+					// NodeSelection on a table node → delete entire table
+					if (view.state.selection instanceof NodeSelection && view.state.selection.node.type.name === "table") {
+						view.dispatch(view.state.tr.deleteSelection().scrollIntoView());
+						event.preventDefault();
+						return true;
+					}
+					// CellSelection → structural delete for full row/col selections
+					if (view.state.selection instanceof CellSelection) {
+						const sel = view.state.selection as CellSelection;
+						const isRow = sel.isRowSelection();
+						const isCol = sel.isColSelection();
+						if (isRow && isCol) {
+							if (deleteTable(view.state, view.dispatch)) {
+								event.preventDefault();
+								return true;
+							}
+						}
+						if (isRow) {
+							if (deleteRow(view.state, view.dispatch)) {
+								event.preventDefault();
+								return true;
+							}
+						}
+						if (isCol) {
+							if (deleteColumn(view.state, view.dispatch)) {
+								event.preventDefault();
+								return true;
+							}
+						}
+					}
+				}
+				return false;
+			},
+		},
+	}));
+
+	plugins.push(tableEditing({ allowTableNodeSelection: true }));
+
+	// Table selection indicator — adds outline class when whole table is selected
+	plugins.push(new Plugin({
+		key: new PluginKey("tableSelectionIndicator"),
+		props: {
+			decorations(state) {
+				const decos: Decoration[] = [];
+
+				// ── Alignment decorations for tables ──
+				// columnResizing's TableView nodeView renders the <table>/<tr>, so
+				// schema toDOM attrs aren't reflected live. We mirror table alignment via Decoration.node().
+				// Row height is applied via direct DOM manipulation in the rowResizing plugin.
+				state.doc.descendants((node, pos) => {
+					if (node.type.name === "table" && node.attrs.textAlign) {
+						decos.push(
+							Decoration.node(pos, pos + node.nodeSize, {
+								"data-align": node.attrs.textAlign,
+							}),
+						);
+					}
+					// Don't descend past tables — row/cell attrs are handled elsewhere
+					return node.type.name !== "table";
+				});
+
+				// ── Selection indicator decorations ──
+				const { selection } = state;
+
+				// NodeSelection on a table node (from Ctrl+A L3)
+				if (selection instanceof NodeSelection && selection.node.type.name === "table") {
+					decos.push(Decoration.node(selection.from, selection.to, {
+						class: "pm-table-all-selected",
+					}));
+				}
+
+				// CellSelection covering all rows+columns (from mouse selection)
+				if (selection instanceof CellSelection) {
+					const sel = selection as CellSelection;
+					if (sel.isRowSelection() && sel.isColSelection()) {
+						const $anchor = sel.$anchorCell;
+						for (let d = $anchor.depth; d > 0; d--) {
+							if ($anchor.node(d).type.name === "table") {
+								const pos = $anchor.before(d);
+								decos.push(Decoration.node(pos, pos + $anchor.node(d).nodeSize, {
+									class: "pm-table-all-selected",
+								}));
+								break;
+							}
+						}
+					}
+				}
+
+				return decos.length ? DecorationSet.create(state.doc, decos) : DecorationSet.empty;
+			},
+		},
+	}));
+
 	// Active line highlight (subtle background on the line containing cursor)
 	plugins.push(activeLinePlugin());
 
@@ -294,6 +567,10 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		const shiftTabInList = liftListItem(nodes.list_item);
 		
 		customKeybindings["Tab"] = (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+			// Try table cell navigation first
+			if (goToNextCell(1)(state, dispatch)) {
+				return true;
+			}
 			// Try to indent list item first
 			if (tabInList(state, dispatch)) {
 				return true;
@@ -309,7 +586,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 					// Selection exists - indent all covered lines with a real tab
 					const tr = state.tr;
 					const positions: number[] = [];
-					state.doc.nodesBetween(from, to, (node: Node, pos: number) => {
+					state.doc.nodesBetween(from, to, (node, pos) => {
 						if (node.isTextblock) positions.push(pos + 1);
 					});
 					let offset = 0;
@@ -324,6 +601,10 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		};
 		
 		customKeybindings["Shift-Tab"] = (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+			// Try table cell navigation first
+			if (goToNextCell(-1)(state, dispatch)) {
+				return true;
+			}
 			// Try to outdent list item first
 			if (shiftTabInList(state, dispatch)) {
 				return true;
@@ -345,7 +626,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 					// Outdent all covered lines — remove leading tab or up to 2 spaces
 					const tr = state.tr;
 					const edits: { pos: number; remove: number }[] = [];
-					state.doc.nodesBetween(from, to, (node: Node, pos: number) => {
+					state.doc.nodesBetween(from, to, (node, pos) => {
 						if (node.isTextblock && node.textContent) {
 							const match = node.textContent.match(/^(\t| {1,2})/);
 							if (match?.[1]) edits.push({ pos: pos + 1, remove: match[1].length });
@@ -363,6 +644,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 	} else {
 		// No list support, just handle tab characters
 		customKeybindings["Tab"] = (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+			if (goToNextCell(1)(state, dispatch)) return true;
 			if (dispatch) {
 				const { from, to, empty } = state.selection;
 				if (empty) {
@@ -370,7 +652,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 				} else {
 					const tr = state.tr;
 					const positions: number[] = [];
-					state.doc.nodesBetween(from, to, (node: Node, pos: number) => {
+					state.doc.nodesBetween(from, to, (node, pos) => {
 						if (node.isTextblock) positions.push(pos + 1);
 					});
 					let offset = 0;
@@ -384,6 +666,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 			return true;
 		};
 		customKeybindings["Shift-Tab"] = (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+			if (goToNextCell(-1)(state, dispatch)) return true;
 			if (dispatch) {
 				const { from, to, empty } = state.selection;
 				if (empty) {
@@ -394,7 +677,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 				} else {
 					const tr = state.tr;
 					const edits: { pos: number; remove: number }[] = [];
-					state.doc.nodesBetween(from, to, (node: Node, pos: number) => {
+					state.doc.nodesBetween(from, to, (node, pos) => {
 						if (node.isTextblock && node.textContent) {
 							const match = node.textContent.match(/^(\t| {1,2})/);
 							if (match?.[1]) edits.push({ pos: pos + 1, remove: match[1].length });
@@ -460,6 +743,10 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		customKeybindings["Mod-Alt-ArrowDown"] = decreaseFontSizeMark(options.schema);
 	}
 
+	// ── Alignment (Ctrl+Shift+E/R) — table position when in table, text otherwise ──
+	customKeybindings["Mod-Shift-e"] = chainCommands(setTableAlign("center"), setTextAlign("center"));
+	customKeybindings["Mod-Shift-r"] = chainCommands(setTableAlign("right"), setTextAlign("right"));
+
 	// NOTE: Format pickers (Ctrl+Shift+1-4), direct colors (Alt+0-6),
 	// and direct highlights (Shift+Alt+0-6) are handled via DOM keydown
 	// handlers in prosemirror-editor.tsx because ProseMirror's keymap
@@ -469,4 +756,109 @@ export function customSetup(options: SetupOptions): Plugin[] {
 	plugins.push(keymap(customKeybindings));
 
 	return plugins;
+}
+
+/**
+ * Insert a 3×3 table at the current cursor position.
+ */
+export function insertTable(schema: Schema): Command {
+	return insertTableWithSize(schema, 3, 3);
+}
+
+/**
+ * Insert a table with the given number of rows and columns.
+ * All cells are regular table_cell (no header row).
+ */
+export function insertTableWithSize(schema: Schema, rows: number, cols: number): Command {
+	return (state, dispatch) => {
+		const { table, table_row, table_cell } = schema.nodes;
+		if (!table || !table_row || !table_cell) return false;
+
+		const tableRows = [];
+		for (let r = 0; r < rows; r++) {
+			const cells = [];
+			for (let c = 0; c < cols; c++) {
+				cells.push(table_cell.createAndFill()!);
+			}
+			tableRows.push(table_row.create(null, cells));
+		}
+
+		const tableNode = table.create(null, tableRows);
+
+		if (dispatch) {
+			dispatch(state.tr.replaceSelectionWith(tableNode).scrollIntoView());
+		}
+		return true;
+	};
+}
+
+/**
+ * Insert or wrap a collapsible details block.
+ *
+ * - If there is no selection (or a cursor): inserts a new empty details
+ *   block with a "Summary" placeholder.
+ * - If there is a selection: wraps the selected blocks inside a details
+ *   block, using the first block's text as the summary.
+ */
+export function insertDetails(schema: Schema): Command {
+	return (state, dispatch) => {
+		const { details, details_summary, paragraph } = schema.nodes;
+		if (!details || !details_summary || !paragraph) return false;
+
+		if (state.selection.empty) {
+			// No selection — insert a fresh details block
+			const summaryNode = details_summary.create(null, schema.text("Summary"));
+			const bodyNode = paragraph.create();
+			const detailsNode = details.create({ open: true }, [summaryNode, bodyNode]);
+			if (dispatch) {
+				dispatch(state.tr.replaceSelectionWith(detailsNode).scrollIntoView());
+			}
+			return true;
+		}
+
+		// Selection exists — wrap selected blocks
+		if (dispatch) {
+			const { from, to } = state.selection;
+			const tr = state.tr;
+
+			// Collect the selected block nodes
+			const blocks: PMNode[] = [];
+			state.doc.nodesBetween(from, to, (node) => {
+				// Only grab top-level blocks that overlap the selection
+				if (node.isBlock && node !== state.doc) {
+					blocks.push(node);
+					return false; // don't descend
+				}
+				return true;
+			});
+
+			if (blocks.length === 0) return false;
+
+			const firstBlock = blocks[0];
+			if (!firstBlock) return false;
+
+			// Use the first block's text content as the summary
+			const summaryText = firstBlock.textContent || "Summary";
+			const summaryNode = details_summary.create(null, schema.text(summaryText));
+
+			// Remaining blocks become the body; if the first block was used for
+			// the summary we still need at least one body block.
+			const bodyNodes: PMNode[] = blocks.slice(1);
+			if (bodyNodes.length === 0) {
+				bodyNodes.push(paragraph.create());
+			}
+
+			const detailsNode = details.create({ open: true }, [summaryNode, ...bodyNodes]);
+
+			// Find the range covering all the selected blocks in the document
+			const $from = state.doc.resolve(from);
+			const $to = state.doc.resolve(to);
+			const range = $from.blockRange($to);
+			if (!range) return false;
+
+			tr.replaceRange(range.start, range.end, new Slice(Fragment.from(detailsNode), 0, 0));
+			dispatch(tr.scrollIntoView());
+		}
+		return true;
+	};
 }

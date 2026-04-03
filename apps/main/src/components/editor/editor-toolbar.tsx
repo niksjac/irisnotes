@@ -2,10 +2,13 @@ import { EditorView } from "prosemirror-view";
 import { toggleMark, setBlockType, wrapIn, lift } from "prosemirror-commands";
 import { wrapInList, liftListItem } from "prosemirror-schema-list";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import type { MarkType, NodeType } from "prosemirror-model";
 import { useAtom, useAtomValue } from "jotai";
 import { editorSettingsAtom } from "@/atoms/settings";
 import { EDITOR_SETTINGS_CONSTRAINTS } from "@/types/editor-settings";
+import { setTextAlign, setTableAlign, setCellContentAlign, fitColumnWidths } from "./format-commands";
+import { isInTable, addRowAfter, addColumnAfter, deleteRow, deleteColumn, deleteTable, setCellAttr, CellSelection } from "prosemirror-tables";
 import {
 	PRESET_COLORS,
 	HIGHLIGHT_COLORS,
@@ -30,6 +33,16 @@ import {
 	BoxSelect,
 	ALargeSmall,
 	SquareCode,
+	AlignLeft,
+	AlignCenter,
+	AlignRight,
+	Columns3,
+	Plus,
+	Minus,
+	Trash2,
+	Shrink,
+	PaintBucket,
+	Grid3x3,
 } from "lucide-react";
 
 interface EditorToolbarProps {
@@ -138,6 +151,271 @@ function ColorGrid({ colors, onSelectColor, onRemoveColor, removeLabel, columns 
 				{removeLabel}
 			</button>
 		</div>
+	);
+}
+
+// Compact cell color picker for table toolbar
+const CELL_COLORS = [
+	"#ef4444", "#f97316", "#eab308", "#22c55e",
+	"#3b82f6", "#8b5cf6", "#ec4899", "#14b8a6",
+	"#fca5a5", "#fdba74", "#fde047", "#86efac",
+	"#93c5fd", "#c4b5fd", "#f9a8d4", "#99f6e4",
+];
+
+interface CellColorPickerProps {
+	icon: any;
+	label: string;
+	currentColor: string | null;
+	onSelectColor: (color: string) => void;
+	onRemoveColor: () => void;
+}
+
+function CellColorPicker({ icon: Icon, label, currentColor, onSelectColor, onRemoveColor }: CellColorPickerProps) {
+	const [open, setOpen] = useState(false);
+	const [pickerPos, setPickerPos] = useState<{ top: number; left: number } | null>(null);
+	const btnRef = useRef<HTMLButtonElement>(null);
+	const panelRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (!open) return;
+		if (btnRef.current) {
+			const rect = btnRef.current.getBoundingClientRect();
+			setPickerPos({ top: rect.bottom + 4, left: rect.left });
+		}
+		const handleClick = (e: MouseEvent) => {
+			if (panelRef.current && !panelRef.current.contains(e.target as Node) && !btnRef.current?.contains(e.target as Node)) {
+				setOpen(false);
+			}
+		};
+		const handleEsc = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+		document.addEventListener("mousedown", handleClick);
+		document.addEventListener("keydown", handleEsc);
+		return () => { document.removeEventListener("mousedown", handleClick); document.removeEventListener("keydown", handleEsc); };
+	}, [open]);
+
+	return (
+		<>
+			<button
+				ref={btnRef}
+				type="button"
+				tabIndex={0}
+				className="relative flex-shrink-0 w-7 h-7 flex flex-col items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+				onClick={() => setOpen((v) => !v)}
+				title={`${label}${currentColor ? ` (${currentColor})` : ""}`}
+			>
+				<Icon size={13} className="mb-0.5" />
+				<div className="w-3.5 h-0.5 rounded-sm" style={{ backgroundColor: currentColor || "currentColor" }} />
+			</button>
+			{open && pickerPos && (
+				<div
+					ref={panelRef}
+					className="fixed p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-lg z-[100]"
+					style={{ top: pickerPos.top, left: pickerPos.left }}
+				>
+					<div className="grid grid-cols-4 gap-1.5 mb-2">
+						{CELL_COLORS.map((color) => (
+							<button
+								key={color}
+								type="button"
+								className={`w-6 h-6 rounded border-2 cursor-pointer transition-all ${currentColor === color ? "border-blue-500 ring-1 ring-blue-300 scale-110" : "border-gray-300 dark:border-gray-600 hover:border-blue-400 hover:scale-110"}`}
+								style={{ backgroundColor: color }}
+								onClick={() => { onSelectColor(color); setOpen(false); }}
+								title={color}
+							/>
+						))}
+					</div>
+					<button
+						type="button"
+						className="w-full text-[10px] py-1 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border-t border-gray-200 dark:border-gray-700"
+						onClick={() => { onRemoveColor(); setOpen(false); }}
+					>
+						Remove
+					</button>
+				</div>
+			)}
+		</>
+	);
+}
+
+// ── Floating table toolbar ──
+// Appears above the active table when cursor is inside one.
+function TableFloatingToolbar({ editorView }: { editorView: EditorView }) {
+	const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+	const toolbarRef = useRef<HTMLDivElement>(null);
+
+	// Position the floating toolbar above the table wrapper
+	useEffect(() => {
+		const { $from } = editorView.state.selection;
+		// Find the table node position
+		let tablePos = -1;
+		for (let d = $from.depth; d > 0; d--) {
+			if ($from.node(d).type.name === "table") {
+				tablePos = $from.before(d);
+				break;
+			}
+		}
+		if (tablePos < 0) { setPos(null); return; }
+
+		const domNode = editorView.nodeDOM(tablePos);
+		if (!domNode) { setPos(null); return; }
+		const el = domNode instanceof HTMLElement ? domNode : (domNode as any).parentElement;
+		if (!el) { setPos(null); return; }
+		// The tableWrapper div is the parent of the <table>
+		const wrapper = el.closest(".tableWrapper") || el;
+		const rect = wrapper.getBoundingClientRect();
+		const toolbarH = 36; // approximate height
+		setPos({
+			top: rect.top - toolbarH - 4,
+			left: rect.left,
+		});
+	}, [editorView, editorView.state.selection]);
+
+	if (!pos) return null;
+
+	const tableBtn = (opts: { icon: any; label: string; shortcut?: string; onClick: () => void; active?: boolean; destructive?: boolean }) => (
+		<button
+			type="button"
+			tabIndex={0}
+			className={`relative flex-shrink-0 w-7 h-7 flex items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ${
+				opts.active
+					? "bg-blue-500 text-white hover:bg-blue-600"
+					: opts.destructive
+						? "hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400"
+						: "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+			}`}
+			onClick={() => { opts.onClick(); editorView.focus(); }}
+			title={`${opts.label}${opts.shortcut ? ` (${opts.shortcut})` : ""}`}
+		>
+			<opts.icon size={15} />
+		</button>
+	);
+
+	// Read current cell's text alignment
+	const getCellTextAlign = () => {
+		const { $from } = editorView.state.selection;
+		for (let d = $from.depth; d > 0; d--) {
+			if ($from.node(d).type.name === "paragraph") {
+				return $from.node(d).attrs.textAlign || null;
+			}
+		}
+		return null;
+	};
+	const cellAlign = getCellTextAlign();
+
+	// Read current cell's attributes
+	const getCellAttr = (attr: string) => {
+		const { selection } = editorView.state;
+		if (selection instanceof CellSelection) {
+			let val: string | null = null;
+			selection.forEachCell((node) => {
+				if (val === null) val = node.attrs[attr] || null;
+			});
+			return val;
+		}
+		const { $from } = selection;
+		for (let d = $from.depth; d > 0; d--) {
+			const n = $from.node(d);
+			if (n.type.name === "table_cell" || n.type.name === "table_header") {
+				return n.attrs[attr] || null;
+			}
+		}
+		return null;
+	};
+	const cellBg = getCellAttr("background");
+	const cellBorder = getCellAttr("borderColor");
+	const cellBorderWidth = getCellAttr("borderWidth");
+	const cellPadding = getCellAttr("cellPadding");
+
+	return createPortal(
+		<div
+			ref={toolbarRef}
+			className="fixed z-[90] flex items-center gap-0.5 px-1.5 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg"
+			style={{ top: pos.top, left: pos.left }}
+			onMouseDown={(e) => e.preventDefault()} // prevent stealing focus from editor
+		>
+			<span className="text-[10px] text-blue-600 dark:text-blue-400 px-0.5 font-medium select-none">TABLE</span>
+
+			{/* Cell text alignment */}
+			{tableBtn({ icon: AlignLeft, label: "Cell Align Left", onClick: () => setCellContentAlign(null)(editorView.state, editorView.dispatch), active: cellAlign === null })}
+			{tableBtn({ icon: AlignCenter, label: "Cell Align Center", onClick: () => setCellContentAlign("center")(editorView.state, editorView.dispatch), active: cellAlign === "center" })}
+			{tableBtn({ icon: AlignRight, label: "Cell Align Right", onClick: () => setCellContentAlign("right")(editorView.state, editorView.dispatch), active: cellAlign === "right" })}
+
+			<div className="w-px h-4 bg-gray-300 dark:bg-gray-600" />
+
+			{/* Cell background color */}
+			<CellColorPicker
+				icon={PaintBucket}
+				label="Cell Background"
+				currentColor={cellBg}
+				onSelectColor={(color) => { setCellAttr("background", color)(editorView.state, editorView.dispatch); editorView.focus(); }}
+				onRemoveColor={() => { setCellAttr("background", null)(editorView.state, editorView.dispatch); editorView.focus(); }}
+			/>
+
+			{/* Cell border color */}
+			<CellColorPicker
+				icon={Grid3x3}
+				label="Cell Border"
+				currentColor={cellBorder}
+				onSelectColor={(color) => { setCellAttr("borderColor", color)(editorView.state, editorView.dispatch); editorView.focus(); }}
+				onRemoveColor={() => { setCellAttr("borderColor", null)(editorView.state, editorView.dispatch); editorView.focus(); }}
+			/>
+
+			{/* Border thickness */}
+			<select
+				className="h-6 text-[10px] bg-transparent border border-gray-300 dark:border-gray-600 rounded px-0.5 text-gray-700 dark:text-gray-300 outline-none"
+				value={cellBorderWidth || ""}
+				onChange={(e) => {
+					const v = e.target.value || null;
+					setCellAttr("borderWidth", v)(editorView.state, editorView.dispatch);
+					editorView.focus();
+				}}
+				title="Border Thickness"
+			>
+				<option value="">Border</option>
+				<option value="0">None</option>
+				<option value="1">1px</option>
+				<option value="2">2px</option>
+				<option value="3">3px</option>
+			</select>
+
+			{/* Cell padding */}
+			<select
+				className="h-6 text-[10px] bg-transparent border border-gray-300 dark:border-gray-600 rounded px-0.5 text-gray-700 dark:text-gray-300 outline-none"
+				value={cellPadding || ""}
+				onChange={(e) => {
+					const v = e.target.value || null;
+					setCellAttr("cellPadding", v)(editorView.state, editorView.dispatch);
+					editorView.focus();
+				}}
+				title="Cell Padding"
+			>
+				<option value="">Padding</option>
+				<option value="2">2px</option>
+				<option value="4">4px</option>
+				<option value="8">8px</option>
+				<option value="12">12px</option>
+				<option value="16">16px</option>
+			</select>
+
+			<div className="w-px h-4 bg-gray-300 dark:bg-gray-600" />
+
+			{/* Add/remove rows */}
+			{tableBtn({ icon: Plus, label: "Add Row After", shortcut: "Ctrl+Enter", onClick: () => addRowAfter(editorView.state, editorView.dispatch) })}
+			{tableBtn({ icon: Minus, label: "Delete Row", shortcut: "Shift+Delete", onClick: () => deleteRow(editorView.state, editorView.dispatch), destructive: true })}
+
+			<div className="w-px h-4 bg-gray-300 dark:bg-gray-600" />
+
+			{/* Add/remove columns */}
+			{tableBtn({ icon: Columns3, label: "Add Column After", shortcut: "Ctrl+Alt+Enter", onClick: () => addColumnAfter(editorView.state, editorView.dispatch) })}
+			{tableBtn({ icon: Minus, label: "Delete Column", shortcut: "Ctrl+Shift+Delete", onClick: () => deleteColumn(editorView.state, editorView.dispatch), destructive: true })}
+
+			<div className="w-px h-4 bg-gray-300 dark:bg-gray-600" />
+
+			{/* Fit columns & delete table */}
+			{tableBtn({ icon: Shrink, label: "Fit Column Widths", shortcut: "Ctrl+Shift+W", onClick: () => fitColumnWidths(editorView.state, editorView.dispatch, editorView) })}
+			{tableBtn({ icon: Trash2, label: "Delete Table", onClick: () => deleteTable(editorView.state, editorView.dispatch), destructive: true })}
+		</div>,
+		document.body,
 	);
 }
 
@@ -600,6 +878,54 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 
 			<div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
 
+			{/* Alignment group — table position when in table, text alignment otherwise */}
+			<div className="flex items-center gap-0.5">
+				{([
+					{ align: null, icon: AlignLeft, label: "Align Left", shortcut: "" },
+					{ align: "center" as const, icon: AlignCenter, label: "Align Center", shortcut: "Ctrl+Shift+E" },
+					{ align: "right" as const, icon: AlignRight, label: "Align Right", shortcut: "Ctrl+Shift+R" },
+				]).map(({ align, icon: Icon, label, shortcut }) => {
+					const inTbl = editorView ? isInTable(editorView.state) : false;
+					const currentAlign = (() => {
+						if (!editorView) return null;
+						const { $from } = editorView.state.selection;
+						if (inTbl) {
+							for (let d = $from.depth; d > 0; d--) {
+								if ($from.node(d).type.name === "table") {
+									return $from.node(d).attrs.textAlign || null;
+								}
+							}
+						}
+						for (let d = $from.depth; d > 0; d--) {
+							if ($from.node(d).type.name === "paragraph") {
+								return $from.node(d).attrs.textAlign || null;
+							}
+						}
+						return null;
+					})();
+					const isActive = currentAlign === align;
+					const cmd = inTbl ? setTableAlign(align) : setTextAlign(align);
+					return (
+						<button
+							key={label}
+							type="button"
+							tabIndex={0}
+							className={`relative flex-shrink-0 w-7 h-7 flex items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ${
+								isActive
+									? "bg-blue-500 text-white hover:bg-blue-600"
+									: "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+							}`}
+							onClick={executeCommand(cmd)}
+							title={`${inTbl ? "Table " : ""}${label}${shortcut ? ` (${shortcut})` : ""}`}
+						>
+							<Icon size={15} />
+						</button>
+					);
+				})}
+			</div>
+
+			<div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
+
 			{/* Colors & clear formatting group */}
 			<div className="flex items-center gap-0.5">
 				{/* Text Color Picker */}
@@ -778,6 +1104,11 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 			>
 				<BoxSelect size={14} />
 			</button>
+
+			{/* Floating table toolbar — rendered via portal above the active table */}
+			{editorView && isInTable(editorView.state) && (
+				<TableFloatingToolbar editorView={editorView} />
+			)}
 		</div>
 	);
 }

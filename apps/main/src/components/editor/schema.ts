@@ -18,6 +18,7 @@
 import { Schema, type Mark, type Node as PMNode } from "prosemirror-model";
 import OrderedMap from "orderedmap";
 import { addListNodes } from "prosemirror-schema-list";
+import { tableNodes } from "prosemirror-tables";
 
 // ============ Node Specs ============
 
@@ -35,18 +36,27 @@ const docSpec = {
 const paragraphSpec = {
 	content: "inline*",
 	group: "block",
+	attrs: {
+		textAlign: { default: null },
+	},
 	parseDOM: [
-		{ tag: "p" },
+		{ tag: "p", getAttrs: (node: HTMLElement) => ({ textAlign: node.style.textAlign || null }) },
 		// Parse headings as paragraphs (legacy content migration)
-		{ tag: "h1" },
-		{ tag: "h2" },
-		{ tag: "h3" },
-		{ tag: "h4" },
-		{ tag: "h5" },
-		{ tag: "h6" },
-		{ tag: "div" },
+		{ tag: "h1", getAttrs: (node: HTMLElement) => ({ textAlign: node.style.textAlign || null }) },
+		{ tag: "h2", getAttrs: (node: HTMLElement) => ({ textAlign: node.style.textAlign || null }) },
+		{ tag: "h3", getAttrs: (node: HTMLElement) => ({ textAlign: node.style.textAlign || null }) },
+		{ tag: "h4", getAttrs: (node: HTMLElement) => ({ textAlign: node.style.textAlign || null }) },
+		{ tag: "h5", getAttrs: (node: HTMLElement) => ({ textAlign: node.style.textAlign || null }) },
+		{ tag: "h6", getAttrs: (node: HTMLElement) => ({ textAlign: node.style.textAlign || null }) },
+		{ tag: "div", getAttrs: (node: HTMLElement) => ({ textAlign: node.style.textAlign || null }) },
 	],
-	toDOM: () => ["p", 0] as const,
+	toDOM: (node: PMNode) => {
+		const attrs: Record<string, string> = {};
+		if (node.attrs.textAlign) {
+			attrs.style = `text-align: ${node.attrs.textAlign}`;
+		}
+		return ["p", attrs, 0] as const;
+	},
 };
 
 /**
@@ -112,6 +122,41 @@ const codeBlockSpec = {
 };
 
 /**
+ * Details block (collapsible container)
+ * Renders as <details> with a <summary> + content body.
+ */
+const detailsSpec = {
+	content: "details_summary block+",
+	group: "block",
+	defining: true,
+	attrs: {
+		open: { default: true },
+	},
+	parseDOM: [
+		{
+			tag: "details",
+			getAttrs: (node: HTMLElement) => ({
+				open: node.hasAttribute("open"),
+			}),
+		},
+	],
+	toDOM: (node: PMNode) =>
+		node.attrs.open
+			? ["details", { open: "" }, 0] as const
+			: ["details", 0] as const,
+};
+
+/**
+ * Details summary line
+ */
+const detailsSummarySpec = {
+	content: "inline*",
+	defining: true,
+	parseDOM: [{ tag: "summary" }],
+	toDOM: () => ["summary", 0] as const,
+};
+
+/**
  * Text node
  */
 const textSpec = {
@@ -127,6 +172,7 @@ const imageSpec = {
 		src: {},
 		alt: { default: null },
 		title: { default: null },
+		width: { default: null },
 	},
 	group: "inline",
 	draggable: true,
@@ -137,18 +183,19 @@ const imageSpec = {
 				src: node.getAttribute("src"),
 				alt: node.getAttribute("alt"),
 				title: node.getAttribute("title"),
+				width: node.getAttribute("width") || node.style.width || null,
 			}),
 		},
 	],
-	toDOM: (node: PMNode) =>
-		[
-			"img",
-			{
-				src: node.attrs.src as string,
-				alt: node.attrs.alt as string,
-				title: node.attrs.title as string,
-			},
-		] as const,
+	toDOM: (node: PMNode) => {
+		const attrs: Record<string, string> = {
+			src: node.attrs.src as string,
+		};
+		if (node.attrs.alt) attrs.alt = node.attrs.alt as string;
+		if (node.attrs.title) attrs.title = node.attrs.title as string;
+		if (node.attrs.width) attrs.style = `width: ${node.attrs.width}`;
+		return ["img", attrs] as const;
+	},
 };
 
 // ============ Mark Specs ============
@@ -331,6 +378,8 @@ const baseNodes = OrderedMap.from({
 	code_section: codeSectionSpec,
 	horizontal_rule: horizontalRuleSpec,
 	code_block: codeBlockSpec,
+	details: detailsSpec,
+	details_summary: detailsSummarySpec,
 	text: textSpec,
 	image: imageSpec,
 });
@@ -341,6 +390,126 @@ const nodesWithLists = addListNodes(
 	"paragraph block*",
 	"block"
 );
+
+// Add table nodes (with alignment support on the table node)
+const rawTableNodes = tableNodes({
+	tableGroup: "block",
+	cellContent: "block+",
+	cellAttributes: {
+		background: {
+			default: null,
+			getFromDOM(dom: HTMLElement) {
+				return dom.getAttribute("data-bg") || dom.style.backgroundColor || null;
+			},
+			setDOMAttr(value: unknown, attrs: Record<string, unknown>) {
+				if (value && typeof value === "string") {
+					attrs.style = ((attrs.style as string) || "") + `background-color: ${value};`;
+					attrs["data-bg"] = value;
+				}
+			},
+		},
+		borderColor: {
+			default: null,
+			getFromDOM(dom: HTMLElement) {
+				return dom.getAttribute("data-border-color") || null;
+			},
+			setDOMAttr(value: unknown, attrs: Record<string, unknown>) {
+				if (value && typeof value === "string") {
+					attrs.style = ((attrs.style as string) || "") +
+						`border-style: solid; border-color: ${value};`;
+					attrs["data-border-color"] = value;
+				}
+			},
+		},
+		borderWidth: {
+			default: null,
+			getFromDOM(dom: HTMLElement) {
+				return dom.getAttribute("data-border-width") || null;
+			},
+			setDOMAttr(value: unknown, attrs: Record<string, unknown>) {
+				if (value !== null && value !== undefined) {
+					const w = Number(value);
+					attrs.style = ((attrs.style as string) || "") +
+						`border-width: ${w}px; border-style: ${w === 0 ? "none" : "solid"};`;
+					attrs["data-border-width"] = String(value);
+				}
+			},
+		},
+		cellPadding: {
+			default: null,
+			getFromDOM(dom: HTMLElement) {
+				return dom.getAttribute("data-cell-padding") || null;
+			},
+			setDOMAttr(value: unknown, attrs: Record<string, unknown>) {
+				if (value !== null && value !== undefined) {
+					attrs.style = ((attrs.style as string) || "") + `padding: ${value}px;`;
+					attrs["data-cell-padding"] = String(value);
+				}
+			},
+		},
+	},
+});
+
+// Override the table spec to support text-align (left/center/right)
+const tableSpecWithAlign = {
+	...rawTableNodes.table,
+	attrs: {
+		...((rawTableNodes.table as any).attrs || {}),
+		textAlign: { default: null },
+	},
+	parseDOM: [
+		{
+			tag: "table",
+			getAttrs: (node: HTMLElement) => {
+				const align = node.style.textAlign
+					|| node.getAttribute("data-align")
+					|| (node.parentElement as HTMLElement | null)?.style.textAlign
+					|| null;
+				return { textAlign: align || null };
+			},
+		},
+	],
+	toDOM: (node: PMNode) => {
+		const attrs: Record<string, string> = {};
+		if (node.attrs.textAlign) {
+			attrs.style = `text-align: ${node.attrs.textAlign}`;
+			attrs["data-align"] = node.attrs.textAlign;
+		}
+		return ["table", attrs, ["tbody", 0]] as const;
+	},
+};
+
+// Override table_row to support minHeight (for row resizing)
+const tableRowWithHeight = {
+	...rawTableNodes.table_row,
+	attrs: {
+		...((rawTableNodes.table_row as any).attrs || {}),
+		minHeight: { default: null },
+	},
+	parseDOM: [
+		{
+			tag: "tr",
+			getAttrs: (dom: HTMLElement) => {
+				const h = dom.getAttribute("data-min-height");
+				return { minHeight: h ? Number(h) : null };
+			},
+		},
+	],
+	toDOM: (node: PMNode) => {
+		const attrs: Record<string, string> = {};
+		if (node.attrs.minHeight) {
+			attrs.style = `min-height: ${node.attrs.minHeight}px`;
+			attrs["data-min-height"] = String(node.attrs.minHeight);
+		}
+		return ["tr", attrs, 0] as const;
+	},
+};
+
+const nodesWithTables = nodesWithLists.append({
+	...rawTableNodes,
+	table: tableSpecWithAlign,
+	table_row: tableRowWithHeight,
+});
 
 // All marks - order matters! Outer marks first.
 const allMarks = {
@@ -365,7 +534,7 @@ const allMarks = {
  * Line-based schema - no headings, just paragraphs with marks
  */
 export const editorSchema = new Schema({
-	nodes: nodesWithLists,
+	nodes: nodesWithTables,
 	marks: allMarks,
 });
 

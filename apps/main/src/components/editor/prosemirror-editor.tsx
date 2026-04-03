@@ -23,7 +23,13 @@ import { openLinkAtCursor } from "./plugins/autolink";
 import { DIRECT_TEXT_COLORS, DIRECT_HIGHLIGHT_COLORS } from "./format-constants";
 import { CodeBlockView,  detectLanguage } from "./codemirror-nodeview";
 import { editorSchema } from "./schema";
+import { DetailsNodeView } from "./plugins/details-nodeview";
+import { ImageNodeView } from "./plugins/image-nodeview";
+import { insertTableWithSize, insertDetails } from "./prosemirror-setup";
+import { TableInsertDialog } from "./table-insert-dialog";
+import { saveAndInsertImage, extensionFromMime, extensionFromFilename } from "./image-utils";
 import type { EditorKeybindings } from "@/config/default-editor-keybindings";
+import { open } from "@tauri-apps/plugin-dialog";
 import "prosemirror-view/style/prosemirror.css";
 import "@/styles/prosemirror.css";
 
@@ -92,6 +98,8 @@ export function ProseMirrorEditor({
 	const editorKeybindingsRef = useRef<EditorKeybindings>(editorKeybindings);
 	const [showSearch, setShowSearch] = useState(false);
 	const [activePicker, setActivePicker] = useState<FormatPickerType | null>(null);
+	const [errorToast, setErrorToast] = useState<string | null>(null);
+	const [showTableDialog, setShowTableDialog] = useState(false);
 	const openPickerRef = useRef<(type: FormatPickerType) => void>(undefined);
 	openPickerRef.current = (type) => setActivePicker(type);
 
@@ -102,6 +110,11 @@ export function ProseMirrorEditor({
 
 	const handleSearchClose = useCallback(() => {
 		setShowSearch(false);
+	}, []);
+
+	const showError = useCallback((message: string) => {
+		setErrorToast(message);
+		setTimeout(() => setErrorToast(null), 4000);
 	}, []);
 
 	// Keep refs up to date
@@ -263,6 +276,8 @@ export function ProseMirrorEditor({
 			editable: () => !readOnly,
 			nodeViews: {
 				code_block: (node, view, getPos) => new CodeBlockView(node, view, getPos),
+				details: (node, view, getPos) => new DetailsNodeView(node, view, getPos),
+				image: (node, view, getPos) => new ImageNodeView(node, view, getPos),
 			},
 			// Custom scroll handling: allow vertical scrolling but prevent automatic
 			// horizontal scrolling in no-wrap mode (which would hide left content)
@@ -306,6 +321,95 @@ export function ProseMirrorEditor({
 					.replace(/\s*color:\s*rgb\(0,\s*0,\s*0\);?/gi, "")
 					.replace(/\s*color:\s*#000000;?/gi, "")
 					.replace(/\s*style="\s*"/g, "");
+			},
+			// Image paste: intercept clipboard image data or file paths
+			handlePaste(pasteView, event) {
+				const items = event.clipboardData?.items;
+				if (!items) return false;
+
+				// 1. Direct image MIME in clipboard (e.g. screenshot)
+				for (const item of items) {
+					if (item.type.startsWith("image/")) {
+						const ext = extensionFromMime(item.type);
+						if (!ext) continue;
+
+						const blob = item.getAsFile();
+						if (!blob) continue;
+
+						event.preventDefault();
+						blob.arrayBuffer().then((buf) => {
+							saveAndInsertImage(
+								pasteView,
+								mySchema,
+								new Uint8Array(buf),
+								ext,
+							);
+						});
+						return true;
+					}
+				}
+
+				// 2. File path in clipboard (e.g. copied from file manager)
+				const text = event.clipboardData?.getData("text/plain")?.trim();
+				if (text) {
+					// Handle file:// URIs (from file manager copy)
+					const filePath = text.startsWith("file://")
+						? decodeURIComponent(text.replace(/^file:\/\//, ""))
+						: text;
+					const ext = extensionFromFilename(filePath);
+					if (ext && filePath.startsWith("/")) {
+						event.preventDefault();
+						invoke<number[]>("read_image_file", { path: filePath }).then((bytes) => {
+							saveAndInsertImage(pasteView, mySchema, new Uint8Array(bytes), ext);
+						}).catch((err) => {
+							console.error("Failed to read image from path:", err);
+							showError(`Failed to read image: ${err}`);
+						});
+						return true;
+					}
+				}
+
+				return false;
+			},
+			// Image drop: intercept dropped image files from external sources
+			handleDrop(dropView, event) {
+				// Skip internal drags (ProseMirror moving nodes within the editor)
+				if (dropView.dragging) return false;
+
+				const files = event.dataTransfer?.files;
+				if (!files || files.length === 0) return false;
+
+				for (const file of files) {
+					// Check MIME type first, fall back to extension (file managers like Thunar may not set MIME)
+					const ext = file.type.startsWith("image/")
+						? extensionFromMime(file.type)
+						: extensionFromFilename(file.name);
+					if (!ext) continue;
+
+					event.preventDefault();
+					// Move cursor to drop position
+					const pos = dropView.posAtCoords({
+						left: event.clientX,
+						top: event.clientY,
+					});
+					if (pos) {
+						const tr = dropView.state.tr.setSelection(
+							TextSelection.create(dropView.state.doc, pos.pos),
+						);
+						dropView.dispatch(tr);
+					}
+
+					file.arrayBuffer().then((buf) => {
+						saveAndInsertImage(
+							dropView,
+							mySchema,
+							new Uint8Array(buf),
+							ext,
+						);
+					});
+					return true;
+				}
+				return false;
 			},
 			dispatchTransaction(transaction) {
 				const newState = view.state.apply(transaction);
@@ -419,6 +523,42 @@ export function ProseMirrorEditor({
 			const kb = editorKeybindingsRef.current;
 			const v = viewRef.current;
 			if (!v) return;
+
+			// Insert table (Ctrl+Shift+T)
+			if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "t" || e.key === "T") && !e.altKey) {
+				e.preventDefault(); e.stopPropagation();
+				setShowTableDialog(true);
+				return;
+			}
+
+			// Insert collapsible details block (Ctrl+Shift+D)
+			if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "d" || e.key === "D") && !e.altKey) {
+				e.preventDefault(); e.stopPropagation();
+				insertDetails(mySchema)(v.state, v.dispatch);
+				return;
+			}
+
+			// Insert image from file (Ctrl+Alt+I)
+			if ((e.ctrlKey || e.metaKey) && e.altKey && (e.key === "i" || e.key === "I") && !e.shiftKey) {
+				e.preventDefault(); e.stopPropagation();
+				(async () => {
+					try {
+						const filePath = await open({
+							multiple: false,
+							filters: [{ name: "Images", extensions: ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp"] }],
+						});
+						if (!filePath) return;
+
+						const bytes = await invoke<number[]>("read_image_file", { path: filePath });
+						const ext = filePath.split(".").pop()?.toLowerCase() || "png";
+						await saveAndInsertImage(v, mySchema, new Uint8Array(bytes), ext);
+					} catch (err) {
+						console.error("Failed to insert image:", err);
+						showError(`Failed to insert image: ${err}`);
+					}
+				})();
+				return;
+			}
 
 			// Format pickers (Ctrl+Shift+1-4)
 			if (matchesPmKey(e, kb.textColorPicker.key)) {
@@ -573,6 +713,27 @@ export function ProseMirrorEditor({
 					schema={mySchema}
 					onClose={() => {
 						setActivePicker(null);
+						viewRef.current?.focus();
+					}}
+				/>
+			)}
+			{errorToast && (
+				<div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-lg text-sm z-50 max-w-md truncate">
+					{errorToast}
+				</div>
+			)}
+			{showTableDialog && (
+				<TableInsertDialog
+					onInsert={(rows, cols) => {
+						setShowTableDialog(false);
+						const v = viewRef.current;
+						if (v) {
+							insertTableWithSize(mySchema, rows, cols)(v.state, v.dispatch);
+							v.focus();
+						}
+					}}
+					onClose={() => {
+						setShowTableDialog(false);
 						viewRef.current?.focus();
 					}}
 				/>

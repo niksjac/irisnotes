@@ -464,6 +464,142 @@ async fn get_app_info(app_handle: tauri::AppHandle) -> Result<serde_json::Value,
     }))
 }
 
+/// Get the assets directory path
+#[tauri::command]
+async fn get_assets_dir(app_handle: tauri::AppHandle) -> Result<String, String> {
+    let data_dir = get_data_dir(&app_handle)?;
+    let assets_dir = data_dir.join("assets");
+    std::fs::create_dir_all(&assets_dir)
+        .map_err(|e| format!("Failed to create assets directory: {}", e))?;
+    Ok(assets_dir.to_string_lossy().to_string())
+}
+
+/// Save image data to the assets directory, returning the filename.
+/// The image is saved as `{uuid}.{ext}` under the assets dir.
+#[tauri::command]
+async fn save_image_asset(
+    app_handle: tauri::AppHandle,
+    data: Vec<u8>,
+    extension: String,
+) -> Result<String, String> {
+    // Validate extension (only allow image types)
+    let ext = extension.to_lowercase();
+    let allowed = ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico"];
+    if !allowed.contains(&ext.as_str()) {
+        return Err(format!("Unsupported image extension: {}", ext));
+    }
+
+    let data_dir = get_data_dir(&app_handle)?;
+    let assets_dir = data_dir.join("assets");
+    std::fs::create_dir_all(&assets_dir)
+        .map_err(|e| format!("Failed to create assets directory: {}", e))?;
+
+    // Generate a unique filename
+    let filename = format!(
+        "{:x}.{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos(),
+        ext
+    );
+    let file_path = assets_dir.join(&filename);
+
+    std::fs::write(&file_path, &data)
+        .map_err(|e| format!("Failed to write image: {}", e))?;
+
+    Ok(filename)
+}
+
+/// Read an image file from an arbitrary path and return its bytes.
+/// Only allows known image extensions.
+#[tauri::command]
+async fn read_image_file(path: String) -> Result<Vec<u8>, String> {
+    let p = std::path::Path::new(&path);
+    let ext = p.extension()
+        .and_then(|e| e.to_str())
+        .map(|e| e.to_lowercase())
+        .unwrap_or_default();
+    let allowed = ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico"];
+    if !allowed.contains(&ext.as_str()) {
+        return Err(format!("Not a supported image type: {}", ext));
+    }
+    std::fs::read(&path)
+        .map_err(|e| format!("Failed to read image file: {}", e))
+}
+
+/// Remove asset files not referenced by any note's content.
+/// Returns the number of deleted files.
+#[tauri::command]
+async fn cleanup_orphaned_assets(app_handle: tauri::AppHandle) -> Result<u32, String> {
+    use rusqlite::Connection;
+    use std::collections::HashSet;
+
+    let data_dir = get_data_dir(&app_handle)?;
+    let db_path = data_dir.join("notes.db");
+    let assets_dir = data_dir.join("assets");
+
+    if !assets_dir.exists() {
+        return Ok(0);
+    }
+
+    // 1. Collect all asset filenames referenced in any note's content
+    let conn = Connection::open(&db_path)
+        .map_err(|e| format!("Failed to open database: {}", e))?;
+
+    let mut stmt = conn
+        .prepare("SELECT content FROM items WHERE type = 'note' AND content IS NOT NULL")
+        .map_err(|e| format!("Failed to prepare query: {}", e))?;
+
+    let mut referenced: HashSet<String> = HashSet::new();
+    let rows = stmt
+        .query_map([], |row| row.get::<_, String>(0))
+        .map_err(|e| format!("Failed to query notes: {}", e))?;
+
+    for row in rows {
+        if let Ok(content) = row {
+            // Find all asset://localhost/{filename} references
+            let prefix = "asset://localhost/";
+            let mut search_from = 0;
+            while let Some(start) = content[search_from..].find(prefix) {
+                let abs_start = search_from + start + prefix.len();
+                // Filename ends at next quote or whitespace
+                let end = content[abs_start..]
+                    .find(|c: char| c == '"' || c == '\'' || c == ' ' || c == '<' || c == '>')
+                    .map(|i| abs_start + i)
+                    .unwrap_or(content.len());
+                let filename = &content[abs_start..end];
+                if !filename.is_empty() {
+                    referenced.insert(filename.to_string());
+                }
+                search_from = end;
+            }
+        }
+    }
+
+    // 2. Walk the assets directory and delete files not in the referenced set
+    let mut deleted = 0u32;
+    let entries = std::fs::read_dir(&assets_dir)
+        .map_err(|e| format!("Failed to read assets directory: {}", e))?;
+
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
+        let path = entry.path();
+        if !path.is_file() {
+            continue;
+        }
+        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+            if !referenced.contains(name) {
+                if std::fs::remove_file(&path).is_ok() {
+                    deleted += 1;
+                }
+            }
+        }
+    }
+
+    Ok(deleted)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -492,6 +628,60 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_global_shortcut::Builder::default().build())
+        .register_uri_scheme_protocol("asset", |_app, request| {
+            // Serve images from the assets directory
+            // URL format: asset://localhost/{filename}
+            let uri = request.uri();
+            let path_str = uri.path().trim_start_matches('/');
+
+            // Sanitise: reject path traversal
+            if path_str.contains("..") || path_str.contains('/') || path_str.contains('\\') {
+                return tauri::http::Response::builder()
+                    .status(400)
+                    .body(Vec::new())
+                    .unwrap();
+            }
+
+            // Resolve assets dir
+            let data_dir = if is_development_mode() {
+                let exe_path = std::env::current_exe().unwrap_or_default();
+                let mut root = exe_path.parent().unwrap_or(std::path::Path::new(".")).to_path_buf();
+                loop {
+                    if root.join("pnpm-workspace.yaml").exists() { break; }
+                    if !root.pop() { root = std::env::current_dir().unwrap_or_default(); break; }
+                }
+                root.join("dev")
+            } else {
+                dirs::config_dir().unwrap_or_default().join("irisnotes")
+            };
+            let file_path = data_dir.join("assets").join(path_str);
+
+            match std::fs::read(&file_path) {
+                Ok(data) => {
+                    let mime = match file_path.extension().and_then(|e| e.to_str()) {
+                        Some("png") => "image/png",
+                        Some("jpg") | Some("jpeg") => "image/jpeg",
+                        Some("gif") => "image/gif",
+                        Some("webp") => "image/webp",
+                        Some("svg") => "image/svg+xml",
+                        Some("bmp") => "image/bmp",
+                        Some("ico") => "image/x-icon",
+                        _ => "application/octet-stream",
+                    };
+                    tauri::http::Response::builder()
+                        .status(200)
+                        .header("Content-Type", mime)
+                        .body(data)
+                        .unwrap()
+                }
+                Err(_) => {
+                    tauri::http::Response::builder()
+                        .status(404)
+                        .body(Vec::new())
+                        .unwrap()
+                }
+            }
+        })
         .setup(|app| {
             // Initialize database if it doesn't exist
             if let Err(e) = init_database(app.handle()) {
@@ -523,6 +713,10 @@ pub fn run() {
             open_app_config_folder,
             get_database_path,
             get_app_info,
+            get_assets_dir,
+            save_image_asset,
+            read_image_file,
+            cleanup_orphaned_assets,
             read_clipboard_target,
             list_clipboard_targets,
             read_vscode_editor_data
