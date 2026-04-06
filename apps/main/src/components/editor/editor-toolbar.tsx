@@ -7,8 +7,8 @@ import type { MarkType, NodeType } from "prosemirror-model";
 import { useAtom, useAtomValue } from "jotai";
 import { editorSettingsAtom } from "@/atoms/settings";
 import { EDITOR_SETTINGS_CONSTRAINTS } from "@/types/editor-settings";
-import { setTextAlign, setTableAlign, setCellContentAlign, fitColumnWidths } from "./format-commands";
-import { isInTable, addRowAfter, addColumnAfter, deleteRow, deleteColumn, deleteTable, setCellAttr, CellSelection } from "prosemirror-tables";
+import { setTextAlign, setTableAlign, setCellContentAlign, fitColumnWidths, resetTableFormatting } from "./format-commands";
+import { isInTable, addRowAfter, addColumnAfter, deleteRow, deleteColumn, deleteTable, setCellAttr, CellSelection, mergeCells, splitCell } from "prosemirror-tables";
 import {
 	PRESET_COLORS,
 	HIGHLIGHT_COLORS,
@@ -36,13 +36,19 @@ import {
 	AlignLeft,
 	AlignCenter,
 	AlignRight,
+	BetweenHorizontalEnd,
+	BetweenVerticalEnd,
+	Rows3,
 	Columns3,
-	Plus,
-	Minus,
 	Trash2,
 	Shrink,
 	PaintBucket,
 	Grid3x3,
+	RotateCcw,
+	Maximize,
+	Table,
+	TableCellsMerge,
+	TableCellsSplit,
 } from "lucide-react";
 
 interface EditorToolbarProps {
@@ -237,16 +243,60 @@ function CellColorPicker({ icon: Icon, label, currentColor, onSelectColor, onRem
 	);
 }
 
+/**
+ * Toggle display mode on all images in the current table cell.
+ * Cycles: null (inline) → "cover" (edge-to-edge) → null
+ */
+function toggleCellImageCover(view: EditorView) {
+	const { state } = view;
+	const { $from } = state.selection;
+	const tr = state.tr;
+	let found = false;
+
+	// Find the cell ancestor
+	for (let d = $from.depth; d > 0; d--) {
+		const n = $from.node(d);
+		if (n.type.name === "table_cell" || n.type.name === "table_header") {
+			const cellStart = $from.start(d);
+			n.descendants((node, childPos) => {
+				if (node.type.name === "image") {
+					const imgPos = cellStart + childPos;
+					const newDisplay = node.attrs.display === "cover" ? null : "cover";
+					tr.setNodeMarkup(imgPos, undefined, {
+						...node.attrs,
+						display: newDisplay,
+						width: newDisplay === "cover" ? null : node.attrs.width,
+					});
+					found = true;
+				}
+			});
+			break;
+		}
+	}
+
+	if (found) {
+		view.dispatch(tr.scrollIntoView());
+	}
+}
+
 // ── Floating table toolbar ──
-// Appears above the active table when cursor is inside one.
-function TableFloatingToolbar({ editorView }: { editorView: EditorView }) {
+// Shown when toggled via the toolbar button or F2. Positioned above the active table.
+// Keyboard: Alt+key hotkeys when visible, Arrow keys to navigate between buttons, Escape to close.
+function TableFloatingToolbar({ editorView, onClose, focused }: { editorView: EditorView; onClose: () => void; focused: boolean }) {
 	const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 	const toolbarRef = useRef<HTMLDivElement>(null);
 
-	// Position the floating toolbar above the table wrapper
+	// When `focused` becomes true, focus the first button
+	useEffect(() => {
+		if (focused && toolbarRef.current) {
+			const first = toolbarRef.current.querySelector<HTMLElement>("button, select");
+			first?.focus();
+		}
+	}, [focused]);
+
+	// Position the floating toolbar above the table
 	useEffect(() => {
 		const { $from } = editorView.state.selection;
-		// Find the table node position
 		let tablePos = -1;
 		for (let d = $from.depth; d > 0; d--) {
 			if ($from.node(d).type.name === "table") {
@@ -258,24 +308,104 @@ function TableFloatingToolbar({ editorView }: { editorView: EditorView }) {
 
 		const domNode = editorView.nodeDOM(tablePos);
 		if (!domNode) { setPos(null); return; }
-		const el = domNode instanceof HTMLElement ? domNode : (domNode as any).parentElement;
-		if (!el) { setPos(null); return; }
-		// The tableWrapper div is the parent of the <table>
-		const wrapper = el.closest(".tableWrapper") || el;
-		const rect = wrapper.getBoundingClientRect();
-		const toolbarH = 36; // approximate height
-		setPos({
-			top: rect.top - toolbarH - 4,
-			left: rect.left,
-		});
+		const wrapperEl = domNode instanceof HTMLElement ? domNode : (domNode as any).parentElement;
+		if (!wrapperEl) { setPos(null); return; }
+		const tableEl = wrapperEl.querySelector("table") || wrapperEl;
+		const tableRect = tableEl.getBoundingClientRect();
+		const toolbarH = toolbarRef.current?.getBoundingClientRect().height || 100;
+		setPos({ top: tableRect.top - toolbarH - 4, left: tableRect.left });
 	}, [editorView, editorView.state.selection]);
+
+	// Keyboard shortcuts (Alt+key) active while toolbar is visible, plus Escape to close
+	useEffect(() => {
+		const handler = (e: KeyboardEvent) => {
+			if (e.key === "Escape") {
+				onClose();
+				editorView.focus();
+				return;
+			}
+			// Alt+key shortcuts (no Ctrl, no Shift unless specified)
+			if (!e.altKey || e.ctrlKey || e.metaKey) return;
+			const key = e.key.toLowerCase();
+			const shiftActions: Record<string, () => void> = {
+				d: () => deleteColumn(editorView.state, editorView.dispatch),
+			};
+			const actions: Record<string, () => void> = {
+				l: () => setCellContentAlign(null)(editorView.state, editorView.dispatch),
+				c: () => setCellContentAlign("center")(editorView.state, editorView.dispatch),
+				r: () => setCellContentAlign("right")(editorView.state, editorView.dispatch),
+				m: () => mergeCells(editorView.state, editorView.dispatch),
+				s: () => splitCell(editorView.state, editorView.dispatch),
+				a: () => addRowAfter(editorView.state, editorView.dispatch),
+				d: () => deleteRow(editorView.state, editorView.dispatch),
+				o: () => addColumnAfter(editorView.state, editorView.dispatch),
+				f: () => fitColumnWidths(editorView.state, editorView.dispatch, editorView),
+				t: () => resetTableFormatting()(editorView.state, editorView.dispatch),
+				i: () => toggleCellImageCover(editorView),
+				x: () => deleteTable(editorView.state, editorView.dispatch),
+			};
+			const action = e.shiftKey ? shiftActions[key] : actions[key];
+			if (action) {
+				e.preventDefault();
+				e.stopPropagation();
+				action();
+				editorView.focus();
+			}
+		};
+		document.addEventListener("keydown", handler, true);
+		return () => document.removeEventListener("keydown", handler, true);
+	}, [onClose, editorView]);
+
+	// Arrow key navigation: Left/Right move linearly, Up/Down move to closest item in row above/below
+	const handleToolbarKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key !== "ArrowRight" && e.key !== "ArrowLeft" && e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+		const focusable = toolbarRef.current?.querySelectorAll<HTMLElement>("button, select");
+		if (!focusable || focusable.length === 0) return;
+		const items = Array.from(focusable);
+		const current = items.indexOf(document.activeElement as HTMLElement);
+		if (current === -1) return;
+		e.preventDefault();
+
+		if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+			const next = e.key === "ArrowRight"
+				? (current < items.length - 1 ? current + 1 : 0)
+				: (current > 0 ? current - 1 : items.length - 1);
+			items[next]?.focus();
+		} else {
+			// Up/Down: find the closest item in the row above or below by x-position
+			const currentEl = items[current];
+			if (!currentEl) return;
+			const curRect = currentEl.getBoundingClientRect();
+			const curCx = curRect.left + curRect.width / 2;
+			const curCy = curRect.top + curRect.height / 2;
+			const direction = e.key === "ArrowDown" ? 1 : -1;
+
+			let best: HTMLElement | null = null;
+			let bestDist = Infinity;
+			for (const item of items) {
+				if (item === items[current]) continue;
+				const rect = item.getBoundingClientRect();
+				const cy = rect.top + rect.height / 2;
+				// Must be in the correct direction (below for Down, above for Up)
+				if (direction > 0 ? cy <= curCy + 2 : cy >= curCy - 2) continue;
+				const dx = (rect.left + rect.width / 2) - curCx;
+				const dy = cy - curCy;
+				const dist = dx * dx + dy * dy;
+				if (dist < bestDist) {
+					bestDist = dist;
+					best = item;
+				}
+			}
+			best?.focus();
+		}
+	};
 
 	if (!pos) return null;
 
 	const tableBtn = (opts: { icon: any; label: string; shortcut?: string; onClick: () => void; active?: boolean; destructive?: boolean }) => (
 		<button
 			type="button"
-			tabIndex={0}
+			tabIndex={-1}
 			className={`relative flex-shrink-0 w-7 h-7 flex items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ${
 				opts.active
 					? "bg-blue-500 text-white hover:bg-blue-600"
@@ -329,91 +459,102 @@ function TableFloatingToolbar({ editorView }: { editorView: EditorView }) {
 	return createPortal(
 		<div
 			ref={toolbarRef}
-			className="fixed z-[90] flex items-center gap-0.5 px-1.5 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg"
+			role="toolbar"
+			aria-label="Table formatting"
+			tabIndex={0}
+			className="fixed z-[90] flex flex-col gap-0.5 p-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-w-[calc(100vw-2rem)] outline-none focus-within:border-blue-500 focus-within:shadow-[0_0_0_1px_rgba(59,130,246,0.5)]"
 			style={{ top: pos.top, left: pos.left }}
-			onMouseDown={(e) => e.preventDefault()} // prevent stealing focus from editor
+			onMouseDown={(e) => e.preventDefault()}
+			onKeyDown={handleToolbarKeyDown}
 		>
-			<span className="text-[10px] text-blue-600 dark:text-blue-400 px-0.5 font-medium select-none">TABLE</span>
+			{/* Row 1: Cell formatting */}
+			<div className="flex items-center gap-0.5 flex-wrap">
+				<span className="text-[10px] text-blue-600 dark:text-blue-400 px-1 font-medium select-none">TABLE</span>
 
-			{/* Cell text alignment */}
-			{tableBtn({ icon: AlignLeft, label: "Cell Align Left", onClick: () => setCellContentAlign(null)(editorView.state, editorView.dispatch), active: cellAlign === null })}
-			{tableBtn({ icon: AlignCenter, label: "Cell Align Center", onClick: () => setCellContentAlign("center")(editorView.state, editorView.dispatch), active: cellAlign === "center" })}
-			{tableBtn({ icon: AlignRight, label: "Cell Align Right", onClick: () => setCellContentAlign("right")(editorView.state, editorView.dispatch), active: cellAlign === "right" })}
+				{tableBtn({ icon: AlignLeft, label: "Cell Align Left", shortcut: "Alt+L", onClick: () => setCellContentAlign(null)(editorView.state, editorView.dispatch), active: !cellAlign || cellAlign === "left" })}
+				{tableBtn({ icon: AlignCenter, label: "Cell Align Center", shortcut: "Alt+C", onClick: () => setCellContentAlign("center")(editorView.state, editorView.dispatch), active: cellAlign === "center" })}
+				{tableBtn({ icon: AlignRight, label: "Cell Align Right", shortcut: "Alt+R", onClick: () => setCellContentAlign("right")(editorView.state, editorView.dispatch), active: cellAlign === "right" })}
 
-			<div className="w-px h-4 bg-gray-300 dark:bg-gray-600" />
+				<div className="w-px h-4 bg-gray-300 dark:bg-gray-600" />
 
-			{/* Cell background color */}
-			<CellColorPicker
-				icon={PaintBucket}
-				label="Cell Background"
-				currentColor={cellBg}
-				onSelectColor={(color) => { setCellAttr("background", color)(editorView.state, editorView.dispatch); editorView.focus(); }}
-				onRemoveColor={() => { setCellAttr("background", null)(editorView.state, editorView.dispatch); editorView.focus(); }}
-			/>
+				<CellColorPicker
+					icon={PaintBucket}
+					label="Cell Background"
+					currentColor={cellBg}
+					onSelectColor={(color) => { setCellAttr("background", color)(editorView.state, editorView.dispatch); editorView.focus(); }}
+					onRemoveColor={() => { setCellAttr("background", null)(editorView.state, editorView.dispatch); editorView.focus(); }}
+				/>
+				<CellColorPicker
+					icon={Grid3x3}
+					label="Cell Border"
+					currentColor={cellBorder}
+					onSelectColor={(color) => { setCellAttr("borderColor", color)(editorView.state, editorView.dispatch); editorView.focus(); }}
+					onRemoveColor={() => { setCellAttr("borderColor", null)(editorView.state, editorView.dispatch); editorView.focus(); }}
+				/>
 
-			{/* Cell border color */}
-			<CellColorPicker
-				icon={Grid3x3}
-				label="Cell Border"
-				currentColor={cellBorder}
-				onSelectColor={(color) => { setCellAttr("borderColor", color)(editorView.state, editorView.dispatch); editorView.focus(); }}
-				onRemoveColor={() => { setCellAttr("borderColor", null)(editorView.state, editorView.dispatch); editorView.focus(); }}
-			/>
+				<select
+					className="h-6 text-[10px] bg-transparent border border-gray-300 dark:border-gray-600 rounded px-0.5 text-gray-700 dark:text-gray-300 outline-none"
+					tabIndex={-1}
+					value={cellBorderWidth || ""}
+					onMouseDown={(e) => e.stopPropagation()}
+					onChange={(e) => {
+						const v = e.target.value || null;
+						setCellAttr("borderWidth", v)(editorView.state, editorView.dispatch);
+						editorView.focus();
+					}}
+					title="Border Width"
+				>
+					<option value="">Border</option>
+					<option value="0">None</option>
+					<option value="1">1px</option>
+					<option value="2">2px</option>
+					<option value="3">3px</option>
+				</select>
 
-			{/* Border thickness */}
-			<select
-				className="h-6 text-[10px] bg-transparent border border-gray-300 dark:border-gray-600 rounded px-0.5 text-gray-700 dark:text-gray-300 outline-none"
-				value={cellBorderWidth || ""}
-				onChange={(e) => {
-					const v = e.target.value || null;
-					setCellAttr("borderWidth", v)(editorView.state, editorView.dispatch);
-					editorView.focus();
-				}}
-				title="Border Thickness"
-			>
-				<option value="">Border</option>
-				<option value="0">None</option>
-				<option value="1">1px</option>
-				<option value="2">2px</option>
-				<option value="3">3px</option>
-			</select>
+				<select
+					className="h-6 text-[10px] bg-transparent border border-gray-300 dark:border-gray-600 rounded px-0.5 text-gray-700 dark:text-gray-300 outline-none"
+					tabIndex={-1}
+					value={cellPadding || ""}
+					onMouseDown={(e) => e.stopPropagation()}
+					onChange={(e) => {
+						const v = e.target.value || null;
+						setCellAttr("cellPadding", v)(editorView.state, editorView.dispatch);
+						editorView.focus();
+					}}
+					title="Cell Padding"
+				>
+					<option value="">Padding</option>
+					<option value="0">0px</option>
+					<option value="2">2px</option>
+					<option value="4">4px</option>
+					<option value="8">8px</option>
+					<option value="12">12px</option>
+					<option value="16">16px</option>
+				</select>
 
-			{/* Cell padding */}
-			<select
-				className="h-6 text-[10px] bg-transparent border border-gray-300 dark:border-gray-600 rounded px-0.5 text-gray-700 dark:text-gray-300 outline-none"
-				value={cellPadding || ""}
-				onChange={(e) => {
-					const v = e.target.value || null;
-					setCellAttr("cellPadding", v)(editorView.state, editorView.dispatch);
-					editorView.focus();
-				}}
-				title="Cell Padding"
-			>
-				<option value="">Padding</option>
-				<option value="2">2px</option>
-				<option value="4">4px</option>
-				<option value="8">8px</option>
-				<option value="12">12px</option>
-				<option value="16">16px</option>
-			</select>
+				<div className="w-px h-4 bg-gray-300 dark:bg-gray-600" />
 
-			<div className="w-px h-4 bg-gray-300 dark:bg-gray-600" />
+				{tableBtn({ icon: TableCellsMerge, label: "Merge Cells", shortcut: "Alt+M", onClick: () => mergeCells(editorView.state, editorView.dispatch) })}
+				{tableBtn({ icon: TableCellsSplit, label: "Split Cell", shortcut: "Alt+S", onClick: () => splitCell(editorView.state, editorView.dispatch) })}
+			</div>
 
-			{/* Add/remove rows */}
-			{tableBtn({ icon: Plus, label: "Add Row After", shortcut: "Ctrl+Enter", onClick: () => addRowAfter(editorView.state, editorView.dispatch) })}
-			{tableBtn({ icon: Minus, label: "Delete Row", shortcut: "Shift+Delete", onClick: () => deleteRow(editorView.state, editorView.dispatch), destructive: true })}
+			{/* Row 2: Structure + utilities */}
+			<div className="flex items-center gap-0.5 flex-wrap">
+				{tableBtn({ icon: BetweenHorizontalEnd, label: "Add Row After", shortcut: "Alt+A", onClick: () => addRowAfter(editorView.state, editorView.dispatch) })}
+				{tableBtn({ icon: Rows3, label: "Delete Row", shortcut: "Alt+D", onClick: () => deleteRow(editorView.state, editorView.dispatch), destructive: true })}
 
-			<div className="w-px h-4 bg-gray-300 dark:bg-gray-600" />
+				<div className="w-px h-4 bg-gray-300 dark:bg-gray-600" />
 
-			{/* Add/remove columns */}
-			{tableBtn({ icon: Columns3, label: "Add Column After", shortcut: "Ctrl+Alt+Enter", onClick: () => addColumnAfter(editorView.state, editorView.dispatch) })}
-			{tableBtn({ icon: Minus, label: "Delete Column", shortcut: "Ctrl+Shift+Delete", onClick: () => deleteColumn(editorView.state, editorView.dispatch), destructive: true })}
+				{tableBtn({ icon: BetweenVerticalEnd, label: "Add Column After", shortcut: "Alt+O", onClick: () => addColumnAfter(editorView.state, editorView.dispatch) })}
+				{tableBtn({ icon: Columns3, label: "Delete Column", shortcut: "Alt+Shift+D", onClick: () => deleteColumn(editorView.state, editorView.dispatch), destructive: true })}
 
-			<div className="w-px h-4 bg-gray-300 dark:bg-gray-600" />
+				<div className="w-px h-4 bg-gray-300 dark:bg-gray-600" />
 
-			{/* Fit columns & delete table */}
-			{tableBtn({ icon: Shrink, label: "Fit Column Widths", shortcut: "Ctrl+Shift+W", onClick: () => fitColumnWidths(editorView.state, editorView.dispatch, editorView) })}
-			{tableBtn({ icon: Trash2, label: "Delete Table", onClick: () => deleteTable(editorView.state, editorView.dispatch), destructive: true })}
+				{tableBtn({ icon: Shrink, label: "Fit Column Widths", shortcut: "Alt+F", onClick: () => fitColumnWidths(editorView.state, editorView.dispatch, editorView) })}
+				{tableBtn({ icon: RotateCcw, label: "Reset Table Formatting", shortcut: "Alt+T", onClick: () => resetTableFormatting()(editorView.state, editorView.dispatch) })}
+				{tableBtn({ icon: Maximize, label: "Toggle Image Cover Mode", shortcut: "Alt+I", onClick: () => toggleCellImageCover(editorView) })}
+				{tableBtn({ icon: Trash2, label: "Delete Table", shortcut: "Alt+X", onClick: () => deleteTable(editorView.state, editorView.dispatch), destructive: true })}
+			</div>
 		</div>,
 		document.body,
 	);
@@ -432,6 +573,30 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 	// Editor settings for spacing controls
 	const [editorSettings, setEditorSettings] = useAtom(editorSettingsAtom);
 	const [boxDebug, setBoxDebug] = useState(false);
+	// 3-state: "hidden" → "visible" (shown, editor keeps focus) → "focused" (toolbar gets keyboard focus) → "hidden"
+	const [tableToolbarState, setTableToolbarState] = useState<"hidden" | "visible" | "focused">("hidden");
+	const inTable = editorView ? isInTable(editorView.state) : false;
+
+	// Close table toolbar when cursor leaves the table
+	useEffect(() => {
+		if (!inTable) setTableToolbarState("hidden");
+	}, [inTable]);
+
+	// F2 cycles: hidden → visible → focused → hidden
+	useEffect(() => {
+		const handler = (e: KeyboardEvent) => {
+			if (e.key === "F2" && !e.ctrlKey && !e.altKey && !e.shiftKey && inTable) {
+				e.preventDefault();
+				setTableToolbarState((v) => {
+					if (v === "hidden") return "visible";
+					if (v === "visible") return "focused";
+					return "hidden";
+				});
+			}
+		};
+		document.addEventListener("keydown", handler);
+		return () => document.removeEventListener("keydown", handler);
+	}, [inTable]);
 
 	// Sync box-model debug class directly onto the ProseMirror DOM element
 	useEffect(() => {
@@ -903,7 +1068,7 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 						}
 						return null;
 					})();
-					const isActive = currentAlign === align;
+					const isActive = (currentAlign || "left") === (align || "left");
 					const cmd = inTbl ? setTableAlign(align) : setTextAlign(align);
 					return (
 						<button
@@ -1105,9 +1270,29 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 				<BoxSelect size={14} />
 			</button>
 
+			{/* Table toolbar toggle — only visible when cursor is in a table */}
+			{inTable && (
+				<>
+					<div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
+					<button
+						type="button"
+						className={`relative flex-shrink-0 h-7 flex items-center gap-1 px-1.5 rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset text-[11px] font-medium ${
+							tableToolbarState !== "hidden"
+								? "bg-blue-500 text-white hover:bg-blue-600"
+								: "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+						}`}
+						onClick={() => setTableToolbarState((v) => v === "hidden" ? "visible" : "hidden")}
+						title="Toggle table toolbar (F2)"
+					>
+						<Table size={14} />
+						Table
+					</button>
+				</>
+			)}
+
 			{/* Floating table toolbar — rendered via portal above the active table */}
-			{editorView && isInTable(editorView.state) && (
-				<TableFloatingToolbar editorView={editorView} />
+			{editorView && tableToolbarState !== "hidden" && inTable && (
+				<TableFloatingToolbar editorView={editorView} onClose={() => setTableToolbarState("hidden")} focused={tableToolbarState === "focused"} />
 			)}
 		</div>
 	);
