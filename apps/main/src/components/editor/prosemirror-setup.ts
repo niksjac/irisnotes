@@ -26,7 +26,6 @@ import { customCursorPlugin } from "./plugins/custom-cursor";
 import { activeLinePlugin } from "./plugins/active-line";
 import { buildLineCommandsKeymap, resetSmartSelectLevel } from "./plugins/line-commands";
 import { searchPlugin } from "./plugins/search";
-import { rowResizing } from "./plugins/row-resize";
 import { clearAllFormatting, increaseFontSizeMark, decreaseFontSizeMark, setTextAlign, setTableAlign, fitColumnWidths } from "./format-commands";
 import { DEFAULT_EDITOR_KEYBINDINGS, type EditorKeybindings } from "@/config/default-editor-keybindings";
 
@@ -316,9 +315,8 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		},
 	}));
 
-	// Table editing support (cell selection, column resize, row resize)
+	// Table editing support (cell selection, column resize)
 	plugins.push(columnResizing());
-	plugins.push(rowResizing());
 
 	// Table structure keys — MUST be before tableEditing() so it intercepts
 	// Delete/Backspace before tableEditing's deleteCellSelection handler,
@@ -456,7 +454,6 @@ export function customSetup(options: SetupOptions): Plugin[] {
 				// ── Alignment decorations for tables ──
 				// columnResizing's TableView nodeView renders the <table>/<tr>, so
 				// schema toDOM attrs aren't reflected live. We mirror table alignment via Decoration.node().
-				// Row height is applied via direct DOM manipulation in the rowResizing plugin.
 				state.doc.descendants((node, pos) => {
 					if (node.type.name === "table" && node.attrs.textAlign) {
 						decos.push(

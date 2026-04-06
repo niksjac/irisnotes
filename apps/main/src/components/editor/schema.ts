@@ -479,36 +479,9 @@ const tableSpecWithAlign = {
 	},
 };
 
-// Override table_row to support minHeight (for row resizing)
-const tableRowWithHeight = {
-	...rawTableNodes.table_row,
-	attrs: {
-		...((rawTableNodes.table_row as any).attrs || {}),
-		minHeight: { default: null },
-	},
-	parseDOM: [
-		{
-			tag: "tr",
-			getAttrs: (dom: HTMLElement) => {
-				const h = dom.getAttribute("data-min-height");
-				return { minHeight: h ? Number(h) : null };
-			},
-		},
-	],
-	toDOM: (node: PMNode) => {
-		const attrs: Record<string, string> = {};
-		if (node.attrs.minHeight) {
-			attrs.style = `min-height: ${node.attrs.minHeight}px`;
-			attrs["data-min-height"] = String(node.attrs.minHeight);
-		}
-		return ["tr", attrs, 0] as const;
-	},
-};
-
 const nodesWithTables = nodesWithLists.append({
 	...rawTableNodes,
 	table: tableSpecWithAlign,
-	table_row: tableRowWithHeight,
 });
 
 // All marks - order matters! Outer marks first.
