@@ -41,3 +41,4 @@ dev/config.toml
 docs/__ACCIDENTALLY*
 apps/quick/build/
 irisnotes.code-workspace
+dev/assets/
