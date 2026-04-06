@@ -350,22 +350,28 @@ export function ProseMirrorEditor({
 				}
 
 				// 2. File path in clipboard (e.g. copied from file manager)
-				const text = event.clipboardData?.getData("text/plain")?.trim();
+				// Try text/uri-list first (Thunar, Nautilus), then text/plain
+				const uriList = event.clipboardData?.getData("text/uri-list")?.trim();
+				const text = uriList || event.clipboardData?.getData("text/plain")?.trim();
 				if (text) {
-					// Handle file:// URIs (from file manager copy)
-					const filePath = text.startsWith("file://")
-						? decodeURIComponent(text.replace(/^file:\/\//, ""))
-						: text;
-					const ext = extensionFromFilename(filePath);
-					if (ext && filePath.startsWith("/")) {
-						event.preventDefault();
-						invoke<number[]>("read_image_file", { path: filePath }).then((bytes) => {
-							saveAndInsertImage(pasteView, mySchema, new Uint8Array(bytes), ext);
-						}).catch((err) => {
-							console.error("Failed to read image from path:", err);
-							showError(`Failed to read image: ${err}`);
-						});
-						return true;
+					// Handle multiple URIs (one per line), take the first image
+					const lines = text.split(/\r?\n/).filter((l: string) => l && !l.startsWith("#"));
+					for (const line of lines) {
+						const trimmedLine = line.trim();
+						const filePath = trimmedLine.startsWith("file://")
+							? decodeURIComponent(trimmedLine.replace(/^file:\/\//, ""))
+							: trimmedLine;
+						const ext = extensionFromFilename(filePath);
+						if (ext && filePath.startsWith("/")) {
+							event.preventDefault();
+							invoke<number[]>("read_image_file", { path: filePath }).then((bytes) => {
+								saveAndInsertImage(pasteView, mySchema, new Uint8Array(bytes), ext);
+							}).catch((err) => {
+								console.error("Failed to read image from path:", err);
+								showError(`Failed to read image: ${err}`);
+							});
+							return true;
+						}
 					}
 				}
 
@@ -377,7 +383,40 @@ export function ProseMirrorEditor({
 				if (dropView.dragging) return false;
 
 				const files = event.dataTransfer?.files;
-				if (!files || files.length === 0) return false;
+				if (!files || files.length === 0) {
+					// No File objects — try text/uri-list (Thunar, some file managers)
+					const uriList = event.dataTransfer?.getData("text/uri-list")?.trim();
+					if (uriList) {
+						const lines = uriList.split(/\r?\n/).filter((l: string) => l && !l.startsWith("#"));
+						for (const line of lines) {
+							const trimmedLine = line.trim();
+							if (!trimmedLine.startsWith("file://")) continue;
+							const filePath = decodeURIComponent(trimmedLine.replace(/^file:\/\//, ""));
+							const ext = extensionFromFilename(filePath);
+							if (!ext) continue;
+
+							event.preventDefault();
+							const pos = dropView.posAtCoords({
+								left: event.clientX,
+								top: event.clientY,
+							});
+							if (pos) {
+								const tr = dropView.state.tr.setSelection(
+									TextSelection.create(dropView.state.doc, pos.pos),
+								);
+								dropView.dispatch(tr);
+							}
+
+							invoke<number[]>("read_image_file", { path: filePath }).then((bytes) => {
+								saveAndInsertImage(dropView, mySchema, new Uint8Array(bytes), ext);
+							}).catch((err) => {
+								console.error("Failed to read dropped image from path:", err);
+							});
+							return true;
+						}
+					}
+					return false;
+				}
 
 				for (const file of files) {
 					// Check MIME type first, fall back to extension (file managers like Thunar may not set MIME)
