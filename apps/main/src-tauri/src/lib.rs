@@ -511,6 +511,63 @@ async fn save_image_asset(
     Ok(filename)
 }
 
+/// Open the assets directory in the system file manager.
+/// On macOS, reveals the specific file. On Linux/Windows, opens the directory.
+#[tauri::command]
+async fn reveal_asset(app_handle: tauri::AppHandle, filename: String) -> Result<(), String> {
+    // Sanitise: reject path traversal
+    if filename.contains("..") || filename.contains('/') || filename.contains('\\') {
+        return Err("Invalid filename".to_string());
+    }
+    let data_dir = get_data_dir(&app_handle)?;
+    let assets_dir = data_dir.join("assets");
+    let file_path = assets_dir.join(&filename);
+
+    #[cfg(target_os = "linux")]
+    {
+        // Try dbus-based file selection first (works with Nautilus, Dolphin, etc.)
+        let dbus_result = std::process::Command::new("dbus-send")
+            .args([
+                "--session",
+                "--dest=org.freedesktop.FileManager1",
+                "--type=method_call",
+                "/org/freedesktop/FileManager1",
+                "org.freedesktop.FileManager1.ShowItems",
+                &format!("array:string:file://{}", file_path.to_string_lossy()),
+                "string:",
+            ])
+            .output();
+        if dbus_result.is_ok() && dbus_result.unwrap().status.success() {
+            return Ok(());
+        }
+        // Fallback: open the assets directory
+        std::process::Command::new("xdg-open")
+            .arg(&assets_dir)
+            .spawn()
+            .map_err(|e| format!("Failed to open directory: {}", e))?;
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg("-R")
+            .arg(&file_path)
+            .spawn()
+            .map_err(|e| format!("Failed to reveal file: {}", e))?;
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("explorer")
+            .arg("/select,")
+            .arg(&file_path)
+            .spawn()
+            .map_err(|e| format!("Failed to reveal file: {}", e))?;
+    }
+
+    Ok(())
+}
+
 /// Read an image file from an arbitrary path and return its bytes.
 /// Only allows known image extensions.
 #[tauri::command]
@@ -716,6 +773,7 @@ pub fn run() {
             get_assets_dir,
             save_image_asset,
             read_image_file,
+            reveal_asset,
             cleanup_orphaned_assets,
             read_clipboard_target,
             list_clipboard_targets,

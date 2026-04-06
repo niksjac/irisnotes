@@ -791,6 +791,11 @@ li.pm-tight-selection-list-item .pm-tight-selection:first-child::before {
   margin: 0.5em 0;
 }
 
+/* In wrap mode, tables must not expand the editor width — scroll internally instead */
+.ProseMirror.wrap-enabled .tableWrapper {
+  max-width: 100%;
+}
+
 .ProseMirror table {
   border-collapse: separate;
   border-spacing: 0;
@@ -990,23 +995,81 @@ li.pm-tight-selection-list-item .pm-tight-selection:first-child::before {
   outline-offset: 1px;
 }
 
-/* Resize handle - visible on hover and when selected */
+/* Resize handle - three dots grip at bottom-right corner */
 .ProseMirror .pm-image-resize-handle {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 12px;
-  height: 12px;
-  background: var(--pm-caret-color);
+  right: 2px;
+  bottom: 2px;
+  width: 14px;
+  height: 14px;
   cursor: nwse-resize;
   opacity: 0;
   transition: opacity 0.15s;
-  border-radius: 2px 0 2px 0;
   z-index: 5;
+  background: none;
+  border-radius: 2px;
+  /* Three-dot diagonal grip */
+  background-image:
+    radial-gradient(circle, var(--pm-caret-color) 1.5px, transparent 1.5px);
+  background-size: 5px 5px;
+  background-position: 6px 6px, 1px 6px, 6px 1px;
+  /* Only show 3 dots in a diagonal: bottom-right, middle, top-left-ish */
+  background-repeat: no-repeat;
+  background-position: 8px 8px, 4px 4px, 0px 0px;
 }
 
 .ProseMirror .pm-image-wrap:hover .pm-image-resize-handle,
 .ProseMirror .pm-image-wrap.ProseMirror-selectednode .pm-image-resize-handle {
   opacity: 0.8;
+}
+
+/* Image info bar — only visible when the image is selected */
+.ProseMirror .pm-image-info-bar {
+  display: none;
+  position: absolute;
+  bottom: -22px;
+  left: 0;
+  right: 0;
+  height: 20px;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  background: var(--pm-caret-color);
+  color: white;
+  font-size: 10px;
+  line-height: 20px;
+  border-radius: 0 0 3px 3px;
+  z-index: 5;
+  user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.ProseMirror .pm-image-wrap.ProseMirror-selectednode .pm-image-info-bar {
+  display: flex;
+}
+
+.ProseMirror .pm-image-info-bar button:hover {
+  opacity: 1 !important;
+}
+
+/* Cover mode — image fills the entire cell edge-to-edge */
+.ProseMirror .pm-image-cover {
+  display: block;
+  width: 100%;
+  margin: 0;
+}
+
+.ProseMirror .pm-image-cover img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  display: block;
+}
+
+/* Remove cell padding when it contains a cover image */
+.ProseMirror td:has(.pm-image-cover),
+.ProseMirror th:has(.pm-image-cover) {
+  padding: 0;
 }
 
