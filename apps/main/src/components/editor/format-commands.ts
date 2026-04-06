@@ -367,6 +367,68 @@ export function setTableAlign(align: "left" | "center" | "right" | null): Comman
 
 // ============ Fit Column Width to Content ============
 
+// ============ Reset Table Formatting ============
+
+/**
+ * Reset all formatting on the current table: clear cell background, border,
+ * padding, and text alignment on all cells and paragraphs within the table.
+ * Also resets table-level alignment.
+ */
+export function resetTableFormatting(): Command {
+	return (state, dispatch) => {
+		const { $from } = state.selection;
+		let tableNode: PMNode | null = null;
+		let tablePos = -1;
+		for (let d = $from.depth; d > 0; d--) {
+			if ($from.node(d).type.name === "table") {
+				tableNode = $from.node(d);
+				tablePos = $from.before(d);
+				break;
+			}
+		}
+		if (!tableNode) return false;
+
+		if (dispatch) {
+			const tr = state.tr;
+			// Reset table alignment
+			tr.setNodeMarkup(tablePos, undefined, {
+				...tableNode.attrs,
+				textAlign: null,
+			});
+			// Walk all cells and paragraphs inside
+			let pos = tablePos + 1;
+			for (let r = 0; r < tableNode.childCount; r++) {
+				const row = tableNode.child(r);
+				let cellPos = pos + 1;
+				for (let c = 0; c < row.childCount; c++) {
+					const cell = row.child(c);
+					// Reset cell attrs
+					tr.setNodeMarkup(cellPos, undefined, {
+						...cell.attrs,
+						background: null,
+						borderColor: null,
+						borderWidth: null,
+						cellPadding: null,
+					});
+					// Reset paragraph alignment inside cell
+					cell.descendants((node, childPos) => {
+						if (node.type.name === "paragraph" && node.attrs.textAlign) {
+							tr.setNodeMarkup(cellPos + 1 + childPos, undefined, {
+								...node.attrs,
+								textAlign: null,
+							});
+						}
+					});
+					cellPos += cell.nodeSize;
+				}
+				pos += row.nodeSize;
+			}
+			dispatch(tr.scrollIntoView());
+		}
+		return true;
+	};
+}
+
 /**
  * Fit table column widths to their longest cell content.
  * Needs EditorView for DOM measurement (pass as third arg or via handleKeyDown).
@@ -445,7 +507,7 @@ export function fitColumnWidths(state: EditorState, dispatch?: (tr: Transaction)
 		if (!rowEl) continue;
 		const cells = rowEl.cells;
 		for (let c = 0; c < cells.length && c < colCount; c++) {
-			const w = cells[c]?.offsetWidth ?? 0;
+			const w = Math.ceil(cells[c]?.getBoundingClientRect().width ?? 0) + 1;
 			if (w > (measuredWidths[c] ?? 0)) {
 				measuredWidths[c] = w;
 			}

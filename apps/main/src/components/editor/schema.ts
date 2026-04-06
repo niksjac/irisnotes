@@ -173,6 +173,7 @@ const imageSpec = {
 		alt: { default: null },
 		title: { default: null },
 		width: { default: null },
+		display: { default: null },
 	},
 	group: "inline",
 	draggable: true,
@@ -184,6 +185,7 @@ const imageSpec = {
 				alt: node.getAttribute("alt"),
 				title: node.getAttribute("title"),
 				width: node.getAttribute("width") || node.style.width || null,
+				display: node.getAttribute("data-display") || null,
 			}),
 		},
 	],
@@ -193,6 +195,7 @@ const imageSpec = {
 		};
 		if (node.attrs.alt) attrs.alt = node.attrs.alt as string;
 		if (node.attrs.title) attrs.title = node.attrs.title as string;
+		if (node.attrs.display) attrs["data-display"] = node.attrs.display as string;
 		if (node.attrs.width) attrs.style = `width: ${node.attrs.width}`;
 		return ["img", attrs] as const;
 	},
