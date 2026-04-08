@@ -15,16 +15,15 @@
 		"jsx": "react-jsx",
 
 		/* Path mapping */
-		"baseUrl": ".",
 		"paths": {
-			"@/*": ["src/*"],
-			"@/components": ["src/components"],
-			"@/views": ["src/views"],
-			"@/hooks": ["src/hooks"],
-			"@/atoms": ["src/atoms"],
-			"@/types": ["src/types"],
-			"@/storage": ["src/storage"],
-			"@/styles": ["src/styles"],
+			"@/*": ["./src/*"],
+			"@/components": ["./src/components"],
+			"@/views": ["./src/views"],
+			"@/hooks": ["./src/hooks"],
+			"@/atoms": ["./src/atoms"],
+			"@/types": ["./src/types"],
+			"@/storage": ["./src/storage"],
+			"@/styles": ["./src/styles"],
 			"@schema/*": ["../../schema/*"]
 		},
 
