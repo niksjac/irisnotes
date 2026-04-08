@@ -84,3 +84,9 @@ export { useKeyTips, useKeyTipActions, altKeyHeldAtom } from "./use-key-tips";
 
 // Editor zoom (Ctrl+scroll wheel)
 export { useEditorZoom, useEditorZoomRef } from "./use-editor-zoom";
+
+// ASCII art insertion
+export { useAsciiArt } from "./use-ascii-art";
+
+// Autocorrect
+export { useAutocorrect } from "./use-autocorrect";

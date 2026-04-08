@@ -1,6 +1,8 @@
 import type { FC } from "react";
 import type { ViewType } from "@/types";
 import {
+	AsciiArtView,
+	AutocorrectView,
 	BookView,
 	ConfigView,
 	HotkeysView,
@@ -16,6 +18,10 @@ interface ViewProps {
 
 export const View: FC<ViewProps> = ({ viewType, viewData }) => {
 	switch (viewType) {
+		case "ascii-art-view":
+			return <AsciiArtView />;
+		case "autocorrect-view":
+			return <AutocorrectView />;
 		case "book-view":
 			return <BookView viewData={viewData} />;
 		case "config-view":

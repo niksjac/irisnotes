@@ -7,6 +7,7 @@ import { useSetAtom, useAtomValue } from "jotai";
 import { invoke } from "@tauri-apps/api/core";
 import { useLineWrapping } from "@/hooks";
 import { editorCursorPositionStore } from "@/hooks/use-editor-view-toggle";
+import { activeEditorViewStore } from "./active-editor-view-store";
 import { editorStatsAtom } from "@/atoms/editor-stats";
 import { editorKeybindingsAtom } from "@/atoms/editor-keybindings";
 import { customSetup } from "./prosemirror-setup";
@@ -177,7 +178,9 @@ export function ProseMirrorEditor({
 					: `<p>${initialContentRef.current}</p>`
 				: "<p></p>";
 		contentDiv.innerHTML = htmlContent;
-		const doc = DOMParser.fromSchema(mySchema).parse(contentDiv);
+		const doc = DOMParser.fromSchema(mySchema).parse(contentDiv, {
+			preserveWhitespace: true,
+		});
 
 		const plugins = customSetup({
 			schema: mySchema,
@@ -524,8 +527,14 @@ export function ProseMirrorEditor({
 
 		// Apply initial line-wrapping class
 		view.dom.classList.add(isWrapping ? "wrap-enabled" : "wrap-disabled");
+		// Set initial overflow-x based on wrapping mode
+		const scrollEl = view.dom.parentElement;
+		if (scrollEl) {
+			scrollEl.style.overflowX = isWrapping ? "hidden" : "auto";
+		}
 
 		viewRef.current = view;
+		activeEditorViewStore.set(view);
 		// Note: Don't auto-focus - let user click or use Ctrl+Alt+1/2 to focus pane
 		// Initial cursor position is set in EditorState.create() above
 
@@ -666,6 +675,7 @@ export function ProseMirrorEditor({
 			view.dom.removeEventListener("keydown", handleKeyDown);
 			view.destroy();
 			viewRef.current = null;
+			activeEditorViewStore.set(null);
 		};
 	}, []);
 
@@ -674,12 +684,20 @@ export function ProseMirrorEditor({
 		if (!viewRef.current) return;
 
 		const dom = viewRef.current.dom;
+		const scrollEl = dom.parentElement;
 		if (isWrapping) {
 			dom.classList.remove("wrap-disabled");
 			dom.classList.add("wrap-enabled");
+			if (scrollEl) {
+				scrollEl.style.overflowX = "hidden";
+				scrollEl.scrollLeft = 0;
+			}
 		} else {
 			dom.classList.remove("wrap-enabled");
 			dom.classList.add("wrap-disabled");
+			if (scrollEl) {
+				scrollEl.style.overflowX = "auto";
+			}
 		}
 	}, [isWrapping]);
 
@@ -713,7 +731,9 @@ export function ProseMirrorEditor({
 						: `<p>${content}</p>`
 					: "<p></p>";
 			contentDiv.innerHTML = htmlContent;
-			const doc = DOMParser.fromSchema(mySchema).parse(contentDiv);
+			const doc = DOMParser.fromSchema(mySchema).parse(contentDiv, {
+				preserveWhitespace: true,
+			});
 
 			// Preserve cursor at end of document when content updates externally
 			const newState = EditorState.create({
@@ -731,7 +751,7 @@ export function ProseMirrorEditor({
 
 	return (
 		<div
-			className="h-full w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col overflow-visible relative"
+			className="h-full w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col overflow-hidden relative"
 		>
 			{showSearch && (
 				<SearchBar view={viewRef.current} onClose={handleSearchClose} />
@@ -742,7 +762,7 @@ export function ProseMirrorEditor({
 			{titleBar}
 			<div
 				ref={editorRef}
-				className="editor-content-zoom flex-1 prose dark:prose-invert max-w-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-inset overflow-auto"
+				className="editor-content-zoom flex-1 prose dark:prose-invert max-w-none overflow-auto"
 
 			/>
 			{activePicker && viewRef.current && (

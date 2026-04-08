@@ -310,6 +310,11 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHandler(handlers.onOpenThemeSwitcher),
 		createHotkeyOptions(hotkeyMapping.openThemeSwitcher.global)
 	);
+	useHotkeys(
+		hotkeyMapping.openSymbolPicker.key,
+		createHandler(handlers.onOpenSymbolPicker),
+		createHotkeyOptions(hotkeyMapping.openSymbolPicker.global)
+	);
 
 	// Tree view hotkeys
 	useHotkeys(
@@ -321,6 +326,13 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		hotkeyMapping.toggleHoist.key,
 		createHandler(handlers.onToggleHoist),
 		createHotkeyOptions(hotkeyMapping.toggleHoist.global)
+	);
+
+	// Config folder
+	useHotkeys(
+		hotkeyMapping.openConfigFolder.key,
+		createHandler(handlers.onOpenConfigFolder),
+		createHotkeyOptions(hotkeyMapping.openConfigFolder.global)
 	);
 
 	// Editor spacing hotkeys (directly mutate editorSettingsAtom)

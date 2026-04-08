@@ -13,6 +13,7 @@ import {
 } from "@/components";
 import { QuickHotkeysModal } from "@/components/dialogs/quick-hotkeys-modal";
 import { ThemeSwitcherDialog } from "@/components/dialogs/theme-switcher-dialog";
+import { SymbolPickerDialog } from "@/components/dialogs/symbol-picker-dialog";
 import { quickHotkeysOpenAtom, hideQuickHotkeysAtom } from "@/atoms";
 import {
 	useLayout,
@@ -27,6 +28,8 @@ import {
 	useEditorSettings,
 	useKeyTips,
 	useQuickAppListener,
+	useAsciiArt,
+	useAutocorrect,
 } from "@/hooks";
 import { mapHotkeyHandlers } from "@/utils/hotkey-mapping";
 import {
@@ -63,6 +66,12 @@ export const Layout: React.FC = () => {
 
 	// Initialize KeyTips system (Alt+key shortcuts)
 	useKeyTips();
+
+	// Load ASCII art config and register insertion hotkeys
+	useAsciiArt();
+
+	// Load autocorrect rules (text replacements triggered by typing)
+	useAutocorrect();
 
 	// Persist app state
 	useAppPersistence();
@@ -146,6 +155,9 @@ export const Layout: React.FC = () => {
 
 			{/* Theme Switcher Dialog */}
 			<ThemeSwitcherDialog />
+
+			{/* Symbol Picker Dialog */}
+			<SymbolPickerDialog />
 		</div>
 	);
 };

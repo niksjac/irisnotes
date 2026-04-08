@@ -116,9 +116,15 @@ export interface HotkeyMapping {
 	// Theme switcher
 	openThemeSwitcher: HotkeyConfig;
 
+	// Symbol picker
+	openSymbolPicker: HotkeyConfig;
+
 	// Tree view hotkeys
 	revealActiveInTree: HotkeyConfig;
 	toggleHoist: HotkeyConfig;
+
+	// Config folder
+	openConfigFolder: HotkeyConfig;
 
 	// Editor spacing hotkeys
 	increaseLineHeight: HotkeyConfig;
@@ -224,9 +230,15 @@ export interface AppHotkeysProps {
 	// Theme switcher
 	onOpenThemeSwitcher?: () => void;
 
+	// Symbol picker
+	onOpenSymbolPicker?: () => void;
+
 	// Tree view hotkeys
 	onRevealActiveInTree?: () => void;
 	onToggleHoist?: () => void;
+
+	// Config folder
+	onOpenConfigFolder?: () => void;
 }
 
 // Storage configuration types
@@ -271,6 +283,8 @@ export interface AppConfig {
 export type ViewType =
 	| "config-view"
 	| "hotkeys-view"
+	| "ascii-art-view"
+	| "autocorrect-view"
 	| "editor-rich-view"
 	| "editor-source-view"
 	| "section-view"

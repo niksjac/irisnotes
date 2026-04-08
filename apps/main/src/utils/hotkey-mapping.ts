@@ -50,6 +50,8 @@ export function mapHotkeyHandlers(
 		openQuickSearch: () => void;
 		openSearchSidebar: () => void;
 		openThemeSwitcher: () => void;
+		openSymbolPicker: () => void;
+		openConfigFolder: () => void;
 	}
 ): AppHotkeysProps {
 	return {
@@ -288,6 +290,9 @@ export function mapHotkeyHandlers(
 		// Theme switcher
 		onOpenThemeSwitcher: handlers.openThemeSwitcher,
 
+		// Symbol picker
+		onOpenSymbolPicker: handlers.openSymbolPicker,
+
 		// Tree view hotkeys
 		onRevealActiveInTree: () => {
 			const callbacks = getTreeViewCallbacks();
@@ -301,5 +306,8 @@ export function mapHotkeyHandlers(
 				callbacks.toggleHoist();
 			}
 		},
+
+		// Config folder
+		onOpenConfigFolder: handlers.openConfigFolder,
 	};
 }

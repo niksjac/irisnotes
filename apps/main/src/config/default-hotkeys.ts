@@ -322,6 +322,12 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		category: "Views",
 		global: true,
 	},
+	openSymbolPicker: {
+		key: "ctrl+alt+p",
+		description: "Open Symbol Picker",
+		category: "Views",
+		global: true,
+	},
 	fullTextSearch: {
 		key: "ctrl+shift+f",
 		description: "Full Text Search (in content)",
@@ -340,6 +346,14 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		key: "ctrl+h",
 		description: "Hoist/Unhoist Selected Book or Section",
 		category: "Tree View",
+		global: true,
+	},
+
+	// Config folder
+	openConfigFolder: {
+		key: "ctrl+alt+comma",
+		description: "Open Config Folder in File Manager",
+		category: "App",
 		global: true,
 	},
 

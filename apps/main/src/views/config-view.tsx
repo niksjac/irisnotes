@@ -2,8 +2,9 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useTheme } from "@/hooks";
 import { useConfig } from "@/hooks/use-config";
 import { useEditorSettings } from "@/hooks/use-editor-settings";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { itemsAtom, notesAtom, booksAtom, sectionsAtom } from "@/atoms/items";
+import { openAsciiArtTabAtom, openAutocorrectTabAtom } from "@/atoms/panes";
 import { exportSettings, importSettings } from "@/storage/settings";
 import { invoke } from "@tauri-apps/api/core";
 import type {
@@ -14,10 +15,34 @@ import { FONT_FAMILIES, getFontsByGroup } from "@/components/editor/format-const
 import * as Icons from "lucide-react";
 import { THEMES } from "@/config/themes";
 
+function CollapsibleSection({ icon, title, children, defaultOpen = false }: {
+	icon: React.ReactNode;
+	title: string;
+	children: React.ReactNode;
+	defaultOpen?: boolean;
+}) {
+	const [isOpen, setIsOpen] = useState(defaultOpen);
+	return (
+		<section>
+			<button
+				onClick={() => setIsOpen(!isOpen)}
+				className="w-full flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 transition-colors py-1"
+			>
+				{icon}
+				{title}
+				<Icons.ChevronRight className={`w-3.5 h-3.5 ml-auto text-gray-400 transition-transform ${isOpen ? "rotate-90" : ""}`} />
+			</button>
+			{isOpen && <div className="mt-2">{children}</div>}
+		</section>
+	);
+}
+
 export function ConfigView() {
 	const { themeName, setTheme } = useTheme();
 	const { config } = useConfig();
 	const { settings: editorSettings, updateSetting, resetSettings, constraints } = useEditorSettings();
+	const openAsciiArtTab = useSetAtom(openAsciiArtTabAtom);
+	const openAutocorrectTab = useSetAtom(openAutocorrectTabAtom);
 
 	// Export/Import state
 	const [isExporting, setIsExporting] = useState(false);
@@ -73,118 +98,76 @@ export function ConfigView() {
 
 	return (
 		<div className="h-full overflow-auto bg-white dark:bg-gray-900">
-			<div className="max-w-4xl mx-auto p-6 space-y-8">
+			<div className="max-w-4xl mx-auto p-4 space-y-5">
 				{/* Header */}
-				<div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-					<h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
-						<Icons.Settings className="w-7 h-7" />
+				<div className="border-b border-gray-200 dark:border-gray-700 pb-3">
+					<h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+						<Icons.Settings className="w-5 h-5" />
 						Settings
 					</h1>
-					<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+					<p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
 						Configure your IrisNotes experience
 					</p>
 				</div>
 
 				{/* Appearance Section */}
-				<section className="space-y-4">
-					<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-						<Icons.Palette className="w-5 h-5" />
-						Appearance
-					</h2>
+				<CollapsibleSection icon={<Icons.Palette className="w-4 h-4" />} title="Appearance">
 
-					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3">
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-2">
 						<div>
-							<div className="font-medium text-gray-900 dark:text-gray-100 mb-1">Theme</div>
-							<div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-								Pick a theme — surface colors, text, and accent all change together
-							</div>
-							{/* Light themes row */}
-							<div className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Light</div>
-							<div className="grid grid-cols-3 gap-2 mb-4">
+							<div className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5">Light</div>
+							<div className="flex flex-col gap-0.5">
 								{THEMES.filter((t) => !t.isDark).map((t) => (
 									<button
 										key={t.id}
 										onClick={() => setTheme(t.id)}
-										className={`relative rounded-lg overflow-hidden border-2 transition-all ${
+										className={`flex items-center gap-2 px-1.5 py-1 transition-all text-xs ${
 											themeName === t.id
-												? "border-blue-500 ring-2 ring-blue-500/30"
-												: "border-transparent hover:border-gray-400 dark:hover:border-gray-500"
+												? "bg-blue-50 dark:bg-blue-900/30"
+												: "hover:bg-gray-200 dark:hover:bg-gray-700"
 										}`}
 									>
-										{/* Swatch preview */}
-										<div className="h-12 flex" style={{ backgroundColor: t.swatch.bg }}>
-											<div className="w-1/4 h-full" style={{ backgroundColor: t.swatch.panel }} />
-											<div className="flex-1 flex items-center justify-center gap-1 px-1">
-												<div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.swatch.accent }} />
-												<div className="h-1 flex-1 rounded-full opacity-60" style={{ backgroundColor: t.swatch.text }} />
-											</div>
-										</div>
-										{/* Label */}
-										<div
-											className="px-2 py-1 text-xs font-medium truncate"
-											style={{ backgroundColor: t.swatch.panel, color: t.swatch.text }}
-										>
-											{t.label}
-											{themeName === t.id && (
-												<Icons.Check className="inline w-3 h-3 ml-1" style={{ color: t.swatch.accent }} />
-											)}
-										</div>
+										<div className="w-3 h-3 flex-shrink-0" style={{ backgroundColor: t.swatch.accent }} />
+										<span className="text-gray-700 dark:text-gray-300">{t.label}</span>
+										{themeName === t.id && <Icons.Check className="w-3 h-3 text-blue-500" />}
 									</button>
 								))}
 							</div>
-							{/* Dark themes rows */}
-							<div className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Dark</div>
-							<div className="grid grid-cols-3 gap-2">
+						</div>
+						<div>
+							<div className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5">Dark</div>
+							<div className="flex flex-col gap-0.5">
 								{THEMES.filter((t) => t.isDark).map((t) => (
 									<button
 										key={t.id}
 										onClick={() => setTheme(t.id)}
-										className={`relative rounded-lg overflow-hidden border-2 transition-all ${
+										className={`flex items-center gap-2 px-1.5 py-1 transition-all text-xs ${
 											themeName === t.id
-												? "border-blue-500 ring-2 ring-blue-500/30"
-												: "border-transparent hover:border-gray-400 dark:hover:border-gray-500"
+												? "bg-blue-50 dark:bg-blue-900/30"
+												: "hover:bg-gray-200 dark:hover:bg-gray-700"
 										}`}
 									>
-										{/* Swatch preview */}
-										<div className="h-12 flex" style={{ backgroundColor: t.swatch.bg }}>
-											<div className="w-1/4 h-full" style={{ backgroundColor: t.swatch.panel }} />
-											<div className="flex-1 flex items-center justify-center gap-1 px-1">
-												<div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.swatch.accent }} />
-												<div className="h-1 flex-1 rounded-full opacity-60" style={{ backgroundColor: t.swatch.text }} />
-											</div>
-										</div>
-										{/* Label */}
-										<div
-											className="px-2 py-1 text-xs font-medium truncate"
-											style={{ backgroundColor: t.swatch.panel, color: t.swatch.text }}
-										>
-											{t.label}
-											{themeName === t.id && (
-												<Icons.Check className="inline w-3 h-3 ml-1" style={{ color: t.swatch.accent }} />
-											)}
-										</div>
+										<div className="w-3 h-3 flex-shrink-0" style={{ backgroundColor: t.swatch.accent }} />
+										<span className="text-gray-700 dark:text-gray-300">{t.label}</span>
+										{themeName === t.id && <Icons.Check className="w-3 h-3 text-blue-500" />}
 									</button>
 								))}
 							</div>
 						</div>
 					</div>
-				</section>
+				</CollapsibleSection>
 
 				{/* Database Section */}
-				<section className="space-y-4">
-					<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-						<Icons.Database className="w-5 h-5" />
-						Database
-					</h2>
+				<CollapsibleSection icon={<Icons.Database className="w-4 h-4" />} title="Database">
 
-					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-3">
 						{/* Connection Status */}
 						<div className="flex items-center justify-between">
 							<div>
-								<div className="font-medium text-gray-900 dark:text-gray-100">
+								<div className="text-sm font-medium text-gray-900 dark:text-gray-100">
 									Status
 								</div>
-								<div className="text-sm text-gray-500 dark:text-gray-400">
+								<div className="text-xs text-gray-500 dark:text-gray-400">
 									Database connection
 								</div>
 							</div>
@@ -198,55 +181,51 @@ export function ConfigView() {
 
 						{/* Item Counts */}
 						<div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-							<div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+							<div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
 								Content Statistics
 							</div>
-							<div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-								<div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center">
-									<div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+							<div className="grid grid-cols-4 gap-2">
+								<div className="bg-gray-100 dark:bg-gray-700 rounded p-2 text-center">
+									<div className="text-lg font-bold text-gray-900 dark:text-gray-100">
 										{items.length}
 									</div>
-									<div className="text-xs text-gray-500 dark:text-gray-400">
+									<div className="text-[10px] text-gray-500 dark:text-gray-400">
 										Total Items
 									</div>
 								</div>
-								<div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center">
-									<div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+								<div className="bg-gray-100 dark:bg-gray-700 rounded p-2 text-center">
+									<div className="text-lg font-bold text-blue-600 dark:text-blue-400">
 										{notes.length}
 									</div>
-									<div className="text-xs text-gray-500 dark:text-gray-400">
+									<div className="text-[10px] text-gray-500 dark:text-gray-400">
 										Notes
 									</div>
 								</div>
-								<div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center">
-									<div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+								<div className="bg-gray-100 dark:bg-gray-700 rounded p-2 text-center">
+									<div className="text-lg font-bold text-purple-600 dark:text-purple-400">
 										{books.length}
 									</div>
-									<div className="text-xs text-gray-500 dark:text-gray-400">
+									<div className="text-[10px] text-gray-500 dark:text-gray-400">
 										Books
 									</div>
 								</div>
-								<div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center">
-									<div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+								<div className="bg-gray-100 dark:bg-gray-700 rounded p-2 text-center">
+									<div className="text-lg font-bold text-amber-600 dark:text-amber-400">
 										{sections.length}
 									</div>
-									<div className="text-xs text-gray-500 dark:text-gray-400">
+									<div className="text-[10px] text-gray-500 dark:text-gray-400">
 										Sections
 									</div>
 								</div>
 							</div>
 						</div>
 					</div>
-				</section>
+				</CollapsibleSection>
 
 				{/* Storage Section */}
-				<section className="space-y-4">
-					<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-						<Icons.HardDrive className="w-5 h-5" />
-						Storage
-					</h2>
+				<CollapsibleSection icon={<Icons.HardDrive className="w-4 h-4" />} title="Storage">
 
-					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-3">
 						{/* Backend Info */}
 						<div className="flex items-start gap-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
 							<Icons.Database className="w-5 h-5 text-blue-500 mt-0.5" />
@@ -270,23 +249,24 @@ export function ConfigView() {
 							</div>
 						</div>
 					</div>
-				</section>
+				</CollapsibleSection>
 
 				{/* Editor Section */}
-				<section className="space-y-4">
-					<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-						<Icons.Edit3 className="w-5 h-5" />
-						Editor
-					</h2>
+				<CollapsibleSection icon={<Icons.Edit3 className="w-4 h-4" />} title="Editor">
 
-					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-3">
 						{/* Font Size */}
 						<div className="space-y-2">
 							<div className="flex items-center justify-between">
-								<div className="font-medium text-gray-900 dark:text-gray-100">
-									Font Size
+								<div>
+									<div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+										Font Size
+									</div>
+									<div className="text-xs text-gray-500 dark:text-gray-400">
+										Default font size for new text
+									</div>
 								</div>
-								<div className="text-sm text-gray-600 dark:text-gray-300">
+								<div className="text-xs text-gray-600 dark:text-gray-300">
 									{editorSettings.fontSize}px
 								</div>
 							</div>
@@ -304,11 +284,11 @@ export function ConfigView() {
 						{/* Font Family */}
 						<div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
 							<div>
-								<div className="font-medium text-gray-900 dark:text-gray-100">
+								<div className="text-sm font-medium text-gray-900 dark:text-gray-100">
 									Font Family
 								</div>
-								<div className="text-sm text-gray-500 dark:text-gray-400">
-									Editor text font
+								<div className="text-xs text-gray-500 dark:text-gray-400">
+									Default font for new text
 								</div>
 							</div>
 							<SettingsFontPicker
@@ -320,10 +300,10 @@ export function ConfigView() {
 						{/* Line Height */}
 						<div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
 							<div className="flex items-center justify-between">
-								<div className="font-medium text-gray-900 dark:text-gray-100">
+								<div className="text-sm font-medium text-gray-900 dark:text-gray-100">
 									Line Height
 								</div>
-								<div className="text-sm text-gray-600 dark:text-gray-300">
+								<div className="text-xs text-gray-600 dark:text-gray-300">
 									{editorSettings.lineHeight.toFixed(1)}
 								</div>
 							</div>
@@ -341,10 +321,10 @@ export function ConfigView() {
 						{/* Paragraph Spacing */}
 						<div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
 							<div className="flex items-center justify-between">
-								<div className="font-medium text-gray-900 dark:text-gray-100">
+								<div className="text-sm font-medium text-gray-900 dark:text-gray-100">
 									Paragraph Spacing
 								</div>
-								<div className="text-sm text-gray-600 dark:text-gray-300">
+								<div className="text-xs text-gray-600 dark:text-gray-300">
 									{editorSettings.paragraphSpacing.toFixed(1)}em
 								</div>
 							</div>
@@ -362,10 +342,10 @@ export function ConfigView() {
 						{/* Letter Spacing */}
 						<div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
 							<div className="flex items-center justify-between">
-								<div className="font-medium text-gray-900 dark:text-gray-100">
+								<div className="text-sm font-medium text-gray-900 dark:text-gray-100">
 									Letter Spacing
 								</div>
-								<div className="text-sm text-gray-600 dark:text-gray-300">
+								<div className="text-xs text-gray-600 dark:text-gray-300">
 									{editorSettings.letterSpacing !== undefined
 										? `${editorSettings.letterSpacing >= 0 ? "+" : ""}${editorSettings.letterSpacing.toFixed(2)}em`
 										: "0.00em"}
@@ -385,10 +365,10 @@ export function ConfigView() {
 						{/* Editor Padding */}
 						<div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
 							<div className="flex items-center justify-between">
-								<div className="font-medium text-gray-900 dark:text-gray-100">
+								<div className="text-sm font-medium text-gray-900 dark:text-gray-100">
 									Editor Padding
 								</div>
-								<div className="text-sm text-gray-600 dark:text-gray-300">
+								<div className="text-xs text-gray-600 dark:text-gray-300">
 									{editorSettings.editorPadding}px
 								</div>
 							</div>
@@ -406,10 +386,10 @@ export function ConfigView() {
 						{/* Line Wrapping */}
 						<div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
 							<div>
-								<div className="font-medium text-gray-900 dark:text-gray-100">
+								<div className="text-sm font-medium text-gray-900 dark:text-gray-100">
 									Line Wrapping
 								</div>
-								<div className="text-sm text-gray-500 dark:text-gray-400">
+								<div className="text-xs text-gray-500 dark:text-gray-400">
 									Wrap long lines in the editor
 								</div>
 							</div>
@@ -437,10 +417,10 @@ export function ConfigView() {
 							{/* Cursor Width */}
 							<div className="flex items-center justify-between mb-3">
 								<div>
-									<div className="font-medium text-gray-900 dark:text-gray-100">
+									<div className="text-sm font-medium text-gray-900 dark:text-gray-100">
 										Cursor Width
 									</div>
-									<div className="text-sm text-gray-500 dark:text-gray-400">
+									<div className="text-xs text-gray-500 dark:text-gray-400">
 										Width of the text cursor
 									</div>
 								</div>
@@ -462,10 +442,10 @@ export function ConfigView() {
 							{/* Cursor Animation */}
 							<div className="flex items-center justify-between mb-3">
 								<div>
-									<div className="font-medium text-gray-900 dark:text-gray-100">
+									<div className="text-sm font-medium text-gray-900 dark:text-gray-100">
 										Cursor Animation
 									</div>
-									<div className="text-sm text-gray-500 dark:text-gray-400">
+									<div className="text-xs text-gray-500 dark:text-gray-400">
 										Cursor blink style
 									</div>
 								</div>
@@ -482,12 +462,12 @@ export function ConfigView() {
 							</div>
 
 							{/* Smooth Cursor Movement */}
-							<div className="flex items-center justify-between">
+							<div className="flex items-center justify-between mb-3">
 								<div>
-									<div className="font-medium text-gray-900 dark:text-gray-100">
+									<div className="text-sm font-medium text-gray-900 dark:text-gray-100">
 										Smooth Cursor Movement
 									</div>
-									<div className="text-sm text-gray-500 dark:text-gray-400">
+									<div className="text-xs text-gray-500 dark:text-gray-400">
 										Animate cursor position changes
 									</div>
 								</div>
@@ -504,6 +484,24 @@ export function ConfigView() {
 									/>
 								</button>
 							</div>
+
+							{/* Cursor Color */}
+							<div className="flex items-center justify-between">
+								<div>
+									<div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+										Cursor Color
+									</div>
+									<div className="text-xs text-gray-500 dark:text-gray-400">
+										Color of the text cursor
+									</div>
+								</div>
+								<input
+									type="color"
+									value={editorSettings.caretColor}
+									onChange={(e) => updateSetting("caretColor", e.target.value)}
+									className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer bg-transparent p-0.5"
+								/>
+							</div>
 						</div>
 
 						{/* Reset Button */}
@@ -516,16 +514,12 @@ export function ConfigView() {
 							</button>
 						</div>
 					</div>
-				</section>
+				</CollapsibleSection>
 
 				{/* Backup & Restore Section */}
-				<section className="space-y-4">
-					<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-						<Icons.Save className="w-5 h-5" />
-						Backup & Restore
-					</h2>
+				<CollapsibleSection icon={<Icons.Save className="w-4 h-4" />} title="Backup & Restore">
 
-					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-3">
 						<div>
 							<div className="font-medium text-gray-900 dark:text-gray-100 mb-1">
 								Settings Backup
@@ -560,16 +554,12 @@ export function ConfigView() {
 							</div>
 						</div>
 					</div>
-				</section>
+				</CollapsibleSection>
 
 				{/* Storage Maintenance Section */}
-				<section className="space-y-4">
-					<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-						<Icons.HardDrive className="w-5 h-5" />
-						Storage Maintenance
-					</h2>
+				<CollapsibleSection icon={<Icons.HardDrive className="w-4 h-4" />} title="Storage Maintenance">
 
-					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-3">
 						<div>
 							<div className="font-medium text-gray-900 dark:text-gray-100 mb-1">
 								Clean Up Orphaned Images
@@ -594,16 +584,46 @@ export function ConfigView() {
 							</div>
 						</div>
 					</div>
-				</section>
+				</CollapsibleSection>
+
+				{/* ASCII Art Section */}
+				<CollapsibleSection icon={<Icons.TextCursorInput className="w-4 h-4" />} title="ASCII Art Insertions">
+
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-2">
+						<div className="text-sm text-gray-500 dark:text-gray-400">
+							Define ASCII art snippets that can be inserted into the editor with keyboard shortcuts.
+						</div>
+						<button
+							onClick={() => openAsciiArtTab()}
+							className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+						>
+							<Icons.Settings className="w-4 h-4" />
+							Manage ASCII Art
+						</button>
+					</div>
+				</CollapsibleSection>
+
+				{/* Autocorrect Section */}
+				<CollapsibleSection icon={<Icons.Replace className="w-4 h-4" />} title="Autocorrect">
+
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-2">
+						<div className="text-sm text-gray-500 dark:text-gray-400">
+							Define text replacements that trigger automatically as you type (e.g. \infty → ∞).
+						</div>
+						<button
+							onClick={() => openAutocorrectTab()}
+							className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+						>
+							<Icons.Settings className="w-4 h-4" />
+							Manage Autocorrect Rules
+						</button>
+					</div>
+				</CollapsibleSection>
 
 				{/* About Section */}
-				<section className="space-y-4">
-					<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-						<Icons.Info className="w-5 h-5" />
-						About
-					</h2>
+				<CollapsibleSection icon={<Icons.Info className="w-4 h-4" />} title="About">
 
-					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3">
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-2">
 						<div className="flex items-center justify-between">
 							<span className="text-gray-600 dark:text-gray-400">
 								Application
@@ -621,22 +641,18 @@ export function ConfigView() {
 							</span>
 						</div>
 					</div>
-				</section>
+				</CollapsibleSection>
 
 				{/* Debug Section (Dev Only) */}
 				{import.meta.env.DEV && (
-					<section className="space-y-4">
-						<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-							<Icons.Bug className="w-5 h-5" />
-							Debug Info
-						</h2>
+					<CollapsibleSection icon={<Icons.Bug className="w-4 h-4" />} title="Debug Info">
 
-						<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+						<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
 							<pre className="text-xs text-gray-600 dark:text-gray-400 overflow-auto max-h-64">
 								{JSON.stringify(config, null, 2)}
 							</pre>
 						</div>
-					</section>
+					</CollapsibleSection>
 				)}
 			</div>
 		</div>

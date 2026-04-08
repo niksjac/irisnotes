@@ -1,4 +1,5 @@
 import { useSetAtom } from "jotai";
+import { invoke } from "@tauri-apps/api/core";
 import {
 	closeActiveTabAtom,
 	reopenLastClosedTabAtom,
@@ -35,6 +36,7 @@ import {
 	showQuickHotkeysAtom,
 	toggleZenModeAtom,
 	openThemeSwitcherAtom,
+	openSymbolPickerAtom,
 } from "@/atoms";
 import { useEditorViewToggle } from "./use-editor-view-toggle";
 import { useLineWrapping } from "./use-line-wrapping";
@@ -157,6 +159,12 @@ export function useHotkeyHandlers() {
 		openHotkeys: useSetAtom(openHotkeysTabAtom),
 		showQuickHotkeys: useSetAtom(showQuickHotkeysAtom),
 		openThemeSwitcher: useSetAtom(openThemeSwitcherAtom),
+		openSymbolPicker: useSetAtom(openSymbolPickerAtom),
+
+		// Config folder
+		openConfigFolder: () => {
+			invoke("open_app_config_folder").catch(console.error);
+		},
 
 		// Search actions
 		openQuickSearch: useSetAtom(openQuickSearchAtom),

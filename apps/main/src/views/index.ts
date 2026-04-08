@@ -1,4 +1,6 @@
 // Views - Barrel Exports
+export { AsciiArtView } from "./ascii-art-view";
+export { AutocorrectView } from "./autocorrect-view";
 export { BookView } from "./book-view";
 export { ConfigView } from "./config-view";
 export { EditorRichView } from "./editor-rich-view";
