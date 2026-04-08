@@ -50,3 +50,14 @@ export const showQuickHotkeysAtom = atom(null, (_get, set) => {
 export const hideQuickHotkeysAtom = atom(null, (_get, set) => {
 	set(quickHotkeysOpenAtom, false);
 });
+
+// Symbol picker dialog
+export const symbolPickerOpenAtom = atom<boolean>(false);
+
+export const openSymbolPickerAtom = atom(null, (_get, set) => {
+	set(symbolPickerOpenAtom, true);
+});
+
+export const closeSymbolPickerAtom = atom(null, (_get, set) => {
+	set(symbolPickerOpenAtom, false);
+});
