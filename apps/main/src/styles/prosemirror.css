@@ -210,8 +210,10 @@ li.pm-tight-selection-list-item .pm-tight-selection:first-child::before {
   bottom: 0;
   /* Extend from left edge of editor (into padding) */
   left: calc(-1 * var(--pm-padding));
-  /* Use very large width to cover any scroll extent, clipped by overflow */
-  width: max(calc(100% + 2 * var(--pm-padding)), 100vw);
+  /* Span the full editor width including both padding sides.
+     Avoid 100vw — it creates hidden overflow wider than the editor,
+     allowing browsers to scroll horizontally (e.g. on PageUp). */
+  width: calc(100% + 2 * var(--pm-padding));
   background-color: var(--pm-active-line-bg);
   border-radius: 0;
   pointer-events: none;
