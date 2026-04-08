@@ -188,8 +188,8 @@ fn read_config() -> Result<String, String> {
 
 // Parsed search query with field-specific filters
 struct ParsedQuery {
-    /// Free text for title search
-    title: String,
+    /// Free text tokens for title search (AND-combined)
+    title_tokens: Vec<String>,
     /// ~content filter
     content: Option<String>,
     /// @book filter
@@ -201,7 +201,7 @@ struct ParsedQuery {
 }
 
 fn parse_query(input: &str) -> ParsedQuery {
-    let mut title_parts = Vec::new();
+    let mut title_tokens = Vec::new();
     let mut content = None;
     let mut book = None;
     let mut section = None;
@@ -240,12 +240,11 @@ fn parse_query(input: &str) -> ParsedQuery {
                 i += 1;
             }
             let token: String = chars[start..i].iter().collect();
-            title_parts.push(token);
+            title_tokens.push(token);
         }
     }
 
-    let title = title_parts.join(" ");
-    ParsedQuery { title, content, book, section, root_only }
+    ParsedQuery { title_tokens, content, book, section, root_only }
 }
 
 /// Extract a value after @ or #, supporting quoted strings: @"my book" or @word
@@ -291,30 +290,74 @@ fn search_notes(query: String, state: State<DbState>) -> Result<Vec<SearchResult
     let parsed = parse_query(&query);
 
     // If nothing to search, return empty
-    if parsed.title.is_empty() && parsed.content.is_none() && parsed.book.is_none() && parsed.section.is_none() && !parsed.root_only {
+    if parsed.title_tokens.is_empty() && parsed.content.is_none() && parsed.book.is_none() && parsed.section.is_none() && !parsed.root_only {
         return Ok(vec![]);
     }
 
-    let title_lower = escape_like(&parsed.title.to_lowercase());
-    let has_title: i32 = if !parsed.title.is_empty() { 1 } else { 0 };
+    let has_title = !parsed.title_tokens.is_empty();
+    let has_content = parsed.content.is_some();
+    let has_book = parsed.book.is_some();
+    let has_section = parsed.section.is_some();
+    let root_only = parsed.root_only;
 
-    // Build FTS query from content filter for content search
-    let content_filter = escape_like(&parsed.content.unwrap_or_default());
-    let content_fts = content_filter
-        .split_whitespace()
-        .map(|word| format!("{}*", word.replace('"', "")))
-        .collect::<Vec<_>>()
-        .join(" ");
-    let has_content: i32 = if !content_filter.is_empty() { 1 } else { 0 };
+    // Build dynamic params and WHERE conditions
+    let mut params: Vec<Box<dyn rusqlite::types::ToSql>> = Vec::new();
+    let mut conditions: Vec<String> = Vec::new();
 
-    let book_filter = escape_like(&parsed.book.unwrap_or_default());
-    let section_filter = escape_like(&parsed.section.unwrap_or_default());
-    let has_book_filter: i32 = if !book_filter.is_empty() { 1 } else { 0 };
-    let has_section_filter: i32 = if !section_filter.is_empty() { 1 } else { 0 };
-    let root_flag: i32 = if parsed.root_only { 1 } else { 0 };
+    // Title filter: one LIKE per token, AND-combined
+    if has_title {
+        let mut title_conds = Vec::new();
+        for token in &parsed.title_tokens {
+            let escaped = escape_like(&token.to_lowercase());
+            title_conds.push("LOWER(i.title) LIKE '%' || ? || '%' ESCAPE '\\'".to_string());
+            params.push(Box::new(escaped));
+        }
+        conditions.push(format!("({})", title_conds.join(" AND ")));
+    }
 
-    let sql = r#"
-        SELECT 
+    // Content filter (~content: FTS + LIKE fallback)
+    if let Some(ref content) = parsed.content {
+        let content_lower = escape_like(&content.to_lowercase());
+        let content_fts = content_lower
+            .split_whitespace()
+            .map(|word| format!("{}*", word.replace('"', "")))
+            .collect::<Vec<_>>()
+            .join(" ");
+        params.push(Box::new(content_fts));
+        params.push(Box::new(content_lower));
+        conditions.push(
+            "(i.id IN (SELECT fts.item_id FROM items_fts fts WHERE items_fts MATCH ?) OR LOWER(i.content) LIKE '%' || ? || '%' ESCAPE '\\')".to_string()
+        );
+    }
+
+    // Book filter (@book)
+    if let Some(ref book) = parsed.book {
+        let book_lower = escape_like(&book.to_lowercase());
+        params.push(Box::new(book_lower.clone()));
+        params.push(Box::new(book_lower));
+        conditions.push(
+            "((p.type = 'book' AND LOWER(p.title) LIKE '%' || ? || '%' ESCAPE '\\') OR (pp.type = 'book' AND LOWER(pp.title) LIKE '%' || ? || '%' ESCAPE '\\'))".to_string()
+        );
+    }
+
+    // Section filter (#section)
+    if let Some(ref section) = parsed.section {
+        let section_lower = escape_like(&section.to_lowercase());
+        params.push(Box::new(section_lower));
+        conditions.push(
+            "(p.type = 'section' AND LOWER(p.title) LIKE '%' || ? || '%' ESCAPE '\\')".to_string()
+        );
+    }
+
+    // Root filter (/)
+    if root_only {
+        conditions.push("i.parent_id IS NULL".to_string());
+    }
+
+    let where_clause = conditions.join("\n          AND ");
+
+    let sql = format!("
+        SELECT
             i.id,
             i.title,
             p.title as parent_title,
@@ -327,56 +370,16 @@ fn search_notes(query: String, state: State<DbState>) -> Result<Vec<SearchResult
         LEFT JOIN items pp ON p.parent_id = pp.id
         WHERE i.type = 'note'
           AND i.deleted_at IS NULL
-          -- Title filter (free text = title LIKE)
-          AND (
-              ?1 = 0 OR LOWER(i.title) LIKE '%' || ?2 || '%' ESCAPE '\'
-          )
-          -- Content filter (~content: FTS on content, with LIKE fallback)
-          AND (
-              ?3 = 0 OR i.id IN (
-                  SELECT fts.item_id FROM items_fts fts
-                  WHERE items_fts MATCH ?4
-              )
-              OR (?3 = 1 AND LOWER(i.content) LIKE '%' || ?5 || '%' ESCAPE '\')
-          )
-          -- Book filter (@book)
-          AND (
-              ?6 = 0 OR (
-                  (p.type = 'book' AND LOWER(p.title) LIKE '%' || ?7 || '%' ESCAPE '\')
-                  OR (pp.type = 'book' AND LOWER(pp.title) LIKE '%' || ?7 || '%' ESCAPE '\')
-              )
-          )
-          -- Section filter (#section)
-          AND (
-              ?8 = 0 OR (
-                  p.type = 'section' AND LOWER(p.title) LIKE '%' || ?9 || '%' ESCAPE '\'
-              )
-          )
-          -- Root filter (/)
-          AND (
-              ?10 = 0 OR i.parent_id IS NULL
-          )
+          AND {}
         ORDER BY i.title
         LIMIT 30
-    "#;
+    ", where_clause);
 
-    let mut stmt = conn.prepare(sql).map_err(|e| e.to_string())?;
+    let param_refs: Vec<&dyn rusqlite::types::ToSql> = params.iter().map(|p| p.as_ref()).collect();
+    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
 
     let results = stmt
-        .query_map(
-            rusqlite::params![
-                &has_title,          // ?1
-                &title_lower,        // ?2
-                &has_content,        // ?3
-                &content_fts,        // ?4 - FTS MATCH for content
-                &content_filter,     // ?5 - LIKE fallback for content
-                &has_book_filter,    // ?6
-                &book_filter,        // ?7
-                &has_section_filter, // ?8
-                &section_filter,     // ?9
-                &root_flag,          // ?10
-            ],
-            |row| {
+        .query_map(param_refs.as_slice(), |row| {
             let parent_title: Option<String> = row.get(2)?;
             let parent_type: Option<String> = row.get(3)?;
             let grandparent_title: Option<String> = row.get(4)?;
@@ -400,13 +403,13 @@ fn search_notes(query: String, state: State<DbState>) -> Result<Vec<SearchResult
             };
 
             let note_title: String = row.get(1)?;
-            let match_type = if has_title == 1 && note_title.to_lowercase().contains(&title_lower) {
+            let match_type = if has_title {
                 "title"
-            } else if has_content == 1 {
+            } else if has_content {
                 "content"
-            } else if root_flag == 1 {
+            } else if root_only {
                 "root"
-            } else if has_book_filter == 1 || has_section_filter == 1 {
+            } else if has_book || has_section {
                 "parent"
             } else {
                 "title"

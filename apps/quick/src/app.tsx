@@ -217,6 +217,7 @@ export function App() {
               <div className="cheat-sheet-section">
                 <div className="cheat-sheet-title">Filters</div>
                 <div className="cheat-sheet-row"><kbd>hello</kbd><span>Search note titles</span></div>
+                <div className="cheat-sheet-row"><kbd>foo bar</kbd><span>Multiple words match independently (AND)</span></div>
                 <div className="cheat-sheet-row"><kbd>~word</kbd><span>Search note content</span></div>
                 <div className="cheat-sheet-row"><kbd>@book</kbd><span>Filter by book name</span></div>
                 <div className="cheat-sheet-row"><kbd>#section</kbd><span>Filter by section name</span></div>
@@ -231,6 +232,7 @@ export function App() {
                 <div className="cheat-sheet-row"><kbd>todo @work</kbd><span>"todo" in title, in "work" book</span></div>
                 <div className="cheat-sheet-row"><kbd>~python #snippets</kbd><span>Content has "python", in "snippets" section</span></div>
                 <div className="cheat-sheet-row"><kbd>/ meeting</kbd><span>"meeting" in title, root only</span></div>
+                <div className="cheat-sheet-row"><kbd>ai assist vir</kbd><span>Matches titles with all three words, any order</span></div>
               </div>
               <div className="cheat-sheet-section">
                 <div className="cheat-sheet-title">Navigation</div>
