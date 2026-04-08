@@ -109,20 +109,10 @@ export const ThemeSwitcherDialog: FC = () => {
 				}`}
 			>
 				{/* Colour swatch */}
-				<span className="flex gap-0.5 flex-shrink-0 rounded overflow-hidden border border-black/10">
-					<span
-						className="w-3 h-5"
-						style={{ background: theme.swatch.bg }}
-					/>
-					<span
-						className="w-3 h-5"
-						style={{ background: theme.swatch.panel }}
-					/>
-					<span
-						className="w-3 h-5"
-						style={{ background: theme.swatch.accent }}
-					/>
-				</span>
+				<span
+					className="w-3 h-3 flex-shrink-0"
+					style={{ background: theme.swatch.accent }}
+				/>
 
 				{/* Theme name with dark/light indicator */}
 				<span
