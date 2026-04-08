@@ -1,0 +1,22 @@
+[insert_arrow]
+art = """
+  ──────►
+"""
+description = "Insert arrow"
+key = "ctrl+shift+alt+3"
+
+[insert_box]
+art = """
+┌─────────────────────┐
+│                     │
+└─────────────────────┘
+"""
+description = "Insert box"
+key = "ctrl+shift+alt+2"
+
+[insert_horizontal_divider]
+art = """
+═══════════════════════════════════════
+"""
+description = "Insert horizontal divider"
+key = "shift+alt+d"
