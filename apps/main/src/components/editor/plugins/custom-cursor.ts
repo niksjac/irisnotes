@@ -57,14 +57,15 @@ export function customCursorPlugin(): Plugin {
 		if (!wrapper) return;
 		const wrapperRect = wrapper.getBoundingClientRect();
 		
-		// coords are viewport-relative. The cursor is position:absolute inside
-		// the scroll container (wrapper), so we must add the scroll offset to
-		// get the correct position in content-space. Without this the cursor
-		// drifts by scrollLeft/scrollTop whenever the container is scrolled
-		// (e.g. long lines in no-wrap mode, or after padding changes).
-		const left = coords.left - wrapperRect.left + wrapper.scrollLeft;
-		const top = coords.top - wrapperRect.top + wrapper.scrollTop;
-		const height = coords.bottom - coords.top;
+		// The cursor element is absolutely positioned inside the wrapper which
+		// may have CSS zoom applied. coordsAtPos and getBoundingClientRect both
+		// return screen-space (zoomed) values, but absolute positioning inside
+		// a zoomed container uses the local (unzoomed) coordinate system.
+		// Divide by zoom to convert screen-space offsets to local-space.
+		const zoom = parseFloat(getComputedStyle(wrapper).zoom) || 1;
+		const left = (coords.left - wrapperRect.left) / zoom + wrapper.scrollLeft;
+		const top = (coords.top - wrapperRect.top) / zoom + wrapper.scrollTop;
+		const height = (coords.bottom - coords.top) / zoom;
 
 		cursorElement.style.display = "block";
 		cursorElement.style.left = `${left}px`;
@@ -125,8 +126,8 @@ export function customCursorPlugin(): Plugin {
 			// Create cursor element
 			cursorElement = createCursor();
 
-			// Append to editor's DOM parent wrapper (outside the zoomed .ProseMirror)
-			// We'll handle zoom by scaling the cursor position/size from screen coords
+			// Append to editor's DOM parent wrapper (the zoomed scroll container)
+			// Zoom is compensated in updateCursorPosition
 			const wrapper = editorView.dom.parentElement;
 			if (wrapper) {
 				wrapper.style.position = "relative";
@@ -140,7 +141,6 @@ export function customCursorPlugin(): Plugin {
 			// Listen for editor settings changes (font size, etc.) to recalculate cursor
 			function handleSettingsChange(): void {
 				if (currentView) {
-					// Use requestAnimationFrame to ensure CSS has been applied
 					requestAnimationFrame(() => {
 						if (currentView) {
 							updateCursorPosition(currentView);
@@ -150,8 +150,34 @@ export function customCursorPlugin(): Plugin {
 			}
 			window.addEventListener("editor-settings-changed", handleSettingsChange);
 
+			// Recalculate cursor on window resize (layout reflow changes coords)
+			function handleResize(): void {
+				if (currentView?.hasFocus()) {
+					updateCursorPosition(currentView);
+				}
+			}
+			window.addEventListener("resize", handleResize);
+
+			// Recalculate cursor when the scroll container scrolls
+			function handleScroll(): void {
+				if (currentView?.hasFocus()) {
+					updateCursorPosition(currentView);
+				}
+			}
+			wrapper?.addEventListener("scroll", handleScroll);
+
+			// Recalculate cursor when wrapper is resized (e.g. pane resize)
+			let resizeObserver: ResizeObserver | null = null;
+			if (wrapper) {
+				resizeObserver = new ResizeObserver(() => {
+					if (currentView?.hasFocus()) {
+						updateCursorPosition(currentView);
+					}
+				});
+				resizeObserver.observe(wrapper);
+			}
+
 			// Initial position - use multiple frames to ensure layout is complete
-			// This handles the case where editor has focus on app startup
 			requestAnimationFrame(() => {
 				requestAnimationFrame(() => {
 					if (currentView && currentView.hasFocus()) {
@@ -169,6 +195,9 @@ export function customCursorPlugin(): Plugin {
 					editorView.dom.removeEventListener("focus", handleFocus);
 					editorView.dom.removeEventListener("blur", handleBlur);
 					window.removeEventListener("editor-settings-changed", handleSettingsChange);
+					window.removeEventListener("resize", handleResize);
+					wrapper?.removeEventListener("scroll", handleScroll);
+					resizeObserver?.disconnect();
 					cursorElement?.remove();
 					cursorElement = null;
 					currentView = null;
