@@ -18,7 +18,6 @@ import {
 import { wrapInList, liftListItem, sinkListItem, splitListItem } from "prosemirror-schema-list";
 import { dropCursor } from "prosemirror-dropcursor";
 import { gapCursor } from "prosemirror-gapcursor";
-import { buildInputRules } from "prosemirror-example-setup";
 import { tableEditing, columnResizing, goToNextCell, deleteRow, deleteColumn, deleteTable, isInTable, CellSelection, addRowAfter, addRowBefore, addColumnAfter, addColumnBefore } from "prosemirror-tables";
 import { autolinkPlugin, linkifySelection } from "./plugins/autolink";
 import { tightSelectionPlugin } from "./plugins/tight-selection";
@@ -26,6 +25,7 @@ import { customCursorPlugin } from "./plugins/custom-cursor";
 import { activeLinePlugin } from "./plugins/active-line";
 import { buildLineCommandsKeymap, resetSmartSelectLevel } from "./plugins/line-commands";
 import { searchPlugin } from "./plugins/search";
+import { autocorrectPlugin } from "./plugins/autocorrect";
 import { clearAllFormatting, increaseFontSizeMark, decreaseFontSizeMark, setTextAlign, setTableAlign, fitColumnWidths } from "./format-commands";
 import { DEFAULT_EDITOR_KEYBINDINGS, type EditorKeybindings } from "@/config/default-editor-keybindings";
 
@@ -76,6 +76,59 @@ function toggleBlockquote(quoteType: NodeType): Command {
 		return wrapIn(quoteType)(state, dispatch);
 	};
 }
+
+/**
+ * Alt+X: Bidirectional Unicode hex ↔ character conversion.
+ * - If the text before cursor ends with \XXXX (4-6 hex digits), convert to the character.
+ * - Otherwise, take the single character before cursor and replace it with \XXXX hex code.
+ */
+const reverseUnicodeLookup: Command = (state, dispatch) => {
+	const { $from } = state.selection;
+
+	if (!state.selection.empty) return false;
+
+	const offset = $from.parentOffset;
+	if (offset === 0) return false;
+
+	const textBefore = $from.parent.textContent.slice(0, offset);
+	if (!textBefore) return false;
+
+	const curPos = $from.pos;
+
+	// First check: does text end with \XXXX hex code? → convert to character
+	const hexMatch = textBefore.match(/\\([0-9a-fA-F]{4,6})$/);
+	if (hexMatch?.[1]) {
+		const codePoint = Number.parseInt(hexMatch[1], 16);
+		if (codePoint > 0 && codePoint <= 0x10FFFF) {
+			if (dispatch) {
+				const triggerLen = hexMatch[0].length;
+				const from = curPos - triggerLen;
+				const char = String.fromCodePoint(codePoint);
+				const tr = state.tr.replaceWith(from, curPos, state.schema.text(char));
+				tr.setMeta("reverseUnicodeLookup", true);
+				dispatch(tr);
+			}
+			return true;
+		}
+	}
+
+	// Second check: take character before cursor → replace with \XXXX
+	const chars = Array.from(textBefore);
+	const lastChar = chars[chars.length - 1];
+	if (!lastChar) return false;
+
+	const codePoint = lastChar.codePointAt(0)!;
+	const charLen = lastChar.length; // 1 for BMP, 2 for surrogate pairs
+	const hex = codePoint.toString(16).toUpperCase().padStart(4, "0");
+
+	if (dispatch) {
+		const from = curPos - charLen;
+		const tr = state.tr.replaceWith(from, curPos, state.schema.text(`\\${hex}`));
+		tr.setMeta("reverseUnicodeLookup", true);
+		dispatch(tr);
+	}
+	return true;
+};
 
 /**
  * Split block while preserving marks from the current position.
@@ -180,8 +233,8 @@ export function customSetup(options: SetupOptions): Plugin[] {
 	});
 	plugins.push(keymap(appShortcutBindings));
 
-	// Input rules (markdown-style shortcuts)
-	plugins.push(buildInputRules(options.schema));
+	// No built-in input rules — all text replacements are handled by
+	// the autocorrect plugin via autocorrect.toml
 
 	// Line commands FIRST - must come before base keymap to override Mod-a
 	// (Alt+Up/Down to move lines, Alt+Shift+Up/Down to copy, Ctrl+A smart select, etc.)
@@ -513,6 +566,9 @@ export function customSetup(options: SetupOptions): Plugin[] {
 	// Search plugin for Ctrl+F find in note
 	plugins.push(searchPlugin());
 
+	// Autocorrect (text replacement as you type, e.g. \infty → ∞)
+	plugins.push(autocorrectPlugin());
+
 	// Custom keybindings - all user-overridable via [editor] TOML section
 	const customKeybindings: { [key: string]: any } = {};
 
@@ -743,6 +799,9 @@ export function customSetup(options: SetupOptions): Plugin[] {
 	// ── Alignment (Ctrl+Shift+E/R) — table position when in table, text otherwise ──
 	customKeybindings["Mod-Shift-e"] = chainCommands(setTableAlign("center"), setTextAlign("center"));
 	customKeybindings["Mod-Shift-r"] = chainCommands(setTableAlign("right"), setTextAlign("right"));
+
+	// ── Alt+X: convert character before cursor to/from Unicode hex code ──
+	customKeybindings["Alt-x"] = reverseUnicodeLookup;
 
 	// NOTE: Format pickers (Ctrl+Shift+1-4), direct colors (Alt+0-6),
 	// and direct highlights (Shift+Alt+0-6) are handled via DOM keydown

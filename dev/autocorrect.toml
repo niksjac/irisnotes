@@ -1,0 +1,159 @@
+[long_line]
+trigger = "---"
+replacement = "────────────────────────────────────────"
+description = "Long line"
+
+[arrow_right]
+trigger = "-->"
+replacement = "→"
+description = "Right arrow"
+
+[arrow_left]
+trigger = "<--"
+replacement = "←"
+description = "Left arrow"
+
+[double_arrow_right]
+trigger = "==>"
+replacement = "⟹"
+description = "Double right arrow"
+
+[double_arrow_left]
+trigger = "<=="
+replacement = "⟸"
+description = "Double left arrow"
+
+[bidi_arrow]
+trigger = "<->"
+replacement = "↔"
+description = "Bidirectional arrow"
+
+[ellipsis]
+trigger = "..."
+replacement = "…"
+description = "Ellipsis"
+
+[infinity]
+trigger = "\\infty"
+replacement = "∞"
+description = "Infinity"
+
+[alpha]
+trigger = "\\alpha"
+replacement = "α"
+description = "Alpha"
+
+[beta]
+trigger = "\\beta"
+replacement = "β"
+description = "Beta"
+
+[gamma]
+trigger = "\\gamma"
+replacement = "γ"
+description = "Gamma"
+
+[delta]
+trigger = "\\delta"
+replacement = "δ"
+description = "Delta"
+
+[pi]
+trigger = "\\pi"
+replacement = "π"
+description = "Pi"
+
+[theta]
+trigger = "\\theta"
+replacement = "θ"
+description = "Theta"
+
+[lambda]
+trigger = "\\lambda"
+replacement = "λ"
+description = "Lambda"
+
+[sigma]
+trigger = "\\sigma"
+replacement = "σ"
+description = "Sigma"
+
+[omega]
+trigger = "\\omega"
+replacement = "ω"
+description = "Omega"
+
+[summation]
+trigger = "\\sum"
+replacement = "∑"
+description = "Summation"
+
+[product]
+trigger = "\\prod"
+replacement = "∏"
+description = "Product"
+
+[integral]
+trigger = "\\int"
+replacement = "∫"
+description = "Integral"
+
+[square_root]
+trigger = "\\sqrt"
+replacement = "√"
+description = "Square root"
+
+[not_equal]
+trigger = "\\neq"
+replacement = "≠"
+description = "Not equal"
+
+[less_equal]
+trigger = "\\leq"
+replacement = "≤"
+description = "Less than or equal"
+
+[greater_equal]
+trigger = "\\geq"
+replacement = "≥"
+description = "Greater than or equal"
+
+[approx]
+trigger = "\\approx"
+replacement = "≈"
+description = "Approximately equal"
+
+[plus_minus]
+trigger = "\\pm"
+replacement = "±"
+description = "Plus-minus"
+
+[times]
+trigger = "\\times"
+replacement = "×"
+description = "Multiplication"
+
+[division]
+trigger = "\\div"
+replacement = "÷"
+description = "Division"
+
+[degree]
+trigger = "\\degree"
+replacement = "°"
+description = "Degree"
+
+[copyright]
+trigger = "(c)"
+replacement = "©"
+description = "Copyright"
+
+[registered]
+trigger = "(r)"
+replacement = "®"
+description = "Registered"
+
+[trademark]
+trigger = "(tm)"
+replacement = "™"
+description = "Trademark"
