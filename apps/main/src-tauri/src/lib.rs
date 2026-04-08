@@ -320,10 +320,34 @@ async fn open_app_config_folder(app_handle: tauri::AppHandle) -> Result<(), Stri
     let app_config_dir = get_config_dir(&app_handle)?;
 
     // Open the directory using the opener plugin
-    app_handle
-        .opener()
-        .open_path(app_config_dir.to_string_lossy().to_string(), None::<&str>)
-        .map_err(|e| format!("Failed to open app config folder: {}", e))?;
+    // On Linux, try to use the preferred file manager (thunar, nautilus, etc.)
+    #[cfg(target_os = "linux")]
+    {
+        let path_str = app_config_dir.to_string_lossy().to_string();
+        // Try common file managers in order of preference
+        for fm in &["thunar", "nautilus", "dolphin", "nemo", "pcmanfm"] {
+            if std::process::Command::new(fm)
+                .arg(&path_str)
+                .spawn()
+                .is_ok()
+            {
+                return Ok(());
+            }
+        }
+        // Fallback to xdg-open via the opener plugin
+        app_handle
+            .opener()
+            .open_path(&path_str, None::<&str>)
+            .map_err(|e| format!("Failed to open app config folder: {}", e))?;
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    {
+        app_handle
+            .opener()
+            .open_path(app_config_dir.to_string_lossy().to_string(), None::<&str>)
+            .map_err(|e| format!("Failed to open app config folder: {}", e))?;
+    }
 
     Ok(())
 }
