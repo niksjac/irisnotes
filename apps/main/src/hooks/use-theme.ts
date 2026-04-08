@@ -26,6 +26,9 @@ export function applyThemeToDOM(themeName: ThemeName) {
 	root.setAttribute("data-theme", themeName);
 	root.classList.toggle("dark", def.isDark);
 	root.style.colorScheme = def.isDark ? "dark" : "light";
+	// Clear inline bg/fg set by index.html bootstrap — CSS rules take over
+	root.style.backgroundColor = "";
+	root.style.color = "";
 	localStorage.setItem("theme", themeName);
 }
 

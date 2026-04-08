@@ -20,6 +20,23 @@
         var isDark = lightThemes.indexOf(theme) === -1;
         document.documentElement.classList.toggle('dark', isDark);
         document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+        // Set correct background immediately to prevent flash of wrong color
+        var bgMap = {
+          'default-dark': '#111827', 'default-light': '#f9fafb',
+          'nord': '#2e3440', 'catppuccin-mocha': '#1e1e2e',
+          'catppuccin-latte': '#eff1f5', 'tokyo-night': '#1a1b26',
+          'gruvbox': '#282828', 'rose-pine': '#191724',
+          'solarized-light': '#fdf6e3'
+        };
+        var fgMap = {
+          'default-dark': '#f9fafb', 'default-light': '#111827',
+          'nord': '#eceff4', 'catppuccin-mocha': '#cdd6f4',
+          'catppuccin-latte': '#4c4f69', 'tokyo-night': '#c0caf5',
+          'gruvbox': '#ebdbb2', 'rose-pine': '#e0def4',
+          'solarized-light': '#657b83'
+        };
+        document.documentElement.style.backgroundColor = bgMap[theme] || (isDark ? '#111827' : '#f9fafb');
+        document.documentElement.style.color = fgMap[theme] || (isDark ? '#f9fafb' : '#111827');
       })();
     </script>
   </head>

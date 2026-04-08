@@ -329,7 +329,7 @@ export function CodeMirrorEditor({
 	return (
 		<div
 			ref={editorRef}
-			className="h-full w-full overflow-hidden bg-white dark:bg-gray-900 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-inset"
+			className="h-full w-full overflow-hidden bg-white dark:bg-gray-900"
 		/>
 	);
 }

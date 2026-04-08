@@ -47,6 +47,8 @@
 /*                overrides from another theme)                                 */
 /* ─────────────────────────────────────────────────────────────────────────── */
 html[data-theme="default-dark"] {
+  background-color: #111827;
+  color: #f9fafb;
   --color-gray-50:   #f9fafb;
   --color-gray-100:  #f3f4f6;
   --color-gray-200:  #e5e7eb;
@@ -81,6 +83,8 @@ html[data-theme="default-dark"] {
 /* DEFAULT LIGHT                                                                */
 /* ─────────────────────────────────────────────────────────────────────────── */
 html[data-theme="default-light"] {
+  background-color: #f9fafb;
+  color: #111827;
   --color-gray-50:   #f9fafb;
   --color-gray-100:  #f3f4f6;
   --color-gray-200:  #e5e7eb;
@@ -115,6 +119,8 @@ html[data-theme="default-light"] {
 /* NORD — Polar Night surfaces · Frost blue accent                             */
 /* ─────────────────────────────────────────────────────────────────────────── */
 html[data-theme="nord"] {
+  background-color: #2e3440;
+  color: #eceff4;
   --color-gray-50:   #eceff4;
   --color-gray-100:  #e5e9f0;
   --color-gray-200:  #d8dee9;
@@ -149,6 +155,8 @@ html[data-theme="nord"] {
 /* CATPPUCCIN MOCHA — Dark crust/mantle · Mauve accent                         */
 /* ─────────────────────────────────────────────────────────────────────────── */
 html[data-theme="catppuccin-mocha"] {
+  background-color: #1e1e2e;
+  color: #cdd6f4;
   --color-gray-50:   #e8ecfa;
   --color-gray-100:  #cdd6f4;
   --color-gray-200:  #bac2de;
@@ -183,6 +191,8 @@ html[data-theme="catppuccin-mocha"] {
 /* CATPPUCCIN LATTE — Warm light · Mauve accent                                */
 /* ─────────────────────────────────────────────────────────────────────────── */
 html[data-theme="catppuccin-latte"] {
+  background-color: #eff1f5;
+  color: #4c4f69;
   --color-gray-50:   #eff1f5;
   --color-gray-100:  #e6e9ef;
   --color-gray-200:  #dce0e8;
@@ -217,6 +227,8 @@ html[data-theme="catppuccin-latte"] {
 /* TOKYO NIGHT — Deep blue-black · Soft blue accent                            */
 /* ─────────────────────────────────────────────────────────────────────────── */
 html[data-theme="tokyo-night"] {
+  background-color: #1a1b26;
+  color: #c0caf5;
   --color-gray-50:   #e8eeff;
   --color-gray-100:  #d5def7;
   --color-gray-200:  #c0caf5;
@@ -251,6 +263,8 @@ html[data-theme="tokyo-night"] {
 /* GRUVBOX — Warm retro contrast · Yellow/amber accent                         */
 /* ─────────────────────────────────────────────────────────────────────────── */
 html[data-theme="gruvbox"] {
+  background-color: #282828;
+  color: #ebdbb2;
   --color-gray-50:   #fbf1c7;
   --color-gray-100:  #ebdbb2;
   --color-gray-200:  #d5c4a1;
@@ -285,6 +299,8 @@ html[data-theme="gruvbox"] {
 /* ROSÉ PINE — Dusty dark purple · Iris accent                                 */
 /* ─────────────────────────────────────────────────────────────────────────── */
 html[data-theme="rose-pine"] {
+  background-color: #191724;
+  color: #e0def4;
   --color-gray-50:   #f0effa;
   --color-gray-100:  #e0def4;
   --color-gray-200:  #d4d1e6;
@@ -319,6 +335,8 @@ html[data-theme="rose-pine"] {
 /* SOLARIZED LIGHT — Warm tan surfaces · Solarized blue                        */
 /* ─────────────────────────────────────────────────────────────────────────── */
 html[data-theme="solarized-light"] {
+  background-color: #fdf6e3;
+  color: #657b83;
   --color-gray-50:   #fdf6e3;
   --color-gray-100:  #eee8d5;
   --color-gray-200:  #d0cab8;
