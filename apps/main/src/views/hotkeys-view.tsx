@@ -49,69 +49,6 @@ function formatHotkeyForDisplay(key: string | undefined): string {
 		.join("+");
 }
 
-/**
- * Get icon for a hotkey category
- */
-function getCategoryIcon(category: string): React.ReactNode {
-	const iconClass = "w-5 h-5";
-	switch (category.toLowerCase()) {
-		case "layout":
-			return <Icons.Layout className={iconClass} />;
-		case "tabs":
-			return <Icons.LayoutGrid className={iconClass} />;
-		case "panes":
-			return <Icons.Columns2 className={iconClass} />;
-		case "editor":
-			return <Icons.Edit className={iconClass} />;
-		case "sidebar":
-			return <Icons.PanelLeft className={iconClass} />;
-		case "focus":
-			return <Icons.Target className={iconClass} />;
-		case "tab focus":
-			return <Icons.Hash className={iconClass} />;
-		case "tab navigation":
-			return <Icons.ArrowRightLeft className={iconClass} />;
-		case "tab movement":
-			return <Icons.MoveHorizontal className={iconClass} />;
-		case "views":
-			return <Icons.Eye className={iconClass} />;
-		case "app":
-			return <Icons.RefreshCw className={iconClass} />;
-		case "formatting":
-			return <Icons.Type className={iconClass} />;
-		case "blocks":
-			return <Icons.Square className={iconClass} />;
-		case "line operations":
-			return <Icons.ArrowUpDown className={iconClass} />;
-		case "history":
-			return <Icons.History className={iconClass} />;
-		case "lists":
-			return <Icons.List className={iconClass} />;
-		case "links":
-			return <Icons.Link className={iconClass} />;
-		case "clipboard":
-			return <Icons.Clipboard className={iconClass} />;
-		case "selection":
-			return <Icons.TextCursor className={iconClass} />;
-		case "navigation":
-			return <Icons.Navigation className={iconClass} />;
-		case "editing":
-			return <Icons.Pencil className={iconClass} />;
-		case "search":
-			return <Icons.Search className={iconClass} />;
-		case "format pickers":
-			return <Icons.Palette className={iconClass} />;
-		case "quick colors":
-			return <Icons.Paintbrush className={iconClass} />;
-		case "quick highlights":
-			return <Icons.Highlighter className={iconClass} />;
-		case "indentation":
-			return <Icons.IndentIncrease className={iconClass} />;
-		default:
-			return <Icons.Keyboard className={iconClass} />;
-	}
-}
-
 export function HotkeysView() {
 	const { hotkeys: appHotkeys } = useHotkeysConfig();
 	const editorKeybindings = useAtomValue(editorKeybindingsAtom);

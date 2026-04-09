@@ -116,8 +116,9 @@ export function AsciiArtView() {
 			// Check other ASCII art entries
 			for (let i = 0; i < localEntries.length; i++) {
 				if (i === excludeIndex) continue;
-				if (normalizeKeyCombo(localEntries[i].key) === normalized) {
-					return `Conflicts with ASCII art: "${localEntries[i].description}"`;
+				const entry = localEntries[i];
+				if (entry && normalizeKeyCombo(entry.key) === normalized) {
+					return `Conflicts with ASCII art: "${entry.description}"`;
 				}
 			}
 
@@ -166,7 +167,8 @@ export function AsciiArtView() {
 		(index: number) => {
 			setEditingIndex(index);
 			setIsAdding(false);
-			setFormState({ ...localEntries[index] });
+			const entry = localEntries[index];
+		if (entry) setFormState({ ...entry });
 		},
 		[localEntries],
 	);

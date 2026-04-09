@@ -21,7 +21,7 @@ function tryUnicodeHex(
 	fullText: string,
 ): { triggerStart: number; replacement: string } | null {
 	const m = UNICODE_HEX_RE.exec(textUpToCursor);
-	if (!m) return null;
+	if (!m?.[1]) return null;
 
 	const codePoint = parseInt(m[1], 16);
 	// Reject surrogates and out-of-range values

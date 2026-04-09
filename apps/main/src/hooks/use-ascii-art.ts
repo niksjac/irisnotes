@@ -79,11 +79,14 @@ function insertAsciiArt(art: string): void {
 	const lines = art.split("\n");
 	while (lines.length > 0 && lines[0] === "") lines.shift();
 	while (lines.length > 0 && lines[lines.length - 1] === "") lines.pop();
+	const paragraphType = schema.nodes.paragraph;
+	if (!paragraphType) return;
+
 	const nodes = lines.map((line: string) => {
 		if (line.length === 0) {
-			return schema.nodes.paragraph.create();
+			return paragraphType.create();
 		}
-		return schema.nodes.paragraph.create(null, [schema.text(line)]);
+		return paragraphType.create(null, [schema.text(line)]);
 	});
 
 	if (nodes.length === 0) return;
