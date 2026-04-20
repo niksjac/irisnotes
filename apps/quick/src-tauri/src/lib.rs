@@ -691,6 +691,18 @@ fn get_tray_icon_path() -> Option<PathBuf> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Set the program name before Tauri/GTK init so Wayland app_id and X11 WM_CLASS
+    // match our .desktop files (irisnotes-quick vs irisnotes-quick-dev)
+    #[cfg(target_os = "linux")]
+    {
+        let prgname = if cfg!(debug_assertions) { "irisnotes-quick-dev" } else { "irisnotes-quick" };
+        let c_name = std::ffi::CString::new(prgname).unwrap();
+        unsafe {
+            extern "C" { fn g_set_prgname(prgname: *const std::ffi::c_char); }
+            g_set_prgname(c_name.as_ptr());
+        }
+    }
+
     let db_state = DbState::new();
 
     // Initialize database

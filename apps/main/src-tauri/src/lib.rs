@@ -681,8 +681,132 @@ async fn cleanup_orphaned_assets(app_handle: tauri::AppHandle) -> Result<u32, St
     Ok(deleted)
 }
 
+/// Install a custom SVG icon to the hicolor icon theme for taskbar use.
+/// Takes the SVG content, generates PNGs at standard sizes using rsvg-convert,
+/// and installs them to ~/.local/share/icons/hicolor/.
+/// The `icon_name` is typically "irisnotes" or "irisnotes-dev".
+#[tauri::command]
+async fn install_icon_to_hicolor(svg_content: String, icon_name: String) -> Result<String, String> {
+    use std::process::Command;
+
+    // Validate icon_name (only allow safe characters)
+    if !icon_name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_') {
+        return Err("Invalid icon name: only alphanumeric, dash, underscore allowed".to_string());
+    }
+
+    // Check rsvg-convert is available
+    let has_rsvg = Command::new("rsvg-convert").arg("--version").output().is_ok();
+    if !has_rsvg {
+        return Err("rsvg-convert not found. Install librsvg (pacman -S librsvg) for icon generation.".to_string());
+    }
+
+    let home = dirs::home_dir().ok_or("Failed to get home directory")?;
+    let hicolor = home.join(".local/share/icons/hicolor");
+
+    let sizes: &[u32] = &[32, 128, 256, 512];
+    let mut installed: Vec<String> = Vec::new();
+
+    // Write SVG to a temp file for rsvg-convert
+    let tmp_svg = std::env::temp_dir().join(format!("{}_custom.svg", icon_name));
+    std::fs::write(&tmp_svg, &svg_content)
+        .map_err(|e| format!("Failed to write temp SVG: {}", e))?;
+
+    // Generate and install PNGs at each size
+    for &size in sizes {
+        let dir = hicolor.join(format!("{}x{}/apps", size, size));
+        std::fs::create_dir_all(&dir)
+            .map_err(|e| format!("Failed to create dir {}: {}", dir.display(), e))?;
+        let out_path = dir.join(format!("{}.png", icon_name));
+
+        let output = Command::new("rsvg-convert")
+            .args([
+                "-w", &size.to_string(),
+                "-h", &size.to_string(),
+                "--keep-aspect-ratio",
+                &tmp_svg.to_string_lossy().to_string(),
+                "-o", &out_path.to_string_lossy().to_string(),
+            ])
+            .output()
+            .map_err(|e| format!("rsvg-convert failed for {}px: {}", size, e))?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(format!("rsvg-convert failed for {}px: {}", size, stderr));
+        }
+        installed.push(format!("{}x{}", size, size));
+    }
+
+    // Install SVG to scalable/
+    let scalable_dir = hicolor.join("scalable/apps");
+    std::fs::create_dir_all(&scalable_dir)
+        .map_err(|e| format!("Failed to create scalable dir: {}", e))?;
+    std::fs::copy(&tmp_svg, scalable_dir.join(format!("{}.svg", icon_name)))
+        .map_err(|e| format!("Failed to copy SVG: {}", e))?;
+    installed.push("scalable".to_string());
+
+    // Create index.theme if missing (required for gtk-update-icon-cache)
+    let index_path = hicolor.join("index.theme");
+    if !index_path.exists() {
+        let _ = std::fs::write(&index_path, "[Icon Theme]\nName=hicolor\nComment=Hicolor Icon Theme\nDirectories=\n");
+    }
+
+    // Update icon cache
+    let _ = Command::new("gtk-update-icon-cache").arg(&hicolor).output();
+
+    // Clean up temp file
+    let _ = std::fs::remove_file(&tmp_svg);
+
+    Ok(format!("Installed {} to hicolor: {}", icon_name, installed.join(", ")))
+}
+
+/// Save a custom SVG icon for use as the systray icon (quick app).
+/// Writes SVG to the config/dev directory where the quick app reads it from.
+#[tauri::command]
+async fn save_custom_tray_svg(app_handle: tauri::AppHandle, svg_content: String) -> Result<String, String> {
+    let config_dir = get_config_dir(&app_handle)?;
+    let svg_path = config_dir.join("quick-tray-icon.svg");
+    std::fs::write(&svg_path, &svg_content)
+        .map_err(|e| format!("Failed to write tray SVG: {}", e))?;
+
+    // Also generate PNG version via rsvg-convert (tray icons often need raster)
+    let png_path = config_dir.join("quick-tray-icon.png");
+    let _ = std::process::Command::new("rsvg-convert")
+        .args(["-w", "512", "-h", "512", "--keep-aspect-ratio",
+            &svg_path.to_string_lossy().to_string(),
+            "-o", &png_path.to_string_lossy().to_string()])
+        .output();
+
+    Ok(svg_path.to_string_lossy().to_string())
+}
+
+/// Save a custom SVG as the in-app logo asset.
+/// Writes to the app's assets dir as custom-logo.svg.
+#[tauri::command]
+async fn save_custom_app_logo(app_handle: tauri::AppHandle, svg_content: String) -> Result<String, String> {
+    let data_dir = get_data_dir(&app_handle)?;
+    let assets_dir = data_dir.join("assets");
+    std::fs::create_dir_all(&assets_dir)
+        .map_err(|e| format!("Failed to create assets dir: {}", e))?;
+    let svg_path = assets_dir.join("custom-logo.svg");
+    std::fs::write(&svg_path, &svg_content)
+        .map_err(|e| format!("Failed to write logo SVG: {}", e))?;
+    Ok("custom-logo.svg".to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Set the program name before Tauri/GTK init so Wayland app_id and X11 WM_CLASS
+    // match our .desktop files (irisnotes vs irisnotes-dev)
+    #[cfg(target_os = "linux")]
+    {
+        let prgname = if is_development_mode() { "irisnotes-dev" } else { "irisnotes" };
+        let c_name = std::ffi::CString::new(prgname).unwrap();
+        unsafe {
+            extern "C" { fn g_set_prgname(prgname: *const std::ffi::c_char); }
+            g_set_prgname(c_name.as_ptr());
+        }
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             // Another instance tried to start - check for --open-note argument
@@ -801,7 +925,10 @@ pub fn run() {
             cleanup_orphaned_assets,
             read_clipboard_target,
             list_clipboard_targets,
-            read_vscode_editor_data
+            read_vscode_editor_data,
+            install_icon_to_hicolor,
+            save_custom_tray_svg,
+            save_custom_app_logo
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
