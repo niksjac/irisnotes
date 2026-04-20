@@ -276,6 +276,16 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHandler(handlers.onNewNoteWithLocation),
 		createHotkeyOptions(hotkeyMapping.newNoteWithLocation.global)
 	);
+	useHotkeys(
+		hotkeyMapping.newBook.key,
+		createHandler(handlers.onNewBook),
+		createHotkeyOptions(hotkeyMapping.newBook.global)
+	);
+	useHotkeys(
+		hotkeyMapping.newSection.key,
+		createHandler(handlers.onNewSection),
+		createHotkeyOptions(hotkeyMapping.newSection.global)
+	);
 
 	// Views hotkeys
 	useHotkeys(

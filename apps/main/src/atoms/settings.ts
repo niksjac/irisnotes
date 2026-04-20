@@ -122,6 +122,47 @@ const layoutStorage = atomWithPersistence<LayoutSettings>(
 export const layoutSettingsAtom = layoutStorage.valueAtom;
 export const layoutSettingsInitAtom = layoutStorage.initAtom;
 
+// ============ Branding Settings ============
+
+export type LogoVariant =
+	| "logo-purple"
+	| "logo-white"
+	| "logo-transparent"
+	| "iris-detailed-blue"
+	| "iris-detailed-purple"
+	| "iris-detailed-periwinkle"
+	| "iris-detailed-mono-dark"
+	| "iris-detailed-mono-light";
+
+export interface BrandingSettings {
+	activityBarLogo: LogoVariant;
+	/** quick app tray icon variant (applied next launch) */
+	quickTrayLogo: LogoVariant;
+}
+
+export const LOGO_OPTIONS: { id: LogoVariant; label: string; file: string }[] = [
+	{ id: "logo-purple", label: "Purple", file: "/logo-purple.png" },
+	{ id: "logo-white", label: "White", file: "/logo-white.png" },
+	{ id: "logo-transparent", label: "Transparent SVG", file: "/logo-transparent.svg" },
+	{ id: "iris-detailed-blue", label: "Detailed Blue", file: "/iris-detailed-blue.svg" },
+	{ id: "iris-detailed-purple", label: "Detailed Purple", file: "/iris-detailed-purple.svg" },
+	{ id: "iris-detailed-periwinkle", label: "Detailed Periwinkle", file: "/iris-detailed-periwinkle.svg" },
+	{ id: "iris-detailed-mono-dark", label: "Mono Dark", file: "/iris-detailed-mono-dark.svg" },
+	{ id: "iris-detailed-mono-light", label: "Mono Light", file: "/iris-detailed-mono-light.svg" },
+];
+
+const DEFAULT_BRANDING_SETTINGS: BrandingSettings = {
+	activityBarLogo: "logo-purple",
+	quickTrayLogo: "logo-purple",
+};
+
+const brandingStorage = atomWithPersistence<BrandingSettings>(
+	"branding",
+	DEFAULT_BRANDING_SETTINGS,
+);
+export const brandingSettingsAtom = brandingStorage.valueAtom;
+export const brandingSettingsInitAtom = brandingStorage.initAtom;
+
 // ============ Bulk Operations ============
 
 /**

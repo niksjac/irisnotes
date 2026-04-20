@@ -96,6 +96,45 @@ export const openSettingsTabAtom = atom(null, (get, set) => {
 	}
 });
 
+export const openBrandingTabAtom = atom(null, (get, set) => {
+	const pane0Tabs = get(pane0TabsAtom);
+	const pane1Tabs = get(pane1TabsAtom);
+
+	const existingInPane0 = pane0Tabs.find((tab) => tab.viewType === "branding-view");
+	const existingInPane1 = pane1Tabs.find((tab) => tab.viewType === "branding-view");
+
+	if (existingInPane0) {
+		set(pane0ActiveTabAtom, existingInPane0.id);
+		set(paneStateAtom, (prev) => ({ ...prev, activePane: 0 }));
+		set(focusAreaAtom, "pane-0");
+		return;
+	}
+	if (existingInPane1) {
+		set(pane1ActiveTabAtom, existingInPane1.id);
+		set(paneStateAtom, (prev) => ({ ...prev, activePane: 1 }));
+		set(focusAreaAtom, "pane-1");
+		return;
+	}
+
+	const paneState = get(paneStateAtom);
+	const newTab: Tab = {
+		id: "branding-tab",
+		title: "Branding",
+		viewType: "branding-view",
+		openedAt: Date.now(),
+	};
+
+	if (paneState.activePane === 0) {
+		set(pane0TabsAtom, (prev) => [...prev, newTab]);
+		set(pane0ActiveTabAtom, newTab.id);
+		set(focusAreaAtom, "pane-0");
+	} else {
+		set(pane1TabsAtom, (prev) => [...prev, newTab]);
+		set(pane1ActiveTabAtom, newTab.id);
+		set(focusAreaAtom, "pane-1");
+	}
+});
+
 export const openHotkeysTabAtom = atom(null, (get, set) => {
 	const pane0Tabs = get(pane0TabsAtom);
 	const pane1Tabs = get(pane1TabsAtom);
@@ -204,6 +243,46 @@ export const openAutocorrectTabAtom = atom(null, (get, set) => {
 		id: "autocorrect-tab",
 		title: "Autocorrect",
 		viewType: "autocorrect-view",
+		openedAt: Date.now(),
+	};
+
+	if (paneState.activePane === 0) {
+		set(pane0TabsAtom, (prev) => [...prev, newTab]);
+		set(pane0ActiveTabAtom, newTab.id);
+		set(focusAreaAtom, "pane-0");
+	} else {
+		set(pane1TabsAtom, (prev) => [...prev, newTab]);
+		set(pane1ActiveTabAtom, newTab.id);
+		set(focusAreaAtom, "pane-1");
+	}
+});
+
+export const openIconEditorTabAtom = atom(null, (get, set) => {
+	const pane0Tabs = get(pane0TabsAtom);
+	const pane1Tabs = get(pane1TabsAtom);
+
+	const existingInPane0 = pane0Tabs.find((tab) => tab.viewType === "icon-editor-view");
+	const existingInPane1 = pane1Tabs.find((tab) => tab.viewType === "icon-editor-view");
+
+	if (existingInPane0) {
+		set(pane0ActiveTabAtom, existingInPane0.id);
+		set(paneStateAtom, (prev) => ({ ...prev, activePane: 0 }));
+		set(focusAreaAtom, "pane-0");
+		return;
+	}
+
+	if (existingInPane1) {
+		set(pane1ActiveTabAtom, existingInPane1.id);
+		set(paneStateAtom, (prev) => ({ ...prev, activePane: 1 }));
+		set(focusAreaAtom, "pane-1");
+		return;
+	}
+
+	const paneState = get(paneStateAtom);
+	const newTab: Tab = {
+		id: "icon-editor-tab",
+		title: "Icon Editor",
+		viewType: "icon-editor-view",
 		openedAt: Date.now(),
 	};
 
@@ -812,4 +891,26 @@ export const reopenLastClosedTabAtom = atom(null, (get, set) => {
 
 	// Remove from recently closed stack
 	set(recentlyClosedTabsAtom, remaining);
+});
+
+// Close all tabs in both panes
+export const closeAllTabsAtom = atom(null, (get, set) => {
+	const pane0Tabs = get(pane0TabsAtom);
+	const pane1Tabs = get(pane1TabsAtom);
+
+	// Save all tabs to recently closed stack
+	const recentlyClosed = get(recentlyClosedTabsAtom);
+	const newEntries = [
+		...pane0Tabs.map((tab) => ({ tab, paneIndex: 0 as const })),
+		...pane1Tabs.map((tab) => ({ tab, paneIndex: 1 as const })),
+	];
+	set(recentlyClosedTabsAtom, [
+		...newEntries,
+		...recentlyClosed,
+	].slice(0, MAX_RECENTLY_CLOSED));
+
+	set(pane0TabsAtom, []);
+	set(pane1TabsAtom, []);
+	set(pane0ActiveTabAtom, null);
+	set(pane1ActiveTabAtom, null);
 });

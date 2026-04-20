@@ -308,6 +308,18 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		category: "Notes",
 		global: true,
 	},
+	newBook: {
+		key: "ctrl+shift+b",
+		description: "Create New Book",
+		category: "Notes",
+		global: true,
+	},
+	newSection: {
+		key: "ctrl+shift+n",
+		description: "Create New Section",
+		category: "Notes",
+		global: true,
+	},
 
 	// Search hotkeys
 	quickSearch: {

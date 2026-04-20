@@ -58,6 +58,7 @@ export function HotkeysView() {
 	);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [contextFilter, setContextFilter] = useState<string | null>(null);
+	const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
 
 	// Build flat list of all hotkeys
 	const allHotkeys = useMemo<HotkeyEntry[]>(() => {
@@ -122,11 +123,20 @@ export function HotkeysView() {
 		return entries;
 	}, [appHotkeys, prosemirrorHotkeys]);
 
-	// Filter hotkeys based on search query and context filter
+	// Derive unique categories from all hotkeys
+	const allCategories = useMemo(() => {
+		const cats = new Set(allHotkeys.map((h) => h.category));
+		return Array.from(cats).sort();
+	}, [allHotkeys]);
+
+	// Filter hotkeys based on search query, context filter, and category filter
 	const filteredHotkeys = useMemo(() => {
 		let result = allHotkeys;
 		if (contextFilter) {
 			result = result.filter((h) => h.context === contextFilter);
+		}
+		if (categoryFilter) {
+			result = result.filter((h) => h.category === categoryFilter);
 		}
 		if (searchQuery.trim()) {
 			const query = searchQuery.toLowerCase();
@@ -139,7 +149,7 @@ export function HotkeysView() {
 			);
 		}
 		return result;
-	}, [allHotkeys, searchQuery, contextFilter]);
+	}, [allHotkeys, searchQuery, contextFilter, categoryFilter]);
 
 	return (
 		<div className="h-full overflow-auto bg-white dark:bg-gray-900">
@@ -177,26 +187,48 @@ export function HotkeysView() {
 				</div>
 
 				{/* Context Filter Buttons */}
-				<div className="flex flex-wrap gap-2 text-sm">
+				<div className="flex flex-wrap items-center gap-2 text-sm">
 					{[
-						{ label: "App", color: "bg-indigo-500", hoverColor: "hover:bg-indigo-100 dark:hover:bg-indigo-900/30" },
-						{ label: "Rich Editor", color: "bg-emerald-500", hoverColor: "hover:bg-emerald-100 dark:hover:bg-emerald-900/30" },
-						{ label: "Source Editor", color: "bg-amber-500", hoverColor: "hover:bg-amber-100 dark:hover:bg-amber-900/30" },
-						{ label: "System", color: "bg-gray-500", hoverColor: "hover:bg-gray-100 dark:hover:bg-gray-700" },
-					].map(({ label, color, hoverColor }) => (
+						{ label: "App" },
+						{ label: "Rich Editor" },
+						{ label: "Source Editor" },
+						{ label: "System" },
+					].map(({ label }) => (
 						<button
 							key={label}
 							onClick={() => setContextFilter(contextFilter === label ? null : label)}
-							className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+							className={`px-3 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer border ${
 								contextFilter === label
-									? `${color} text-white`
-									: contextFilter === null
-										? `text-gray-600 dark:text-gray-400 ${hoverColor}`
-										: `text-gray-400 dark:text-gray-600 ${hoverColor}`
+									? "bg-blue-600 dark:bg-blue-500 text-white border-blue-600 dark:border-blue-500"
+									: "text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
 							}`}
 						>
-							<span className={`w-2 h-2 rounded-full ${color}`} />
 							{label}
+						</button>
+					))}
+					{(contextFilter || categoryFilter || searchQuery) && (
+						<button
+							onClick={() => { setContextFilter(null); setCategoryFilter(null); setSearchQuery(""); }}
+							className="px-3 py-1 rounded-md text-xs font-medium text-red-600 dark:text-red-400 border border-red-300 dark:border-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer"
+						>
+							Clear filters
+						</button>
+					)}
+				</div>
+
+				{/* Category Filter Buttons */}
+				<div className="flex flex-wrap items-center gap-2 text-sm">
+					{allCategories.map((cat) => (
+						<button
+							key={cat}
+							onClick={() => setCategoryFilter(categoryFilter === cat ? null : cat)}
+							className={`px-3 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer border ${
+								categoryFilter === cat
+									? "bg-blue-600 dark:bg-blue-500 text-white border-blue-600 dark:border-blue-500"
+									: "text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+							}`}
+						>
+							{cat}
 						</button>
 					))}
 				</div>

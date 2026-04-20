@@ -70,6 +70,12 @@ export const handleSidebarCollapsedChangeAtom = atom(
 // New note (root) name dialog state
 export const newNoteDialogOpenAtom = atom<boolean>(false);
 
+// New book dialog state
+export const newBookDialogOpenAtom = atom<boolean>(false);
+
+// New section dialog state
+export const newSectionDialogOpenAtom = atom<boolean>(false);
+
 // Note location dialog state
 export const locationDialogOpenAtom = atom<boolean>(false);
 

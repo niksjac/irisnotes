@@ -52,7 +52,7 @@ export function useHotkeyHandlers() {
 	const { toggleEditorView } = useEditorViewToggle();
 	const { toggleLineWrapping } = useLineWrapping();
 	const { toggleToolbar, toggleTitleBar } = useEditorLayout();
-	const { createNoteInRoot, openLocationDialog } = useNoteActions();
+	const { createNoteInRoot, openLocationDialog, openNewBookDialog, openNewSectionDialog } = useNoteActions();
 	const { toggleActivityBarExpanded } = useView();
 	// Tab actions
 	const closeActiveTab = useSetAtom(closeActiveTabAtom);
@@ -153,6 +153,8 @@ export function useHotkeyHandlers() {
 		// Note actions
 		createNoteInRoot,
 		openLocationDialog,
+		openNewBookDialog,
+		openNewSectionDialog,
 
 		// View actions
 		openSettings: useSetAtom(openSettingsTabAtom),
