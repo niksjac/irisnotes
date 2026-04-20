@@ -49,6 +49,7 @@ Icon=irisnotes
 Terminal=false
 Type=Application
 Categories=Office;TextEditor;
+StartupWMClass=irisnotes
 EOF
 
     install -Dm644 /dev/stdin "$pkgdir/usr/share/applications/irisnotes-quick.desktop" << EOF
@@ -61,10 +62,18 @@ Terminal=false
 Type=Application
 Categories=Office;
 NoDisplay=true
+StartupWMClass=irisnotes-quick
 EOF
 
-    # Install icons (if available)
-    if [ -f "apps/main/src-tauri/icons/128x128.png" ]; then
-        install -Dm644 "apps/main/src-tauri/icons/128x128.png" "$pkgdir/usr/share/icons/hicolor/128x128/apps/irisnotes.png"
+    # Install icons at multiple sizes
+    local _icons="apps/main/src-tauri/icons"
+    install -Dm644 "$_icons/32x32.png" "$pkgdir/usr/share/icons/hicolor/32x32/apps/irisnotes.png"
+    install -Dm644 "$_icons/128x128.png" "$pkgdir/usr/share/icons/hicolor/128x128/apps/irisnotes.png"
+    install -Dm644 "$_icons/128x128@2x.png" "$pkgdir/usr/share/icons/hicolor/256x256/apps/irisnotes.png"
+    install -Dm644 "$_icons/icon.png" "$pkgdir/usr/share/icons/hicolor/512x512/apps/irisnotes.png"
+
+    # Install SVG for scalable icon
+    if [ -f "assets/logo-transparent.svg" ]; then
+        install -Dm644 "assets/logo-transparent.svg" "$pkgdir/usr/share/icons/hicolor/scalable/apps/irisnotes.svg"
     fi
 }

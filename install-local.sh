@@ -41,8 +41,15 @@ fi
 # Create directories
 mkdir -p "$PREFIX/bin"
 mkdir -p "$PREFIX/share/applications"
-mkdir -p "$PREFIX/share/icons/hicolor/128x128/apps"
 mkdir -p "$HOME/.config/irisnotes"
+
+ICON_DIR="$PREFIX/share/icons/hicolor"
+ICON_SRC="$SCRIPT_DIR/apps/main/src-tauri/icons"
+
+for size in 32 128 256 512; do
+    mkdir -p "$ICON_DIR/${size}x${size}/apps"
+done
+mkdir -p "$ICON_DIR/scalable/apps"
 
 # Initialize database if it doesn't exist
 if [ ! -f "$HOME/.config/irisnotes/notes.db" ]; then
@@ -65,6 +72,7 @@ Icon=irisnotes
 Terminal=false
 Type=Application
 Categories=Office;TextEditor;
+StartupWMClass=irisnotes
 EOF
 
 # Create desktop entry for quick app (hidden from menu, for keybind)
@@ -78,12 +86,22 @@ Terminal=false
 Type=Application
 Categories=Office;
 NoDisplay=true
+StartupWMClass=irisnotes-quick
 EOF
 
-# Copy icon if available
-if [ -f "$SCRIPT_DIR/apps/main/src-tauri/icons/128x128.png" ]; then
-    cp "$SCRIPT_DIR/apps/main/src-tauri/icons/128x128.png" "$PREFIX/share/icons/hicolor/128x128/apps/irisnotes.png"
+# Install icons at multiple sizes for crisp display in all contexts
+[ -f "$ICON_SRC/32x32.png" ] && cp "$ICON_SRC/32x32.png" "$ICON_DIR/32x32/apps/irisnotes.png"
+[ -f "$ICON_SRC/128x128.png" ] && cp "$ICON_SRC/128x128.png" "$ICON_DIR/128x128/apps/irisnotes.png"
+[ -f "$ICON_SRC/128x128@2x.png" ] && cp "$ICON_SRC/128x128@2x.png" "$ICON_DIR/256x256/apps/irisnotes.png"
+[ -f "$ICON_SRC/icon.png" ] && cp "$ICON_SRC/icon.png" "$ICON_DIR/512x512/apps/irisnotes.png"
+
+# Install SVG for scalable icon (best quality)
+if [ -f "$SCRIPT_DIR/assets/logo-transparent.svg" ]; then
+    cp "$SCRIPT_DIR/assets/logo-transparent.svg" "$ICON_DIR/scalable/apps/irisnotes.svg"
 fi
+
+# Update icon cache for fast lookups
+gtk-update-icon-cache "$ICON_DIR" 2>/dev/null || true
 
 echo ""
 echo "✓ IrisNotes v1.0.0 installed!"
