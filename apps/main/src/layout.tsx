@@ -8,6 +8,8 @@ import {
 	PaneContainer,
 	NoteLocationDialog,
 	NewNoteDialog,
+	NewBookDialog,
+	NewSectionDialog,
 	QuickSearchDialog,
 	StatusBar,
 } from "@/components";
@@ -46,6 +48,13 @@ export const Layout: React.FC = () => {
 		isNewNoteDialogOpen,
 		closeNewNoteDialog,
 		createNoteInRootWithTitle,
+		isNewBookDialogOpen,
+		closeNewBookDialog,
+		createBookWithTitle,
+		isNewSectionDialogOpen,
+		closeNewSectionDialog,
+		createSectionInBook,
+		getBooks,
 		isLocationDialogOpen,
 		closeLocationDialog,
 		createNoteWithLocation,
@@ -138,6 +147,21 @@ export const Layout: React.FC = () => {
 				isOpen={isNewNoteDialogOpen}
 				onClose={closeNewNoteDialog}
 				onCreate={createNoteInRootWithTitle}
+			/>
+
+			{/* New Book Dialog */}
+			<NewBookDialog
+				isOpen={isNewBookDialogOpen}
+				onClose={closeNewBookDialog}
+				onCreate={createBookWithTitle}
+			/>
+
+			{/* New Section Dialog */}
+			<NewSectionDialog
+				isOpen={isNewSectionDialogOpen}
+				onClose={closeNewSectionDialog}
+				onCreate={createSectionInBook}
+				books={getBooks()}
 			/>
 
 			{/* Note Location Dialog */}

@@ -44,6 +44,8 @@ export function mapHotkeyHandlers(
 		toggleZenMode: () => void;
 		createNoteInRoot: () => void;
 		openLocationDialog: () => void;
+		openNewBookDialog: () => void;
+		openNewSectionDialog: () => void;
 		openSettings: () => void;
 		openHotkeys: () => void;
 		showQuickHotkeys: () => void;
@@ -271,6 +273,8 @@ export function mapHotkeyHandlers(
 		// Notes hotkeys
 		onNewNote: handlers.createNoteInRoot,
 		onNewNoteWithLocation: handlers.openLocationDialog,
+		onNewBook: handlers.openNewBookDialog,
+		onNewSection: handlers.openNewSectionDialog,
 		// App hotkeys
 		onRefreshApp: () => window.location.reload(),
 		// Editor hotkeys

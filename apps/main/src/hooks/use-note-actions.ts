@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { useItems } from "./use-items";
 import { useTabManagement } from "./use-tab-management";
-import { locationDialogOpenAtom, closeLocationDialogAtom, newNoteDialogOpenAtom } from "@/atoms/actions";
+import { locationDialogOpenAtom, closeLocationDialogAtom, newNoteDialogOpenAtom, newBookDialogOpenAtom, newSectionDialogOpenAtom } from "@/atoms/actions";
 
 /**
  * Hook for note creation actions with tab management integration.
@@ -14,6 +14,8 @@ export function useNoteActions() {
 	const [isLocationDialogOpen, setIsLocationDialogOpen] = useAtom(locationDialogOpenAtom);
 	const closeDialogAction = useSetAtom(closeLocationDialogAtom);
 	const [isNewNoteDialogOpen, setIsNewNoteDialogOpen] = useAtom(newNoteDialogOpenAtom);
+	const [isNewBookDialogOpen, setIsNewBookDialogOpen] = useAtom(newBookDialogOpenAtom);
+	const [isNewSectionDialogOpen, setIsNewSectionDialogOpen] = useAtom(newSectionDialogOpenAtom);
 
 	/**
 	 * Open the new-note name dialog (Ctrl+N)
@@ -166,6 +168,40 @@ export function useNoteActions() {
 	);
 
 	/**
+	 * Open the new book dialog
+	 */
+	const openNewBookDialog = useCallback(() => {
+		setIsNewBookDialogOpen(true);
+	}, [setIsNewBookDialogOpen]);
+
+	/**
+	 * Open the new section dialog (requires selecting a book)
+	 */
+	const openNewSectionDialog = useCallback(() => {
+		setIsNewSectionDialogOpen(true);
+	}, [setIsNewSectionDialogOpen]);
+
+	/**
+	 * Create a new book with the given title (called by NewBookDialog)
+	 */
+	const createBookWithTitle = useCallback(
+		async (title: string) => {
+			return await createBook(title);
+		},
+		[createBook]
+	);
+
+	/**
+	 * Create a new section in a specific book (called by NewSectionDialog)
+	 */
+	const createSectionInBook = useCallback(
+		async (title: string, bookId: string) => {
+			return await createSection(title, bookId);
+		},
+		[createSection]
+	);
+
+	/**
 	 * Open the location picker dialog
 	 */
 	const openLocationDialog = useCallback(() => {
@@ -210,6 +246,14 @@ export function useNoteActions() {
 		createNewSection,
 		isNewNoteDialogOpen,
 		closeNewNoteDialog: () => setIsNewNoteDialogOpen(false),
+		isNewBookDialogOpen,
+		closeNewBookDialog: () => setIsNewBookDialogOpen(false),
+		openNewBookDialog,
+		createBookWithTitle,
+		isNewSectionDialogOpen,
+		closeNewSectionDialog: () => setIsNewSectionDialogOpen(false),
+		openNewSectionDialog,
+		createSectionInBook,
 		isLocationDialogOpen,
 		openLocationDialog,
 		closeLocationDialog,

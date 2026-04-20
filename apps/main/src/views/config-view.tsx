@@ -4,9 +4,10 @@ import { useConfig } from "@/hooks/use-config";
 import { useEditorSettings } from "@/hooks/use-editor-settings";
 import { useAtomValue, useSetAtom } from "jotai";
 import { itemsAtom, notesAtom, booksAtom, sectionsAtom } from "@/atoms/items";
-import { openAsciiArtTabAtom, openAutocorrectTabAtom } from "@/atoms/panes";
+import { openAsciiArtTabAtom, openAutocorrectTabAtom, openHotkeysTabAtom } from "@/atoms/panes";
 import { exportSettings, importSettings } from "@/storage/settings";
 import { invoke } from "@tauri-apps/api/core";
+import { getVersion } from "@tauri-apps/api/app";
 import type {
 	CursorWidth,
 	CursorBlinkStyle,
@@ -26,7 +27,9 @@ function CollapsibleSection({ icon, title, children, defaultOpen = false }: {
 		<section>
 			<button
 				onClick={() => setIsOpen(!isOpen)}
-				className="w-full flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 transition-colors py-1"
+				data-section-header
+				data-expanded={isOpen}
+				className="w-full flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 transition-colors py-1 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
 			>
 				{icon}
 				{title}
@@ -43,6 +46,7 @@ export function ConfigView() {
 	const { settings: editorSettings, updateSetting, resetSettings, constraints } = useEditorSettings();
 	const openAsciiArtTab = useSetAtom(openAsciiArtTabAtom);
 	const openAutocorrectTab = useSetAtom(openAutocorrectTabAtom);
+	const openHotkeysTab = useSetAtom(openHotkeysTabAtom);
 
 	// Export/Import state
 	const [isExporting, setIsExporting] = useState(false);
@@ -55,6 +59,12 @@ export function ConfigView() {
 	const notes = useAtomValue(notesAtom);
 	const books = useAtomValue(booksAtom);
 	const sections = useAtomValue(sectionsAtom);
+
+	// App version
+	const [appVersion, setAppVersion] = useState<string | null>(null);
+	useEffect(() => {
+		getVersion().then(setAppVersion).catch(() => setAppVersion(null));
+	}, []);
 
 	// Storage backend - SQLite only
 
@@ -96,9 +106,49 @@ export function ConfigView() {
 		}
 	};
 
+	const settingsRef = useRef<HTMLDivElement>(null);
+
+	const handleSectionKeyDown = useCallback((e: React.KeyboardEvent) => {
+		const container = settingsRef.current;
+		if (!container) return;
+		const headers = Array.from(container.querySelectorAll<HTMLButtonElement>("[data-section-header]"));
+		const currentIndex = headers.indexOf(document.activeElement as HTMLButtonElement);
+		if (currentIndex === -1) return;
+
+		let nextIndex: number | null = null;
+		if (e.key === "ArrowDown" || e.key === "j") {
+			nextIndex = Math.min(currentIndex + 1, headers.length - 1);
+		} else if (e.key === "ArrowUp" || e.key === "k") {
+			nextIndex = Math.max(currentIndex - 1, 0);
+		} else if (e.key === "Home") {
+			nextIndex = 0;
+		} else if (e.key === "End") {
+			nextIndex = headers.length - 1;
+		} else if (e.key === "ArrowRight" || e.key === "l") {
+			const btn = headers[currentIndex];
+			if (btn && btn.dataset.expanded !== "true") {
+				e.preventDefault();
+				btn.click();
+			}
+			return;
+		} else if (e.key === "ArrowLeft" || e.key === "h") {
+			const btn = headers[currentIndex];
+			if (btn && btn.dataset.expanded === "true") {
+				e.preventDefault();
+				btn.click();
+			}
+			return;
+		}
+		if (nextIndex !== null && nextIndex !== currentIndex) {
+			e.preventDefault();
+			headers[nextIndex]?.focus();
+			headers[nextIndex]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+		}
+	}, []);
+
 	return (
 		<div className="h-full overflow-auto bg-white dark:bg-gray-900">
-			<div className="max-w-4xl mx-auto p-4 space-y-5">
+			<div ref={settingsRef} onKeyDown={handleSectionKeyDown} className="max-w-4xl mx-auto p-4 space-y-5">
 				{/* Header */}
 				<div className="border-b border-gray-200 dark:border-gray-700 pb-3">
 					<h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -620,6 +670,23 @@ export function ConfigView() {
 					</div>
 				</CollapsibleSection>
 
+				{/* Keyboard Shortcuts Section */}
+				<CollapsibleSection icon={<Icons.Keyboard className="w-4 h-4" />} title="Keyboard Shortcuts">
+
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-2">
+						<div className="text-sm text-gray-500 dark:text-gray-400">
+							View and search all keyboard shortcuts for the app, rich editor, source editor, and system.
+						</div>
+						<button
+							onClick={() => openHotkeysTab()}
+							className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+						>
+							<Icons.Keyboard className="w-4 h-4" />
+							View Keyboard Shortcuts
+						</button>
+					</div>
+				</CollapsibleSection>
+
 				{/* About Section */}
 				<CollapsibleSection icon={<Icons.Info className="w-4 h-4" />} title="About">
 
@@ -632,6 +699,16 @@ export function ConfigView() {
 								IrisNotes
 							</span>
 						</div>
+						{appVersion && (
+							<div className="flex items-center justify-between">
+								<span className="text-gray-600 dark:text-gray-400">
+									Version
+								</span>
+								<span className="font-medium text-gray-900 dark:text-gray-100">
+									{appVersion}
+								</span>
+							</div>
+						)}
 						<div className="flex items-center justify-between">
 							<span className="text-gray-600 dark:text-gray-400">
 								Environment

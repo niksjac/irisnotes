@@ -8,17 +8,16 @@ import {
 	paneStateAtom,
 	focusAreaAtom,
 	openSettingsTabAtom,
-	openHotkeysTabAtom,
 	pane0TabsAtom,
 	pane1TabsAtom,
 	pane0ActiveTabAtom,
 	pane1ActiveTabAtom,
-	zenModeAtom,
 	toggleZenModeAtom,
 	statusBarVisibleAtom,
 	toggleStatusBarAtom,
 } from "@/atoms";
-import { tabBarVisibleAtom, toggleTabBarAtom } from "@/atoms/panes";
+import { tabBarVisibleAtom, toggleTabBarAtom, openBrandingTabAtom } from "@/atoms/panes";
+import { brandingSettingsAtom, LOGO_OPTIONS } from "@/atoms/settings";
 import { ActivityBarButton } from "./activity-bar-button";
 import { useEffect, useRef, useCallback, useMemo } from "react";
 
@@ -37,7 +36,10 @@ export function ActivityBar() {
 
 	// Tab-based view openers
 	const openSettingsTab = useSetAtom(openSettingsTabAtom);
-	const openHotkeysTab = useSetAtom(openHotkeysTabAtom);
+	const openBrandingTab = useSetAtom(openBrandingTabAtom);
+
+	// Branding settings for logo
+	const branding = useAtomValue(brandingSettingsAtom);
 
 	// Check if settings/hotkeys tabs are currently active
 	const pane0Tabs = useAtomValue(pane0TabsAtom);
@@ -54,19 +56,20 @@ export function ActivityBar() {
 		);
 	}, [pane0Tabs, pane1Tabs, pane0ActiveTab, pane1ActiveTab]);
 
-	const isHotkeysActive = useMemo(() => {
+	const isBrandingActive = useMemo(() => {
 		const activeInPane0 = pane0Tabs.find((t) => t.id === pane0ActiveTab);
 		const activeInPane1 = pane1Tabs.find((t) => t.id === pane1ActiveTab);
 		return (
-			activeInPane0?.viewType === "hotkeys-view" ||
-			activeInPane1?.viewType === "hotkeys-view"
+			activeInPane0?.viewType === "branding-view" ||
+			activeInPane1?.viewType === "branding-view"
 		);
 	}, [pane0Tabs, pane1Tabs, pane0ActiveTab, pane1ActiveTab]);
+
+
 
 	const { toolbarVisible, toggleToolbar, titleBarVisible, toggleTitleBar } = useEditorLayout();
 	const { isWrapping, toggleLineWrapping } = useLineWrapping();
 	const [paneState, setPaneState] = useAtom(paneStateAtom);
-	const isZenMode = useAtomValue(zenModeAtom);
 	const toggleZenMode = useSetAtom(toggleZenModeAtom);
 	const tabBarVisible = useAtomValue(tabBarVisibleAtom);
 	const toggleTabBar = useSetAtom(toggleTabBarAtom);
@@ -76,13 +79,11 @@ export function ActivityBar() {
 	// Live hotkey labels (reflect user overrides from hotkeys.toml)
 	const labelToggleSidebar = useHotkeyLabel("toggleSidebar");
 	const labelOpenSettings = useHotkeyLabel("openSettings");
-	const labelOpenHotkeys = useHotkeyLabel("openHotkeys");
 	const labelToggleDualPane = useHotkeyLabel("toggleDualPane");
 	const labelToggleToolbar = useHotkeyLabel("toggleToolbar");
 	const labelToggleTitleBar = useHotkeyLabel("toggleTitleBar");
 	const labelToggleTabBar = useHotkeyLabel("toggleTabBar");
 	const labelToggleLineWrapping = useHotkeyLabel("toggleLineWrapping");
-	const labelToggleZenMode = useHotkeyLabel("toggleZenMode");
 	const labelExpandActivityBar = useHotkeyLabel("expandActivityBar");
 
 	const togglePaneMode = useCallback(() => {
@@ -96,7 +97,6 @@ export function ActivityBar() {
 	const keyTipActions = useMemo(() => [
 		{ key: "1", action: toggleSidebar, label: "Toggle Sidebar" },
 		{ key: "2", action: openSettingsTab, label: "Settings" },
-		{ key: "3", action: openHotkeysTab, label: "Hotkeys" },
 		{ key: "4", action: togglePaneMode, label: "Toggle Pane" },
 		{ key: "5", action: toggleToolbar, label: "Toolbar" },
 		{ key: "6", action: toggleTitleBar, label: "Title Bar" },
@@ -105,7 +105,7 @@ export function ActivityBar() {
 		{ key: "7", action: toggleLineWrapping, label: "Wrap" },
 		{ key: "9", action: toggleZenMode, label: "Zen Mode" },
 		{ key: "e", action: toggleActivityBarExpanded, label: "Expand/Collapse" },
-	], [toggleSidebar, openSettingsTab, openHotkeysTab, togglePaneMode, toggleToolbar, toggleTitleBar, toggleTabBar, toggleStatusBar, toggleLineWrapping, toggleZenMode, toggleActivityBarExpanded]);
+	], [toggleSidebar, openSettingsTab, togglePaneMode, toggleToolbar, toggleTitleBar, toggleTabBar, toggleStatusBar, toggleLineWrapping, toggleZenMode, toggleActivityBarExpanded]);
 
 	// Use the KeyTip system for Alt+key shortcuts
 	const { altKeyHeld } = useKeyTipActions(keyTipActions);
@@ -151,11 +151,46 @@ export function ActivityBar() {
 				"w-full h-12 flex-row justify-between px-4 py-2 gap-4 border-b border-gray-300 dark:border-gray-600",
 				// Desktop: vertical sidebar with right border
 				activityBarExpanded
-					? "md:w-40 md:h-auto md:flex-col md:justify-start md:py-2 md:gap-1 md:border-r md:border-b-0"
-					: "md:w-9 md:h-auto md:flex-col md:justify-start md:py-2 md:gap-2 md:border-r md:border-b-0"
+					? "md:w-40 md:h-auto md:flex-col md:justify-start md:px-1 md:py-2 md:gap-1 md:border-r md:border-b-0"
+					: "md:w-9 md:h-auto md:flex-col md:justify-start md:px-0 md:py-2 md:gap-2 md:border-r md:border-b-0"
 			)}
 		>
 
+
+			{/* Logo button */}
+			<div className={clsx("hidden md:flex md:w-full", activityBarExpanded ? "md:justify-center md:mb-1" : "md:justify-center md:mb-2")}>
+				<button
+					className={clsx(
+						"relative flex items-center justify-center border-none bg-transparent cursor-pointer transition-all duration-200 rounded p-0",
+						isBrandingActive
+							? "ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-gray-800"
+							: "hover:opacity-80",
+						activityBarExpanded ? "w-8 h-8" : "w-6 h-6"
+					)}
+					onClick={openBrandingTab}
+					title="IrisNotes — Branding & About"
+					tabIndex={-1}
+				>
+					<img
+						src={LOGO_OPTIONS.find((o) => o.id === branding.activityBarLogo)?.file ?? "/logo-purple.png"}
+						alt="IrisNotes"
+						style={{ width: activityBarExpanded ? 28 : 22, height: activityBarExpanded ? 28 : 22 }}
+						className="object-contain"
+					/>
+					{import.meta.env.DEV && (
+						<span
+							className={clsx(
+								"absolute bg-red-500 text-white font-bold leading-none rounded-sm",
+								activityBarExpanded
+									? "bottom-[-4px] right-[-6px] text-[6px] px-[3px] py-[1px]"
+									: "bottom-[-3px] right-[-5px] text-[5px] px-[2px] py-[1px]"
+							)}
+						>
+							DEV
+						</span>
+					)}
+				</button>
+			</div>
 
 			{/* Expand/Collapse toggle - desktop only */}
 			<div className={clsx("hidden md:flex md:w-full", activityBarExpanded ? "md:justify-end md:mb-1" : "md:justify-center md:mb-2")}>
@@ -172,9 +207,9 @@ export function ActivityBar() {
 					tabIndex={-1}
 				>
 					{activityBarExpanded ? (
-						<Icons.PanelLeftClose size={14} />
+						<Icons.ChevronLeft size={14} />
 					) : (
-						<Icons.PanelLeftOpen size={18} />
+						<Icons.ChevronRight size={18} />
 					)}
 					{altKeyHeld && (
 						<span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center bg-amber-400 text-[9px] font-bold text-amber-900 rounded shadow-sm">
@@ -187,7 +222,7 @@ export function ActivityBar() {
 			{/* Main action buttons */}
 			<div className={clsx("flex gap-2", activityBarExpanded ? "md:flex-col md:gap-1 md:w-full" : "md:flex-col md:gap-2")}>
 				<ActivityBarButton
-					icon={Icons.FileText}
+					icon={sidebarCollapsed ? Icons.PanelLeft : Icons.PanelLeftClose}
 					isActive={!sidebarCollapsed}
 					onClick={toggleSidebar}
 					title={`Toggle Notes Sidebar (${labelToggleSidebar})`}
@@ -208,20 +243,96 @@ export function ActivityBar() {
 					showKeyTip={altKeyHeld}
 				/>
 
+			</div>
+
+			{/* Separator - desktop only */}
+			<div className={clsx(
+				"hidden md:block border-t border-gray-200 dark:border-gray-600",
+				activityBarExpanded ? "md:my-1 md:w-full" : "md:my-1 md:mx-1"
+			)} />
+
+			{/* Show/Hide toggles */}
+			<div
+				className={clsx(
+					"flex items-center gap-2",
+					"flex-row",
+					activityBarExpanded
+						? "md:flex-col md:gap-1 md:w-full"
+						: "md:flex-col md:gap-2"
+				)}
+			>
 				<ActivityBarButton
-					icon={Icons.Keyboard}
-					isActive={isHotkeysActive}
-					onClick={openHotkeysTab}
-					title={`Keyboard Shortcuts (${labelOpenHotkeys})`}
-					label="Hotkeys"
+					icon={toolbarVisible ? Icons.Brush : Icons.EyeOff}
+					isActive={toolbarVisible}
+					onClick={toggleToolbar}
+					title={`${toolbarVisible ? "Hide" : "Show"} editor toolbar (${labelToggleToolbar})`}
+					label="Toolbar"
 					expanded={activityBarExpanded}
-					keyTip="3"
+					keyTip="5"
 					showKeyTip={altKeyHeld}
+					iconSize={16}
+					iconClassName="md:w-4 md:h-4"
 				/>
 
-				<div className="hidden md:block">
+				<ActivityBarButton
+					icon={titleBarVisible ? Icons.Heading : Icons.EyeOff}
+					isActive={titleBarVisible}
+					onClick={toggleTitleBar}
+					title={`${titleBarVisible ? "Hide" : "Show"} title bar (${labelToggleTitleBar})`}
+					label="Title Bar"
+					expanded={activityBarExpanded}
+					keyTip="6"
+					showKeyTip={altKeyHeld}
+					iconSize={16}
+					iconClassName="md:w-4 md:h-4"
+				/>
+
+				<ActivityBarButton
+					icon={tabBarVisible ? Icons.PanelTop : Icons.EyeOff}
+					isActive={tabBarVisible}
+					onClick={toggleTabBar}
+					title={`${tabBarVisible ? "Hide" : "Show"} tab bar (${labelToggleTabBar})`}
+					label="Tab Bar"
+					expanded={activityBarExpanded}
+					keyTip="0"
+					showKeyTip={altKeyHeld}
+					iconSize={16}
+					iconClassName="md:w-4 md:h-4"
+				/>
+
+				<ActivityBarButton
+					icon={statusBarVisible ? Icons.PanelBottom : Icons.EyeOff}
+					isActive={statusBarVisible}
+					onClick={toggleStatusBar}
+					title={`${statusBarVisible ? "Hide" : "Show"} status bar`}
+					label="Status Bar"
+					expanded={activityBarExpanded}
+					keyTip="s"
+					showKeyTip={altKeyHeld}
+					iconSize={16}
+					iconClassName="md:w-4 md:h-4"
+				/>
+			</div>
+
+			{/* Separator - desktop only */}
+			<div className={clsx(
+				"hidden md:block border-t border-gray-200 dark:border-gray-600",
+				activityBarExpanded ? "md:my-1 md:w-full" : "md:my-1 md:mx-1"
+			)} />
+
+			{/* Mode switches */}
+			<div
+				className={clsx(
+					"flex items-center gap-2",
+					"flex-row",
+					activityBarExpanded
+						? "md:flex-col md:gap-1 md:w-full"
+						: "md:flex-col md:gap-2"
+				)}
+			>
+				<div className="hidden md:block md:w-full">
 					<ActivityBarButton
-						icon={paneState.count === 1 ? Icons.Columns2 : Icons.Minus}
+						icon={paneState.count === 1 ? Icons.Columns2 : Icons.Square}
 						isActive={paneState.count === 2}
 						onClick={togglePaneMode}
 						title={
@@ -235,97 +346,15 @@ export function ActivityBar() {
 						showKeyTip={altKeyHeld}
 					/>
 				</div>
-			</div>
-
-			{/* Separator between upper and lower groups - desktop only */}
-			<div className={clsx(
-				"hidden md:block border-t border-gray-200 dark:border-gray-600",
-				activityBarExpanded ? "md:my-1 md:w-full" : "md:my-1 md:mx-1"
-			)} />
-
-			{/* Editor controls section */}
-			<div
-				className={clsx(
-					"flex items-center gap-2",
-					"flex-row",
-					activityBarExpanded
-						? "md:flex-col md:gap-1 md:w-full"
-						: "md:flex-col md:gap-2"
-				)}
-			>
-				<ActivityBarButton
-					icon={toolbarVisible ? Icons.PanelTop : Icons.PanelTopDashed}
-					isActive={toolbarVisible}
-					onClick={toggleToolbar}
-					title={`${toolbarVisible ? "Hide" : "Show"} editor toolbar (${labelToggleToolbar})`}
-					label="Toolbar"
-					expanded={activityBarExpanded}
-					keyTip="5"
-					showKeyTip={altKeyHeld}
-					iconSize={16}
-					iconClassName="md:w-4 md:h-4"
-				/>
 
 				<ActivityBarButton
-					icon={titleBarVisible ? Icons.Type : Icons.TypeOutline}
-					isActive={titleBarVisible}
-					onClick={toggleTitleBar}
-					title={`${titleBarVisible ? "Hide" : "Show"} title bar (${labelToggleTitleBar})`}
-					label="Title Bar"
-					expanded={activityBarExpanded}
-					keyTip="6"
-					showKeyTip={altKeyHeld}
-					iconSize={16}
-					iconClassName="md:w-4 md:h-4"
-				/>
-
-				<ActivityBarButton
-					icon={tabBarVisible ? Icons.Rows2 : Icons.Rows3}
-					isActive={tabBarVisible}
-					onClick={toggleTabBar}
-					title={`${tabBarVisible ? "Hide" : "Show"} tab bar (${labelToggleTabBar})`}
-					label="Tab Bar"
-					expanded={activityBarExpanded}
-					keyTip="0"
-					showKeyTip={altKeyHeld}
-					iconSize={16}
-					iconClassName="md:w-4 md:h-4"
-				/>
-
-				<ActivityBarButton
-					icon={statusBarVisible ? Icons.PanelBottom : Icons.PanelBottomClose}
-					isActive={statusBarVisible}
-					onClick={toggleStatusBar}
-					title={`${statusBarVisible ? "Hide" : "Show"} status bar`}
-					label="Status Bar"
-					expanded={activityBarExpanded}
-					keyTip="s"
-					showKeyTip={altKeyHeld}
-					iconSize={16}
-					iconClassName="md:w-4 md:h-4"
-				/>
-
-				<ActivityBarButton
-					icon={isWrapping ? Icons.WrapText : Icons.ArrowRight}
+					icon={isWrapping ? Icons.WrapText : Icons.AlignJustify}
 					isActive={isWrapping}
 					onClick={toggleLineWrapping}
 					title={`${isWrapping ? "Disable" : "Enable"} line wrapping (${labelToggleLineWrapping})`}
 					label="Wrap Text"
 					expanded={activityBarExpanded}
 					keyTip="7"
-					showKeyTip={altKeyHeld}
-					iconSize={16}
-					iconClassName="md:w-4 md:h-4"
-				/>
-
-				<ActivityBarButton
-					icon={isZenMode ? Icons.Minimize2 : Icons.Maximize2}
-					isActive={isZenMode}
-					onClick={toggleZenMode}
-					title={`${isZenMode ? "Exit" : "Enter"} Zen Mode (${labelToggleZenMode})`}
-					label={isZenMode ? "Exit Zen" : "Zen Mode"}
-					expanded={activityBarExpanded}
-					keyTip="9"
 					showKeyTip={altKeyHeld}
 					iconSize={16}
 					iconClassName="md:w-4 md:h-4"

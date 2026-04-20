@@ -4,8 +4,10 @@ import {
 	AsciiArtView,
 	AutocorrectView,
 	BookView,
+	BrandingView,
 	ConfigView,
 	HotkeysView,
+	IconEditorView,
 	EditorRichView,
 	EditorSourceView,
 	SectionView,
@@ -24,10 +26,14 @@ export const View: FC<ViewProps> = ({ viewType, viewData }) => {
 			return <AutocorrectView />;
 		case "book-view":
 			return <BookView viewData={viewData} />;
+		case "branding-view":
+			return <BrandingView />;
 		case "config-view":
 			return <ConfigView />;
 		case "hotkeys-view":
 			return <HotkeysView />;
+		case "icon-editor-view":
+			return <IconEditorView />;
 		case "editor-rich-view":
 			return <EditorRichView viewData={viewData} />;
 		case "editor-source-view":

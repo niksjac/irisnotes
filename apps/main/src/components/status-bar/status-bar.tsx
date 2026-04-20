@@ -9,10 +9,10 @@
  * - Cursor position (line, column)
  */
 
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { editorSettingsAtom } from "@/atoms/settings";
 import { editorStatsAtom } from "@/atoms/editor-stats";
-import { pane0ActiveTabAtom, pane1TabsAtom, pane0TabsAtom, pane1ActiveTabAtom, paneStateAtom } from "@/atoms/panes";
+import { pane0ActiveTabAtom, pane1TabsAtom, pane0TabsAtom, pane1ActiveTabAtom, paneStateAtom, closeAllTabsAtom } from "@/atoms/panes";
 import { statusBarVisibleAtom } from "@/atoms";
 import { useMemo, useCallback } from "react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
@@ -33,7 +33,9 @@ export function StatusBar() {
 	const pane0ActiveTab = useAtomValue(pane0ActiveTabAtom);
 	const pane1ActiveTab = useAtomValue(pane1ActiveTabAtom);
 	const paneState = useAtomValue(paneStateAtom);
+	const closeAllTabs = useSetAtom(closeAllTabsAtom);
 	const focusedPane = paneState.activePane;
+	const totalTabCount = pane0Tabs.length + pane1Tabs.length;
 
 	const { isEditorActive, activeNoteId } = useMemo(() => {
 		const activeInPane0 = pane0Tabs.find((t) => t.id === pane0ActiveTab);
@@ -118,6 +120,24 @@ export function StatusBar() {
 
 			{/* Right side - display settings */}
 			<div className="flex items-center gap-3 tabular-nums flex-shrink-0">
+				{totalTabCount > 0 && (
+					<>
+						<span className="flex items-center gap-1" title={`${totalTabCount} open tab${totalTabCount !== 1 ? "s" : ""}`}>
+							Tabs: {totalTabCount}
+							<button
+								type="button"
+								onClick={() => closeAllTabs()}
+								className="ml-0.5 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+								title="Close all tabs"
+							>
+								<svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor">
+									<path d="M6 4.586L10.293.293a1 1 0 011.414 1.414L7.414 6l4.293 4.293a1 1 0 01-1.414 1.414L6 7.414l-4.293 4.293a1 1 0 01-1.414-1.414L4.586 6 .293 1.707A1 1 0 011.707.293L6 4.586z" />
+								</svg>
+							</button>
+						</span>
+						<span className="text-gray-300 dark:text-gray-600">|</span>
+					</>
+				)}
 				<span title="Base font size (Ctrl+Alt+Up/Down to adjust)">
 					{fontSize}px
 				</span>

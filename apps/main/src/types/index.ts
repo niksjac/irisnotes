@@ -108,6 +108,8 @@ export interface HotkeyMapping {
 	// Notes hotkeys
 	newNote: HotkeyConfig;
 	newNoteWithLocation: HotkeyConfig;
+	newBook: HotkeyConfig;
+	newSection: HotkeyConfig;
 
 	// Search hotkeys
 	quickSearch: HotkeyConfig;
@@ -217,6 +219,8 @@ export interface AppHotkeysProps {
 	// Notes hotkeys
 	onNewNote?: () => void;
 	onNewNoteWithLocation?: () => void;
+	onNewBook?: () => void;
+	onNewSection?: () => void;
 
 	// Views hotkeys
 	onOpenSettings?: () => void;
@@ -281,10 +285,12 @@ export interface AppConfig {
 
 // UI and Layout types
 export type ViewType =
+	| "branding-view"
 	| "config-view"
 	| "hotkeys-view"
 	| "ascii-art-view"
 	| "autocorrect-view"
+	| "icon-editor-view"
 	| "editor-rich-view"
 	| "editor-source-view"
 	| "section-view"

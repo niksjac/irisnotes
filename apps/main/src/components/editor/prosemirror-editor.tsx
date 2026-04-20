@@ -282,6 +282,105 @@ export function ProseMirrorEditor({
 				details: (node, view, getPos) => new DetailsNodeView(node, view, getPos),
 				image: (node, view, getPos) => new ImageNodeView(node, view, getPos),
 			},
+			// Custom plain text serialization for clipboard - fixes two issues:
+			// 1. Removes extra blank lines between paragraphs (single newline instead)
+			// 2. Includes list markers (bullets, numbers) that were being lost
+			clipboardTextSerializer(slice) {
+				const lines: string[] = [];
+
+				function serializeNode(
+					node: import("prosemirror-model").Node,
+					depth: number,
+					listType: "bullet" | "ordered" | null,
+					listIndex: number,
+				): number {
+					const indent = "  ".repeat(depth);
+
+					if (node.isText) {
+						return listIndex;
+					}
+
+					if (node.type.name === "bullet_list") {
+						node.forEach((child) => {
+							serializeNode(child, depth, "bullet", 1);
+						});
+						return listIndex;
+					}
+
+					if (node.type.name === "ordered_list") {
+						let idx = 1;
+						node.forEach((child) => {
+							idx = serializeNode(child, depth, "ordered", idx);
+						});
+						return listIndex;
+					}
+
+					if (node.type.name === "list_item") {
+						// Collect the text content of immediate paragraph children
+						const itemLines: string[] = [];
+						node.forEach((child, _offset, index) => {
+							if (child.type.name === "paragraph") {
+								const text = child.textContent;
+								if (index === 0) {
+									// First paragraph gets the marker
+									const marker = listType === "ordered" ? `${listIndex}. ` : "- ";
+									itemLines.push(`${indent}${marker}${text}`);
+								} else {
+									// Subsequent paragraphs are indented without marker
+									const extraIndent = listType === "ordered" ? "   " : "  ";
+									itemLines.push(`${indent}${extraIndent}${text}`);
+								}
+							} else if (child.type.name === "bullet_list" || child.type.name === "ordered_list") {
+								// Nested list
+								serializeNode(child, depth + 1, null, 1);
+							}
+						});
+						lines.push(...itemLines);
+						return listIndex + 1;
+					}
+
+					if (node.type.name === "paragraph") {
+						lines.push(node.textContent);
+						return listIndex;
+					}
+
+					if (node.type.name === "blockquote") {
+						node.forEach((child) => {
+							if (child.type.name === "paragraph") {
+								lines.push(`> ${child.textContent}`);
+							} else {
+								serializeNode(child, depth, null, 1);
+							}
+						});
+						return listIndex;
+					}
+
+					if (node.type.name === "code_block") {
+						lines.push(node.textContent);
+						return listIndex;
+					}
+
+					if (node.type.name === "horizontal_rule") {
+						lines.push("---");
+						return listIndex;
+					}
+
+					// For other block nodes, recurse into children
+					if (node.isBlock) {
+						node.forEach((child) => {
+							serializeNode(child, depth, listType, listIndex);
+						});
+					}
+
+					return listIndex;
+				}
+
+				slice.content.forEach((node) => {
+					serializeNode(node, 0, null, 1);
+				});
+
+				return lines.join("\n");
+			},
 			// Custom scroll handling: allow vertical scrolling but prevent automatic
 			// horizontal scrolling in no-wrap mode (which would hide left content)
 			handleScrollToSelection(view) {
