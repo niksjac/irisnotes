@@ -807,6 +807,24 @@ pub fn run() {
         }
     }
 
+    // Point window-state plugin at our custom config dir (dev/ or ~/.config/irisnotes/)
+    // instead of the default ~/.config/com.irisnotes.* that Tauri would create.
+    let window_state_dir = if is_development_mode() {
+        let exe_path = std::env::current_exe().unwrap_or_default();
+        let mut project_root = exe_path.parent().map(|p| p.to_path_buf()).unwrap_or_default();
+        loop {
+            if project_root.join("pnpm-workspace.yaml").exists() { break; }
+            if !project_root.pop() {
+                project_root = std::env::current_dir().unwrap_or_default();
+                break;
+            }
+        }
+        project_root.join("dev")
+    } else {
+        dirs::config_dir().unwrap_or_default().join("irisnotes")
+    };
+    let _ = std::fs::create_dir_all(&window_state_dir);
+
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             // Another instance tried to start - check for --open-note argument
@@ -831,7 +849,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_notification::init())
-        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(tauri_plugin_window_state::Builder::default().with_state_dir(window_state_dir).build())
         .plugin(tauri_plugin_global_shortcut::Builder::default().build())
         .register_uri_scheme_protocol("asset", |_app, request| {
             // Serve images from the assets directory

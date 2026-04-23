@@ -709,6 +709,11 @@ pub fn run() {
     let db_path = get_database_path();
     let _ = db_state.init(&db_path);
 
+    // Point window-state plugin at our custom config dir (dev/ or ~/.config/irisnotes/)
+    // instead of the default ~/.config/com.irisnotes.* that Tauri would create.
+    let window_state_dir = get_config_dir();
+    let _ = std::fs::create_dir_all(&window_state_dir);
+
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             // Another instance tried to start - show our window instead
@@ -716,7 +721,7 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(tauri_plugin_window_state::Builder::default().with_state_dir(window_state_dir).build())
         .manage(db_state)
         .invoke_handler(tauri::generate_handler![search_notes, open_note_in_main_app, hide_window, read_config])
         .setup(|app| {
