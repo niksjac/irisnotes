@@ -782,6 +782,39 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 		editorView.focus();
 	}, [editorView, schema]);
 
+	// Clear formatting but keep explicit font family marks.
+	const clearFormattingExceptFontFamily = useCallback(() => {
+		if (!editorView) return;
+		const { state, dispatch } = editorView;
+		const { from, to, empty } = state.selection;
+
+		let tr = state.tr;
+		const marksToRemove = [
+			schema.marks.textColor,
+			schema.marks.highlight,
+			schema.marks.fontSize,
+			schema.marks.strong,
+			schema.marks.em,
+			schema.marks.underline,
+			schema.marks.strikethrough,
+			schema.marks.code,
+			schema.marks.link,
+		].filter(Boolean);
+
+		if (empty) {
+			for (const markType of marksToRemove) {
+				tr = tr.removeStoredMark(markType);
+			}
+		} else {
+			for (const markType of marksToRemove) {
+				tr = tr.removeMark(from, to, markType);
+			}
+		}
+
+		dispatch(tr);
+		editorView.focus();
+	}, [editorView, schema]);
+
 	const currentTextColor = getCurrentTextColor();
 	const currentHighlightColor = getCurrentHighlightColor();
 
@@ -973,7 +1006,7 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 		<div
 			ref={toolbarRef}
 			data-editor-toolbar
-			className="relative flex items-center flex-wrap bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 min-w-0 px-1 py-1 gap-0.5"
+			className="relative flex items-center flex-wrap overflow-visible min-h-[36px] bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 min-w-0 px-1 py-1 gap-0.5 gap-y-1"
 			onKeyDown={(e) => {
 				if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
 					e.preventDefault();
@@ -1175,6 +1208,18 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 				>
 					<RemoveFormatting size={15} />
 				</button>
+
+				{/* Clear formatting but preserve Font Family */}
+				<button
+					type="button"
+					tabIndex={0}
+					className="relative flex-shrink-0 w-7 h-7 flex items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+					onClick={clearFormattingExceptFontFamily}
+					title="Clear Formatting, Keep Font Family"
+				>
+					<RemoveFormatting size={15} />
+					<span className="absolute right-0.5 bottom-0.5 text-[8px] leading-none font-semibold">F</span>
+				</button>
 			</div>
 
 			<div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
@@ -1270,25 +1315,31 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 				<BoxSelect size={14} />
 			</button>
 
-			{/* Table toolbar toggle — only visible when cursor is in a table */}
-			{inTable && (
-				<>
-					<div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
-					<button
-						type="button"
-						className={`relative flex-shrink-0 h-7 flex items-center gap-1 px-1.5 rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset text-[11px] font-medium ${
-							tableToolbarState !== "hidden"
-								? "bg-blue-500 text-white hover:bg-blue-600"
-								: "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-						}`}
-						onClick={() => setTableToolbarState((v) => v === "hidden" ? "visible" : "hidden")}
-						title="Toggle table toolbar (F2)"
-					>
-						<Table size={14} />
-						Table
-					</button>
-				</>
-			)}
+			{/* Table toolbar toggle — always mounted; hidden (but occupying space) when not in a table to prevent toolbar layout jumps. */}
+			<div
+				className="flex items-center gap-0.5"
+				aria-hidden={!inTable}
+				style={{
+					visibility: inTable ? "visible" : "hidden",
+					pointerEvents: inTable ? "auto" : "none",
+				}}
+			>
+				<div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
+				<button
+					type="button"
+					tabIndex={inTable ? 0 : -1}
+					className={`relative flex-shrink-0 h-7 flex items-center gap-1 px-1.5 rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset text-[11px] font-medium ${
+						tableToolbarState !== "hidden"
+							? "bg-blue-500 text-white hover:bg-blue-600"
+							: "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+					}`}
+					onClick={() => setTableToolbarState((v) => v === "hidden" ? "visible" : "hidden")}
+					title="Toggle table toolbar (F2)"
+				>
+					<Table size={14} />
+					Table
+				</button>
+			</div>
 
 			{/* Floating table toolbar — rendered via portal above the active table */}
 			{editorView && tableToolbarState !== "hidden" && inTable && (
@@ -1404,7 +1455,7 @@ function SpacingDropdown({ label, value, onChange, presets, format, defaultValue
 		<div className="relative flex-shrink-0" ref={containerRef}>
 			<button
 				type="button"
-				className={`flex-shrink-0 flex items-center gap-0.5 h-6 px-1 rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ${
+				className={`flex-shrink-0 flex items-center gap-0.5 h-6 px-1 rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ring-1 ring-inset ring-gray-300 dark:ring-gray-600 ${
 					isOpen ? "bg-gray-200 dark:bg-gray-600" : "hover:bg-gray-200 dark:hover:bg-gray-700"
 				} text-gray-700 dark:text-gray-300`}
 				onClick={() => (isOpen ? setIsOpen(false) : openDropdown())}
@@ -1412,7 +1463,7 @@ function SpacingDropdown({ label, value, onChange, presets, format, defaultValue
 				title={`${label}: ${format(value)}`}
 			>
 				<span className="text-[11px] leading-none select-none flex-shrink-0">{icon}</span>
-				<span className="text-[10px] tabular-nums leading-none min-w-[22px] text-center">{format(value)}</span>
+				<span className="text-[10px] tabular-nums leading-none w-[34px] text-center">{format(value)}</span>
 				<ChevronDown size={7} className={`flex-shrink-0 opacity-40 transition-transform ${isOpen ? "rotate-180" : ""}`} />
 			</button>
 			{isOpen && dropdownPos && (
@@ -1616,7 +1667,7 @@ function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, 
 			<button
 				ref={inputRef as React.RefObject<HTMLButtonElement>}
 				type="button"
-				className={`flex-shrink-0 flex items-center gap-0.5 h-6 px-1 rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ${
+				className={`flex-shrink-0 flex items-center gap-0.5 h-6 px-1 rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ring-1 ring-inset ring-gray-300 dark:ring-gray-600 ${
 					isOpen ? "bg-gray-200 dark:bg-gray-600" : "hover:bg-gray-200 dark:hover:bg-gray-700"
 				} text-gray-700 dark:text-gray-300`}
 				onClick={() => setIsOpen(!isOpen)}
@@ -1624,7 +1675,7 @@ function FontSizeDropdown({ schema, editorView, applyMarkWithAttrs, removeMark, 
 				title={`Font Size: ${displaySize}px`}
 			>
 				<ALargeSmall size={13} className="flex-shrink-0" />
-				<span className="text-[10px] tabular-nums leading-none min-w-[18px] text-center">{displaySize}</span>
+				<span className="text-[10px] tabular-nums leading-none w-[26px] text-center">{displaySize}</span>
 				<ChevronDown size={7} className={`flex-shrink-0 text-gray-500 dark:text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
 			</button>
 			{isOpen && dropdownPos && (
@@ -1827,14 +1878,14 @@ function FontFamilyDropdown({ schema, editorView, applyMarkWithAttrs, removeMark
 			<button
 				ref={inputRef as React.RefObject<HTMLButtonElement>}
 				type="button"
-				className={`flex items-center h-6 px-1.5 gap-0.5 rounded transition-colors text-[11px] text-gray-700 dark:text-gray-300 whitespace-nowrap ${
+				className={`flex items-center h-6 px-1.5 gap-0.5 rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ring-1 ring-inset ring-gray-300 dark:ring-gray-600 text-[11px] text-gray-700 dark:text-gray-300 whitespace-nowrap w-[120px] ${
 					isOpen ? "bg-gray-200 dark:bg-gray-600" : "hover:bg-gray-200 dark:hover:bg-gray-700"
 				}`}
 				onClick={() => setIsOpen(!isOpen)}
 				onKeyDown={handleKeyDown}
-				title="Font Family"
+				title={`Font Family: ${currentFamily}`}
 			>
-				<span className="text-left">{currentFamily}</span>
+				<span className="flex-1 text-left truncate min-w-0">{currentFamily}</span>
 				<ChevronDown size={10} className={`flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
 			</button>
 			{isOpen && dropdownPos && (
