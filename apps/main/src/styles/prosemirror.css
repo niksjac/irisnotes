@@ -71,6 +71,9 @@
   caret-color: var(--pm-caret-color);
   word-wrap: break-word;
   overflow-wrap: break-word;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   /* Note: zoom is applied to parent container so cursor scales too */
 }
 
