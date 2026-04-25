@@ -16,6 +16,7 @@ import {
 import { QuickHotkeysModal } from "@/components/dialogs/quick-hotkeys-modal";
 import { ThemeSwitcherDialog } from "@/components/dialogs/theme-switcher-dialog";
 import { SymbolPickerDialog } from "@/components/dialogs/symbol-picker-dialog";
+import { NerdFontPickerDialog } from "@/components/dialogs/nerd-font-picker-dialog";
 import { quickHotkeysOpenAtom, hideQuickHotkeysAtom } from "@/atoms";
 import {
 	useLayout,
@@ -182,6 +183,9 @@ export const Layout: React.FC = () => {
 
 			{/* Symbol Picker Dialog */}
 			<SymbolPickerDialog />
+
+			{/* Nerd Font Icon Picker Dialog */}
+			<NerdFontPickerDialog />
 		</div>
 	);
 };

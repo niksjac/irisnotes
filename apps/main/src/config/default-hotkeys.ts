@@ -340,6 +340,12 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		category: "Views",
 		global: true,
 	},
+	openNerdFontPicker: {
+		key: "ctrl+alt+u",
+		description: "Open Nerd Font Icon Picker",
+		category: "Views",
+		global: true,
+	},
 	fullTextSearch: {
 		key: "ctrl+shift+f",
 		description: "Full Text Search (in content)",

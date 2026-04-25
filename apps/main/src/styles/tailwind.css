@@ -4,6 +4,35 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ==========================================================================
+   Symbols Nerd Font (v3.3.0) — bundled for the Nerd Font icon picker.
+   License: SIL Open Font License (see public/fonts/SymbolsNerdFont-LICENSE)
+   ========================================================================== */
+@font-face {
+  font-family: "Symbols Nerd Font";
+  src: url("/fonts/SymbolsNerdFont-Regular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.nf-glyph {
+  font-family: "Symbols Nerd Font", var(--pm-font-family, sans-serif);
+  font-feature-settings: normal;
+  font-variant-ligatures: none;
+}
+
+/* Utility: hide scrollbar chrome while preserving scroll behavior. */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* ==========================================================================
    Global keyboard focus indicator
    Uses :focus-visible so it only shows for keyboard/sequential navigation,
    not mouse clicks. Applied in @layer base so component-level ring utilities

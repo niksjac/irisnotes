@@ -5,3 +5,4 @@ export * from "./new-book-dialog";
 export * from "./new-section-dialog";
 export * from "./theme-switcher-dialog";
 export * from "./symbol-picker-dialog";
+export * from "./nerd-font-picker-dialog";

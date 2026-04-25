@@ -37,6 +37,7 @@ import {
 	toggleZenModeAtom,
 	openThemeSwitcherAtom,
 	openSymbolPickerAtom,
+	openNerdFontPickerAtom,
 } from "@/atoms";
 import { useEditorViewToggle } from "./use-editor-view-toggle";
 import { useLineWrapping } from "./use-line-wrapping";
@@ -162,6 +163,7 @@ export function useHotkeyHandlers() {
 		showQuickHotkeys: useSetAtom(showQuickHotkeysAtom),
 		openThemeSwitcher: useSetAtom(openThemeSwitcherAtom),
 		openSymbolPicker: useSetAtom(openSymbolPickerAtom),
+		openNerdFontPicker: useSetAtom(openNerdFontPickerAtom),
 
 		// Config folder
 		openConfigFolder: () => {

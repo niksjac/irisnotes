@@ -53,6 +53,7 @@ export function mapHotkeyHandlers(
 		openSearchSidebar: () => void;
 		openThemeSwitcher: () => void;
 		openSymbolPicker: () => void;
+		openNerdFontPicker: () => void;
 		openConfigFolder: () => void;
 	}
 ): AppHotkeysProps {
@@ -296,6 +297,9 @@ export function mapHotkeyHandlers(
 
 		// Symbol picker
 		onOpenSymbolPicker: handlers.openSymbolPicker,
+
+		// Nerd Font icon picker
+		onOpenNerdFontPicker: handlers.openNerdFontPicker,
 
 		// Tree view hotkeys
 		onRevealActiveInTree: () => {

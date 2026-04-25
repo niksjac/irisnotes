@@ -10,6 +10,6 @@ export { StatusBar } from "./status-bar";
 export { TreeView } from "./tree";
 export { Tab, TabBar, TabContent } from "./tabs";
 export { Pane, PaneContainer, PaneResizer } from "./panes";
-export { NoteLocationDialog, QuickSearchDialog, NewNoteDialog, NewBookDialog, NewSectionDialog, ThemeSwitcherDialog, SymbolPickerDialog } from "./dialogs";
+export { NoteLocationDialog, QuickSearchDialog, NewNoteDialog, NewBookDialog, NewSectionDialog, ThemeSwitcherDialog, SymbolPickerDialog, NerdFontPickerDialog } from "./dialogs";
 export { Logo } from "./logo";
 export { IrisLogo } from "./iris-logo";

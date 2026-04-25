@@ -61,3 +61,14 @@ export const openSymbolPickerAtom = atom(null, (_get, set) => {
 export const closeSymbolPickerAtom = atom(null, (_get, set) => {
 	set(symbolPickerOpenAtom, false);
 });
+
+// Nerd Font icon picker dialog
+export const nerdFontPickerOpenAtom = atom<boolean>(false);
+
+export const openNerdFontPickerAtom = atom(null, (_get, set) => {
+	set(nerdFontPickerOpenAtom, true);
+});
+
+export const closeNerdFontPickerAtom = atom(null, (_get, set) => {
+	set(nerdFontPickerOpenAtom, false);
+});

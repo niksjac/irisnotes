@@ -325,6 +325,11 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHandler(handlers.onOpenSymbolPicker),
 		createHotkeyOptions(hotkeyMapping.openSymbolPicker.global)
 	);
+	useHotkeys(
+		hotkeyMapping.openNerdFontPicker.key,
+		createHandler(handlers.onOpenNerdFontPicker),
+		createHotkeyOptions(hotkeyMapping.openNerdFontPicker.global)
+	);
 
 	// Tree view hotkeys
 	useHotkeys(

@@ -121,6 +121,9 @@ export interface HotkeyMapping {
 	// Symbol picker
 	openSymbolPicker: HotkeyConfig;
 
+	// Nerd Font icon picker
+	openNerdFontPicker: HotkeyConfig;
+
 	// Tree view hotkeys
 	revealActiveInTree: HotkeyConfig;
 	toggleHoist: HotkeyConfig;
@@ -236,6 +239,9 @@ export interface AppHotkeysProps {
 
 	// Symbol picker
 	onOpenSymbolPicker?: () => void;
+
+	// Nerd Font icon picker
+	onOpenNerdFontPicker?: () => void;
 
 	// Tree view hotkeys
 	onRevealActiveInTree?: () => void;
