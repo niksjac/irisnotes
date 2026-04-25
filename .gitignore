@@ -35,6 +35,7 @@ storybook-static
 
 # Development database
 dev/notes.db
+dev/.window-state.json
 
 # Local config
 dev/config.toml

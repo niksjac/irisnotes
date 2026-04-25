@@ -809,6 +809,10 @@ pub fn run() {
 
     // Point window-state plugin at our custom config dir (dev/ or ~/.config/irisnotes/)
     // instead of the default ~/.config/com.irisnotes.* that Tauri would create.
+    //
+    // The plugin only exposes `with_filename`, not a directory override, but internally it
+    // does `app_config_dir.join(&filename)` — and PathBuf::join replaces the base when the
+    // argument is an absolute path. So we pass the full absolute path as the "filename".
     let window_state_dir = if is_development_mode() {
         let exe_path = std::env::current_exe().unwrap_or_default();
         let mut project_root = exe_path.parent().map(|p| p.to_path_buf()).unwrap_or_default();
@@ -824,6 +828,7 @@ pub fn run() {
         dirs::config_dir().unwrap_or_default().join("irisnotes")
     };
     let _ = std::fs::create_dir_all(&window_state_dir);
+    let window_state_path = window_state_dir.join(".window-state.json");
 
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
@@ -849,7 +854,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_notification::init())
-        .plugin(tauri_plugin_window_state::Builder::default().with_state_dir(window_state_dir).build())
+        .plugin(tauri_plugin_window_state::Builder::default().with_filename(window_state_path.to_string_lossy().into_owned()).build())
         .plugin(tauri_plugin_global_shortcut::Builder::default().build())
         .register_uri_scheme_protocol("asset", |_app, request| {
             // Serve images from the assets directory
