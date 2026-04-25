@@ -188,10 +188,10 @@ export const SymbolPickerDialog: FC = () => {
 				</div>
 
 				{/* Category tabs */}
-				<div className="flex gap-1 px-2 py-1.5 border-b border-gray-200 dark:border-gray-700 overflow-x-auto scrollbar-hide">
+				<div className="flex items-center gap-1 px-2 py-2.5 min-h-[44px] border-b border-gray-200 dark:border-gray-700 overflow-x-auto scrollbar-hide">
 					<button
 						onClick={() => setActiveCategory(null)}
-						className={`px-2 py-0.5 text-xs rounded whitespace-nowrap transition-colors ${
+						className={`px-2 py-1 text-xs rounded whitespace-nowrap transition-colors ${
 							activeCategory === null
 								? "bg-blue-500 text-white"
 								: "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -203,7 +203,7 @@ export const SymbolPickerDialog: FC = () => {
 						<button
 							key={cat}
 							onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
-							className={`px-2 py-0.5 text-xs rounded whitespace-nowrap transition-colors ${
+							className={`px-2 py-1 text-xs rounded whitespace-nowrap transition-colors ${
 								activeCategory === cat
 									? "bg-blue-500 text-white"
 									: "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -246,7 +246,7 @@ export const SymbolPickerDialog: FC = () => {
 				</div>
 
 				{/* Status bar: show info about selected symbol */}
-				<div className="flex items-center gap-3 px-3 py-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-850">
+				<div className="flex items-center gap-3 px-3 py-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900">
 					{selectedSym ? (
 						<>
 							<span className="text-base">{selectedSym.char}</span>
