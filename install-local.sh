@@ -8,6 +8,76 @@ PREFIX="${PREFIX:-$HOME/.local}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SKIP_BUILD=false
 
+get_current_version() {
+    sed -n 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$SCRIPT_DIR/apps/main/src-tauri/tauri.conf.json" | head -n 1
+}
+
+bump_patch_version() {
+    local version="$1"
+    local major minor patch
+
+    if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "Cannot auto-bump non-semver version: $version" >&2
+        exit 1
+    fi
+
+    IFS=. read -r major minor patch <<< "$version"
+    echo "$major.$minor.$((patch + 1))"
+}
+
+set_json_version() {
+    local file="$1"
+    local version="$2"
+
+    node --input-type=module - "$file" "$version" <<'NODE'
+import fs from "node:fs";
+
+const [file, version] = process.argv.slice(2);
+const text = fs.readFileSync(file, "utf8");
+const data = JSON.parse(text);
+const indent = text.includes('\n\t"') ? "\t" : 2;
+
+data.version = version;
+fs.writeFileSync(file, `${JSON.stringify(data, null, indent)}\n`);
+NODE
+}
+
+set_cargo_manifest_version() {
+    local file="$1"
+    local version="$2"
+
+    NEW_VERSION="$version" perl -0pi -e 's/(\[package\]\s*name\s*=\s*"[^"]+"\s*version\s*=\s*")[^"]+(")/$1$ENV{NEW_VERSION}$2/s' "$file"
+}
+
+set_cargo_lock_package_version() {
+    local file="$1"
+    local package_name="$2"
+    local version="$3"
+
+    PACKAGE_NAME="$package_name" NEW_VERSION="$version" perl -0pi -e 'my $pkg = quotemeta $ENV{PACKAGE_NAME}; s/(\[\[package\]\]\s*name = "$pkg"\s*version = ")[^"]+(")/$1$ENV{NEW_VERSION}$2/s' "$file"
+}
+
+bump_release_version() {
+    local current_version new_version
+
+    current_version="$(get_current_version)"
+    new_version="$(bump_patch_version "$current_version")"
+
+    echo "Bumping release version: $current_version -> $new_version"
+
+    set_json_version "$SCRIPT_DIR/apps/main/package.json" "$new_version"
+    set_json_version "$SCRIPT_DIR/apps/main/src-tauri/tauri.conf.json" "$new_version"
+    set_cargo_manifest_version "$SCRIPT_DIR/apps/main/src-tauri/Cargo.toml" "$new_version"
+    set_cargo_lock_package_version "$SCRIPT_DIR/apps/main/src-tauri/Cargo.lock" "irisnotes" "$new_version"
+
+    set_json_version "$SCRIPT_DIR/apps/quick/package.json" "$new_version"
+    set_json_version "$SCRIPT_DIR/apps/quick/src-tauri/tauri.conf.json" "$new_version"
+    set_cargo_manifest_version "$SCRIPT_DIR/apps/quick/src-tauri/Cargo.toml" "$new_version"
+    set_cargo_lock_package_version "$SCRIPT_DIR/apps/quick/src-tauri/Cargo.lock" "irisnotes-quick" "$new_version"
+
+    APP_VERSION="$new_version"
+}
+
 # Parse arguments
 for arg in "$@"; do
     case $arg in
@@ -20,8 +90,13 @@ done
 
 echo "Installing IrisNotes to $PREFIX..."
 
+APP_VERSION="$(get_current_version)"
+
 # Build apps unless --no-build is passed
 if [ "$SKIP_BUILD" = false ]; then
+    echo ""
+    bump_release_version
+
     echo ""
     echo "Building main app..."
     cd "$SCRIPT_DIR/apps/main"
@@ -36,6 +111,8 @@ if [ "$SKIP_BUILD" = false ]; then
     cd "$SCRIPT_DIR"
     echo ""
     echo "Build complete!"
+else
+    echo "Skipping build and version bump (--no-build). Installing existing binaries for v$APP_VERSION."
 fi
 
 # Create directories
@@ -104,7 +181,7 @@ fi
 gtk-update-icon-cache "$ICON_DIR" 2>/dev/null || true
 
 echo ""
-echo "✓ IrisNotes v1.0.0 installed!"
+echo "✓ IrisNotes v$APP_VERSION installed!"
 echo ""
 echo "Binaries:"
 echo "  $PREFIX/bin/irisnotes"
