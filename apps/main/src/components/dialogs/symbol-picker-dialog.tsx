@@ -92,7 +92,7 @@ export const SymbolPickerDialog: FC = () => {
 					break;
 				case "ArrowRight":
 					e.preventDefault();
-					setSelectedIndex((prev) => Math.min(prev + 1, filtered.length - 1));
+					setSelectedIndex((prev) => filtered.length === 0 ? 0 : Math.min(prev + 1, filtered.length - 1));
 					break;
 				case "ArrowLeft":
 					e.preventDefault();
@@ -100,7 +100,7 @@ export const SymbolPickerDialog: FC = () => {
 					break;
 				case "ArrowDown":
 					e.preventDefault();
-					setSelectedIndex((prev) => Math.min(prev + cols, filtered.length - 1));
+					setSelectedIndex((prev) => filtered.length === 0 ? 0 : Math.min(prev + cols, filtered.length - 1));
 					break;
 				case "ArrowUp":
 					e.preventDefault();

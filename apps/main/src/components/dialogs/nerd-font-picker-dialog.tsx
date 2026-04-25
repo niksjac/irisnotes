@@ -129,7 +129,7 @@ export const NerdFontPickerDialog: FC = () => {
 				case "ArrowRight":
 					e.preventDefault();
 					setSelectedIndex((prev) =>
-						Math.min(prev + 1, filtered.length - 1),
+						filtered.length === 0 ? 0 : Math.min(prev + 1, filtered.length - 1),
 					);
 					break;
 				case "ArrowLeft":
@@ -139,7 +139,7 @@ export const NerdFontPickerDialog: FC = () => {
 				case "ArrowDown":
 					e.preventDefault();
 					setSelectedIndex((prev) =>
-						Math.min(prev + cols, filtered.length - 1),
+						filtered.length === 0 ? 0 : Math.min(prev + cols, filtered.length - 1),
 					);
 					break;
 				case "ArrowUp":
@@ -186,14 +186,19 @@ export const NerdFontPickerDialog: FC = () => {
 	const handleSelect = (icon: NerdFontIcon) => {
 		const view = activeEditorViewStore.get();
 		if (view) {
-			const { schema } = view.state;
+			const { schema, storedMarks, selection } = view.state;
 			const { from, to } = view.state.selection;
 			// Wrap glyph with a fontFamily mark so it renders correctly even when
-			// the editor's global font isn't a Nerd Font.
+			// the editor's global font isn't a Nerd Font, while preserving active
+			// formatting such as color, highlight, and font size.
 			const fontFamilyMark = schema.marks.fontFamily;
+			const activeMarks = storedMarks || selection.$from.marks();
 			const marks = fontFamilyMark
-				? [fontFamilyMark.create({ family: NERD_FONT_FAMILY })]
-				: [];
+				? [
+					...activeMarks.filter((mark: any) => mark.type !== fontFamilyMark),
+					fontFamilyMark.create({ family: NERD_FONT_FAMILY }),
+				]
+				: activeMarks;
 			const node = schema.text(icon.char, marks);
 			const tr = view.state.tr.replaceWith(from, to, node);
 			view.dispatch(tr);
