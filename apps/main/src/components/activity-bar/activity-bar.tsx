@@ -136,8 +136,6 @@ export function ActivityBar() {
 
 	if (!activityBarVisible) return null;
 
-	// Focus colors: using solid dark:bg-[#132247] (pre-computed blue-900/30 over gray-900)
-	// This avoids opacity blending issues
 	return (
 		<div
 			ref={containerRef}
@@ -145,8 +143,7 @@ export function ActivityBar() {
 			onFocus={() => setFocusArea("activity-bar")}
 			onBlur={() => setFocusArea(null)}
 			className={clsx(
-				"flex-shrink-0 flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
-				hasFocus ? "bg-blue-100 dark:bg-[#132247]" : "bg-gray-50 dark:bg-gray-800",
+				"flex-shrink-0 flex items-center focus:outline-none bg-gray-50 dark:bg-gray-800",
 				// Mobile: horizontal top bar with bottom border
 				"w-full h-12 flex-row justify-between px-4 py-2 gap-4 border-b border-gray-300 dark:border-gray-600",
 				// Desktop: vertical sidebar with right border
@@ -196,11 +193,11 @@ export function ActivityBar() {
 			<div className={clsx("hidden md:flex md:w-full", activityBarExpanded ? "md:justify-end md:mb-1" : "md:justify-center md:mb-2")}>
 				<button
 					className={clsx(
-						"relative flex items-center justify-center border-none bg-transparent cursor-pointer transition-all duration-200",
+						"relative flex items-center justify-center bg-transparent cursor-pointer transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset",
 						"text-gray-400 hover:text-gray-600 dark:hover:text-gray-200",
 						activityBarExpanded
 							? "w-6 h-5 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
-							: "w-6 h-6 hover:scale-110"
+							: "w-6 h-6 rounded hover:scale-110"
 					)}
 					onClick={toggleActivityBarExpanded}
 				title={activityBarExpanded ? `Collapse activity bar (${labelExpandActivityBar})` : `Expand activity bar (${labelExpandActivityBar})`}
@@ -222,7 +219,7 @@ export function ActivityBar() {
 			{/* Main action buttons */}
 			<div className={clsx("flex gap-2", activityBarExpanded ? "md:flex-col md:gap-1 md:w-full" : "md:flex-col md:gap-2")}>
 				<ActivityBarButton
-					icon={sidebarCollapsed ? Icons.PanelLeft : Icons.PanelLeftClose}
+					icon={Icons.PanelLeft}
 					isActive={!sidebarCollapsed}
 					onClick={toggleSidebar}
 					title={`Toggle Notes Sidebar (${labelToggleSidebar})`}
@@ -262,7 +259,7 @@ export function ActivityBar() {
 				)}
 			>
 				<ActivityBarButton
-					icon={toolbarVisible ? Icons.Brush : Icons.EyeOff}
+					icon={Icons.Brush}
 					isActive={toolbarVisible}
 					onClick={toggleToolbar}
 					title={`${toolbarVisible ? "Hide" : "Show"} editor toolbar (${labelToggleToolbar})`}
@@ -275,7 +272,7 @@ export function ActivityBar() {
 				/>
 
 				<ActivityBarButton
-					icon={titleBarVisible ? Icons.Heading : Icons.EyeOff}
+					icon={Icons.Heading}
 					isActive={titleBarVisible}
 					onClick={toggleTitleBar}
 					title={`${titleBarVisible ? "Hide" : "Show"} title bar (${labelToggleTitleBar})`}
@@ -288,7 +285,7 @@ export function ActivityBar() {
 				/>
 
 				<ActivityBarButton
-					icon={tabBarVisible ? Icons.PanelTop : Icons.EyeOff}
+					icon={Icons.PanelTop}
 					isActive={tabBarVisible}
 					onClick={toggleTabBar}
 					title={`${tabBarVisible ? "Hide" : "Show"} tab bar (${labelToggleTabBar})`}
@@ -301,7 +298,7 @@ export function ActivityBar() {
 				/>
 
 				<ActivityBarButton
-					icon={statusBarVisible ? Icons.PanelBottom : Icons.EyeOff}
+					icon={Icons.PanelBottom}
 					isActive={statusBarVisible}
 					onClick={toggleStatusBar}
 					title={`${statusBarVisible ? "Hide" : "Show"} status bar`}
@@ -332,7 +329,7 @@ export function ActivityBar() {
 			>
 				<div className="hidden md:block md:w-full">
 					<ActivityBarButton
-						icon={paneState.count === 1 ? Icons.Columns2 : Icons.Square}
+						icon={Icons.Columns2}
 						isActive={paneState.count === 2}
 						onClick={togglePaneMode}
 						title={
@@ -348,7 +345,7 @@ export function ActivityBar() {
 				</div>
 
 				<ActivityBarButton
-					icon={isWrapping ? Icons.WrapText : Icons.AlignJustify}
+					icon={Icons.WrapText}
 					isActive={isWrapping}
 					onClick={toggleLineWrapping}
 					title={`${isWrapping ? "Disable" : "Enable"} line wrapping (${labelToggleLineWrapping})`}

@@ -30,13 +30,14 @@ export function ActivityBarButton({
 	const COLORS = {
 		text: "text-gray-600 dark:text-gray-400",
 		textHover: "hover:text-gray-900 dark:hover:text-gray-100",
-		textActive: "text-blue-500",
+		textActive: "text-gray-950 dark:text-gray-50",
 	};
 
 	// Mobile: always icon-only style
 	// Desktop: use expanded prop to determine style
 	const buttonClasses = clsx(
-		"relative flex items-center border-none rounded-none bg-transparent cursor-pointer transition-all duration-200 font-medium p-0",
+		"relative flex items-center rounded bg-transparent cursor-pointer transition-all duration-200 font-medium p-0 outline-none",
+		"focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset",
 		// Mobile: always compact icon-only
 		"justify-center w-8 h-8",
 		// Desktop: depends on expanded state
@@ -50,9 +51,7 @@ export function ActivityBarButton({
 		!expanded && "md:hover:scale-110",
 		expanded && "md:hover:bg-gray-200 md:dark:hover:bg-gray-700 md:rounded",
 		{
-			[`${COLORS.textActive} scale-110 md:scale-100`]: isActive,
-			[`${COLORS.textActive} md:scale-110`]: isActive && !expanded,
-			"md:bg-blue-100 md:dark:bg-blue-900/30": isActive && expanded,
+			[`${COLORS.textActive} bg-gray-300/80 dark:bg-gray-600/75 shadow-inner`]: isActive,
 		}
 	);
 
