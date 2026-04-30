@@ -1,15 +1,53 @@
 #!/bin/bash
 # Local install script for IrisNotes on Arch Linux
-# Usage: ./install-local.sh [--no-build]
+# Usage: ./install-local.sh [--no-build] [--bump] [--force]
 
 set -e
 
 PREFIX="${PREFIX:-$HOME/.local}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SKIP_BUILD=false
+BUMP_VERSION=false
+FORCE_INSTALL=false
+
+show_usage() {
+    cat << EOF
+Usage: ./install-local.sh [options]
+
+Options:
+    --bump      Bump the patch version before building and installing
+    --force     Rebuild/reinstall even when the current version is already installed
+    --no-build  Skip build and install existing release binaries
+    -h, --help  Show this help
+EOF
+}
 
 get_current_version() {
     sed -n 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$SCRIPT_DIR/apps/main/src-tauri/tauri.conf.json" | head -n 1
+}
+
+get_installed_version() {
+    local binary="$PREFIX/bin/irisnotes"
+    local version
+
+    [ -x "$binary" ] || return 1
+
+    version="$("$binary" --version 2>/dev/null | sed -n 's/^irisnotes[[:space:]]\+\([^[:space:]]\+\).*/\1/p' | head -n 1)"
+    [ -n "$version" ] || return 1
+
+    echo "$version"
+}
+
+get_built_version() {
+    local binary="$SCRIPT_DIR/apps/main/src-tauri/target/release/irisnotes"
+    local version
+
+    [ -x "$binary" ] || return 1
+
+    version="$("$binary" --version 2>/dev/null | sed -n 's/^irisnotes[[:space:]]\+\([^[:space:]]\+\).*/\1/p' | head -n 1)"
+    [ -n "$version" ] || return 1
+
+    echo "$version"
 }
 
 bump_patch_version() {
@@ -81,21 +119,60 @@ bump_release_version() {
 # Parse arguments
 for arg in "$@"; do
     case $arg in
+        --bump)
+            BUMP_VERSION=true
+            ;;
+        --force)
+            FORCE_INSTALL=true
+            ;;
         --no-build)
             SKIP_BUILD=true
-            shift
+            ;;
+        -h|--help)
+            show_usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown argument: $arg" >&2
+            show_usage >&2
+            exit 1
             ;;
     esac
 done
 
+if [ "$SKIP_BUILD" = true ] && [ "$BUMP_VERSION" = true ]; then
+    echo "--bump cannot be used with --no-build because the rebuilt binaries would be missing." >&2
+    exit 1
+fi
+
 echo "Installing IrisNotes to $PREFIX..."
 
 APP_VERSION="$(get_current_version)"
+INSTALLED_VERSION="$(get_installed_version || true)"
+
+if [ -n "$INSTALLED_VERSION" ]; then
+    echo "Installed version: v$INSTALLED_VERSION"
+else
+    echo "Installed version: none"
+fi
+echo "Source version: v$APP_VERSION"
+
+if [ "$BUMP_VERSION" = false ] && [ "$FORCE_INSTALL" = false ] && [ "$INSTALLED_VERSION" = "$APP_VERSION" ]; then
+    echo ""
+    echo "IrisNotes v$APP_VERSION is already installed. Nothing new to install."
+    echo "Use --bump to create the next patch release, or --force to rebuild/reinstall v$APP_VERSION."
+    exit 0
+fi
 
 # Build apps unless --no-build is passed
 if [ "$SKIP_BUILD" = false ]; then
-    echo ""
-    bump_release_version
+    if [ "$BUMP_VERSION" = true ]; then
+        echo ""
+        bump_release_version
+    else
+        echo ""
+        echo "Building IrisNotes v$APP_VERSION..."
+    fi
 
     echo ""
     echo "Building main app..."
@@ -112,6 +189,19 @@ if [ "$SKIP_BUILD" = false ]; then
     echo ""
     echo "Build complete!"
 else
+    BUILT_VERSION="$(get_built_version || true)"
+
+    if [ ! -x "$SCRIPT_DIR/apps/main/src-tauri/target/release/irisnotes" ] || [ ! -x "$SCRIPT_DIR/apps/quick/src-tauri/target/release/irisnotes-quick" ]; then
+        echo "Release binaries are missing. Run ./install-local.sh to build them first." >&2
+        exit 1
+    fi
+
+    if [ -n "$BUILT_VERSION" ] && [ "$BUILT_VERSION" != "$APP_VERSION" ] && [ "$FORCE_INSTALL" = false ]; then
+        echo "Built main binary is v$BUILT_VERSION, but the source version is v$APP_VERSION." >&2
+        echo "Run ./install-local.sh to rebuild, or use --force --no-build to copy the existing binaries anyway." >&2
+        exit 1
+    fi
+
     echo "Skipping build and version bump (--no-build). Installing existing binaries for v$APP_VERSION."
 fi
 
