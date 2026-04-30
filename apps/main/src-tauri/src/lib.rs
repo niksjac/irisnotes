@@ -10,6 +10,8 @@ use tauri::{AppHandle, Emitter, Manager};
 
 // Embed the database schema at compile time
 const DATABASE_SCHEMA: &str = include_str!("../../../../schema/base.sql");
+const ALLOWED_IMAGE_EXTENSIONS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico"];
+const MAX_IMAGE_ASSET_BYTES: u64 = 20 * 1024 * 1024;
 
 // Helper function to determine if we're in development mode
 fn is_development_mode() -> bool {
@@ -53,10 +55,10 @@ fn get_config_dir(_app_handle: &AppHandle) -> Result<PathBuf, String> {
         let config_dir = dirs::config_dir()
             .ok_or("Failed to get system config directory")?
             .join("irisnotes");
-        
+
         std::fs::create_dir_all(&config_dir)
             .map_err(|e| format!("Failed to create config directory: {}", e))?;
-        
+
         Ok(config_dir)
     }
 }
@@ -102,10 +104,10 @@ fn get_data_dir(_app_handle: &AppHandle) -> Result<PathBuf, String> {
         let data_dir = dirs::config_dir()
             .ok_or("Failed to get system config directory")?
             .join("irisnotes");
-        
+
         std::fs::create_dir_all(&data_dir)
             .map_err(|e| format!("Failed to create data directory: {}", e))?;
-        
+
         Ok(data_dir)
     }
 }
@@ -114,16 +116,16 @@ fn get_data_dir(_app_handle: &AppHandle) -> Result<PathBuf, String> {
 /// Creates the schema from base.sql embedded at compile time
 fn init_database(app_handle: &AppHandle) -> Result<(), String> {
     use rusqlite::Connection;
-    
+
     let data_dir = get_data_dir(app_handle)?;
     let db_path = data_dir.join("notes.db");
-    
+
     // Check if the database file already exists
     if db_path.exists() {
         // Database exists - check if it has tables
         let conn = Connection::open(&db_path)
             .map_err(|e| format!("Failed to open database: {}", e))?;
-        
+
         let table_count: i32 = conn
             .query_row(
                 "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='items'",
@@ -131,20 +133,20 @@ fn init_database(app_handle: &AppHandle) -> Result<(), String> {
                 |row| row.get(0),
             )
             .unwrap_or(0);
-        
+
         if table_count > 0 {
             // Database is already initialized
             return Ok(());
         }
     }
-    
+
     // Create new database with schema
     let conn = Connection::open(&db_path)
         .map_err(|e| format!("Failed to create database: {}", e))?;
-    
+
     conn.execute_batch(DATABASE_SCHEMA)
         .map_err(|e| format!("Failed to initialize database schema: {}", e))?;
-    
+
     println!("Database initialized at: {}", db_path.display());
     Ok(())
 }
@@ -221,14 +223,14 @@ fn list_clipboard_targets() -> Result<Vec<String>, String> {
 #[tauri::command]
 fn read_vscode_editor_data() -> Result<String, String> {
     use std::process::Command;
-    
+
     // First, try to read vscode-editor-data directly
     let targets = list_clipboard_targets()?;
-    
+
     if targets.iter().any(|t| t == "vscode-editor-data") {
         return read_clipboard_target("vscode-editor-data".to_string());
     }
-    
+
     // On Wayland/Chromium, vscode-editor-data is embedded in chromium/x-web-custom-data as UTF-16LE
     if targets.iter().any(|t| t == "chromium/x-web-custom-data") {
         let output = if is_wayland() {
@@ -242,15 +244,15 @@ fn read_vscode_editor_data() -> Result<String, String> {
                 .output()
                 .map_err(|e| format!("Failed to run xclip: {}", e))?
         };
-        
+
         if output.status.success() {
             // The data is UTF-16LE encoded, decode it
             let bytes = &output.stdout;
-            
+
             // Find "vscode-editor-data" marker and extract the JSON after it
             // The format is: ... "vscode-editor-data" (UTF-16LE) then length byte then JSON (UTF-16LE)
             let needle = "vscode-editor-data";
-            
+
             // Convert bytes to UTF-16LE string for searching
             if bytes.len() >= 2 {
                 let utf16_chars: Vec<u16> = bytes
@@ -263,9 +265,9 @@ fn read_vscode_editor_data() -> Result<String, String> {
                         }
                     })
                     .collect();
-                
+
                 let decoded = String::from_utf16_lossy(&utf16_chars);
-                
+
                 // Find the vscode-editor-data JSON - it starts with {"version":
                 if let Some(start_idx) = decoded.find("vscode-editor-data") {
                     // Look for the JSON after the marker
@@ -281,7 +283,7 @@ fn read_vscode_editor_data() -> Result<String, String> {
             }
         }
     }
-    
+
     Err("vscode-editor-data not found in clipboard".to_string())
 }
 
@@ -290,13 +292,13 @@ fn find_json_object_end(s: &str) -> Option<usize> {
     let mut depth = 0;
     let mut in_string = false;
     let mut escape_next = false;
-    
+
     for (i, c) in s.chars().enumerate() {
         if escape_next {
             escape_next = false;
             continue;
         }
-        
+
         match c {
             '\\' if in_string => escape_next = true,
             '"' => in_string = !in_string,
@@ -355,16 +357,16 @@ async fn open_app_config_folder(app_handle: tauri::AppHandle) -> Result<(), Stri
 #[tauri::command]
 async fn read_config(app_handle: tauri::AppHandle, filename: String) -> Result<String, String> {
     let app_config_dir = get_config_dir(&app_handle)?;
-    
+
     // Determine the base name (without extension) and try TOML first, then JSON
     let base_name = filename
         .strip_suffix(".json")
         .or_else(|| filename.strip_suffix(".toml"))
         .unwrap_or(&filename);
-    
+
     let toml_path = app_config_dir.join(format!("{}.toml", base_name));
     let json_path = app_config_dir.join(format!("{}.json", base_name));
-    
+
     if toml_path.exists() {
         // Read TOML and convert to JSON for frontend
         let toml_content = std::fs::read_to_string(&toml_path)
@@ -389,15 +391,15 @@ async fn write_config(
     content: String,
 ) -> Result<(), String> {
     let app_config_dir = get_config_dir(&app_handle)?;
-    
+
     // Determine the base name and always write as TOML
     let base_name = filename
         .strip_suffix(".json")
         .or_else(|| filename.strip_suffix(".toml"))
         .unwrap_or(&filename);
-    
+
     let toml_path = app_config_dir.join(format!("{}.toml", base_name));
-    
+
     // Parse JSON from frontend and convert to TOML
     let json_value: serde_json::Value = serde_json::from_str(&content)
         .map_err(|e| format!("Failed to parse JSON: {}", e))?;
@@ -450,7 +452,7 @@ async fn setup_config_watcher(app_handle: AppHandle) -> Result<(), String> {
                 let file_name = path.file_name();
                 let is_config_file = file_name == Some(std::ffi::OsStr::new("config.json"))
                     || file_name == Some(std::ffi::OsStr::new("config.toml"));
-                
+
                 if is_config_file {
                     let now = Instant::now();
                     if now.duration_since(last_config_event) > debounce_duration {
@@ -488,6 +490,74 @@ async fn get_app_info(app_handle: tauri::AppHandle) -> Result<serde_json::Value,
     }))
 }
 
+fn normalize_image_extension(extension: &str) -> Result<String, String> {
+    let ext = extension.trim().trim_start_matches('.').to_lowercase();
+    if ALLOWED_IMAGE_EXTENSIONS.contains(&ext.as_str()) {
+        Ok(ext)
+    } else {
+        Err(format!("Unsupported image extension: {}", ext))
+    }
+}
+
+fn image_extension_from_content_type(content_type: &str) -> Option<&'static str> {
+    let mime = content_type
+        .split(';')
+        .next()
+        .unwrap_or_default()
+        .trim()
+        .to_ascii_lowercase();
+
+    match mime.as_str() {
+        "image/png" => Some("png"),
+        "image/jpeg" => Some("jpg"),
+        "image/gif" => Some("gif"),
+        "image/webp" => Some("webp"),
+        "image/svg+xml" => Some("svg"),
+        "image/bmp" => Some("bmp"),
+        "image/x-icon" | "image/vnd.microsoft.icon" => Some("ico"),
+        _ => None,
+    }
+}
+
+fn image_extension_from_path_like(value: &str) -> Option<String> {
+    let without_fragment = value.split('#').next().unwrap_or(value);
+    let without_query = without_fragment
+        .split('?')
+        .next()
+        .unwrap_or(without_fragment);
+    let ext = std::path::Path::new(without_query)
+        .extension()
+        .and_then(|ext| ext.to_str())?;
+
+    normalize_image_extension(ext).ok()
+}
+
+fn write_image_asset(
+    app_handle: &AppHandle,
+    data: &[u8],
+    extension: &str,
+) -> Result<String, String> {
+    let ext = normalize_image_extension(extension)?;
+    let data_dir = get_data_dir(app_handle)?;
+    let assets_dir = data_dir.join("assets");
+    std::fs::create_dir_all(&assets_dir)
+        .map_err(|e| format!("Failed to create assets directory: {}", e))?;
+
+    let filename = format!(
+        "{:x}.{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos(),
+        ext
+    );
+    let file_path = assets_dir.join(&filename);
+
+    std::fs::write(&file_path, data).map_err(|e| format!("Failed to write image: {}", e))?;
+
+    Ok(filename)
+}
+
 /// Get the assets directory path
 #[tauri::command]
 async fn get_assets_dir(app_handle: tauri::AppHandle) -> Result<String, String> {
@@ -506,33 +576,87 @@ async fn save_image_asset(
     data: Vec<u8>,
     extension: String,
 ) -> Result<String, String> {
-    // Validate extension (only allow image types)
-    let ext = extension.to_lowercase();
-    let allowed = ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico"];
-    if !allowed.contains(&ext.as_str()) {
-        return Err(format!("Unsupported image extension: {}", ext));
+    write_image_asset(&app_handle, &data, &extension)
+}
+
+/// Download a remote image and save it into the assets directory.
+#[tauri::command]
+async fn import_remote_image_asset(
+    app_handle: tauri::AppHandle,
+    url: String,
+) -> Result<String, String> {
+    let lower_url = url.to_ascii_lowercase();
+    if !lower_url.starts_with("https://") && !lower_url.starts_with("http://") {
+        return Err("Only http and https image URLs can be imported".to_string());
     }
 
-    let data_dir = get_data_dir(&app_handle)?;
-    let assets_dir = data_dir.join("assets");
-    std::fs::create_dir_all(&assets_dir)
-        .map_err(|e| format!("Failed to create assets directory: {}", e))?;
+    let app_handle_for_task = app_handle.clone();
+    tauri::async_runtime::spawn_blocking(move || -> Result<String, String> {
+        let client = reqwest::blocking::Client::builder()
+            .timeout(Duration::from_secs(30))
+            .redirect(reqwest::redirect::Policy::limited(5))
+            .user_agent("IrisNotes/1.0")
+            .build()
+            .map_err(|err| format!("Failed to create image download client: {}", err))?;
 
-    // Generate a unique filename
-    let filename = format!(
-        "{:x}.{}",
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
+        let response = client
+            .get(&url)
+            .send()
+            .map_err(|err| format!("Failed to download image: {}", err))?;
+
+        let status = response.status();
+        if !status.is_success() {
+            return Err(format!("Image download failed with status {}", status));
+        }
+
+        if let Some(content_length) = response.content_length() {
+            if content_length > MAX_IMAGE_ASSET_BYTES {
+                return Err("Image is larger than the 20 MB import limit".to_string());
+            }
+        }
+
+        let content_type = response
+            .headers()
+            .get(reqwest::header::CONTENT_TYPE)
+            .and_then(|value| value.to_str().ok())
             .unwrap_or_default()
-            .as_nanos(),
-        ext
-    );
-    let file_path = assets_dir.join(&filename);
+            .to_string();
 
-    std::fs::write(&file_path, &data)
-        .map_err(|e| format!("Failed to write image: {}", e))?;
+        let content_type_base = content_type
+            .split(';')
+            .next()
+            .unwrap_or_default()
+            .trim()
+            .to_ascii_lowercase();
 
-    Ok(filename)
+        if !content_type_base.is_empty()
+            && !content_type_base.starts_with("image/")
+            && content_type_base != "application/octet-stream"
+            && content_type_base != "binary/octet-stream"
+        {
+            return Err(format!(
+                "Remote URL did not return an image: {}",
+                content_type_base
+            ));
+        }
+
+        let ext = image_extension_from_content_type(&content_type)
+            .map(str::to_string)
+            .or_else(|| image_extension_from_path_like(&url))
+            .ok_or_else(|| "Remote image type is not supported".to_string())?;
+
+        let bytes = response
+            .bytes()
+            .map_err(|err| format!("Failed to read downloaded image: {}", err))?;
+
+        if bytes.len() as u64 > MAX_IMAGE_ASSET_BYTES {
+            return Err("Image is larger than the 20 MB import limit".to_string());
+        }
+
+        write_image_asset(&app_handle_for_task, bytes.as_ref(), &ext)
+    })
+    .await
+    .map_err(|err| format!("Image import task failed: {}", err))?
 }
 
 /// Open the assets directory in the system file manager.
@@ -841,7 +965,7 @@ pub fn run() {
                     }
                 }
             }
-            
+
             // Focus our window
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.show();
@@ -915,10 +1039,10 @@ pub fn run() {
             if let Err(e) = init_database(app.handle()) {
                 eprintln!("Warning: Failed to initialize database: {}", e);
             }
-            
+
             // Check for --open-note argument on startup (from quick app launching us)
             let args: Vec<String> = std::env::args().collect();
-            
+
             for arg in &args {
                 if let Some(note_id) = arg.strip_prefix("--open-note=") {
                     let note_id = note_id.to_string();
@@ -943,6 +1067,7 @@ pub fn run() {
             get_app_info,
             get_assets_dir,
             save_image_asset,
+            import_remote_image_asset,
             read_image_file,
             reveal_asset,
             cleanup_orphaned_assets,

@@ -28,7 +28,12 @@ import { DetailsNodeView } from "./plugins/details-nodeview";
 import { ImageNodeView } from "./plugins/image-nodeview";
 import { insertTableWithSize, insertDetails } from "./prosemirror-setup";
 import { TableInsertDialog } from "./table-insert-dialog";
-import { saveAndInsertImage, extensionFromMime, extensionFromFilename } from "./image-utils";
+import {
+	saveAndInsertImage,
+	extensionFromMime,
+	extensionFromFilename,
+	localizeImagesInHtml,
+} from "./image-utils";
 import type { EditorKeybindings } from "@/config/default-editor-keybindings";
 import { open } from "@tauri-apps/plugin-dialog";
 import "prosemirror-view/style/prosemirror.css";
@@ -36,6 +41,16 @@ import "@/styles/prosemirror.css";
 
 // Use the extended schema from schema.ts
 const mySchema = editorSchema;
+
+function normalizePastedHtml(html: string): string {
+	return html
+		.replace(/<br\s*\/?>\s*<\/p>/gi, "</p>")
+		.replace(/<br\s*\/?>/gi, "</p><p>")
+		.replace(/<p>\s*&nbsp;\s*<\/p>/gi, "<p></p>")
+		.replace(/\s*color:\s*rgb\(0,\s*0,\s*0\);?/gi, "")
+		.replace(/\s*color:\s*#000000;?/gi, "")
+		.replace(/\s*style="\s*"/g, "");
+}
 
 /**
  * Match a DOM KeyboardEvent against a ProseMirror key notation string.
@@ -416,13 +431,7 @@ export function ProseMirrorEditor({
 				//    to keep empty paragraphs visible; ProseMirror handles empty <p> fine)
 				// 4. Strip default-black color that browsers inject into clipboard HTML
 				// 5. Clean up empty style attributes
-				return html
-					.replace(/<br\s*\/?>\s*<\/p>/gi, "</p>")
-					.replace(/<br\s*\/?>/gi, "</p><p>")
-					.replace(/<p>\s*&nbsp;\s*<\/p>/gi, "<p></p>")
-					.replace(/\s*color:\s*rgb\(0,\s*0,\s*0\);?/gi, "")
-					.replace(/\s*color:\s*#000000;?/gi, "")
-					.replace(/\s*style="\s*"/g, "");
+				return normalizePastedHtml(html);
 			},
 			// Image paste: intercept clipboard image data or file paths
 			handlePaste(pasteView, event) {
@@ -475,6 +484,34 @@ export function ProseMirrorEditor({
 							return true;
 						}
 					}
+				}
+
+				const html = event.clipboardData?.getData("text/html");
+				if (html && /<img[\s>]/i.test(html)) {
+					event.preventDefault();
+					(async () => {
+						const localized = await localizeImagesInHtml(
+							normalizePastedHtml(html),
+						);
+						const contentDiv = document.createElement("div");
+						contentDiv.innerHTML = localized.html;
+						const slice = DOMParser.fromSchema(mySchema).parseSlice(contentDiv, {
+							preserveWhitespace: true,
+						});
+						pasteView.dispatch(
+							pasteView.state.tr.replaceSelection(slice).scrollIntoView(),
+						);
+
+						if (localized.failedCount > 0) {
+							showError(
+								`Failed to import ${localized.failedCount} pasted image${localized.failedCount === 1 ? "" : "s"}.`,
+							);
+						}
+					})().catch((err) => {
+						console.error("Failed to paste HTML images:", err);
+						showError(`Failed to paste image: ${err}`);
+					});
+					return true;
 				}
 
 				return false;
