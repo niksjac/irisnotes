@@ -113,7 +113,6 @@ export class ImageNodeView implements NodeView {
 		const openBtn = document.createElement("button");
 		openBtn.textContent = "📂 Open";
 		openBtn.title = "Reveal in file manager";
-		openBtn.style.cssText = "flex-shrink:0;padding:0 4px;border:none;background:none;cursor:pointer;color:inherit;font:inherit;opacity:0.7;";
 		openBtn.addEventListener("mousedown", (e) => {
 			e.preventDefault();
 			e.stopPropagation();
