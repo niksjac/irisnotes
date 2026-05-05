@@ -159,7 +159,7 @@ export const useItems = () => {
 				let result: any;
 				if (item.type === "note") {
 					const noteParams: UpdateNoteParams = { id };
-					if (updates.title) noteParams.title = updates.title;
+					if (updates.title !== undefined) noteParams.title = updates.title;
 					if (updates.content !== undefined)
 						noteParams.content = updates.content;
 					if (updates.content_type)
