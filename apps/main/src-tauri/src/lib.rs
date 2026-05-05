@@ -190,6 +190,39 @@ fn read_clipboard_target(target: String) -> Result<String, String> {
     }
 }
 
+/// Read binary clipboard content with a specific MIME type/target.
+/// Used as a fallback for image paste when the webview does not expose a File.
+#[tauri::command]
+fn read_clipboard_binary_target(target: String) -> Result<Vec<u8>, String> {
+    use std::process::Command;
+
+    if !target.to_ascii_lowercase().starts_with("image/") {
+        return Err(format!("Not an image clipboard target: {}", target));
+    }
+
+    let output = if is_wayland() {
+        Command::new("wl-paste")
+            .args(["-t", &target])
+            .output()
+            .map_err(|e| format!("Failed to run wl-paste: {}. Is wl-clipboard installed?", e))?
+    } else {
+        Command::new("xclip")
+            .args(["-selection", "clipboard", "-target", &target, "-o"])
+            .output()
+            .map_err(|e| format!("Failed to run xclip: {}. Is xclip installed?", e))?
+    };
+
+    if output.status.success() {
+        if output.stdout.len() as u64 > MAX_IMAGE_ASSET_BYTES {
+            return Err("Clipboard image is larger than the 20 MB import limit".to_string());
+        }
+        Ok(output.stdout)
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        Err(format!("Clipboard read failed: {}", stderr))
+    }
+}
+
 /// List all available clipboard targets (MIME types)
 #[tauri::command]
 fn list_clipboard_targets() -> Result<Vec<String>, String> {
@@ -530,6 +563,48 @@ fn image_extension_from_path_like(value: &str) -> Option<String> {
         .and_then(|ext| ext.to_str())?;
 
     normalize_image_extension(ext).ok()
+}
+
+fn image_mime_from_extension(extension: Option<&str>) -> Option<&'static str> {
+    match extension.map(str::to_ascii_lowercase).as_deref() {
+        Some("png") => Some("image/png"),
+        Some("jpg") | Some("jpeg") => Some("image/jpeg"),
+        Some("gif") => Some("image/gif"),
+        Some("webp") => Some("image/webp"),
+        Some("svg") => Some("image/svg+xml"),
+        Some("bmp") => Some("image/bmp"),
+        Some("ico") => Some("image/x-icon"),
+        _ => None,
+    }
+}
+
+fn image_mime_from_bytes(data: &[u8]) -> Option<&'static str> {
+    if data.starts_with(b"\x89PNG\r\n\x1a\n") {
+        return Some("image/png");
+    }
+    if data.starts_with(b"\xff\xd8\xff") {
+        return Some("image/jpeg");
+    }
+    if data.starts_with(b"GIF87a") || data.starts_with(b"GIF89a") {
+        return Some("image/gif");
+    }
+    if data.len() >= 12 && data.starts_with(b"RIFF") && &data[8..12] == b"WEBP" {
+        return Some("image/webp");
+    }
+    if data.starts_with(b"BM") {
+        return Some("image/bmp");
+    }
+    if data.starts_with(b"\0\0\x01\0") {
+        return Some("image/x-icon");
+    }
+
+    let text_prefix = String::from_utf8_lossy(&data[..data.len().min(256)]);
+    let trimmed = text_prefix.trim_start_matches('\u{feff}').trim_start();
+    if trimmed.starts_with("<svg") || trimmed.starts_with("<?xml") && trimmed.contains("<svg") {
+        return Some("image/svg+xml");
+    }
+
+    None
 }
 
 fn write_image_asset(
@@ -1010,16 +1085,9 @@ pub fn run() {
 
             match std::fs::read(&file_path) {
                 Ok(data) => {
-                    let mime = match file_path.extension().and_then(|e| e.to_str()) {
-                        Some("png") => "image/png",
-                        Some("jpg") | Some("jpeg") => "image/jpeg",
-                        Some("gif") => "image/gif",
-                        Some("webp") => "image/webp",
-                        Some("svg") => "image/svg+xml",
-                        Some("bmp") => "image/bmp",
-                        Some("ico") => "image/x-icon",
-                        _ => "application/octet-stream",
-                    };
+                    let mime = image_mime_from_extension(file_path.extension().and_then(|e| e.to_str()))
+                        .or_else(|| image_mime_from_bytes(&data))
+                        .unwrap_or("application/octet-stream");
                     tauri::http::Response::builder()
                         .status(200)
                         .header("Content-Type", mime)
@@ -1072,6 +1140,7 @@ pub fn run() {
             reveal_asset,
             cleanup_orphaned_assets,
             read_clipboard_target,
+            read_clipboard_binary_target,
             list_clipboard_targets,
             read_vscode_editor_data,
             install_icon_to_hicolor,

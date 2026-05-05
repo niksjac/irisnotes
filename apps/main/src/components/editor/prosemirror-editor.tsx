@@ -29,10 +29,17 @@ import { ImageNodeView } from "./plugins/image-nodeview";
 import { insertTableWithSize, insertDetails } from "./prosemirror-setup";
 import { TableInsertDialog } from "./table-insert-dialog";
 import {
+	assetFilenameFromUrl,
+	importImageSrcToAsset,
 	saveAndInsertImage,
 	extensionFromMime,
 	extensionFromFilename,
+	insertImageTextSource,
 	localizeImagesInHtml,
+	parseImageSourcesFromText,
+	readClipboardImageData,
+	saveFilePathAndInsertImage,
+	shouldLocalizeImageSrc,
 } from "./image-utils";
 import type { EditorKeybindings } from "@/config/default-editor-keybindings";
 import { open } from "@tauri-apps/plugin-dialog";
@@ -112,6 +119,7 @@ export function ProseMirrorEditor({
 	const setEditorStatsRef = useRef(setEditorStats);
 	const editorKeybindings = useAtomValue(editorKeybindingsAtom);
 	const editorKeybindingsRef = useRef<EditorKeybindings>(editorKeybindings);
+	const pendingImageLocalizationsRef = useRef<Set<string>>(new Set());
 	const [showSearch, setShowSearch] = useState(false);
 	const [activePicker, setActivePicker] = useState<FormatPickerType | null>(null);
 	const [errorToast, setErrorToast] = useState<string | null>(null);
@@ -225,6 +233,89 @@ export function ProseMirrorEditor({
 			plugins,
 			selection: initialSelection,
 		});
+
+		const insertImageSourcesFromText = (targetView: EditorView, text: string): boolean => {
+			const sources = parseImageSourcesFromText(text);
+			if (sources.length === 0) return false;
+
+			(async () => {
+				try {
+					for (const source of sources) {
+						await insertImageTextSource(targetView, mySchema, source);
+					}
+				} catch (err) {
+					console.error("Failed to insert image from text:", err);
+					showError(`Failed to insert image: ${err}`);
+				}
+			})();
+
+			return true;
+		};
+
+		const localizeTransientImages = (targetView: EditorView, stateToScan: EditorState): boolean => {
+			const transientImages: string[] = [];
+			const imagesToStart: string[] = [];
+
+			stateToScan.doc.descendants((node) => {
+				if (node.type.name !== "image") return true;
+
+				const src = node.attrs.src;
+				if (typeof src !== "string" || !shouldLocalizeImageSrc(src)) return true;
+
+				transientImages.push(src);
+				if (!pendingImageLocalizationsRef.current.has(src)) {
+					pendingImageLocalizationsRef.current.add(src);
+					imagesToStart.push(src);
+				}
+				return true;
+			});
+
+			if (imagesToStart.length === 0) return transientImages.length > 0;
+
+			Promise.all(
+				imagesToStart.map(async (src) => {
+					try {
+						const assetSrc = await importImageSrcToAsset(src);
+						return { src, assetSrc };
+					} catch (error) {
+						console.error("Failed to localize transient image:", error);
+						return { src, assetSrc: null };
+					} finally {
+						pendingImageLocalizationsRef.current.delete(src);
+					}
+				}),
+			).then((localizedImages) => {
+				const currentView = viewRef.current ?? targetView;
+				let tr = currentView.state.tr;
+
+				for (const image of localizedImages) {
+					const matchingImages: Array<{ pos: number; node: typeof currentView.state.doc }> = [];
+					tr.doc.descendants((node, pos) => {
+						if (node.type.name === "image" && node.attrs.src === image.src) {
+							matchingImages.push({ pos, node });
+						}
+						return true;
+					});
+
+					for (const { pos, node } of matchingImages.sort((first, second) => second.pos - first.pos)) {
+						if (image.assetSrc) {
+							tr = tr.setNodeMarkup(pos, undefined, {
+								...node.attrs,
+								src: image.assetSrc,
+								alt: node.attrs.alt ?? assetFilenameFromUrl(image.assetSrc),
+							});
+						} else {
+							tr = tr.delete(pos, pos + node.nodeSize);
+							showError("Failed to save pasted image. The temporary image was removed.");
+						}
+					}
+				}
+
+				if (tr.docChanged) currentView.dispatch(tr.scrollIntoView());
+			});
+
+			return true;
+		};
 
 		// Ctrl+Alt+V: Paste as code block with VS Code language detection
 		const handlePasteAsCodeBlock = async (e: KeyboardEvent) => {
@@ -435,12 +526,13 @@ export function ProseMirrorEditor({
 			},
 			// Image paste: intercept clipboard image data or file paths
 			handlePaste(pasteView, event) {
-				const items = event.clipboardData?.items;
-				if (!items) return false;
+				const items = Array.from(event.clipboardData?.items ?? []);
 
 				// 1. Direct image MIME in clipboard (e.g. screenshot)
+				let sawImageClipboardItem = false;
 				for (const item of items) {
 					if (item.type.startsWith("image/")) {
+						sawImageClipboardItem = true;
 						const ext = extensionFromMime(item.type);
 						if (!ext) continue;
 
@@ -448,41 +540,43 @@ export function ProseMirrorEditor({
 						if (!blob) continue;
 
 						event.preventDefault();
-						blob.arrayBuffer().then((buf) => {
-							saveAndInsertImage(
+						blob.arrayBuffer()
+							.then((buf) => saveAndInsertImage(
 								pasteView,
 								mySchema,
 								new Uint8Array(buf),
 								ext,
-							);
-						});
+							))
+							.catch((err) => {
+								console.error("Failed to paste clipboard image:", err);
+								showError(`Failed to paste image: ${err}`);
+							});
 						return true;
 					}
 				}
 
-				// 2. File path in clipboard (e.g. copied from file manager)
-				// Try text/uri-list first (Thunar, Nautilus), then text/plain
+				if (sawImageClipboardItem) {
+					event.preventDefault();
+					readClipboardImageData()
+						.then((imageData) => {
+							if (!imageData) throw new Error("No supported image target found in clipboard");
+							return saveAndInsertImage(pasteView, mySchema, imageData.data, imageData.extension);
+						})
+						.catch((err) => {
+							console.error("Failed to paste clipboard image:", err);
+							showError(`Failed to paste image: ${err}`);
+						});
+					return true;
+				}
+
+				// 2. File path or asset URL in clipboard text
 				const uriList = event.clipboardData?.getData("text/uri-list")?.trim();
-				const text = uriList || event.clipboardData?.getData("text/plain")?.trim();
-				if (text) {
-					// Handle multiple URIs (one per line), take the first image
-					const lines = text.split(/\r?\n/).filter((l: string) => l && !l.startsWith("#"));
-					for (const line of lines) {
-						const trimmedLine = line.trim();
-						const filePath = trimmedLine.startsWith("file://")
-							? decodeURIComponent(trimmedLine.replace(/^file:\/\//, ""))
-							: trimmedLine;
-						const ext = extensionFromFilename(filePath);
-						if (ext && filePath.startsWith("/")) {
-							event.preventDefault();
-							invoke<number[]>("read_image_file", { path: filePath }).then((bytes) => {
-								saveAndInsertImage(pasteView, mySchema, new Uint8Array(bytes), ext);
-							}).catch((err) => {
-								console.error("Failed to read image from path:", err);
-								showError(`Failed to read image: ${err}`);
-							});
-							return true;
-						}
+				const gnomeFileList = event.clipboardData?.getData("x-special/gnome-copied-files")?.trim();
+				const plainText = event.clipboardData?.getData("text/plain")?.trim();
+				for (const text of [uriList, gnomeFileList, plainText]) {
+					if (text && insertImageSourcesFromText(pasteView, text)) {
+						event.preventDefault();
+						return true;
 					}
 				}
 
@@ -521,51 +615,7 @@ export function ProseMirrorEditor({
 				// Skip internal drags (ProseMirror moving nodes within the editor)
 				if (dropView.dragging) return false;
 
-				const files = event.dataTransfer?.files;
-				if (!files || files.length === 0) {
-					// No File objects — try text/uri-list (Thunar, some file managers)
-					const uriList = event.dataTransfer?.getData("text/uri-list")?.trim();
-					if (uriList) {
-						const lines = uriList.split(/\r?\n/).filter((l: string) => l && !l.startsWith("#"));
-						for (const line of lines) {
-							const trimmedLine = line.trim();
-							if (!trimmedLine.startsWith("file://")) continue;
-							const filePath = decodeURIComponent(trimmedLine.replace(/^file:\/\//, ""));
-							const ext = extensionFromFilename(filePath);
-							if (!ext) continue;
-
-							event.preventDefault();
-							const pos = dropView.posAtCoords({
-								left: event.clientX,
-								top: event.clientY,
-							});
-							if (pos) {
-								const tr = dropView.state.tr.setSelection(
-									TextSelection.create(dropView.state.doc, pos.pos),
-								);
-								dropView.dispatch(tr);
-							}
-
-							invoke<number[]>("read_image_file", { path: filePath }).then((bytes) => {
-								saveAndInsertImage(dropView, mySchema, new Uint8Array(bytes), ext);
-							}).catch((err) => {
-								console.error("Failed to read dropped image from path:", err);
-							});
-							return true;
-						}
-					}
-					return false;
-				}
-
-				for (const file of files) {
-					// Check MIME type first, fall back to extension (file managers like Thunar may not set MIME)
-					const ext = file.type.startsWith("image/")
-						? extensionFromMime(file.type)
-						: extensionFromFilename(file.name);
-					if (!ext) continue;
-
-					event.preventDefault();
-					// Move cursor to drop position
+				const moveSelectionToDropPosition = () => {
 					const pos = dropView.posAtCoords({
 						left: event.clientX,
 						top: event.clientY,
@@ -576,22 +626,54 @@ export function ProseMirrorEditor({
 						);
 						dropView.dispatch(tr);
 					}
+				};
 
-					file.arrayBuffer().then((buf) => {
-						saveAndInsertImage(
+				const files = Array.from(event.dataTransfer?.files ?? []);
+
+				for (const file of files) {
+					// Check MIME type first, fall back to extension (file managers like Thunar may not set MIME)
+					const ext = file.type.startsWith("image/")
+						? extensionFromMime(file.type)
+						: extensionFromFilename(file.name);
+					if (!ext) continue;
+
+					event.preventDefault();
+					moveSelectionToDropPosition();
+
+					file.arrayBuffer()
+						.then((buf) => saveAndInsertImage(
 							dropView,
 							mySchema,
 							new Uint8Array(buf),
 							ext,
-						);
-					});
+						))
+						.catch((err) => {
+							console.error("Failed to insert dropped image:", err);
+							showError(`Failed to insert image: ${err}`);
+						});
 					return true;
 				}
+
+				for (const text of [
+					event.dataTransfer?.getData("text/uri-list")?.trim(),
+					event.dataTransfer?.getData("text/plain")?.trim(),
+				]) {
+					if (text && parseImageSourcesFromText(text).length > 0) {
+						event.preventDefault();
+						moveSelectionToDropPosition();
+						insertImageSourcesFromText(dropView, text);
+						return true;
+					}
+				}
+
 				return false;
 			},
 			dispatchTransaction(transaction) {
 				const newState = view.state.apply(transaction);
 				view.updateState(newState);
+				const hasTransientImages = transaction.docChanged
+					? localizeTransientImages(view, newState)
+					: false;
 
 				// When cursor moves to the start of a line (Home key, etc.) in
 				// no-wrap mode, ProseMirror's scroll-into-view aligns the cursor
@@ -635,7 +717,7 @@ export function ProseMirrorEditor({
 				}
 
 				// Call onChange when content changes (debounce with requestAnimationFrame)
-				if (transaction.docChanged && onChangeRef.current) {
+				if (transaction.docChanged && onChangeRef.current && !hasTransientImages) {
 					requestAnimationFrame(() => {
 						const div = document.createElement("div");
 						const fragment = DOMSerializer.fromSchema(
@@ -671,6 +753,7 @@ export function ProseMirrorEditor({
 
 		viewRef.current = view;
 		activeEditorViewStore.set(view);
+		localizeTransientImages(view, view.state);
 		// Note: Don't auto-focus - let user click or use Ctrl+Alt+1/2 to focus pane
 		// Initial cursor position is set in EditorState.create() above
 
@@ -733,9 +816,7 @@ export function ProseMirrorEditor({
 						});
 						if (!filePath) return;
 
-						const bytes = await invoke<number[]>("read_image_file", { path: filePath });
-						const ext = filePath.split(".").pop()?.toLowerCase() || "png";
-						await saveAndInsertImage(v, mySchema, new Uint8Array(bytes), ext);
+						await saveFilePathAndInsertImage(v, mySchema, filePath);
 					} catch (err) {
 						console.error("Failed to insert image:", err);
 						showError(`Failed to insert image: ${err}`);
