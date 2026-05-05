@@ -22,6 +22,12 @@ import type { ViewUpdate } from "@codemirror/view";
 import { useTheme, useLineWrapping } from "@/hooks";
 import { editorCursorPositionStore } from "@/hooks/use-editor-view-toggle";
 import { isAppHotkey } from "@/utils/app-hotkeys";
+import {
+	deleteChunkBackwardCodeMirror,
+	deleteChunkForwardCodeMirror,
+	jumpParagraphDownCodeMirror,
+	jumpParagraphUpCodeMirror,
+} from "./plugins/chunk-commands";
 
 // Compartments for dynamic configuration (allows efficient partial reconfiguration)
 const readOnlyCompartment = new Compartment();
@@ -159,6 +165,10 @@ export function CodeMirrorEditor({
 		// Smart select keymap - overrides default selectAll
 		keymap.of([
 			{ key: "Mod-a", run: smartSelectAll, preventDefault: true },
+			{ key: "Ctrl-Backspace", run: deleteChunkBackwardCodeMirror, preventDefault: true },
+			{ key: "Ctrl-Delete", run: deleteChunkForwardCodeMirror, preventDefault: true },
+			{ key: "Ctrl-ArrowUp", run: jumpParagraphUpCodeMirror, preventDefault: true },
+			{ key: "Ctrl-ArrowDown", run: jumpParagraphDownCodeMirror, preventDefault: true },
 		]),
 		keymap.of([
 			...closeBracketsKeymap,

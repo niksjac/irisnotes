@@ -26,6 +26,7 @@ import { activeLinePlugin } from "./plugins/active-line";
 import { buildLineCommandsKeymap, resetSmartSelectLevel } from "./plugins/line-commands";
 import { searchPlugin } from "./plugins/search";
 import { autocorrectPlugin } from "./plugins/autocorrect";
+import { deleteChunkBackward, deleteChunkForward, jumpParagraphDown, jumpParagraphUp } from "./plugins/chunk-commands";
 import { clearAllFormatting, increaseFontSizeMark, decreaseFontSizeMark, setTextAlign, setTableAlign, fitColumnWidths } from "./format-commands";
 import { DEFAULT_EDITOR_KEYBINDINGS, type EditorKeybindings } from "@/config/default-editor-keybindings";
 
@@ -267,6 +268,13 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		),
 	};
 	plugins.push(keymap(enterKeymap));
+
+	plugins.push(keymap({
+		"Ctrl-Backspace": deleteChunkBackward,
+		"Ctrl-Delete": deleteChunkForward,
+		"Ctrl-ArrowUp": jumpParagraphUp,
+		"Ctrl-ArrowDown": jumpParagraphDown,
+	}));
 
 	// Base keymap (arrows, enter, backspace, etc.)
 	// Remove Escape → selectParentNode so our custom Escape handler (blur/toolbar) takes priority

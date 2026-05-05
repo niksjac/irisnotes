@@ -24,6 +24,10 @@ export interface EditorHotkeyConfig {
 const STRUCTURAL_HOTKEYS: EditorHotkeyConfig[] = [
 	{ key: "Tab", description: "Indent (list item or text)", category: "Indentation" },
 	{ key: "Shift+Tab", description: "Outdent (list item or text)", category: "Indentation" },
+	{ key: "Ctrl+Backspace", description: "Delete Previous Chunk", category: "Editing" },
+	{ key: "Ctrl+Delete", description: "Delete Next Chunk", category: "Editing" },
+	{ key: "Ctrl+↑", description: "Jump to Previous Paragraph / Blank Line", category: "Navigation" },
+	{ key: "Ctrl+↓", description: "Jump to Next Paragraph / Blank Line", category: "Navigation" },
 	{ key: "Enter", description: "New List Item / Split Block", category: "Lists" },
 	{ key: "Ctrl+Enter", description: "New Line in List Item (no bullet)", category: "Lists" },
 	{ key: "Ctrl+Click", description: "Open Link in Browser", category: "Links" },
@@ -69,6 +73,10 @@ export const CODEMIRROR_HOTKEYS: EditorHotkeyConfig[] = [
 	{ key: "Ctrl+H", description: "Find and Replace", category: "Search" },
 	{ key: "Alt+↑", description: "Move Line Up", category: "Line Operations" },
 	{ key: "Alt+↓", description: "Move Line Down", category: "Line Operations" },
+	{ key: "Ctrl+Backspace", description: "Delete Previous Chunk", category: "Editing" },
+	{ key: "Ctrl+Delete", description: "Delete Next Chunk", category: "Editing" },
+	{ key: "Ctrl+↑", description: "Jump to Previous Paragraph / Blank Line", category: "Navigation" },
+	{ key: "Ctrl+↓", description: "Jump to Next Paragraph / Blank Line", category: "Navigation" },
 	{
 		key: "Alt+Shift+↑",
 		description: "Copy Line Up",
