@@ -1,209 +1,65 @@
 # IrisNotes AI Assistant Guide
 
-## Architecture Overview
+## Purpose
 
-IrisNotes is a **pnpm monorepo** containing multiple applications built around a shared SQLite database. The main app is a **Tauri v2 desktop notes app** with a React frontend. The app uses a **unified hierarchical structure**: Books → Sections → Notes stored in a single SQLite `items` table.
+This file is always-on Copilot context. Keep it short: include repo facts that change how code should be edited, and verify detailed behavior in source before broad changes.
 
-### Monorepo Apps
-- **`apps/main`** - The primary Tauri desktop app (rich text editor, sidebar, tabs, panes)
-- **`apps/quick`** - Quick Search overlay — a separate lightweight Tauri window for fast note lookup
-- **`apps/cli`** - Bun-based CLI tool (`iris`) for searching, listing, and reading notes from the terminal
+## Repo Shape
 
-### Core Technology Stack
-- **Frontend**: React 19 + TypeScript + Tailwind CSS v4 + Jotai (state management)
-- **Backend**: Tauri v2 (Rust) + SQLite
-- **Editor**: ProseMirror (rich text) + CodeMirror 6 (source view)
-- **Build**: Vite + pnpm workspaces
-- **CLI**: Bun + Commander.js
+- IrisNotes is a pnpm workspace with three apps:
+	- `apps/main`: primary Tauri v2 desktop notes app with a React frontend.
+	- `apps/quick`: separate Tauri quick-search overlay; its React UI uses direct Tauri `invoke`/events, not Jotai.
+	- `apps/cli`: Bun/Commander CLI (`iris`) for list/search/show/open against the SQLite database.
+- Main stack: React 19, TypeScript, Tailwind CSS v4, Jotai, Rust/Tauri v2, SQLite, ProseMirror, and CodeMirror 6.
+- Main app source lives in `apps/main/src`. The `@/` alias maps there; `@schema/*` maps to root `schema/*`.
 
-## Critical Development Workflows
+## Commands
 
-### Database Setup
-```bash
-# ALWAYS run this after schema changes or fresh checkout
-./dev/setup-dev-db.sh
-```
-- Creates `/dev/notes.db` from `/schema/base.sql` + `/schema/seed-dev.sql`
-- Schema is the SINGLE SOURCE OF TRUTH at `/schema/base.sql`
+- `pnpm dev`: run main and quick apps together.
+- `pnpm main`, `pnpm quick`: run one Tauri app.
+- `pnpm run type-check`: TypeScript validation for the main app.
+- `pnpm test`, `pnpm test:e2e`, `pnpm build`: unit tests, Playwright e2e, and both app builds.
+- After schema changes, or when resetting local data, run `./dev/setup-dev-db.sh`.
+- Vite dev ports: main `1420`, quick `3333`.
 
-### Development Commands
-```bash
-pnpm dev                # Start both main + quick apps concurrently
-pnpm main               # Start main Tauri app only
-pnpm quick              # Start quick search app only
-pnpm run type-check     # TypeScript validation (main app)
-pnpm test               # Run unit tests (vitest)
-pnpm test:e2e           # Run end-to-end tests (Playwright)
-pnpm build              # Build both main + quick apps
-```
+## Database And Storage
 
-## Key Architecture Patterns
+- `schema/base.sql` is the schema source of truth. The main frontend imports it via `@schema/base.sql?raw`; the Tauri backend embeds it with `include_str!`. Update that file, not `dev/notes.db` or generated artifacts.
+- Content uses one SQLite `items` table with `type` in `note | book | section`, `parent_id`, fractional `sort_order`, JSON `metadata`, and FTS via `items_fts`.
+- Intended hierarchy: books are root; notes may be root, under books, or under sections; notes cannot contain notes. Sections are intended to live under books; if touching hierarchy, keep `schema/base.sql`, `apps/main/src/storage/hierarchy.ts`, and UI creation/drop logic aligned.
+- Production storage is SQLite only through `SQLiteStorageAdapter`; file backup/restore lives in `apps/main/src/storage/export-import.ts`.
 
-### 1. Unified Items Model
-Single `items` table for all content types:
-```sql
--- items table supports: type IN ('note', 'book', 'section')
--- Hierarchy: parent_id references items(id)
--- Books: always at root (parent_id IS NULL)
--- Sections: always under a book
--- Notes: can be at root, under books, OR under sections
--- Notes CANNOT be inside other notes (enforced by trigger)
-```
+## Main App Architecture
 
-### 2. Jotai State Management
-State is organized in `apps/main/src/atoms/`:
-- `atoms/items.ts` - Main data atoms for the unified items system
-- `atoms/panes.ts` - Multi-pane layout state
-- `atoms/tree.ts` - Tree view state
-- `atoms/settings.ts` - App settings
-- `atoms/actions.ts` - Action atoms (create, delete, move items)
-- `atoms/editor-stats.ts` - Editor statistics (word count, etc.)
-- `atoms/search.ts` - Search state
+- State lives in Jotai atoms under `apps/main/src/atoms`. Core areas include items, panes/tabs, tree, settings, hotkeys/editor keybindings, search, editor stats, autocorrect, and ascii-art.
+- Views are routed by `apps/main/src/view.tsx` using `ViewType` from `apps/main/src/types/index.ts`. Current view files include editor rich/source, book/section, config, hotkeys, branding, ascii-art, autocorrect, and icon editor.
+- Components are organized by UI area under `apps/main/src/components`. Prefer existing hooks, atoms, and local helpers over new global abstractions.
 
-### 3. Storage
-`apps/main/src/storage/` provides a SQLite-only storage layer:
-- `SQLiteStorageAdapter` in `adapters/sqlite-adapter.ts` - the sole production adapter
-- Factory pattern in `factory.ts` (SQLite only — JSON adapters were removed)
-- `export-import.ts` - File-based export/import for backup
-- `hierarchy.ts` - Item hierarchy utilities
+## Editor Rules
 
-### 4. View System
-Views in `apps/main/src/views/` are switched based on selection:
-- `editor-rich-view.tsx` - ProseMirror rich text editor
-- `editor-source-view.tsx` - CodeMirror source editor
-- `config-view.tsx` - App settings
-- `hotkeys-view.tsx` - Keyboard shortcuts (dynamic, pulls from all sources)
-- `book-view.tsx` - Book detail/content view
-- `section-view.tsx` - Section detail/content view
+- ProseMirror is line-oriented: paragraphs are "lines"; there is no `hard_break`; there is no semantic heading node. Legacy `h1`-`h6` parse as paragraphs, and visual headings use `fontSize` marks.
+- Current schema includes paragraph, blockquote, horizontal rule, `code_section`, `code_block`, details/summary, image, lists, tables, and marks for link, font, color, bold, italic, code, underline, and strikethrough.
+- Editor plugin/keybinding code is in `apps/main/src/components/editor/plugins`, `apps/main/src/components/editor/prosemirror-setup.ts`, and `apps/main/src/config/default-editor-keybindings.ts`. Check the directory before assuming the plugin list is complete.
+- Source editor is CodeMirror 6. Content and cursor state sync through Jotai/hooks when toggling rich/source with `Ctrl+E`.
 
-When no tab is active, `view.tsx` returns `null` (no dedicated empty view component).
+## Hotkeys And Config
 
-### 5. Editor Architecture
+- App defaults are in `apps/main/src/config/default-hotkeys.ts`; rich-editor defaults are in `apps/main/src/config/default-editor-keybindings.ts`; display aggregation is in `apps/main/src/config/editor-hotkeys.ts` and `apps/main/src/views/hotkeys-view.tsx`.
+- User/dev overrides are TOML in `dev/hotkeys.toml`; `apps/main/src/hooks/use-hotkeys-config.ts` loads TOML through Tauri config commands and merges with defaults.
+- App hotkeys use react-hotkeys-hook names like `comma` and `period`, not literal `,` or `.`. ProseMirror editor keys use its own `Mod-b` style notation.
 
-**Line-Based Model**: The ProseMirror editor treats each paragraph as a "line":
-- No soft line breaks (`hard_break` removed from schema)
-- No semantic heading nodes (h1-h6 parsed as paragraphs for legacy content migration)
-- Enter and Shift+Enter both create new blocks
-- Empty lines create visual separation
+## TypeScript And Style
 
-**Schema** (`apps/main/src/components/editor/schema.ts`):
-- Marks: bold (strong), italic (em), code, underline, strikethrough, textColor, highlight, fontSize, fontFamily, link
-- Nodes: paragraph, blockquote, horizontal_rule, code_block, image, text, list nodes (via `addListNodes`)
-- No heading node — use fontSize mark instead
+- Strict TypeScript is enabled (`noUnused*`, `noUncheckedIndexedAccess`, `noImplicitReturns`). Keep imports and type-only imports consistent with nearby files.
+- Follow existing React ref patterns in the touched file. DOM refs commonly use `useRef<T>(null)` here; mutable non-DOM refs often use `useRef<T | null>(null)`.
+- Tailwind v4 is used via `@tailwindcss/vite`; keep custom base/reset CSS inside Tailwind layers to avoid utility cascade problems.
+- Keep changes scoped. Do not refactor broad architecture or update stale docs unless the task asks for it.
 
-**Line Commands** (`apps/main/src/components/editor/plugins/line-commands.ts`):
-- `Alt+↑/↓` - Move line up/down
-- `Alt+Shift+↑/↓` - Duplicate line up/down
-- `Ctrl+D` - Select word / next occurrence
-- `Ctrl+Shift+D` - Select previous occurrence
-- `Shift+Delete` - Delete line
-- `Ctrl+A` - Smart select all (progressive: line → paragraph → all)
+## Source Pointers
 
-**Additional Editor Plugins** (`apps/main/src/components/editor/plugins/`):
-- `active-line.ts` - Active line highlighting
-- `autolink.ts` - Automatic URL detection and linking
-- `custom-cursor.ts` - Custom cursor styling
-- `search.ts` - In-editor search
-- `tight-selection.ts` - Selection behavior customization
-
-## Project-Specific Conventions
-
-### File Organization
-```
-apps/
-├── main/                    # Primary Tauri desktop app
-│   └── src/
-│       ├── atoms/           # Jotai state atoms
-│       ├── components/      # React components by UI area
-│       │   ├── activity-bar/  # Left activity bar
-│       │   ├── dialogs/       # Modal dialogs
-│       │   ├── editor/        # ProseMirror/CodeMirror components
-│       │   ├── logos/         # Logo components
-│       │   ├── panes/         # Multi-pane layout
-│       │   ├── right-click-menu/ # Context menu
-│       │   ├── sidebar/       # Sidebar & tree header
-│       │   ├── status-bar/    # Bottom status bar
-│       │   ├── tabs/          # Tab management
-│       │   └── tree/          # Tree view
-│       ├── config/          # Configuration (default-hotkeys.ts, editor-hotkeys.ts)
-│       ├── hooks/           # Custom React hooks
-│       ├── storage/         # Storage adapter (SQLite) & types
-│       ├── types/           # TypeScript definitions
-│       ├── utils/           # Pure utility functions
-│       ├── views/           # Top-level view components
-│       └── styles/          # CSS (tailwind.css, theme.css, prosemirror.css)
-├── quick/                   # Quick Search overlay app
-│   └── src/
-│       ├── app.tsx          # Quick search UI
-│       └── main.tsx         # Entry point
-├── cli/                     # CLI tool
-│   └── src/
-│       ├── index.ts         # CLI commands (list, search, show, open, etc.)
-│       └── db.ts            # Database access for CLI
-schema/                      # Database schema (single source of truth)
-dev/                         # Development config & database
-docs/                        # Documentation
-scripts/                     # Build & utility scripts
-```
-
-### TypeScript Patterns
-- Strict type checking enabled
-- Use `type` imports: `import type { SomeType } from "..."`
-- Components in `.tsx`, utilities in `.ts`
-- Path alias `@/` maps to `apps/main/src/`
-
-### Hotkeys System
-Hotkeys are managed through multiple layers:
-- `apps/main/src/config/default-hotkeys.ts` - Default app hotkey definitions
-- `/dev/hotkeys.toml` - Runtime hotkey overrides (TOML format, loaded via Tauri backend)
-- `apps/main/src/config/editor-hotkeys.ts` - Editor-specific hotkeys for display
-- `apps/main/src/hooks/use-app-hotkeys.ts` - Central hotkey registration
-- `apps/main/src/hooks/use-hotkey-handlers.ts` - Handler implementations
-- `apps/main/src/hooks/use-hotkeys-config.ts` - TOML config loading & merging with defaults
-
-**Key App Shortcuts**:
-- `Ctrl+G` - Toggle sidebar
-- `Ctrl+J` - Toggle activity bar
-- `Ctrl+N` - New note (root)
-- `Ctrl+Alt+N` - New note (pick location)
-- `Ctrl+Shift+,` - Open settings
-- `Ctrl+Shift+.` - Open keyboard shortcuts
-- `Ctrl+,`/`Ctrl+.` - Resize sidebar
-- `Alt+,`/`Alt+.` - Resize panes
-- `Ctrl+E` - Toggle rich/source editor
-- `Ctrl+P` - Quick search
-- `Ctrl+Shift+F` - Full text search
-- `F1` - Quick hotkeys reference
-
-## Integration Points
-
-### Tauri Bridge
-- Database operations via `@tauri-apps/plugin-sql`
-- File system access via `@tauri-apps/plugin-fs`
-- Global shortcuts via `@tauri-apps/plugin-global-shortcut`
-- Clipboard via `@tauri-apps/plugin-clipboard-manager`
-- File dialogs via `@tauri-apps/plugin-dialog`
-- Notifications via `@tauri-apps/plugin-notification`
-- URL/file opening via `@tauri-apps/plugin-opener`
-- Window state persistence via `@tauri-apps/plugin-window-state`
-
-### Editor Integration
-- **Rich editor**: ProseMirror with line-based schema and custom plugins
-- **Source editor**: CodeMirror 6 with markdown/HTML support
-- Content synced between editors via Jotai atoms
-- Toggle with `Ctrl+E`
-
-### Development Database
-- SQLite database at `/dev/notes.db`
-- Schema managed declaratively in `/schema/base.sql`
-- Run `./dev/setup-dev-db.sh` to reset with sample data
-
-## Common Gotchas
-
-1. **Database Schema**: Only modify `/schema/base.sql` - not generated files
-2. **Hotkey Key Names**: react-hotkeys-hook uses `comma`, `period` not `,`, `.`
-3. **Line-Based Model**: No `<br>` soft breaks, no heading nodes - each "line" is a paragraph block
-4. **Tauri Dev**: Main frontend runs on port 1420, quick frontend on port 3333
-5. **React 19**: Use `useRef<T | null>(null)` pattern for DOM refs
-6. **Hotkey Config Format**: User overrides are in TOML (`dev/hotkeys.toml`), not JSON
-7. **Monorepo Paths**: Source lives under `apps/main/src/`, not a flat `src/`
+- Database: `schema/base.sql`, `apps/main/src/storage/`, `apps/main/src-tauri/src/lib.rs`.
+- Editor: `apps/main/src/components/editor/`, `apps/main/src/config/default-editor-keybindings.ts`.
+- Hotkeys: `apps/main/src/config/`, `apps/main/src/hooks/use-app-hotkeys.ts`, `apps/main/src/hooks/use-hotkeys-config.ts`.
+- Quick search: `apps/quick/src/app.tsx`, `apps/quick/src-tauri/src/lib.rs`.
+- CLI: `apps/cli/src/index.ts`, `apps/cli/src/db.ts`.
+- Docs in `docs/` are useful background, but some files predate the current monorepo layout and TOML config; verify source before treating docs as current.
