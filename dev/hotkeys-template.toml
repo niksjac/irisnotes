@@ -355,6 +355,9 @@ global = true
 # blockquote = "Mod-Shift-."
 # codeBlock = "Mod-Shift-c"
 #
+# # Tables
+# insertTable = "Shift-Alt-t"
+#
 # # Indentation (Mod key shortcuts; Tab/Shift-Tab always work too)
 # indent = "Mod-]"
 # outdent = "Mod-["

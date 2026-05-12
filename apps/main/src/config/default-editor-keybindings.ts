@@ -34,6 +34,8 @@ export type EditorKeybindingId =
 	| "orderedList"
 	| "blockquote"
 	| "codeBlock"
+	// Tables
+	| "insertTable"
 	// Indentation
 	| "indent"
 	| "outdent"
@@ -129,6 +131,13 @@ export const DEFAULT_EDITOR_KEYBINDINGS: EditorKeybindings = {
 		key: "Mod-Shift-c",
 		description: "Code Block",
 		category: "Blocks",
+	},
+
+	// Tables
+	insertTable: {
+		key: "Shift-Alt-t",
+		description: "Insert Table",
+		category: "Tables",
 	},
 
 	// Indentation (Mod key shortcuts; Tab/Shift-Tab are structural and always bound)

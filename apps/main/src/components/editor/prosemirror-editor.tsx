@@ -791,8 +791,8 @@ export function ProseMirrorEditor({
 			const v = viewRef.current;
 			if (!v) return;
 
-			// Insert table (Ctrl+Shift+T)
-			if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "t" || e.key === "T") && !e.altKey) {
+			// Insert table
+			if (matchesPmKey(e, kb.insertTable.key)) {
 				e.preventDefault(); e.stopPropagation();
 				setShowTableDialog(true);
 				return;

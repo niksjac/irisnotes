@@ -372,7 +372,7 @@ const strikeRule = new InputRule(/~~([^~]+)~~$/, (state, match, start, end) => {
 | | `Ctrl+Shift+C` | Toggle checkbox |
 | | `Ctrl+Shift+>` | Blockquote |
 | | `Ctrl+Alt+C` | Code block |
-| **Tables** | `Ctrl+Alt+T` | Insert table |
+| **Tables** | `Shift+Alt+T` | Insert table |
 | | `Tab` | Next cell |
 | | `Shift+Tab` | Previous cell |
 | | `Ctrl+Alt+R` | Add row below |
