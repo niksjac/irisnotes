@@ -2205,7 +2205,7 @@ dependencies = [
 
 [[package]]
 name = "irisnotes"
-version = "1.0.5"
+version = "1.0.6"
 dependencies = [
  "clap",
  "colored",
