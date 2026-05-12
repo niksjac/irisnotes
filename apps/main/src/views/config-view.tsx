@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useTheme } from "@/hooks";
 import { useConfig } from "@/hooks/use-config";
 import { useEditorSettings } from "@/hooks/use-editor-settings";
@@ -16,26 +16,127 @@ import { FONT_FAMILIES, getFontsByGroup } from "@/components/editor/format-const
 import * as Icons from "lucide-react";
 import { THEMES } from "@/config/themes";
 
-function CollapsibleSection({ icon, title, children, defaultOpen = false }: {
+type SettingsSectionId =
+	| "appearance"
+	| "database"
+	| "storage"
+	| "editor"
+	| "backup-restore"
+	| "storage-maintenance"
+	| "ascii-art"
+	| "autocorrect"
+	| "keyboard-shortcuts"
+	| "about"
+	| "debug";
+
+interface SettingsSectionMeta {
+	id: SettingsSectionId;
+	title: string;
+	category: string;
+	keywords: string;
+}
+
+const SETTINGS_SECTIONS: SettingsSectionMeta[] = [
+	{
+		id: "appearance",
+		title: "Appearance",
+		category: "Interface",
+		keywords: "theme light dark color palette swatch",
+	},
+	{
+		id: "database",
+		title: "Database",
+		category: "Storage",
+		keywords: "connection status content statistics items notes books sections",
+	},
+	{
+		id: "storage",
+		title: "Storage",
+		category: "Storage",
+		keywords: "sqlite database backend path local data",
+	},
+	{
+		id: "editor",
+		title: "Editor",
+		category: "Editor",
+		keywords: "font size family line height paragraph spacing letter spacing padding wrapping cursor width animation smooth movement color caret reset defaults",
+	},
+	{
+		id: "backup-restore",
+		title: "Backup & Restore",
+		category: "Storage",
+		keywords: "export import settings backup restore json",
+	},
+	{
+		id: "storage-maintenance",
+		title: "Storage Maintenance",
+		category: "Storage",
+		keywords: "cleanup orphaned images assets delete files maintenance",
+	},
+	{
+		id: "ascii-art",
+		title: "ASCII Art Insertions",
+		category: "Tools",
+		keywords: "ascii art snippets insertions keyboard shortcuts hotkeys",
+	},
+	{
+		id: "autocorrect",
+		title: "Autocorrect",
+		category: "Tools",
+		keywords: "text replacements rules typing infinity symbols",
+	},
+	{
+		id: "keyboard-shortcuts",
+		title: "Keyboard Shortcuts",
+		category: "Keyboard",
+		keywords: "hotkeys shortcuts app rich editor source editor system search",
+	},
+	{
+		id: "about",
+		title: "About",
+		category: "System",
+		keywords: "application version environment development production",
+	},
+	{
+		id: "debug",
+		title: "Debug Info",
+		category: "System",
+		keywords: "debug config json development",
+	},
+];
+
+function filterButtonClass(isActive: boolean): string {
+	return `px-3 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer border ${
+		isActive
+			? "bg-blue-600 dark:bg-blue-500 text-white border-blue-600 dark:border-blue-500"
+			: "text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+	}`;
+}
+
+function CollapsibleSection({ icon, title, children, defaultOpen = false, forceOpen = false, isVisible = true }: {
 	icon: React.ReactNode;
 	title: string;
 	children: React.ReactNode;
 	defaultOpen?: boolean;
+	forceOpen?: boolean;
+	isVisible?: boolean;
 }) {
 	const [isOpen, setIsOpen] = useState(defaultOpen);
+	const expanded = forceOpen || isOpen;
+	if (!isVisible) return null;
 	return (
 		<section>
 			<button
 				onClick={() => setIsOpen(!isOpen)}
 				data-section-header
-				data-expanded={isOpen}
+				data-expanded={expanded}
 				className="w-full flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 transition-colors py-1 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
 			>
 				{icon}
 				{title}
-				<Icons.ChevronRight className={`w-3.5 h-3.5 ml-auto text-gray-400 transition-transform ${isOpen ? "rotate-90" : ""}`} />
+				<Icons.ChevronRight className={`w-3.5 h-3.5 ml-auto text-gray-400 transition-transform ${expanded ? "rotate-90" : ""}`} />
 			</button>
-			{isOpen && <div className="mt-2">{children}</div>}
+			{expanded && <div className="mt-2">{children}</div>}
 		</section>
 	);
 }
@@ -53,6 +154,9 @@ export function ConfigView() {
 	const [isImporting, setIsImporting] = useState(false);
 	const [cleanupResult, setCleanupResult] = useState<string | null>(null);
 	const [isCleaning, setIsCleaning] = useState(false);
+	const [searchQuery, setSearchQuery] = useState("");
+	const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+	const [sectionFilter, setSectionFilter] = useState<SettingsSectionId | null>(null);
 
 	// Database stats
 	const items = useAtomValue(itemsAtom);
@@ -64,6 +168,48 @@ export function ConfigView() {
 	const [appVersion, setAppVersion] = useState<string | null>(null);
 	useEffect(() => {
 		getVersion().then(setAppVersion).catch(() => setAppVersion(null));
+	}, []);
+
+	const availableSettingsSections = useMemo(
+		() => SETTINGS_SECTIONS.filter((section) => section.id !== "debug" || import.meta.env.DEV),
+		[],
+	);
+	const settingCategories = useMemo(
+		() => Array.from(new Set(availableSettingsSections.map((section) => section.category))).sort(),
+		[availableSettingsSections],
+	);
+	const sectionFilterButtons = useMemo(
+		() => categoryFilter
+			? availableSettingsSections.filter((section) => section.category === categoryFilter)
+			: availableSettingsSections,
+		[availableSettingsSections, categoryFilter],
+	);
+	const filteredSettingsSections = useMemo(() => {
+		const query = searchQuery.trim().toLowerCase();
+
+		return availableSettingsSections.filter((section) => {
+			if (categoryFilter && section.category !== categoryFilter) return false;
+			if (sectionFilter && section.id !== sectionFilter) return false;
+			if (!query) return true;
+
+			return `${section.title} ${section.category} ${section.keywords}`
+				.toLowerCase()
+				.includes(query);
+		});
+	}, [availableSettingsSections, categoryFilter, searchQuery, sectionFilter]);
+	const visibleSectionIds = useMemo(
+		() => new Set(filteredSettingsSections.map((section) => section.id)),
+		[filteredSettingsSections],
+	);
+	const isFiltering = Boolean(searchQuery.trim() || categoryFilter || sectionFilter);
+	const shouldShowSection = useCallback(
+		(id: SettingsSectionId) => visibleSectionIds.has(id),
+		[visibleSectionIds],
+	);
+	const clearFilters = useCallback(() => {
+		setSearchQuery("");
+		setCategoryFilter(null);
+		setSectionFilter(null);
 	}, []);
 
 	// Storage backend - SQLite only
@@ -149,19 +295,89 @@ export function ConfigView() {
 	return (
 		<div className="h-full overflow-auto bg-white dark:bg-gray-900">
 			<div ref={settingsRef} onKeyDown={handleSectionKeyDown} className="max-w-4xl mx-auto p-4 space-y-5">
-				{/* Header */}
-				<div className="border-b border-gray-200 dark:border-gray-700 pb-3">
-					<h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-						<Icons.Settings className="w-5 h-5" />
-						Settings
-					</h1>
-					<p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-						Configure your IrisNotes experience
-					</p>
+				{/* Header with Search */}
+				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-3">
+					<div>
+						<h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+							<Icons.Settings className="w-5 h-5" />
+							Settings
+						</h1>
+						<p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+							{filteredSettingsSections.length} of {availableSettingsSections.length} sections
+						</p>
+					</div>
+					<div className="relative w-full sm:w-72">
+						<Icons.Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+						<input
+							type="text"
+							value={searchQuery}
+							onChange={(event) => setSearchQuery(event.target.value)}
+							placeholder="Filter settings..."
+							className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+						/>
+						{searchQuery && (
+							<button
+								onClick={() => setSearchQuery("")}
+								className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+							>
+								<Icons.X className="w-4 h-4" />
+							</button>
+						)}
+					</div>
 				</div>
 
+				{/* Category Filter Buttons */}
+				<div className="flex flex-wrap items-center gap-2 text-sm">
+					{settingCategories.map((category) => (
+						<button
+							key={category}
+							onClick={() => {
+								const nextCategory = categoryFilter === category ? null : category;
+								setCategoryFilter(nextCategory);
+								if (
+									nextCategory &&
+									sectionFilter &&
+									availableSettingsSections.find((section) => section.id === sectionFilter)?.category !== nextCategory
+								) {
+									setSectionFilter(null);
+								}
+							}}
+							className={filterButtonClass(categoryFilter === category)}
+						>
+							{category}
+						</button>
+					))}
+					{isFiltering && (
+						<button
+							onClick={clearFilters}
+							className="px-3 py-1 rounded-md text-xs font-medium text-red-600 dark:text-red-400 border border-red-300 dark:border-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer"
+						>
+							Clear filters
+						</button>
+					)}
+				</div>
+
+				{/* Section Filter Buttons */}
+				<div className="flex flex-wrap items-center gap-2 text-sm">
+					{sectionFilterButtons.map((section) => (
+						<button
+							key={section.id}
+							onClick={() => setSectionFilter(sectionFilter === section.id ? null : section.id)}
+							className={filterButtonClass(sectionFilter === section.id)}
+						>
+							{section.title}
+						</button>
+					))}
+				</div>
+
+				{filteredSettingsSections.length === 0 && (
+					<div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 text-center text-sm text-gray-500 dark:text-gray-400">
+						No settings match "{searchQuery}"
+					</div>
+				)}
+
 				{/* Appearance Section */}
-				<CollapsibleSection icon={<Icons.Palette className="w-4 h-4" />} title="Appearance">
+				<CollapsibleSection icon={<Icons.Palette className="w-4 h-4" />} title="Appearance" isVisible={shouldShowSection("appearance")} forceOpen={isFiltering}>
 
 					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-2">
 						<div>
@@ -208,7 +424,7 @@ export function ConfigView() {
 				</CollapsibleSection>
 
 				{/* Database Section */}
-				<CollapsibleSection icon={<Icons.Database className="w-4 h-4" />} title="Database">
+				<CollapsibleSection icon={<Icons.Database className="w-4 h-4" />} title="Database" isVisible={shouldShowSection("database")} forceOpen={isFiltering}>
 
 					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-3">
 						{/* Connection Status */}
@@ -273,7 +489,7 @@ export function ConfigView() {
 				</CollapsibleSection>
 
 				{/* Storage Section */}
-				<CollapsibleSection icon={<Icons.HardDrive className="w-4 h-4" />} title="Storage">
+				<CollapsibleSection icon={<Icons.HardDrive className="w-4 h-4" />} title="Storage" isVisible={shouldShowSection("storage")} forceOpen={isFiltering}>
 
 					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-3">
 						{/* Backend Info */}
@@ -302,7 +518,7 @@ export function ConfigView() {
 				</CollapsibleSection>
 
 				{/* Editor Section */}
-				<CollapsibleSection icon={<Icons.Edit3 className="w-4 h-4" />} title="Editor">
+				<CollapsibleSection icon={<Icons.Edit3 className="w-4 h-4" />} title="Editor" isVisible={shouldShowSection("editor")} forceOpen={isFiltering}>
 
 					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-3">
 						{/* Font Size */}
@@ -567,7 +783,7 @@ export function ConfigView() {
 				</CollapsibleSection>
 
 				{/* Backup & Restore Section */}
-				<CollapsibleSection icon={<Icons.Save className="w-4 h-4" />} title="Backup & Restore">
+				<CollapsibleSection icon={<Icons.Save className="w-4 h-4" />} title="Backup & Restore" isVisible={shouldShowSection("backup-restore")} forceOpen={isFiltering}>
 
 					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-3">
 						<div>
@@ -607,7 +823,7 @@ export function ConfigView() {
 				</CollapsibleSection>
 
 				{/* Storage Maintenance Section */}
-				<CollapsibleSection icon={<Icons.HardDrive className="w-4 h-4" />} title="Storage Maintenance">
+				<CollapsibleSection icon={<Icons.HardDrive className="w-4 h-4" />} title="Storage Maintenance" isVisible={shouldShowSection("storage-maintenance")} forceOpen={isFiltering}>
 
 					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-3">
 						<div>
@@ -637,7 +853,7 @@ export function ConfigView() {
 				</CollapsibleSection>
 
 				{/* ASCII Art Section */}
-				<CollapsibleSection icon={<Icons.TextCursorInput className="w-4 h-4" />} title="ASCII Art Insertions">
+				<CollapsibleSection icon={<Icons.TextCursorInput className="w-4 h-4" />} title="ASCII Art Insertions" isVisible={shouldShowSection("ascii-art")} forceOpen={isFiltering}>
 
 					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-2">
 						<div className="text-sm text-gray-500 dark:text-gray-400">
@@ -654,7 +870,7 @@ export function ConfigView() {
 				</CollapsibleSection>
 
 				{/* Autocorrect Section */}
-				<CollapsibleSection icon={<Icons.Replace className="w-4 h-4" />} title="Autocorrect">
+				<CollapsibleSection icon={<Icons.Replace className="w-4 h-4" />} title="Autocorrect" isVisible={shouldShowSection("autocorrect")} forceOpen={isFiltering}>
 
 					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-2">
 						<div className="text-sm text-gray-500 dark:text-gray-400">
@@ -671,7 +887,7 @@ export function ConfigView() {
 				</CollapsibleSection>
 
 				{/* Keyboard Shortcuts Section */}
-				<CollapsibleSection icon={<Icons.Keyboard className="w-4 h-4" />} title="Keyboard Shortcuts">
+				<CollapsibleSection icon={<Icons.Keyboard className="w-4 h-4" />} title="Keyboard Shortcuts" isVisible={shouldShowSection("keyboard-shortcuts")} forceOpen={isFiltering}>
 
 					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-2">
 						<div className="text-sm text-gray-500 dark:text-gray-400">
@@ -688,7 +904,7 @@ export function ConfigView() {
 				</CollapsibleSection>
 
 				{/* About Section */}
-				<CollapsibleSection icon={<Icons.Info className="w-4 h-4" />} title="About">
+				<CollapsibleSection icon={<Icons.Info className="w-4 h-4" />} title="About" isVisible={shouldShowSection("about")} forceOpen={isFiltering}>
 
 					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-2">
 						<div className="flex items-center justify-between">
@@ -722,7 +938,7 @@ export function ConfigView() {
 
 				{/* Debug Section (Dev Only) */}
 				{import.meta.env.DEV && (
-					<CollapsibleSection icon={<Icons.Bug className="w-4 h-4" />} title="Debug Info">
+					<CollapsibleSection icon={<Icons.Bug className="w-4 h-4" />} title="Debug Info" isVisible={shouldShowSection("debug")} forceOpen={isFiltering}>
 
 						<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
 							<pre className="text-xs text-gray-600 dark:text-gray-400 overflow-auto max-h-64">
