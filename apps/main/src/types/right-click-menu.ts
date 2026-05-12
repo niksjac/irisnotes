@@ -3,7 +3,7 @@ export interface MenuItem {
 	id: string;
 	label: string;
 	icon?: React.ComponentType<{ className?: string }>;
-	action: () => void;
+	action: () => void | Promise<void>;
 	disabled?: boolean;
 	separator?: boolean;
 	shortcut?: string;

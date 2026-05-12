@@ -41,9 +41,14 @@ export function RightClickMenu({ data, onClose }: RightClickMenuProps) {
 		setAdjustedPosition({ x, y });
 	}, [data]);
 
-	const handleMenuItemClick = (item: MenuItem) => {
-		if (!item.disabled) {
-			item.action();
+	const handleMenuItemClick = async (item: MenuItem) => {
+		if (item.disabled) return;
+
+		try {
+			await item.action();
+		} catch (error) {
+			console.error("Right-click menu action failed:", error);
+		} finally {
 			onClose();
 		}
 	};
@@ -83,7 +88,7 @@ export function RightClickMenu({ data, onClose }: RightClickMenuProps) {
 										? "text-gray-400 dark:text-gray-500 cursor-not-allowed"
 										: "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
 								}`}
-								onClick={() => handleMenuItemClick(item)}
+								onClick={() => void handleMenuItemClick(item)}
 								disabled={item.disabled}
 							>
 								{item.icon && <item.icon className="h-4 w-4" />}

@@ -32,6 +32,7 @@ import {
 	useRightClickMenuActions,
 } from "@/hooks";
 import { canBeChildOf } from "@/storage/hierarchy";
+import { confirmDeleteItem } from "@/utils/confirm-delete";
 import { RightClickMenu } from "@/components/right-click-menu";
 import type { TreeRightClickData } from "@/types/right-click-menu";
 
@@ -40,7 +41,7 @@ import type { TreeRightClickData } from "@/types/right-click-menu";
 type TreeHotkeyHandler = (
 	e: KeyboardEvent,
 	tree: TreeInstance<FlexibleItem>,
-) => void;
+) => void | Promise<void>;
 
 // Custom click behavior based on item type:
 // Notes: single-click = focus only, double-click = open in editor
@@ -695,21 +696,12 @@ export function TreeView() {
 					const focusedItem = treeInstance.getFocusedItem();
 					if (focusedItem) {
 						const itemData = focusedItem.getItemData();
-						const itemType = itemData.type;
-						const itemName =
-							itemType === "note"
-								? "note"
-								: itemType === "book"
-									? "book"
-									: itemType === "section"
-										? "section"
-										: "item";
+						const confirmed = await confirmDeleteItem(
+							itemData.type,
+							itemData.title,
+						);
 
-						const confirmMessage = `Are you sure you want to delete ${itemName} "${itemData.title}"${
-							itemType !== "note" ? " and all its contents" : ""
-						}?`;
-
-						if (confirm(confirmMessage)) {
+						if (confirmed) {
 							// Find the item to focus after deletion
 							const parentId = itemData.parent_id || "root";
 							const siblings = childrenMap.get(parentId) || [];

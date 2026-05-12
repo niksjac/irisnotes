@@ -13,6 +13,7 @@ import {
 	Hash,
 } from "lucide-react";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { confirmDeleteItem } from "@/utils/confirm-delete";
 import type {
 	MenuGroup,
 	TreeRightClickData,
@@ -24,7 +25,7 @@ interface UseRightClickMenuActionsProps {
 	onCreateNote?: (parentId?: string) => void;
 	onCreateBook?: (parentId?: string) => void;
 	onCreateSection?: (parentId?: string) => void;
-	onDeleteItem?: (itemId: string) => void;
+	onDeleteItem?: (itemId: string) => void | Promise<void>;
 	onRenameItem?: (itemId: string, newTitle: string) => void;
 	onOpenInPane?: (
 		itemId: string,
@@ -46,27 +47,14 @@ export function useRightClickMenuActions({
 		useItems();
 
 	const handleDeleteAction = useCallback(
-		(data: TreeRightClickData) => {
-			const itemType = data.nodeType;
-			const itemName =
-				itemType === "note"
-					? "note"
-					: itemType === "book"
-						? "book"
-						: itemType === "section"
-							? "section"
-							: "item";
+		async (data: TreeRightClickData) => {
+			const confirmed = await confirmDeleteItem(data.nodeType, data.nodeName);
+			if (!confirmed) return;
 
-			const confirmMessage = `Are you sure you want to delete ${itemName} "${data.nodeName}"${
-				itemType !== "note" ? " and all its contents" : ""
-			}?`;
-
-			if (confirm(confirmMessage)) {
-				if (onDeleteItem) {
-					onDeleteItem(data.nodeId);
-				} else {
-					deleteItem(data.nodeId);
-				}
+			if (onDeleteItem) {
+				await onDeleteItem(data.nodeId);
+			} else {
+				await deleteItem(data.nodeId);
 			}
 		},
 		[onDeleteItem, deleteItem]
