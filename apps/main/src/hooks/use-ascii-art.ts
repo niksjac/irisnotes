@@ -2,7 +2,7 @@ import { useCallback, useEffect } from "react";
 import { useAtom } from "jotai";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { TextSelection } from "prosemirror-state";
+import { Fragment, Slice } from "prosemirror-model";
 import { asciiArtConfigAtom } from "@/atoms/ascii-art";
 import type { AsciiArtEntry } from "@/atoms/ascii-art";
 import { activeEditorViewStore } from "@/components/editor/active-editor-view-store";
@@ -91,22 +91,9 @@ function insertAsciiArt(art: string): void {
 
 	if (nodes.length === 0) return;
 
-	const tr = state.tr;
-
-	// Replace the selection range (from..to) with the ASCII art nodes.
-	// `replaceWith` handles block-level replacement correctly.
-	tr.replaceWith(from, to, nodes);
-
-	// Calculate where the last inserted node ends.
-	// After replaceWith, `from` is still the start of the replaced range.
-	// Sum node sizes from `from` to find the end position.
-	let endPos = from;
-	for (const node of nodes) {
-		endPos += node.nodeSize;
-	}
-	// Resolve backward into the last paragraph's text content
-	const $end = tr.doc.resolve(Math.min(endPos, tr.doc.content.size));
-	tr.setSelection(TextSelection.near($end, -1));
+	// Open the paragraph slice so the first and last art lines splice into the current line.
+	const slice = new Slice(Fragment.from(nodes), 1, 1);
+	const tr = state.tr.replace(from, to, slice);
 
 	view.dispatch(tr.scrollIntoView());
 	view.focus();
