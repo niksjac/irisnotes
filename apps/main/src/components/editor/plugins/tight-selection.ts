@@ -9,6 +9,7 @@
  */
 
 import { Plugin, PluginKey } from "prosemirror-state";
+import type { Node as PMNode, ResolvedPos } from "prosemirror-model";
 import { Decoration, DecorationSet } from "prosemirror-view";
 
 export const tightSelectionPluginKey = new PluginKey("tightSelection");
@@ -25,6 +26,31 @@ function isEmptyBlock(node: any): boolean {
  */
 function isTextBlock(node: any): boolean {
 	return node.isTextblock;
+}
+
+function getAncestor($pos: ResolvedPos, nodeTypeName: string): { node: PMNode; pos: number } | null {
+	for (let depth = $pos.depth; depth > 0; depth--) {
+		const node = $pos.node(depth);
+		if (node.type.name === nodeTypeName) {
+			return { node, pos: $pos.before(depth) };
+		}
+	}
+
+	return null;
+}
+
+function getFirstTextPos(node: PMNode, absolutePos: number): number | null {
+	let firstTextPos: number | null = null;
+	node.descendants((child, relativePos) => {
+		if (child.isText) {
+			firstTextPos = absolutePos + 1 + relativePos;
+			return false;
+		}
+
+		return true;
+	});
+
+	return firstTextPos;
 }
 
 /**
@@ -51,8 +77,8 @@ export function tightSelectionPlugin(): Plugin {
 				}
 
 				const decorations: Decoration[] = [];
-				// Track list items that contain selected content
-				const selectedListItems = new Set<number>();
+				// Track list items whose selection starts at the first text position
+				const listItemsWithStartSelection = new Set<number>();
 				// Track textblocks with selected content and their selection bounds
 				const selectedTextBlocks = new Map<number, { start: number; end: number; nodeEnd: number }>();
 
@@ -77,9 +103,24 @@ export function tightSelectionPlugin(): Plugin {
 
 						// Only create decoration if there's actual overlap
 						if (start < end) {
+							const $pos = state.doc.resolve(pos);
+							const listItem = start === pos
+								? getAncestor($pos, "list_item")
+								: null;
+							const listItemPos = listItem && getFirstTextPos(listItem.node, listItem.pos) === pos
+								? listItem.pos
+								: null;
+							const className = listItemPos !== null
+								? "pm-tight-selection pm-tight-selection-list-start"
+								: "pm-tight-selection";
+
+							if (listItemPos !== null) {
+								listItemsWithStartSelection.add(listItemPos);
+							}
+
 							decorations.push(
 								Decoration.inline(start, end, {
-									class: "pm-tight-selection",
+									class: className,
 								})
 							);
 						}
@@ -116,20 +157,11 @@ export function tightSelectionPlugin(): Plugin {
 						}
 					}
 
-					// Track list items that have selected content
-					if (node.type.name === "list_item") {
-						const nodeStart = pos;
-						const nodeEnd = pos + node.nodeSize;
-						if (from < nodeEnd && to > nodeStart) {
-							selectedListItems.add(pos);
-						}
-					}
-
 					return true; // Continue traversing
 				});
 
-				// Add decorations for selected list items (to extend selection to cover bullets)
-				for (const pos of selectedListItems) {
+				// Add decorations for selected list items whose selection starts at text start.
+				for (const pos of listItemsWithStartSelection) {
 					const node = state.doc.nodeAt(pos);
 					if (node) {
 						decorations.push(

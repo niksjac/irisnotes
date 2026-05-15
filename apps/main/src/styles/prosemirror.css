@@ -189,9 +189,9 @@ li.pm-tight-selection-list-item {
   isolation: isolate;
 }
 
-/* Use ::before pseudo-element on first selected text to extend into bullet area */
+/* Use ::before on selections that begin at list text start to extend into bullet area */
 /* This sits behind the ::marker due to z-index: -1 */
-li.pm-tight-selection-list-item .pm-tight-selection:first-child::before {
+li.pm-tight-selection-list-item .pm-tight-selection-list-start::before {
   content: "";
   position: absolute;
   top: calc(-1 * var(--selection-extend-top, 0.24em));
