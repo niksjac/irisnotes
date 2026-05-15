@@ -46,6 +46,9 @@ export function useHotkeysConfig() {
 			const mergedHotkeys: HotkeyMapping = {
 				...DEFAULT_HOTKEYS,
 				...parsedHotkeys,
+				showQuickHotkeys: parsedHotkeys.showQuickHotkeys?.key?.toLowerCase() === "f1"
+					? DEFAULT_HOTKEYS.showQuickHotkeys
+					: parsedHotkeys.showQuickHotkeys ?? DEFAULT_HOTKEYS.showQuickHotkeys,
 			};
 
 			// Update CodeMirror app hotkey patterns

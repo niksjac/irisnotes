@@ -299,6 +299,11 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHotkeyOptions(hotkeyMapping.openHotkeys.global)
 	);
 	useHotkeys(
+		hotkeyMapping.openBranding.key,
+		createHandler(handlers.onOpenBranding),
+		createHotkeyOptions(hotkeyMapping.openBranding.global)
+	);
+	useHotkeys(
 		hotkeyMapping.showQuickHotkeys.key,
 		createHandler(handlers.onShowQuickHotkeys),
 		createHotkeyOptions(hotkeyMapping.showQuickHotkeys.global)

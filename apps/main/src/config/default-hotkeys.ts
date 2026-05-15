@@ -288,8 +288,14 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		category: "Views",
 		global: true,
 	},
-	showQuickHotkeys: {
+	openBranding: {
 		key: "f1",
+		description: "Open Branding & About",
+		category: "Views",
+		global: true,
+	},
+	showQuickHotkeys: {
+		key: "f12",
 		description: "Show Quick Hotkeys Reference",
 		category: "Views",
 		global: true,

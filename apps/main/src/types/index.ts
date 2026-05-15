@@ -103,6 +103,7 @@ export interface HotkeyMapping {
 	// Views hotkeys
 	openSettings: HotkeyConfig;
 	openHotkeys: HotkeyConfig;
+	openBranding: HotkeyConfig;
 	showQuickHotkeys: HotkeyConfig;
 
 	// Notes hotkeys
@@ -228,6 +229,7 @@ export interface AppHotkeysProps {
 	// Views hotkeys
 	onOpenSettings?: () => void;
 	onOpenHotkeys?: () => void;
+	onOpenBranding?: () => void;
 	onShowQuickHotkeys?: () => void;
 
 	// Search hotkeys

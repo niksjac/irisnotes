@@ -29,6 +29,7 @@ import {
 	focusPreviousSpawnedTabAtom,
 	openSettingsTabAtom,
 	openHotkeysTabAtom,
+	openBrandingTabAtom,
 	openQuickSearchAtom,
 	openSearchSidebarAtom,
 	sidebarCollapsed,
@@ -160,6 +161,7 @@ export function useHotkeyHandlers() {
 		// View actions
 		openSettings: useSetAtom(openSettingsTabAtom),
 		openHotkeys: useSetAtom(openHotkeysTabAtom),
+		openBranding: useSetAtom(openBrandingTabAtom),
 		showQuickHotkeys: useSetAtom(showQuickHotkeysAtom),
 		openThemeSwitcher: useSetAtom(openThemeSwitcherAtom),
 		openSymbolPicker: useSetAtom(openSymbolPickerAtom),

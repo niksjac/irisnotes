@@ -48,6 +48,7 @@ export function mapHotkeyHandlers(
 		openNewSectionDialog: () => void;
 		openSettings: () => void;
 		openHotkeys: () => void;
+		openBranding: () => void;
 		showQuickHotkeys: () => void;
 		openQuickSearch: () => void;
 		openSearchSidebar: () => void;
@@ -287,6 +288,7 @@ export function mapHotkeyHandlers(
 		// Views hotkeys
 		onOpenSettings: handlers.openSettings,
 		onOpenHotkeys: handlers.openHotkeys,
+		onOpenBranding: handlers.openBranding,
 		onShowQuickHotkeys: handlers.showQuickHotkeys,
 		// Search hotkeys
 		onQuickSearch: handlers.openQuickSearch,

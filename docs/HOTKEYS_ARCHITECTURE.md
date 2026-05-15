@@ -82,8 +82,8 @@ Uses `react-hotkeys-hook` for app-wide keyboard shortcuts that work regardless o
 ### Configuration
 
 Hotkeys are configurable via:
-- `dev/hotkeys.json` - User configuration
-- `src/config/default-hotkeys.ts` - Default values
+- `dev/hotkeys.toml` - Development/user override configuration
+- `apps/main/src/config/default-hotkeys.ts` - Default values
 
 ### Hotkey Reference
 
@@ -100,7 +100,8 @@ Hotkeys are configurable via:
 | `Ctrl+Shift+Tab` | Previous tab | `onPreviousTab` |
 | `Ctrl+1-9` | Go to tab N | `onGoToTab` |
 | `Ctrl+,` | Open settings | `onOpenSettings` |
-| `F1` | Open hotkeys view | `onOpenHotkeys` |
+| `F1` | Open Branding & About | `onOpenBranding` |
+| `F12` | Show quick hotkeys reference | `onShowQuickHotkeys` |
 | `Ctrl+E` | Toggle edit mode | `onToggleEditMode` |
 | `Alt+Shift+F` | Format document | `onFormatDocument` |
 | `Ctrl+Shift+B` | New book | `onNewBook` |
