@@ -116,6 +116,11 @@ bump_release_version() {
     APP_VERSION="$new_version"
 }
 
+generate_release_notes() {
+    echo "Generating release notes for v$APP_VERSION..."
+    node "$SCRIPT_DIR/scripts/generate-release-notes.mjs"
+}
+
 # Parse arguments
 for arg in "$@"; do
     case $arg in
@@ -173,6 +178,9 @@ if [ "$SKIP_BUILD" = false ]; then
         echo ""
         echo "Building IrisNotes v$APP_VERSION..."
     fi
+
+    echo ""
+    generate_release_notes
 
     echo ""
     echo "Building main app..."

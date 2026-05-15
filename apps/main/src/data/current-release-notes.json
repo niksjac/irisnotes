@@ -1,0 +1,28 @@
+{
+	"version": "1.0.7",
+	"range": "HEAD~12..HEAD",
+	"sections": [
+		{
+			"title": "Features",
+			"items": [
+				"Editor: Add chunk deletion and paragraph jumps",
+				"Settings: Add filters to settings page"
+			]
+		},
+		{
+			"title": "Fixes",
+			"items": [
+				"Editor: Localize pasted and dropped images",
+				"Tree: Use native delete confirmation dialogs",
+				"Editor: Insert ASCII art at cursor",
+				"Editor: Avoid table shortcut conflict"
+			]
+		},
+		{
+			"title": "Improvements",
+			"items": [
+				"Editor: Restyle image info bar"
+			]
+		}
+	]
+}

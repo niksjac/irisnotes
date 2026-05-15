@@ -9,6 +9,20 @@ import {
 	type BrandingSettings,
 } from "@/atoms/settings";
 import { openIconEditorTabAtom } from "@/atoms/panes";
+import currentReleaseNotes from "@/data/current-release-notes.json";
+
+interface ReleaseNotesSection {
+	title: string;
+	items: string[];
+}
+
+interface CurrentReleaseNotes {
+	version: string;
+	range: string;
+	sections: ReleaseNotesSection[];
+}
+
+const releaseNotes = currentReleaseNotes as CurrentReleaseNotes;
 
 function LogoPicker({
 	label,
@@ -59,6 +73,7 @@ export function BrandingView() {
 	const [branding, setBranding] = useAtom(brandingSettingsAtom);
 	const [appVersion, setAppVersion] = useState<string | null>(null);
 	const openIconEditor = useSetAtom(openIconEditorTabAtom);
+	const hasReleaseNotes = releaseNotes.sections.some((section) => section.items.length > 0);
 
 	useEffect(() => {
 		getVersion().then(setAppVersion).catch(() => setAppVersion(null));
@@ -123,6 +138,28 @@ export function BrandingView() {
 								{import.meta.env.DEV ? "Development" : "Production"}
 							</span>
 						</div>
+						{hasReleaseNotes && (
+							<div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2 space-y-2">
+								<div className="text-sm text-gray-600 dark:text-gray-400">In This Version</div>
+								<div className="space-y-2">
+									{releaseNotes.sections.map((section) => (
+										<div key={section.title} className="space-y-1">
+											<div className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
+												{section.title}
+											</div>
+											<ul className="space-y-1">
+												{section.items.map((item) => (
+													<li key={item} className="flex gap-2 text-sm text-gray-700 dark:text-gray-300">
+														<span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-gray-400 dark:bg-gray-500" />
+														<span>{item}</span>
+													</li>
+												))}
+											</ul>
+										</div>
+									))}
+								</div>
+							</div>
+						)}
 					</div>
 				</section>
 
