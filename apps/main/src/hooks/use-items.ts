@@ -7,6 +7,7 @@ import {
 	treeDataAtom,
 } from "@/atoms/items";
 import { closeTabsByItemIdAtom } from "@/atoms/panes";
+import { treeRevealRequestAtom } from "@/atoms/tree";
 import { useNotesStorage } from "./use-notes-storage";
 import { canBeChildOf } from "@/storage/hierarchy";
 import type { FlexibleItem, CreateItemParams } from "@/types/items";
@@ -23,6 +24,7 @@ export const useItems = () => {
 
 	const { storageAdapter, isInitialized } = useNotesStorage();
 	const closeTabsByItemId = useSetAtom(closeTabsByItemIdAtom);
+	const requestTreeReveal = useSetAtom(treeRevealRequestAtom);
 
 	// ========================================
 	// LOAD OPERATIONS
@@ -106,6 +108,7 @@ export const useItems = () => {
 					// Select the new item if it's a note
 					if (params.type === "note") {
 						setSelectedItemId(result.data.id);
+						requestTreeReveal(result.data.id);
 					}
 
 					return { success: true, data: result.data };
@@ -119,7 +122,7 @@ export const useItems = () => {
 				return { success: false, error: errorMsg };
 			}
 		},
-		[storageAdapter, items, loadAllItems, setSelectedItemId]
+		[storageAdapter, items, loadAllItems, setSelectedItemId, requestTreeReveal]
 	);
 
 	// ========================================

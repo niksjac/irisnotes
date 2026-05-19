@@ -11,7 +11,7 @@ import {
 } from "@headless-tree/core";
 import { itemsAtom, selectedItemIdAtom } from "@/atoms/items";
 import { focusAreaAtom, pane0TabsAtom, pane1TabsAtom, pane0ActiveTabAtom, pane1ActiveTabAtom, hoistedRootIdAtom } from "@/atoms";
-import { registerTreeViewCallbacks, unregisterTreeViewCallbacks, treeFilterAtom, treeViewModeAtom, dateSortDirectionAtom } from "@/atoms/tree";
+import { registerTreeViewCallbacks, unregisterTreeViewCallbacks, treeFilterAtom, treeViewModeAtom, dateSortDirectionAtom, treeRevealRequestAtom } from "@/atoms/tree";
 import type { FlexibleItem } from "@/types/items";
 import { compareSortOrder } from "@/utils/sort-order";
 import {
@@ -212,9 +212,10 @@ export function TreeView() {
 	const [hoistedRootId, setHoistedRootId] = useAtom(hoistedRootIdAtom);
 	
 	// Tree view state atoms (filter, view mode, date sort)
-	const filterText = useAtomValue(treeFilterAtom);
+	const [filterText, setFilterText] = useAtom(treeFilterAtom);
 	const viewMode = useAtomValue(treeViewModeAtom);
 	const dateSortDir = useAtomValue(dateSortDirectionAtom);
+	const [treeRevealRequest, setTreeRevealRequest] = useAtom(treeRevealRequestAtom);
 	
 	const [selectedItemId, setSelectedItemId] = useAtom(selectedItemIdAtom);
 	const { openItemInTab } = useTabManagement();
@@ -944,6 +945,55 @@ export function TreeView() {
 		],
 	});
 
+	const treeRef = useRef(tree);
+	useEffect(() => {
+		treeRef.current = tree;
+	}, [tree]);
+
+	const focusAndScrollTreeItem = useCallback((itemId: string) => {
+		const focusRenderedItem = () => {
+			const treeInstance = treeRef.current;
+			const targetItem = treeInstance.getItems().find(
+				(item) => item.getItemMeta().itemId === itemId,
+			);
+			if (targetItem) {
+				targetItem.setFocused();
+				treeInstance.updateDomFocus();
+			}
+
+			const buttons = treeContainerRef.current?.querySelectorAll<HTMLButtonElement>(
+				"button[data-item-id]",
+			);
+			const targetElement = buttons
+				? Array.from(buttons).find((button) => button.dataset.itemId === itemId)
+				: null;
+
+			if (!targetElement) {
+				return false;
+			}
+
+			try {
+				targetElement.focus({ preventScroll: true });
+			} catch {
+				targetElement.focus();
+			}
+			targetElement.scrollIntoView({
+				block: "nearest",
+				inline: "nearest",
+				behavior: "smooth",
+			});
+			return true;
+		};
+
+		window.setTimeout(() => {
+			requestAnimationFrame(() => {
+				if (!focusRenderedItem()) {
+					window.setTimeout(focusRenderedItem, 100);
+				}
+			});
+		}, 50);
+	}, []);
+
 	// Track if this is the first render to skip initial rebuild
 	const isFirstRender = useRef(true);
 
@@ -1012,6 +1062,55 @@ export function TreeView() {
 		}
 		return false;
 	}, [hoistedRootId, itemMap]);
+
+	useEffect(() => {
+		if (!treeRevealRequest) return;
+
+		const itemToReveal = itemMap.get(treeRevealRequest);
+		if (!itemToReveal) return;
+
+		if (hoistedRootId && !isItemInHoistedScope(treeRevealRequest)) {
+			setHoistedRootId(null);
+			return;
+		}
+
+		if (
+			isFiltering &&
+			!itemToReveal.title.toLowerCase().includes(filterText.toLowerCase())
+		) {
+			setFilterText("");
+			return;
+		}
+
+		const parentChain = getParentChain(treeRevealRequest);
+		setTreeState((prev) => {
+			const currentExpanded = prev.expandedItems || [];
+			const expandedItems = [...new Set([...currentExpanded, ...parentChain])];
+			return {
+				...prev,
+				expandedItems,
+				selectedItems: [treeRevealRequest],
+				focusedItem: treeRevealRequest,
+			};
+		});
+
+		setFocusArea("tree");
+		focusAndScrollTreeItem(treeRevealRequest);
+		setTreeRevealRequest(null);
+	}, [
+		treeRevealRequest,
+		itemMap,
+		hoistedRootId,
+		isItemInHoistedScope,
+		setHoistedRootId,
+		isFiltering,
+		filterText,
+		setFilterText,
+		getParentChain,
+		setFocusArea,
+		focusAndScrollTreeItem,
+		setTreeRevealRequest,
+	]);
 
 	/**
 	 * Reveal the active item (note/section/book) in tree view:

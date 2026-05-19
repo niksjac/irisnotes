@@ -30,6 +30,11 @@ export const treeViewModeAtom = atom<TreeViewMode>("hierarchical");
 export type DateSortDirection = "asc" | "desc" | null;
 export const dateSortDirectionAtom = atom<DateSortDirection>(null);
 
+/**
+ * One-shot request for the mounted tree view to reveal, focus, and scroll to an item.
+ */
+export const treeRevealRequestAtom = atom<string | null>(null);
+
 // ============================================================================
 // Global callback registry for tree view actions
 // Using window object to avoid Jotai store mismatch issues
