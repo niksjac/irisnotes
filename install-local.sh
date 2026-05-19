@@ -50,6 +50,35 @@ get_built_version() {
     echo "$version"
 }
 
+get_release_baseline_commit() {
+    local version="$1"
+    local tag="v$version"
+    local commit
+
+    git -C "$SCRIPT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1 || return 1
+
+    commit="$(git -C "$SCRIPT_DIR" rev-parse --verify --quiet "refs/tags/$tag^{commit}" || true)"
+    if [ -n "$commit" ]; then
+        echo "$commit"
+        return 0
+    fi
+
+    git -C "$SCRIPT_DIR" log -1 --format=%H --fixed-strings --grep="chore(release): bump apps to $version"
+}
+
+get_unreleased_commit_count() {
+    local baseline="$1"
+
+    [ -n "$baseline" ] || return 1
+    git -C "$SCRIPT_DIR" rev-list --count "$baseline..HEAD"
+}
+
+print_unreleased_commits() {
+    local baseline="$1"
+
+    git -C "$SCRIPT_DIR" --no-pager log --oneline --no-merges --max-count=5 "$baseline..HEAD" | sed 's/^/  /'
+}
+
 bump_patch_version() {
     local version="$1"
     local major minor patch
@@ -163,9 +192,22 @@ fi
 echo "Source version: v$APP_VERSION"
 
 if [ "$BUMP_VERSION" = false ] && [ "$FORCE_INSTALL" = false ] && [ "$INSTALLED_VERSION" = "$APP_VERSION" ]; then
+    RELEASE_BASELINE="$(get_release_baseline_commit "$APP_VERSION" || true)"
+    UNRELEASED_COUNT="$(get_unreleased_commit_count "$RELEASE_BASELINE" 2>/dev/null || echo 0)"
+
     echo ""
-    echo "IrisNotes v$APP_VERSION is already installed. Nothing new to install."
-    echo "Use --bump to create the next patch release, or --force to rebuild/reinstall v$APP_VERSION."
+    if [ "$UNRELEASED_COUNT" -gt 0 ]; then
+        NEXT_VERSION="$(bump_patch_version "$APP_VERSION")"
+        echo "IrisNotes v$APP_VERSION is installed, but this checkout has $UNRELEASED_COUNT committed change(s) after the v$APP_VERSION release marker."
+        echo ""
+        echo "Recent unreleased commits:"
+        print_unreleased_commits "$RELEASE_BASELINE"
+        echo ""
+        echo "Use --bump to create and install v$NEXT_VERSION, or --force to rebuild/reinstall v$APP_VERSION."
+    else
+        echo "IrisNotes v$APP_VERSION is already installed. Nothing new to install."
+        echo "Use --bump to create the next patch release, or --force to rebuild/reinstall v$APP_VERSION."
+    fi
     exit 0
 fi
 
