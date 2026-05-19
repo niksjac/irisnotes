@@ -1,6 +1,6 @@
 #!/bin/bash
 # Local install script for IrisNotes on Arch Linux
-# Usage: ./install-local.sh [--no-build] [--bump] [--force]
+# Usage: ./install-local.sh [--no-build] [--bump] [--commit] [--force]
 
 set -e
 
@@ -9,6 +9,19 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SKIP_BUILD=false
 BUMP_VERSION=false
 FORCE_INSTALL=false
+CREATE_RELEASE_COMMIT=false
+
+RELEASE_FILES=(
+    "apps/main/package.json"
+    "apps/main/src-tauri/tauri.conf.json"
+    "apps/main/src-tauri/Cargo.toml"
+    "apps/main/src-tauri/Cargo.lock"
+    "apps/main/src/data/current-release-notes.json"
+    "apps/quick/package.json"
+    "apps/quick/src-tauri/tauri.conf.json"
+    "apps/quick/src-tauri/Cargo.toml"
+    "apps/quick/src-tauri/Cargo.lock"
+)
 
 show_usage() {
     cat << EOF
@@ -16,10 +29,30 @@ Usage: ./install-local.sh [options]
 
 Options:
     --bump      Bump the patch version before building and installing
+    --commit    With --bump, commit release files locally after a successful install
     --force     Rebuild/reinstall even when the current version is already installed
     --no-build  Skip build and install existing release binaries
     -h, --help  Show this help
 EOF
+}
+
+ensure_git_work_tree() {
+    git -C "$SCRIPT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1 || {
+        echo "--commit requires install-local.sh to run inside a git work tree." >&2
+        exit 1
+    }
+}
+
+ensure_clean_tracked_worktree() {
+    ensure_git_work_tree
+
+    if ! git -C "$SCRIPT_DIR" diff --quiet -- . || ! git -C "$SCRIPT_DIR" diff --cached --quiet -- .; then
+        echo "--commit requires a clean tracked worktree before bumping." >&2
+        echo "Commit or stash existing tracked changes first, then rerun ./install-local.sh --bump --commit." >&2
+        echo "" >&2
+        git -C "$SCRIPT_DIR" --no-pager status --short --untracked-files=no >&2
+        exit 1
+    fi
 }
 
 get_current_version() {
@@ -77,6 +110,23 @@ print_unreleased_commits() {
     local baseline="$1"
 
     git -C "$SCRIPT_DIR" --no-pager log --oneline --no-merges --max-count=5 "$baseline..HEAD" | sed 's/^/  /'
+}
+
+create_release_commit() {
+    local message="chore(release): bump apps to $APP_VERSION"
+
+    ensure_git_work_tree
+
+    if git -C "$SCRIPT_DIR" diff --quiet -- "${RELEASE_FILES[@]}" && git -C "$SCRIPT_DIR" diff --cached --quiet -- "${RELEASE_FILES[@]}"; then
+        echo "No release file changes to commit."
+        return 0
+    fi
+
+    echo ""
+    echo "Creating local release commit..."
+    git -C "$SCRIPT_DIR" add -- "${RELEASE_FILES[@]}"
+    git -C "$SCRIPT_DIR" commit --only --message "$message" -- "${RELEASE_FILES[@]}"
+    echo "Release commit created locally. No remote push was attempted."
 }
 
 bump_patch_version() {
@@ -156,6 +206,9 @@ for arg in "$@"; do
         --bump)
             BUMP_VERSION=true
             ;;
+        --commit)
+            CREATE_RELEASE_COMMIT=true
+            ;;
         --force)
             FORCE_INSTALL=true
             ;;
@@ -177,6 +230,15 @@ done
 if [ "$SKIP_BUILD" = true ] && [ "$BUMP_VERSION" = true ]; then
     echo "--bump cannot be used with --no-build because the rebuilt binaries would be missing." >&2
     exit 1
+fi
+
+if [ "$CREATE_RELEASE_COMMIT" = true ] && [ "$BUMP_VERSION" = false ]; then
+    echo "--commit must be used with --bump so the commit matches a freshly built release." >&2
+    exit 1
+fi
+
+if [ "$CREATE_RELEASE_COMMIT" = true ]; then
+    ensure_clean_tracked_worktree
 fi
 
 echo "Installing IrisNotes to $PREFIX..."
@@ -203,10 +265,10 @@ if [ "$BUMP_VERSION" = false ] && [ "$FORCE_INSTALL" = false ] && [ "$INSTALLED_
         echo "Recent unreleased commits:"
         print_unreleased_commits "$RELEASE_BASELINE"
         echo ""
-        echo "Use --bump to create and install v$NEXT_VERSION, or --force to rebuild/reinstall v$APP_VERSION."
+        echo "Use --bump --commit to create, install, and commit v$NEXT_VERSION, or --force to rebuild/reinstall v$APP_VERSION."
     else
         echo "IrisNotes v$APP_VERSION is already installed. Nothing new to install."
-        echo "Use --bump to create the next patch release, or --force to rebuild/reinstall v$APP_VERSION."
+        echo "Use --bump --commit to create the next patch release with a local release commit, or --force to rebuild/reinstall v$APP_VERSION."
     fi
     exit 0
 fi
@@ -319,6 +381,10 @@ fi
 
 # Update icon cache for fast lookups
 gtk-update-icon-cache "$ICON_DIR" 2>/dev/null || true
+
+if [ "$CREATE_RELEASE_COMMIT" = true ]; then
+    create_release_commit
+fi
 
 echo ""
 echo "✓ IrisNotes v$APP_VERSION installed!"
