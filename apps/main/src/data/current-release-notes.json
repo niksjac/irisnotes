@@ -1,27 +1,19 @@
 {
-	"version": "1.0.7",
-	"range": "HEAD~12..HEAD",
+	"version": "1.0.8",
+	"range": "4e14fb4..HEAD",
 	"sections": [
 		{
 			"title": "Features",
 			"items": [
-				"Editor: Add chunk deletion and paragraph jumps",
-				"Settings: Add filters to settings page"
+				"Hotkeys: Open branding with F1",
+				"Branding: Show generated release notes",
+				"Install: Detect unreleased commits and suggest version bump"
 			]
 		},
 		{
 			"title": "Fixes",
 			"items": [
-				"Editor: Localize pasted and dropped images",
-				"Tree: Use native delete confirmation dialogs",
-				"Editor: Insert ASCII art at cursor",
-				"Editor: Avoid table shortcut conflict"
-			]
-		},
-		{
-			"title": "Improvements",
-			"items": [
-				"Editor: Restyle image info bar"
+				"Editor: Constrain list selection highlights"
 			]
 		}
 	]
