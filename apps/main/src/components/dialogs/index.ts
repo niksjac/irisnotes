@@ -3,6 +3,7 @@ export * from "./quick-search-dialog";
 export * from "./new-note-dialog";
 export * from "./new-book-dialog";
 export * from "./new-section-dialog";
+export * from "./note-version-history-dialog";
 export * from "./theme-switcher-dialog";
 export * from "./symbol-picker-dialog";
 export * from "./nerd-font-picker-dialog";

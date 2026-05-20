@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { useAtomValue } from "jotai";
 import { itemsAtom } from "@/atoms/items";
+import { NoteVersionHistoryDialog } from "@/components/dialogs";
 import { EditorContainer, NoteTitleBar } from "@/components/editor";
 import { useItems } from "@/hooks";
 import { useEditorLayout } from "@/hooks/use-editor-layout";
@@ -12,6 +14,7 @@ export function EditorRichView({ viewData }: EditorRichViewProps) {
 	const items = useAtomValue(itemsAtom);
 	const { updateItemContent, updateItemTitle } = useItems();
 	const { toolbarVisible, titleBarVisible } = useEditorLayout();
+	const [historyOpen, setHistoryOpen] = useState(false);
 
 	// Get the note from viewData or fall back to selectedNote
 	const note = viewData?.noteId
@@ -36,6 +39,11 @@ export function EditorRichView({ viewData }: EditorRichViewProps) {
 
 	return (
 		<div className="flex flex-col h-full bg-white dark:bg-gray-900">
+			<NoteVersionHistoryDialog
+				isOpen={historyOpen}
+				note={note}
+				onClose={() => setHistoryOpen(false)}
+			/>
 			{/* Rich Editor (toolbar renders inside, above title) */}
 			<div className="flex-1 overflow-hidden relative flex flex-col">
 				<EditorContainer
@@ -51,6 +59,7 @@ export function EditorRichView({ viewData }: EditorRichViewProps) {
 								noteId={note.id}
 								title={note.title}
 								onTitleChange={handleNoteTitleChange}
+									onOpenHistory={() => setHistoryOpen(true)}
 							/>
 						) : undefined
 					}
