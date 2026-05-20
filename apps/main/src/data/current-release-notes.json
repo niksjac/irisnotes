@@ -1,5 +1,5 @@
 {
-	"version": "1.0.8",
+	"version": "1.0.9",
 	"range": "4e14fb4..HEAD",
 	"sections": [
 		{
@@ -7,7 +7,11 @@
 			"items": [
 				"Hotkeys: Open branding with F1",
 				"Branding: Show generated release notes",
-				"Install: Detect unreleased commits and suggest version bump"
+				"Install: Detect unreleased commits and suggest version bump",
+				"Install: Add release commit flag",
+				"Tree: Auto-focus, select, and scroll to newly created notes",
+				"Versioning: Add note version storage and snapshots",
+				"Versioning: Add note history dialog"
 			]
 		},
 		{
