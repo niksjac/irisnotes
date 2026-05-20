@@ -1,5 +1,6 @@
 import type {
 	Attachment,
+	CreateNoteVersionParams,
 	CreateNoteParams,
 	CreateTagParams,
 	Note,
@@ -124,15 +125,16 @@ export interface StorageAdapter {
 	// Versioning
 	getNoteVersions(noteId: string): Promise<StorageResult<NoteVersion[]>>;
 	createNoteVersion(
-		noteId: string,
-		content: string,
-		contentRaw?: string,
-		comment?: string
+		params: CreateNoteVersionParams
 	): Promise<StorageResult<NoteVersion>>;
 	restoreNoteVersion(
 		noteId: string,
 		versionId: string
 	): Promise<StorageResult<Note>>;
+	pruneNoteVersions(
+		noteId: string,
+		keepCount: number
+	): Promise<VoidStorageResult>;
 
 	// Settings
 	getSettings(): Promise<StorageResult<Setting[]>>;

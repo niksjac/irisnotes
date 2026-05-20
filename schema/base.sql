@@ -101,6 +101,24 @@ CREATE TABLE IF NOT EXISTS settings (
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Note version history - application-managed snapshots for restore/preview
+CREATE TABLE IF NOT EXISTS note_versions (
+    id TEXT PRIMARY KEY,
+    note_id TEXT NOT NULL,
+    version_number INTEGER NOT NULL,
+    title TEXT NOT NULL DEFAULT 'Untitled',
+    content TEXT NOT NULL DEFAULT '',
+    content_type TEXT NOT NULL DEFAULT 'html' CHECK (content_type IN ('html', 'markdown', 'plain', 'custom')),
+    content_raw TEXT NULL,
+    comment TEXT NULL,
+    source TEXT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+
+    UNIQUE(note_id, version_number),
+    FOREIGN KEY (note_id) REFERENCES items(id) ON DELETE CASCADE
+);
+
 -- Performance indexes
 CREATE INDEX IF NOT EXISTS idx_items_type ON items(type);
 CREATE INDEX IF NOT EXISTS idx_items_parent_id ON items(parent_id);
@@ -109,6 +127,11 @@ CREATE INDEX IF NOT EXISTS idx_items_created_at ON items(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_items_updated_at ON items(updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_items_title ON items(title);
 CREATE INDEX IF NOT EXISTS idx_items_deleted_at ON items(deleted_at);
+
+-- Version history indexes
+CREATE INDEX IF NOT EXISTS idx_note_versions_note_id ON note_versions(note_id);
+CREATE INDEX IF NOT EXISTS idx_note_versions_note_number ON note_versions(note_id, version_number DESC);
+CREATE INDEX IF NOT EXISTS idx_note_versions_created_at ON note_versions(created_at DESC);
 
 -- Index for hierarchy queries
 CREATE INDEX IF NOT EXISTS idx_items_parent_sort ON items(parent_id, sort_order);

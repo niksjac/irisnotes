@@ -60,13 +60,35 @@ export interface Attachment {
 	created_at: string;
 }
 
+export type NoteVersionSource =
+	| "auto-content"
+	| "title-change"
+	| "manual"
+	| "before-restore"
+	| "note-close";
+
 export interface NoteVersion {
 	id: string;
 	note_id: string;
+	version_number: number;
 	title: string;
 	content: string;
-	version_number: number;
+	content_type: "html" | "markdown" | "plain" | "custom";
+	content_raw?: string | null;
+	comment?: string | null;
+	source?: NoteVersionSource | null;
 	created_at: string;
+	updated_at: string;
+}
+
+export interface CreateNoteVersionParams {
+	note_id: string;
+	title: string;
+	content: string;
+	content_type?: "html" | "markdown" | "plain" | "custom";
+	content_raw?: string | null;
+	comment?: string | null;
+	source?: NoteVersionSource | null;
 }
 
 export interface Setting {

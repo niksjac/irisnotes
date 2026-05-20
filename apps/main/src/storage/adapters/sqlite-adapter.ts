@@ -5,6 +5,7 @@ import Database from "@tauri-apps/plugin-sql";
 import { generateKeyBetween } from "fractional-indexing";
 import type {
 	Attachment,
+	CreateNoteVersionParams,
 	CreateNoteParams,
 	Note,
 	NoteFilters,
@@ -539,6 +540,22 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 		};
 	}
 
+	private rowToNoteVersion(row: any): NoteVersion {
+		return {
+			id: row.id,
+			note_id: row.note_id,
+			version_number: row.version_number,
+			title: row.title,
+			content: row.content || "",
+			content_type: row.content_type || "html",
+			content_raw: row.content_raw,
+			comment: row.comment,
+			source: row.source,
+			created_at: row.created_at,
+			updated_at: row.updated_at,
+		};
+	}
+
 	async updateItem(
 		id: string,
 		params: Partial<FlexibleItem>
@@ -830,14 +847,153 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 	async deleteAttachment(): Promise<VoidStorageResult> {
 		throw new Error("Not implemented");
 	}
-	async getNoteVersions(): Promise<StorageResult<NoteVersion[]>> {
-		throw new Error("Not implemented");
+	async getNoteVersions(noteId: string): Promise<StorageResult<NoteVersion[]>> {
+		if (!this.db) return { success: false, error: "Database not initialized" };
+
+		try {
+			const results = await this.db.select<any[]>(
+				`SELECT * FROM note_versions
+				 WHERE note_id = ?
+				 ORDER BY version_number DESC`,
+				[noteId]
+			);
+
+			return {
+				success: true,
+				data: results.map((row) => this.rowToNoteVersion(row)),
+			};
+		} catch (error) {
+			return {
+				success: false,
+				error: `Failed to get note versions: ${error}`,
+			};
+		}
 	}
-	async createNoteVersion(): Promise<StorageResult<NoteVersion>> {
-		throw new Error("Not implemented");
+
+	async createNoteVersion(
+		params: CreateNoteVersionParams
+	): Promise<StorageResult<NoteVersion>> {
+		if (!this.db) return { success: false, error: "Database not initialized" };
+
+		try {
+			const noteResult = await this.getNote(params.note_id);
+			if (!noteResult.success) {
+				return { success: false, error: noteResult.error };
+			}
+			if (!noteResult.data) {
+				return { success: false, error: "Note not found" };
+			}
+
+			const latestRows = await this.db.select<Array<{ max_version: number | null }>>(
+				"SELECT MAX(version_number) as max_version FROM note_versions WHERE note_id = ?",
+				[params.note_id]
+			);
+			const versionNumber = (latestRows[0]?.max_version || 0) + 1;
+			const now = new Date().toISOString();
+			const id = `version_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+			await this.db.execute(
+				`INSERT INTO note_versions (
+					id, note_id, version_number, title, content, content_type, content_raw,
+					comment, source, created_at, updated_at
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				[
+					id,
+					params.note_id,
+					versionNumber,
+					params.title,
+					params.content,
+					params.content_type || "html",
+					params.content_raw ?? null,
+					params.comment ?? null,
+					params.source ?? null,
+					now,
+					now,
+				]
+			);
+
+			return {
+				success: true,
+				data: {
+					id,
+					note_id: params.note_id,
+					version_number: versionNumber,
+					title: params.title,
+					content: params.content,
+					content_type: params.content_type || "html",
+					content_raw: params.content_raw ?? null,
+					comment: params.comment ?? null,
+					source: params.source ?? null,
+					created_at: now,
+					updated_at: now,
+				},
+			};
+		} catch (error) {
+			return {
+				success: false,
+				error: `Failed to create note version: ${error}`,
+			};
+		}
 	}
-	async restoreNoteVersion(): Promise<StorageResult<Note>> {
-		throw new Error("Not implemented");
+
+	async restoreNoteVersion(
+		noteId: string,
+		versionId: string
+	): Promise<StorageResult<Note>> {
+		if (!this.db) return { success: false, error: "Database not initialized" };
+
+		try {
+			const results = await this.db.select<any[]>(
+				"SELECT * FROM note_versions WHERE id = ? AND note_id = ?",
+				[versionId, noteId]
+			);
+
+			if (results.length === 0) {
+				return { success: false, error: "Note version not found" };
+			}
+
+			const version = this.rowToNoteVersion(results[0]);
+			return await this.updateNote({
+				id: noteId,
+				title: version.title,
+				content: version.content,
+				content_type: version.content_type,
+				content_raw: version.content_raw ?? null,
+			});
+		} catch (error) {
+			return {
+				success: false,
+				error: `Failed to restore note version: ${error}`,
+			};
+		}
+	}
+
+	async pruneNoteVersions(
+		noteId: string,
+		keepCount: number
+	): Promise<VoidStorageResult> {
+		if (!this.db) return { success: false, error: "Database not initialized" };
+		if (keepCount <= 0) return { success: true };
+
+		try {
+			await this.db.execute(
+				`DELETE FROM note_versions
+				 WHERE note_id = ?
+				   AND id NOT IN (
+					 SELECT id FROM note_versions
+					 WHERE note_id = ?
+					 ORDER BY version_number DESC
+					 LIMIT ?
+				   )`,
+				[noteId, noteId, keepCount]
+			);
+			return { success: true };
+		} catch (error) {
+			return {
+				success: false,
+				error: `Failed to prune note versions: ${error}`,
+			};
+		}
 	}
 	async getSettings(): Promise<StorageResult<Setting[]>> {
 		if (!this.db) return { success: false, error: "Database not initialized" };

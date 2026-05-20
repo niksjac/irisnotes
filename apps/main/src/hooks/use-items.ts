@@ -1,5 +1,5 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
 	itemsAtom,
 	selectedItemIdAtom,
@@ -9,12 +9,14 @@ import {
 import { closeTabsByItemIdAtom } from "@/atoms/panes";
 import { treeRevealRequestAtom } from "@/atoms/tree";
 import { useNotesStorage } from "./use-notes-storage";
+import { useNoteVersioning } from "./use-note-versioning";
 import { canBeChildOf } from "@/storage/hierarchy";
 import type { FlexibleItem, CreateItemParams } from "@/types/items";
 import type { UpdateNoteParams, CreateNoteParams } from "@/types/database";
 
 export const useItems = () => {
 	const [items, setItems] = useAtom(itemsAtom);
+	const itemsRef = useRef(items);
 	const [selectedItemId, setSelectedItemId] = useAtom(selectedItemIdAtom);
 	const selectedItem = useAtomValue(selectedItemAtom);
 	const treeData = useAtomValue(treeDataAtom);
@@ -23,8 +25,14 @@ export const useItems = () => {
 	const [error, setError] = useState<string | null>(null);
 
 	const { storageAdapter, isInitialized } = useNotesStorage();
+	const { maybeSnapshotForContentChange, snapshotTitleChange } =
+		useNoteVersioning(storageAdapter);
 	const closeTabsByItemId = useSetAtom(closeTabsByItemIdAtom);
 	const requestTreeReveal = useSetAtom(treeRevealRequestAtom);
+
+	useEffect(() => {
+		itemsRef.current = items;
+	}, [items]);
 
 	// ========================================
 	// LOAD OPERATIONS
@@ -92,7 +100,8 @@ export const useItems = () => {
 					const noteParams: CreateNoteParams = {
 						title: params.title,
 						content: params.content || "",
-						content_type: "html",
+						content_type: params.content_type || "html",
+						content_raw: params.content_raw,
 						parent_id: params.parent_id,
 					};
 					result = await storageAdapter.createNote(noteParams);
@@ -161,6 +170,18 @@ export const useItems = () => {
 				// Update via appropriate adapter method based on type
 				let result: any;
 				if (item.type === "note") {
+					if (updates.title !== undefined && updates.title !== item.title) {
+						void snapshotTitleChange(item);
+					}
+					if (updates.content !== undefined) {
+						void maybeSnapshotForContentChange(
+							item,
+							updates.content,
+							updates.content_type,
+							updates.content_raw
+						);
+					}
+
 					const noteParams: UpdateNoteParams = { id };
 					if (updates.title !== undefined) noteParams.title = updates.title;
 					if (updates.content !== undefined)
@@ -192,7 +213,13 @@ export const useItems = () => {
 				return { success: false, error: errorMsg };
 			}
 		},
-		[storageAdapter, items, loadAllItems]
+		[
+			storageAdapter,
+			items,
+			loadAllItems,
+			maybeSnapshotForContentChange,
+			snapshotTitleChange,
+		]
 	);
 
 	// ========================================
@@ -294,11 +321,13 @@ export const useItems = () => {
 	// ========================================
 
 	const createNote = useCallback(
-		(params: Omit<CreateNoteParams, "content_type">) => {
+		(params: CreateNoteParams) => {
 			return createItem({
 				type: "note",
 				title: params.title,
 				content: params.content,
+				content_type: params.content_type,
+				content_raw: params.content_raw,
 				parent_id: params.parent_id,
 			});
 		},
@@ -341,6 +370,15 @@ export const useItems = () => {
 			contentType?: "html" | "markdown" | "plain" | "custom",
 			contentRaw?: string
 		) => {
+			const currentItem = itemsRef.current.find(
+				(item) => item.id === id && item.type === "note"
+			);
+			void maybeSnapshotForContentChange(
+				currentItem,
+				content,
+				contentType,
+				contentRaw
+			);
 			
 			// Optimistically update local state immediately
 			setItems((prevItems) =>
@@ -371,7 +409,7 @@ export const useItems = () => {
 
 			return await storageAdapter.updateNote(noteParams);
 		},
-		[storageAdapter, setItems]
+		[maybeSnapshotForContentChange, storageAdapter, setItems]
 	);
 
 	const moveItem = useCallback(

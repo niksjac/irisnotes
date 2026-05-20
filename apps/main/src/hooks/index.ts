@@ -47,6 +47,7 @@ export { useHotkeyLabel } from "./use-hotkey-label";
 
 // Unified items system (replaces notes/categories)
 export { useItems } from "./use-items";
+export { useNoteVersioning } from "./use-note-versioning";
 
 // Tree view management
 export { useTreeView } from "./use-tree-view";

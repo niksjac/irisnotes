@@ -107,3 +107,6 @@ export * from "./search";
 
 // Import editor stats atoms
 export * from "./editor-stats";
+
+// Import note versioning atoms
+export * from "./versioning";
