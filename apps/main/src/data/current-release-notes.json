@@ -1,5 +1,5 @@
 {
-	"version": "1.0.9",
+	"version": "1.0.10",
 	"range": "4e14fb4..HEAD",
 	"sections": [
 		{
@@ -11,13 +11,15 @@
 				"Install: Add release commit flag",
 				"Tree: Auto-focus, select, and scroll to newly created notes",
 				"Versioning: Add note version storage and snapshots",
-				"Versioning: Add note history dialog"
+				"Versioning: Add note history dialog",
+				"Editor: Add toggleable note metadata bar in editor views"
 			]
 		},
 		{
 			"title": "Fixes",
 			"items": [
-				"Editor: Constrain list selection highlights"
+				"Editor: Constrain list selection highlights",
+				"Tauri: Unify app config storage and drop window-state plugin"
 			]
 		}
 	]
