@@ -8,7 +8,6 @@
     "opener:default",
     "opener:allow-open-path",
     "core:path:default",
-    "window-state:default",
     "notification:default",
     "clipboard-manager:default",
     "clipboard-manager:allow-write-text",

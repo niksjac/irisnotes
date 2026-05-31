@@ -1,12 +1,12 @@
 use rusqlite::{Connection, Result as SqliteResult};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri::{
     image::Image,
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
-    AppHandle, Emitter, Manager, State, WindowEvent,
+    AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, State, WebviewWindow, WindowEvent,
 };
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
 
@@ -165,6 +165,93 @@ fn get_config_dir() -> PathBuf {
             .unwrap_or_else(|| PathBuf::from("."))
             .join("irisnotes")
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct SavedWindowState {
+    width: u32,
+    height: u32,
+    x: i32,
+    y: i32,
+    maximized: bool,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+struct SavedWindowStates {
+    main: Option<SavedWindowState>,
+    quick: Option<SavedWindowState>,
+}
+
+const WINDOW_STATE_KEY: &str = "quick";
+
+fn window_state_file_path() -> PathBuf {
+    get_config_dir().join(".window-state.json")
+}
+
+fn load_saved_window_state(path: &PathBuf) -> Option<SavedWindowState> {
+    let content = std::fs::read_to_string(path).ok()?;
+    let states = serde_json::from_str::<SavedWindowStates>(&content).ok()?;
+
+    match WINDOW_STATE_KEY {
+        "main" => states.main,
+        "quick" => states.quick,
+        _ => None,
+    }
+}
+
+fn apply_saved_window_state(window: &WebviewWindow, state: &SavedWindowState) {
+    if state.width > 0 && state.height > 0 {
+        let _ = window.set_size(PhysicalSize::new(state.width, state.height));
+    }
+
+    let _ = window.set_position(PhysicalPosition::new(state.x, state.y));
+
+    if state.maximized {
+        let _ = window.maximize();
+    }
+}
+
+fn save_window_state(window: &WebviewWindow, path: &PathBuf) -> Result<(), String> {
+    let size = window
+        .inner_size()
+        .map_err(|e| format!("Failed to read window size: {}", e))?;
+
+    if size.width == 0 || size.height == 0 {
+        return Ok(());
+    }
+
+    let position = window
+        .outer_position()
+        .map_err(|e| format!("Failed to read window position: {}", e))?;
+
+    let state = SavedWindowState {
+        width: size.width,
+        height: size.height,
+        x: position.x,
+        y: position.y,
+        maximized: window.is_maximized().unwrap_or(false),
+    };
+
+    let mut states = if path.exists() {
+        let existing = std::fs::read_to_string(path)
+            .map_err(|e| format!("Failed to read existing window state: {}", e))?;
+
+        serde_json::from_str::<SavedWindowStates>(&existing).unwrap_or_default()
+    } else {
+        SavedWindowStates::default()
+    };
+
+    match WINDOW_STATE_KEY {
+        "main" => states.main = Some(state),
+        "quick" => states.quick = Some(state),
+        _ => {}
+    }
+
+    let content = serde_json::to_string_pretty(&states)
+        .map_err(|e| format!("Failed to serialize window state: {}", e))?;
+
+    std::fs::write(path, content)
+        .map_err(|e| format!("Failed to write window state: {}", e))
 }
 
 // Read config command - reads config.toml and returns JSON
@@ -709,15 +796,6 @@ pub fn run() {
     let db_path = get_database_path();
     let _ = db_state.init(&db_path);
 
-    // Point window-state plugin at our custom config dir (dev/ or ~/.config/irisnotes/)
-    // instead of the default ~/.config/com.irisnotes.* that Tauri would create.
-    // The plugin only exposes `with_filename`, but it internally does
-    // `app_config_dir.join(&filename)` — PathBuf::join replaces the base for an absolute path,
-    // so we pass the full absolute path as the "filename".
-    let window_state_dir = get_config_dir();
-    let _ = std::fs::create_dir_all(&window_state_dir);
-    let window_state_path = window_state_dir.join(".window-state.json");
-
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             // Another instance tried to start - show our window instead
@@ -725,7 +803,6 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_window_state::Builder::default().with_filename(window_state_path.to_string_lossy().into_owned()).build())
         .manage(db_state)
         .invoke_handler(tauri::generate_handler![search_notes, open_note_in_main_app, hide_window, read_config])
         .setup(|app| {
@@ -760,11 +837,22 @@ pub fn run() {
 
             let _tray = tray_builder.build(app)?;
 
-            // Handle window close event - hide instead of closing (tray keeps app alive)
             if let Some(window) = app.get_webview_window("main") {
+                let state_path = window_state_file_path();
+
+                if let Some(state) = load_saved_window_state(&state_path) {
+                    apply_saved_window_state(&window, &state);
+                }
+
                 let window_clone = window.clone();
+                let state_path_for_events = state_path.clone();
+
+                // Handle window close event - hide instead of closing (tray keeps app alive)
                 window.on_window_event(move |event| {
                     if let WindowEvent::CloseRequested { api, .. } = event {
+                        if let Err(err) = save_window_state(&window_clone, &state_path_for_events) {
+                            eprintln!("Failed to save quick window state on close: {}", err);
+                        }
                         api.prevent_close();
                         let _ = window_clone.hide();
                     }
@@ -782,6 +870,16 @@ pub fn run() {
 
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            if let tauri::RunEvent::Exit = event {
+                if let Some(window) = app_handle.get_webview_window("main") {
+                    let state_path = window_state_file_path();
+                    if let Err(err) = save_window_state(&window, &state_path) {
+                        eprintln!("Failed to save quick window state on exit: {}", err);
+                    }
+                }
+            }
+        });
 }

@@ -2,11 +2,12 @@
 pub mod cli;
 
 use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
+use serde::{Deserialize, Serialize};
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 use std::path::PathBuf;
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewWindow};
 
 // Embed the database schema at compile time
 const DATABASE_SCHEMA: &str = include_str!("../../../../schema/base.sql");
@@ -110,6 +111,93 @@ fn get_data_dir(_app_handle: &AppHandle) -> Result<PathBuf, String> {
 
         Ok(data_dir)
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct SavedWindowState {
+    width: u32,
+    height: u32,
+    x: i32,
+    y: i32,
+    maximized: bool,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+struct SavedWindowStates {
+    main: Option<SavedWindowState>,
+    quick: Option<SavedWindowState>,
+}
+
+const WINDOW_STATE_KEY: &str = "main";
+
+fn window_state_file_path(app_handle: &AppHandle) -> Result<PathBuf, String> {
+    Ok(get_config_dir(app_handle)?.join(".window-state.json"))
+}
+
+fn load_saved_window_state(path: &PathBuf) -> Option<SavedWindowState> {
+    let content = std::fs::read_to_string(path).ok()?;
+    let states = serde_json::from_str::<SavedWindowStates>(&content).ok()?;
+
+    match WINDOW_STATE_KEY {
+        "main" => states.main,
+        "quick" => states.quick,
+        _ => None,
+    }
+}
+
+fn apply_saved_window_state(window: &WebviewWindow, state: &SavedWindowState) {
+    if state.width > 0 && state.height > 0 {
+        let _ = window.set_size(PhysicalSize::new(state.width, state.height));
+    }
+
+    let _ = window.set_position(PhysicalPosition::new(state.x, state.y));
+
+    if state.maximized {
+        let _ = window.maximize();
+    }
+}
+
+fn save_window_state(window: &WebviewWindow, path: &PathBuf) -> Result<(), String> {
+    let size = window
+        .inner_size()
+        .map_err(|e| format!("Failed to read window size: {}", e))?;
+
+    if size.width == 0 || size.height == 0 {
+        return Ok(());
+    }
+
+    let position = window
+        .outer_position()
+        .map_err(|e| format!("Failed to read window position: {}", e))?;
+
+    let state = SavedWindowState {
+        width: size.width,
+        height: size.height,
+        x: position.x,
+        y: position.y,
+        maximized: window.is_maximized().unwrap_or(false),
+    };
+
+    let mut states = if path.exists() {
+        let existing = std::fs::read_to_string(path)
+            .map_err(|e| format!("Failed to read existing window state: {}", e))?;
+
+        serde_json::from_str::<SavedWindowStates>(&existing).unwrap_or_default()
+    } else {
+        SavedWindowStates::default()
+    };
+
+    match WINDOW_STATE_KEY {
+        "main" => states.main = Some(state),
+        "quick" => states.quick = Some(state),
+        _ => {}
+    }
+
+    let content = serde_json::to_string_pretty(&states)
+        .map_err(|e| format!("Failed to serialize window state: {}", e))?;
+
+    std::fs::write(path, content)
+        .map_err(|e| format!("Failed to write window state: {}", e))
 }
 
 /// Initialize the database if it doesn't exist
@@ -1006,29 +1094,6 @@ pub fn run() {
         }
     }
 
-    // Point window-state plugin at our custom config dir (dev/ or ~/.config/irisnotes/)
-    // instead of the default ~/.config/com.irisnotes.* that Tauri would create.
-    //
-    // The plugin only exposes `with_filename`, not a directory override, but internally it
-    // does `app_config_dir.join(&filename)` — and PathBuf::join replaces the base when the
-    // argument is an absolute path. So we pass the full absolute path as the "filename".
-    let window_state_dir = if is_development_mode() {
-        let exe_path = std::env::current_exe().unwrap_or_default();
-        let mut project_root = exe_path.parent().map(|p| p.to_path_buf()).unwrap_or_default();
-        loop {
-            if project_root.join("pnpm-workspace.yaml").exists() { break; }
-            if !project_root.pop() {
-                project_root = std::env::current_dir().unwrap_or_default();
-                break;
-            }
-        }
-        project_root.join("dev")
-    } else {
-        dirs::config_dir().unwrap_or_default().join("irisnotes")
-    };
-    let _ = std::fs::create_dir_all(&window_state_dir);
-    let window_state_path = window_state_dir.join(".window-state.json");
-
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             // Another instance tried to start - check for --open-note argument
@@ -1053,7 +1118,6 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_notification::init())
-        .plugin(tauri_plugin_window_state::Builder::default().with_filename(window_state_path.to_string_lossy().into_owned()).build())
         .plugin(tauri_plugin_global_shortcut::Builder::default().build())
         .register_uri_scheme_protocol("asset", |_app, request| {
             // Serve images from the assets directory
@@ -1108,6 +1172,24 @@ pub fn run() {
                 eprintln!("Warning: Failed to initialize database: {}", e);
             }
 
+            if let Some(window) = app.get_webview_window("main") {
+                if let Ok(state_path) = window_state_file_path(app.handle()) {
+                    if let Some(state) = load_saved_window_state(&state_path) {
+                        apply_saved_window_state(&window, &state);
+                    }
+
+                    let window_clone = window.clone();
+                    let state_path_for_events = state_path.clone();
+                    window.on_window_event(move |event| {
+                        if let tauri::WindowEvent::CloseRequested { .. } = event {
+                            if let Err(err) = save_window_state(&window_clone, &state_path_for_events) {
+                                eprintln!("Failed to save window state on close: {}", err);
+                            }
+                        }
+                    });
+                }
+            }
+
             // Check for --open-note argument on startup (from quick app launching us)
             let args: Vec<String> = std::env::args().collect();
 
@@ -1147,6 +1229,17 @@ pub fn run() {
             save_custom_tray_svg,
             save_custom_app_logo
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            if let tauri::RunEvent::Exit = event {
+                if let Some(window) = app_handle.get_webview_window("main") {
+                    if let Ok(state_path) = window_state_file_path(app_handle) {
+                        if let Err(err) = save_window_state(&window, &state_path) {
+                            eprintln!("Failed to save window state on exit: {}", err);
+                        }
+                    }
+                }
+            }
+        });
 }
