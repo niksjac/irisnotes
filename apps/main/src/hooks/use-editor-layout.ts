@@ -1,17 +1,19 @@
 import { useAtom } from "jotai";
 import { useCallback, useRef } from "react";
-import { toolbarVisibleAtom, titleBarVisibleAtom } from "@/atoms";
+import { metadataBarVisibleAtom, toolbarVisibleAtom, titleBarVisibleAtom } from "@/atoms";
 import { useConfig } from "@/hooks/use-config";
 
 // Module-level state to track pending saves
 let pendingSaveTimeout: ReturnType<typeof setTimeout> | null = null;
 let pendingToolbar: boolean | null = null;
 let pendingTitleBar: boolean | null = null;
+let pendingMetadataBar: boolean | null = null;
 
 export const useEditorLayout = () => {
 	const { config, updateConfig } = useConfig();
 	const [toolbarVisible, setToolbarVisible] = useAtom(toolbarVisibleAtom);
 	const [titleBarVisible, setTitleBarVisible] = useAtom(titleBarVisibleAtom);
+	const [metadataBarVisible, setMetadataBarVisible] = useAtom(metadataBarVisibleAtom);
 	
 	// Keep refs to current config for use in timeout
 	const configRef = useRef(config);
@@ -36,6 +38,10 @@ export const useEditorLayout = () => {
 			if (pendingTitleBar !== null) {
 				changes.titleBarVisible = pendingTitleBar;
 				pendingTitleBar = null;
+			}
+			if (pendingMetadataBar !== null) {
+				changes.metadataBarVisible = pendingMetadataBar;
+				pendingMetadataBar = null;
 			}
 			
 			if (Object.keys(changes).length > 0) {
@@ -64,10 +70,19 @@ export const useEditorLayout = () => {
 		scheduleSave();
 	}, [titleBarVisible, setTitleBarVisible, scheduleSave]);
 
+	const toggleMetadataBar = useCallback(() => {
+		const newVisibility = !metadataBarVisible;
+		setMetadataBarVisible(newVisibility);
+		pendingMetadataBar = newVisibility;
+		scheduleSave();
+	}, [metadataBarVisible, setMetadataBarVisible, scheduleSave]);
+
 	return {
 		toolbarVisible,
 		toggleToolbar,
 		titleBarVisible,
 		toggleTitleBar,
+		metadataBarVisible,
+		toggleMetadataBar,
 	};
 };

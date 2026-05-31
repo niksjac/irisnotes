@@ -97,7 +97,7 @@ export function StatusBar() {
 						<button
 							type="button"
 							onClick={handleCopyId}
-							className="hover:text-gray-700 dark:hover:text-gray-200 select-text cursor-pointer truncate max-w-[120px] flex-shrink min-w-0 hidden sm:inline"
+							className="hover:text-gray-700 dark:hover:text-gray-200 select-text cursor-pointer truncate max-w-[260px] md:max-w-[420px] lg:max-w-[560px] flex-shrink min-w-0 hidden sm:inline-block"
 							title="Click to copy note ID"
 						>
 							ID: {activeNoteId}

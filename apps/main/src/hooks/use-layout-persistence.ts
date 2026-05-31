@@ -2,6 +2,7 @@ import { useAtomValue } from "jotai";
 import { useEffect, useRef } from "react";
 import {
 	sidebarWidth, activityBarVisible, sidebarCollapsed, titleBarVisibleAtom, toolbarVisibleAtom,
+	metadataBarVisibleAtom,
 	paneStateAtom, pane0TabsAtom, pane1TabsAtom, pane0ActiveTabAtom, pane1ActiveTabAtom, tabBarVisibleAtom,
 	PANE_STORAGE_KEY,
 } from "@/atoms";
@@ -11,6 +12,7 @@ interface LayoutState {
 	activityBarVisible: boolean;
 	sidebarCollapsed: boolean;
 	titleBarVisible: boolean;
+	metadataBarVisible: boolean;
 	toolbarVisible: boolean;
 }
 
@@ -20,6 +22,7 @@ const DEFAULT_LAYOUT: LayoutState = {
 	activityBarVisible: true,
 	sidebarCollapsed: false,
 	titleBarVisible: true,
+	metadataBarVisible: true,
 	toolbarVisible: false,
 };
 
@@ -61,6 +64,7 @@ export const useLayoutPersistence = () => {
 	const activityBarVisibleValue = useAtomValue(activityBarVisible);
 	const sidebarCollapsedValue = useAtomValue(sidebarCollapsed);
 	const titleBarVisibleValue = useAtomValue(titleBarVisibleAtom);
+	const metadataBarVisibleValue = useAtomValue(metadataBarVisibleAtom);
 	const toolbarVisibleValue = useAtomValue(toolbarVisibleAtom);
 
 	const debounceTimerRef = useRef<number | null>(null);
@@ -104,6 +108,11 @@ export const useLayoutPersistence = () => {
 	useEffect(() => {
 		saveLayoutState({ titleBarVisible: titleBarVisibleValue });
 	}, [titleBarVisibleValue]);
+
+	// Immediate save for metadata bar visibility
+	useEffect(() => {
+		saveLayoutState({ metadataBarVisible: metadataBarVisibleValue });
+	}, [metadataBarVisibleValue]);
 
 	// Immediate save for toolbar visibility
 	useEffect(() => {

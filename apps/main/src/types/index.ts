@@ -269,6 +269,7 @@ export interface AppConfig {
 		lineWrapping: boolean;
 		toolbarVisible: boolean;
 		titleBarVisible?: boolean;
+		metadataBarVisible?: boolean;
 	};
 	debug: {
 		enableExampleNote: boolean;

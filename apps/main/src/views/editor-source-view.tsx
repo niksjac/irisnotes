@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAtomValue } from "jotai";
 import { itemsAtom } from "@/atoms/items";
 import { NoteVersionHistoryDialog } from "@/components/dialogs";
-import { EditorContainer, NoteTitleBar } from "@/components/editor";
+import { EditorContainer, NoteMetadataBar, NoteTitleBar } from "@/components/editor";
 import { useItems } from "@/hooks";
 import { useEditorLayout } from "@/hooks/use-editor-layout";
 
@@ -13,7 +13,7 @@ interface EditorSourceViewProps {
 export function EditorSourceView({ viewData }: EditorSourceViewProps) {
 	const items = useAtomValue(itemsAtom);
 	const { updateItemContent, updateItemTitle } = useItems();
-	const { titleBarVisible } = useEditorLayout();
+	const { titleBarVisible, metadataBarVisible } = useEditorLayout();
 	const [historyOpen, setHistoryOpen] = useState(false);
 
 	// Get the note from viewData or fall back to selectedNote
@@ -50,6 +50,12 @@ export function EditorSourceView({ viewData }: EditorSourceViewProps) {
 					noteId={note.id}
 					title={note.title}
 					onTitleChange={handleNoteTitleChange}
+					onOpenHistory={() => setHistoryOpen(true)}
+				/>
+			)}
+			{metadataBarVisible && (
+				<NoteMetadataBar
+					note={note}
 					onOpenHistory={() => setHistoryOpen(true)}
 				/>
 			)}

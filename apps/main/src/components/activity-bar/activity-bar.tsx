@@ -67,7 +67,14 @@ export function ActivityBar() {
 
 
 
-	const { toolbarVisible, toggleToolbar, titleBarVisible, toggleTitleBar } = useEditorLayout();
+	const {
+		toolbarVisible,
+		toggleToolbar,
+		titleBarVisible,
+		toggleTitleBar,
+		metadataBarVisible,
+		toggleMetadataBar,
+	} = useEditorLayout();
 	const { isWrapping, toggleLineWrapping } = useLineWrapping();
 	const [paneState, setPaneState] = useAtom(paneStateAtom);
 	const toggleZenMode = useSetAtom(toggleZenModeAtom);
@@ -100,12 +107,13 @@ export function ActivityBar() {
 		{ key: "4", action: togglePaneMode, label: "Toggle Pane" },
 		{ key: "5", action: toggleToolbar, label: "Toolbar" },
 		{ key: "6", action: toggleTitleBar, label: "Title Bar" },
+		{ key: "8", action: toggleMetadataBar, label: "Info Bar" },
 		{ key: "0", action: toggleTabBar, label: "Tab Bar" },
 		{ key: "s", action: toggleStatusBar, label: "Status Bar" },
 		{ key: "7", action: toggleLineWrapping, label: "Wrap" },
 		{ key: "9", action: toggleZenMode, label: "Zen Mode" },
 		{ key: "e", action: toggleActivityBarExpanded, label: "Expand/Collapse" },
-	], [toggleSidebar, openSettingsTab, togglePaneMode, toggleToolbar, toggleTitleBar, toggleTabBar, toggleStatusBar, toggleLineWrapping, toggleZenMode, toggleActivityBarExpanded]);
+	], [toggleSidebar, openSettingsTab, togglePaneMode, toggleToolbar, toggleTitleBar, toggleMetadataBar, toggleTabBar, toggleStatusBar, toggleLineWrapping, toggleZenMode, toggleActivityBarExpanded]);
 
 	// Use the KeyTip system for Alt+key shortcuts
 	const { altKeyHeld } = useKeyTipActions(keyTipActions);
@@ -279,6 +287,19 @@ export function ActivityBar() {
 					label="Title Bar"
 					expanded={activityBarExpanded}
 					keyTip="6"
+					showKeyTip={altKeyHeld}
+					iconSize={16}
+					iconClassName="md:w-4 md:h-4"
+				/>
+
+				<ActivityBarButton
+					icon={Icons.Info}
+					isActive={metadataBarVisible}
+					onClick={toggleMetadataBar}
+					title={`${metadataBarVisible ? "Hide" : "Show"} note info bar`}
+					label="Info Bar"
+					expanded={activityBarExpanded}
+					keyTip="8"
 					showKeyTip={altKeyHeld}
 					iconSize={16}
 					iconClassName="md:w-4 md:h-4"

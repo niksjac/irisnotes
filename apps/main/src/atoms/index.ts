@@ -9,6 +9,7 @@ interface LayoutState {
 	activityBarVisible: boolean;
 	sidebarCollapsed: boolean;
 	titleBarVisible: boolean;
+	metadataBarVisible: boolean;
 	toolbarVisible: boolean;
 }
 
@@ -17,6 +18,7 @@ const DEFAULT_LAYOUT: LayoutState = {
 	activityBarVisible: true,
 	sidebarCollapsed: false,
 	titleBarVisible: true,
+	metadataBarVisible: true,
 	toolbarVisible: false,
 };
 
@@ -57,6 +59,7 @@ export const focusAreaAtom = atom<FocusArea>(null);
 
 export const toolbarVisibleAtom = atom<boolean>(initialLayout.toolbarVisible);
 export const titleBarVisibleAtom = atom<boolean>(initialLayout.titleBarVisible);
+export const metadataBarVisibleAtom = atom<boolean>(initialLayout.metadataBarVisible);
 
 // Zen mode - when true, hides all UI elements for distraction-free writing
 export const zenModeAtom = atom<boolean>(false);
@@ -65,6 +68,7 @@ export const zenModePreviousStateAtom = atom<{
 	sidebarCollapsed: boolean;
 	activityBarVisible: boolean;
 	toolbarVisible: boolean;
+	metadataBarVisible: boolean;
 	tabBarVisible: boolean;
 	statusBarVisible: boolean;
 } | null>(null);

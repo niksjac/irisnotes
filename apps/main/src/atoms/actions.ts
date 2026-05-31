@@ -2,6 +2,7 @@ import { atom } from "jotai";
 import {
 	activityBarVisible,
 	sidebarCollapsed,
+	metadataBarVisibleAtom,
 	toolbarVisibleAtom,
 	zenModeAtom,
 	zenModePreviousStateAtom,
@@ -36,6 +37,7 @@ export const toggleZenModeAtom = atom(null, (get, set) => {
 			sidebarCollapsed: get(sidebarCollapsed),
 			activityBarVisible: get(activityBarVisible),
 			toolbarVisible: get(toolbarVisibleAtom),
+			metadataBarVisible: get(metadataBarVisibleAtom),
 			tabBarVisible: get(tabBarVisibleAtom),
 			statusBarVisible: get(statusBarVisibleAtom),
 		};
@@ -45,6 +47,7 @@ export const toggleZenModeAtom = atom(null, (get, set) => {
 		set(sidebarCollapsed, true);
 		set(activityBarVisible, false);
 		set(toolbarVisibleAtom, false);
+		set(metadataBarVisibleAtom, false);
 		set(tabBarVisibleAtom, false);
 		set(statusBarVisibleAtom, false);
 		set(zenModeAtom, true);
@@ -53,6 +56,7 @@ export const toggleZenModeAtom = atom(null, (get, set) => {
 		set(sidebarCollapsed, false);
 		set(activityBarVisible, true);
 		set(toolbarVisibleAtom, true);
+		set(metadataBarVisibleAtom, true);
 		set(tabBarVisibleAtom, true);
 		set(statusBarVisibleAtom, true);
 		set(zenModePreviousStateAtom, null);

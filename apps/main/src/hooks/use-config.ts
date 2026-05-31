@@ -23,6 +23,7 @@ export const DEFAULT_CONFIG: AppConfig = {
 		lineWrapping: false,
 		toolbarVisible: true,
 		titleBarVisible: true,
+		metadataBarVisible: true,
 	},
 	debug: {
 		enableExampleNote: false,
