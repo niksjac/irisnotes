@@ -1,13 +1,10 @@
 {
-	"version": "1.0.10",
-	"range": "4e14fb4..HEAD",
+	"version": "1.0.11",
+	"range": "HEAD~12..HEAD",
 	"sections": [
 		{
 			"title": "Features",
 			"items": [
-				"Hotkeys: Open branding with F1",
-				"Branding: Show generated release notes",
-				"Install: Detect unreleased commits and suggest version bump",
 				"Install: Add release commit flag",
 				"Tree: Auto-focus, select, and scroll to newly created notes",
 				"Versioning: Add note version storage and snapshots",
@@ -18,7 +15,6 @@
 		{
 			"title": "Fixes",
 			"items": [
-				"Editor: Constrain list selection highlights",
 				"Tauri: Unify app config storage and drop window-state plugin"
 			]
 		}

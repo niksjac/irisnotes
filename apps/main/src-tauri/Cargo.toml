@@ -1,6 +1,6 @@
 [package]
 name = "irisnotes"
-version = "1.0.10"
+version = "1.0.11"
 description = "A modern note-taking application inspired by Trilium Notes"
 authors = ["you"]
 edition = "2021"
