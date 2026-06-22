@@ -8,6 +8,7 @@ import {
 } from "../atoms/panes";
 import type { Tab, ViewType } from "../types";
 import type { FlexibleItem } from "../types/items";
+import { recordNoteView } from "../storage/view-tracking";
 
 /** Minimal item info needed to open a tab */
 interface OpenItemParams {
@@ -96,6 +97,11 @@ export const useTabManagement = () => {
 					return;
 				}
 			}
+		}
+
+		// A fresh open (all dedupe paths above return early), so record a view.
+		if (item.type === "note") {
+			void recordNoteView(item.id);
 		}
 
 		// Determine target pane (explicit or active)

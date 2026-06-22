@@ -16,7 +16,7 @@ import {
 	statusBarVisibleAtom,
 	toggleStatusBarAtom,
 } from "@/atoms";
-import { tabBarVisibleAtom, toggleTabBarAtom, openBrandingTabAtom } from "@/atoms/panes";
+import { tabBarVisibleAtom, toggleTabBarAtom, openBrandingTabAtom, openTopNotesTabAtom } from "@/atoms/panes";
 import { brandingSettingsAtom, LOGO_OPTIONS } from "@/atoms/settings";
 import { ActivityBarButton } from "./activity-bar-button";
 import { useEffect, useRef, useCallback, useMemo } from "react";
@@ -37,6 +37,7 @@ export function ActivityBar() {
 	// Tab-based view openers
 	const openSettingsTab = useSetAtom(openSettingsTabAtom);
 	const openBrandingTab = useSetAtom(openBrandingTabAtom);
+	const openTopNotesTab = useSetAtom(openTopNotesTabAtom);
 
 	// Branding settings for logo
 	const branding = useAtomValue(brandingSettingsAtom);
@@ -53,6 +54,15 @@ export function ActivityBar() {
 		return (
 			activeInPane0?.viewType === "config-view" ||
 			activeInPane1?.viewType === "config-view"
+		);
+	}, [pane0Tabs, pane1Tabs, pane0ActiveTab, pane1ActiveTab]);
+
+	const isTopNotesActive = useMemo(() => {
+		const activeInPane0 = pane0Tabs.find((t) => t.id === pane0ActiveTab);
+		const activeInPane1 = pane1Tabs.find((t) => t.id === pane1ActiveTab);
+		return (
+			activeInPane0?.viewType === "top-notes-view" ||
+			activeInPane1?.viewType === "top-notes-view"
 		);
 	}, [pane0Tabs, pane1Tabs, pane0ActiveTab, pane1ActiveTab]);
 
@@ -235,6 +245,15 @@ export function ActivityBar() {
 					expanded={activityBarExpanded}
 					keyTip="1"
 					showKeyTip={altKeyHeld}
+				/>
+
+				<ActivityBarButton
+					icon={Icons.TrendingUp}
+					isActive={isTopNotesActive}
+					onClick={openTopNotesTab}
+					title="Top Notes — most viewed, recent, oldest"
+					label="Top Notes"
+					expanded={activityBarExpanded}
 				/>
 
 				<ActivityBarButton

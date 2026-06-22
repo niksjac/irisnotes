@@ -144,13 +144,39 @@ export class SqliteSchemaManager {
 				"PRAGMA table_info(items)"
 			);
 
-			// Add any missing columns that might be needed for future migrations
-			// Currently all required columns are in the base schema
-			// This method is kept for potential future schema updates
 			if (itemsTableInfo.length === 0) {
 				console.warn(
 					"⚠️ Items table not found - schema may need to be recreated"
 				);
+				return;
+			}
+
+			// Add any columns introduced after a database was first created.
+			// ALTER TABLE ADD COLUMN is a no-op-equivalent here because we guard
+			// on the current column set, so existing data is preserved.
+			const existingColumns = new Set(itemsTableInfo.map((c) => c.name));
+			const columnMigrations: Array<{ name: string; ddl: string }> = [
+				{
+					name: "view_count",
+					ddl: "ALTER TABLE items ADD COLUMN view_count INTEGER NOT NULL DEFAULT 0",
+				},
+				{
+					name: "last_viewed_at",
+					ddl: "ALTER TABLE items ADD COLUMN last_viewed_at TEXT NULL",
+				},
+			];
+
+			for (const migration of columnMigrations) {
+				if (existingColumns.has(migration.name)) continue;
+				try {
+					await this.db.execute(migration.ddl);
+				} catch (error: any) {
+					if (!this.isExpectedError(error)) {
+						console.warn(
+							`Failed to add column ${migration.name}: ${error.message || error}`
+						);
+					}
+				}
 			}
 		} catch (error) {
 			console.error("❌ Failed to add missing columns:", error);

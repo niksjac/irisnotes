@@ -40,6 +40,10 @@ CREATE TABLE IF NOT EXISTS items (
     word_count INTEGER DEFAULT 0,
     character_count INTEGER DEFAULT 0,
 
+    -- View tracking (powers the "Top Notes" view: most/least/recently viewed)
+    view_count INTEGER NOT NULL DEFAULT 0,
+    last_viewed_at TEXT NULL, -- ISO/SQLite datetime of the most recent open
+
     -- Hierarchy constraints
     -- Books must be root, sections under books, notes anywhere except inside notes
     CHECK (
@@ -127,6 +131,10 @@ CREATE INDEX IF NOT EXISTS idx_items_created_at ON items(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_items_updated_at ON items(updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_items_title ON items(title);
 CREATE INDEX IF NOT EXISTS idx_items_deleted_at ON items(deleted_at);
+
+-- View-tracking indexes (Top Notes view)
+CREATE INDEX IF NOT EXISTS idx_items_view_count ON items(view_count DESC);
+CREATE INDEX IF NOT EXISTS idx_items_last_viewed_at ON items(last_viewed_at DESC);
 
 -- Version history indexes
 CREATE INDEX IF NOT EXISTS idx_note_versions_note_id ON note_versions(note_id);

@@ -303,7 +303,8 @@ export type ViewType =
 	| "editor-rich-view"
 	| "editor-source-view"
 	| "section-view"
-	| "book-view";
+	| "book-view"
+	| "top-notes-view";
 
 // Tree view types
 export interface TreeData {

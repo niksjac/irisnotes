@@ -11,6 +11,7 @@ import {
 	EditorRichView,
 	EditorSourceView,
 	SectionView,
+	TopNotesView,
 } from "@/views";
 
 interface ViewProps {
@@ -40,6 +41,8 @@ export const View: FC<ViewProps> = ({ viewType, viewData }) => {
 			return <EditorSourceView viewData={viewData} />;
 		case "section-view":
 			return <SectionView viewData={viewData} />;
+		case "top-notes-view":
+			return <TopNotesView />;
 		default:
 			return null;
 	}

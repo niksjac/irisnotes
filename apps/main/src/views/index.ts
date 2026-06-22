@@ -9,3 +9,4 @@ export { EditorSourceView } from "./editor-source-view";
 export { HotkeysView } from "./hotkeys-view";
 export { IconEditorView } from "./icon-editor-view";
 export { SectionView } from "./section-view";
+export { TopNotesView } from "./top-notes-view";
