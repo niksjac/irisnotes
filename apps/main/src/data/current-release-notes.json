@@ -1,21 +1,17 @@
 {
-	"version": "1.0.11",
-	"range": "HEAD~12..HEAD",
+	"version": "1.0.12",
+	"range": "caeeaa2..HEAD",
 	"sections": [
 		{
 			"title": "Features",
 			"items": [
-				"Install: Add release commit flag",
-				"Tree: Auto-focus, select, and scroll to newly created notes",
-				"Versioning: Add note version storage and snapshots",
-				"Versioning: Add note history dialog",
-				"Editor: Add toggleable note metadata bar in editor views"
+				"Notes: Add Top Notes view with view tracking"
 			]
 		},
 		{
 			"title": "Fixes",
 			"items": [
-				"Tauri: Unify app config storage and drop window-state plugin"
+				"Editor: Derive tight-selection extension from line height"
 			]
 		}
 	]
