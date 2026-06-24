@@ -1,12 +1,11 @@
 {
-	"version": "1.0.15",
-	"range": "7b4af71..HEAD",
+	"version": "1.0.16",
+	"range": "010bf10..HEAD",
 	"sections": [
 		{
 			"title": "Features",
 			"items": [
-				"Views: Ctrl+F filter focus and keyboard section nav in settings",
-				"Notes: Add per-note jump hotkey to open a note from anywhere"
+				"Palettes: Add command palette (Ctrl+Shift+P) and tab switcher (Ctrl+R)"
 			]
 		}
 	]
