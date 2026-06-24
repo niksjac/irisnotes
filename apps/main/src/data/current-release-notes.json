@@ -1,11 +1,11 @@
 {
-	"version": "1.0.13",
-	"range": "11e8fcf..HEAD",
+	"version": "1.0.14",
+	"range": "6927c5d..HEAD",
 	"sections": [
 		{
 			"title": "Fixes",
 			"items": [
-				"Editor: Open ctrl-clicked links once instead of in two browser tabs"
+				"Editor: Stop ctrl-clicked links from opening in two browser tabs"
 			]
 		}
 	]
