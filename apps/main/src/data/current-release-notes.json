@@ -1,17 +1,11 @@
 {
-	"version": "1.0.12",
-	"range": "caeeaa2..HEAD",
+	"version": "1.0.13",
+	"range": "11e8fcf..HEAD",
 	"sections": [
-		{
-			"title": "Features",
-			"items": [
-				"Notes: Add Top Notes view with view tracking"
-			]
-		},
 		{
 			"title": "Fixes",
 			"items": [
-				"Editor: Derive tight-selection extension from line height"
+				"Editor: Open ctrl-clicked links once instead of in two browser tabs"
 			]
 		}
 	]

@@ -2029,7 +2029,7 @@ dependencies = [
 
 [[package]]
 name = "irisnotes-quick"
-version = "1.0.12"
+version = "1.0.13"
 dependencies = [
  "dirs",
  "image",
