@@ -342,20 +342,26 @@ export function autolinkPlugin(schema: Schema): Plugin[] {
 				return false;
 			},
 
-			handleClick(view, pos, event) {
-				// Ctrl+Click to open link
-				if (!event.ctrlKey && !event.metaKey) return false;
+			// Open links on Ctrl/Cmd+click. We use a raw DOM `click` handler
+			// rather than ProseMirror's `handleClick` so we can preventDefault()
+			// the click itself — otherwise the webview ALSO follows the real
+			// <a href> natively, opening the URL in a second browser tab. The DOM
+			// `click` event is left-button only, so right-clicks never reach here.
+			handleDOMEvents: {
+				click(_view, event) {
+					if (!event.ctrlKey && !event.metaKey) return false;
 
-				const $pos = view.state.doc.resolve(pos);
-				const marks = $pos.marks();
-				const linkMarkInstance = marks.find((m) => m.type === linkMark);
+					const target = event.target as HTMLElement | null;
+					const anchor = target?.closest("a[href]") as
+						| HTMLAnchorElement
+						| null;
+					const href = anchor?.getAttribute("href");
+					if (!href) return false;
 
-				if (linkMarkInstance?.attrs.href) {
-					openUrl(linkMarkInstance.attrs.href as string).catch(() => {});
+					event.preventDefault();
+					openUrl(href).catch(() => {});
 					return true;
-				}
-
-				return false;
+				},
 			},
 		},
 	});
