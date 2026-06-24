@@ -321,6 +321,16 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHotkeyOptions(hotkeyMapping.fullTextSearch.global)
 	);
 	useHotkeys(
+		hotkeyMapping.commandPalette.key,
+		createHandler(handlers.onCommandPalette),
+		createHotkeyOptions(hotkeyMapping.commandPalette.global)
+	);
+	useHotkeys(
+		hotkeyMapping.tabPalette.key,
+		createHandler(handlers.onTabPalette),
+		createHotkeyOptions(hotkeyMapping.tabPalette.global)
+	);
+	useHotkeys(
 		hotkeyMapping.openThemeSwitcher.key,
 		createHandler(handlers.onOpenThemeSwitcher),
 		createHotkeyOptions(hotkeyMapping.openThemeSwitcher.global)

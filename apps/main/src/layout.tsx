@@ -15,6 +15,8 @@ import {
 } from "@/components";
 import { NoteHotkeyRegistrar } from "@/components/editor";
 import { QuickHotkeysModal } from "@/components/dialogs/quick-hotkeys-modal";
+import { ActionPalette } from "@/components/dialogs/action-palette";
+import { TabPalette } from "@/components/dialogs/tab-palette";
 import { ThemeSwitcherDialog } from "@/components/dialogs/theme-switcher-dialog";
 import { SymbolPickerDialog } from "@/components/dialogs/symbol-picker-dialog";
 import { NerdFontPickerDialog } from "@/components/dialogs/nerd-font-picker-dialog";
@@ -187,6 +189,10 @@ export const Layout: React.FC = () => {
 
 			{/* Nerd Font Icon Picker Dialog */}
 			<NerdFontPickerDialog />
+
+			{/* Command palette (Ctrl+Shift+P) and open-tabs switcher (Ctrl+R) */}
+			<ActionPalette />
+			<TabPalette />
 
 			{/* Registers per-note "jump" hotkeys app-wide (renders nothing) */}
 			<NoteHotkeyRegistrar />

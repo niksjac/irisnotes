@@ -56,6 +56,8 @@ export function mapHotkeyHandlers(
 		openSymbolPicker: () => void;
 		openNerdFontPicker: () => void;
 		openConfigFolder: () => void;
+		openCommandPalette: () => void;
+		openTabPalette: () => void;
 	}
 ): AppHotkeysProps {
 	return {
@@ -293,6 +295,10 @@ export function mapHotkeyHandlers(
 		// Search hotkeys
 		onQuickSearch: handlers.openQuickSearch,
 		onFullTextSearch: handlers.openSearchSidebar,
+
+		// Command / tab palettes
+		onCommandPalette: handlers.openCommandPalette,
+		onTabPalette: handlers.openTabPalette,
 
 		// Theme switcher
 		onOpenThemeSwitcher: handlers.openThemeSwitcher,

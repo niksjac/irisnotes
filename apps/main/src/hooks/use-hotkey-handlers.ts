@@ -39,6 +39,8 @@ import {
 	openThemeSwitcherAtom,
 	openSymbolPickerAtom,
 	openNerdFontPickerAtom,
+	openActionPaletteAtom,
+	openTabPaletteAtom,
 } from "@/atoms";
 import { useEditorViewToggle } from "./use-editor-view-toggle";
 import { useLineWrapping } from "./use-line-wrapping";
@@ -175,6 +177,10 @@ export function useHotkeyHandlers() {
 		// Search actions
 		openQuickSearch: useSetAtom(openQuickSearchAtom),
 		openSearchSidebar: useOpenSearchSidebar(),
+
+		// Command / tab palettes
+		openCommandPalette: useSetAtom(openActionPaletteAtom),
+		openTabPalette: useSetAtom(openTabPaletteAtom),
 	};
 }
 

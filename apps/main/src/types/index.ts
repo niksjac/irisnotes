@@ -142,6 +142,10 @@ export interface HotkeyMapping {
 
 	// Zen mode
 	toggleZenMode: HotkeyConfig;
+
+	// Command / tab palettes
+	commandPalette: HotkeyConfig;
+	tabPalette: HotkeyConfig;
 }
 
 export interface AppHotkeysProps {
@@ -235,6 +239,10 @@ export interface AppHotkeysProps {
 	// Search hotkeys
 	onQuickSearch?: () => void;
 	onFullTextSearch?: () => void;
+
+	// Command / tab palettes
+	onCommandPalette?: () => void;
+	onTabPalette?: () => void;
 
 	// Theme switcher
 	onOpenThemeSwitcher?: () => void;

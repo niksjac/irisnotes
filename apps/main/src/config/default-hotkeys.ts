@@ -334,6 +334,18 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		category: "Search",
 		global: true,
 	},
+	commandPalette: {
+		key: "ctrl+shift+p",
+		description: "Command Palette (actions & settings)",
+		category: "Search",
+		global: true,
+	},
+	tabPalette: {
+		key: "ctrl+r",
+		description: "Switch Open Tab",
+		category: "Search",
+		global: true,
+	},
 	openThemeSwitcher: {
 		key: "ctrl+k",
 		description: "Open Theme Switcher",

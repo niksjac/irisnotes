@@ -43,6 +43,13 @@ const initialLayout = loadInitialLayout();
 
 // Re-export pane storage (loaded in separate file to avoid circular deps)
 export { initialPaneStorage, PANE_STORAGE_KEY } from "./pane-storage";
+// Command / tab palette atoms
+export {
+	actionPaletteOpenAtom,
+	openActionPaletteAtom,
+	tabPaletteOpenAtom,
+	openTabPaletteAtom,
+} from "./palettes";
 // Hotkeys atom (live merged hotkeys: defaults + user overrides)
 export { hotkeysAtom } from "./hotkeys";
 
