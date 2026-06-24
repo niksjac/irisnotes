@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { useTheme } from "@/hooks";
 import { useConfig } from "@/hooks/use-config";
 import { useEditorSettings } from "@/hooks/use-editor-settings";
@@ -105,14 +106,6 @@ const SETTINGS_SECTIONS: SettingsSectionMeta[] = [
 	},
 ];
 
-function filterButtonClass(isActive: boolean): string {
-	return `px-3 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer border ${
-		isActive
-			? "bg-blue-600 dark:bg-blue-500 text-white border-blue-600 dark:border-blue-500"
-			: "text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-	}`;
-}
-
 function CollapsibleSection({ icon, title, children, defaultOpen = false, forceOpen = false, isVisible = true }: {
 	icon: React.ReactNode;
 	title: string;
@@ -155,8 +148,7 @@ export function ConfigView() {
 	const [cleanupResult, setCleanupResult] = useState<string | null>(null);
 	const [isCleaning, setIsCleaning] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
-	const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-	const [sectionFilter, setSectionFilter] = useState<SettingsSectionId | null>(null);
+	const searchRef = useRef<HTMLInputElement>(null);
 
 	// Database stats
 	const items = useAtomValue(itemsAtom);
@@ -174,43 +166,26 @@ export function ConfigView() {
 		() => SETTINGS_SECTIONS.filter((section) => section.id !== "debug" || import.meta.env.DEV),
 		[],
 	);
-	const settingCategories = useMemo(
-		() => Array.from(new Set(availableSettingsSections.map((section) => section.category))).sort(),
-		[availableSettingsSections],
-	);
-	const sectionFilterButtons = useMemo(
-		() => categoryFilter
-			? availableSettingsSections.filter((section) => section.category === categoryFilter)
-			: availableSettingsSections,
-		[availableSettingsSections, categoryFilter],
-	);
 	const filteredSettingsSections = useMemo(() => {
 		const query = searchQuery.trim().toLowerCase();
 
 		return availableSettingsSections.filter((section) => {
-			if (categoryFilter && section.category !== categoryFilter) return false;
-			if (sectionFilter && section.id !== sectionFilter) return false;
 			if (!query) return true;
 
 			return `${section.title} ${section.category} ${section.keywords}`
 				.toLowerCase()
 				.includes(query);
 		});
-	}, [availableSettingsSections, categoryFilter, searchQuery, sectionFilter]);
+	}, [availableSettingsSections, searchQuery]);
 	const visibleSectionIds = useMemo(
 		() => new Set(filteredSettingsSections.map((section) => section.id)),
 		[filteredSettingsSections],
 	);
-	const isFiltering = Boolean(searchQuery.trim() || categoryFilter || sectionFilter);
+	const isFiltering = Boolean(searchQuery.trim());
 	const shouldShowSection = useCallback(
 		(id: SettingsSectionId) => visibleSectionIds.has(id),
 		[visibleSectionIds],
 	);
-	const clearFilters = useCallback(() => {
-		setSearchQuery("");
-		setCategoryFilter(null);
-		setSectionFilter(null);
-	}, []);
 
 	// Storage backend - SQLite only
 
@@ -253,6 +228,28 @@ export function ConfigView() {
 	};
 
 	const settingsRef = useRef<HTMLDivElement>(null);
+
+	// Ctrl+F focuses the filter input from anywhere in the settings view.
+	useHotkeys(
+		"ctrl+f",
+		(e) => {
+			e.preventDefault();
+			searchRef.current?.focus();
+			searchRef.current?.select();
+		},
+		{ enableOnFormTags: ["INPUT", "TEXTAREA", "SELECT"], enableOnContentEditable: true },
+	);
+
+	// Land focus on the first section header on open so the arrow-key section
+	// navigation below works immediately, without tabbing in first.
+	useEffect(() => {
+		const id = requestAnimationFrame(() => {
+			settingsRef.current
+				?.querySelector<HTMLButtonElement>("[data-section-header]")
+				?.focus();
+		});
+		return () => cancelAnimationFrame(id);
+	}, []);
 
 	const handleSectionKeyDown = useCallback((e: React.KeyboardEvent) => {
 		const container = settingsRef.current;
@@ -309,10 +306,11 @@ export function ConfigView() {
 					<div className="relative w-full sm:w-72">
 						<Icons.Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
 						<input
+							ref={searchRef}
 							type="text"
 							value={searchQuery}
 							onChange={(event) => setSearchQuery(event.target.value)}
-							placeholder="Filter settings..."
+							placeholder="Filter settings... (Ctrl+F)"
 							className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 						/>
 						{searchQuery && (
@@ -324,50 +322,6 @@ export function ConfigView() {
 							</button>
 						)}
 					</div>
-				</div>
-
-				{/* Category Filter Buttons */}
-				<div className="flex flex-wrap items-center gap-2 text-sm">
-					{settingCategories.map((category) => (
-						<button
-							key={category}
-							onClick={() => {
-								const nextCategory = categoryFilter === category ? null : category;
-								setCategoryFilter(nextCategory);
-								if (
-									nextCategory &&
-									sectionFilter &&
-									availableSettingsSections.find((section) => section.id === sectionFilter)?.category !== nextCategory
-								) {
-									setSectionFilter(null);
-								}
-							}}
-							className={filterButtonClass(categoryFilter === category)}
-						>
-							{category}
-						</button>
-					))}
-					{isFiltering && (
-						<button
-							onClick={clearFilters}
-							className="px-3 py-1 rounded-md text-xs font-medium text-red-600 dark:text-red-400 border border-red-300 dark:border-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer"
-						>
-							Clear filters
-						</button>
-					)}
-				</div>
-
-				{/* Section Filter Buttons */}
-				<div className="flex flex-wrap items-center gap-2 text-sm">
-					{sectionFilterButtons.map((section) => (
-						<button
-							key={section.id}
-							onClick={() => setSectionFilter(sectionFilter === section.id ? null : section.id)}
-							className={filterButtonClass(sectionFilter === section.id)}
-						>
-							{section.title}
-						</button>
-					))}
 				</div>
 
 				{filteredSettingsSections.length === 0 && (

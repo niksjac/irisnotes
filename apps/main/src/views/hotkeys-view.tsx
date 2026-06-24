@@ -1,5 +1,6 @@
 import * as Icons from "lucide-react";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo, useRef, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { useAtomValue } from "jotai";
 import { useHotkeysConfig } from "@/hooks/use-hotkeys-config";
 import {
@@ -59,6 +60,18 @@ export function HotkeysView() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [contextFilter, setContextFilter] = useState<string | null>(null);
 	const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+	const searchRef = useRef<HTMLInputElement>(null);
+
+	// Ctrl+F focuses the filter input from anywhere in the hotkeys view.
+	useHotkeys(
+		"ctrl+f",
+		(e) => {
+			e.preventDefault();
+			searchRef.current?.focus();
+			searchRef.current?.select();
+		},
+		{ enableOnFormTags: ["INPUT", "TEXTAREA", "SELECT"], enableOnContentEditable: true },
+	);
 
 	// Build flat list of all hotkeys
 	const allHotkeys = useMemo<HotkeyEntry[]>(() => {
@@ -169,10 +182,11 @@ export function HotkeysView() {
 					<div className="relative w-full sm:w-72">
 						<Icons.Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
 						<input
+							ref={searchRef}
 							type="text"
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
-							placeholder="Filter shortcuts..."
+							placeholder="Filter shortcuts... (Ctrl+F)"
 							className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 						/>
 						{searchQuery && (
