@@ -61,6 +61,13 @@ export const toolbarVisibleAtom = atom<boolean>(initialLayout.toolbarVisible);
 export const titleBarVisibleAtom = atom<boolean>(initialLayout.titleBarVisible);
 export const metadataBarVisibleAtom = atom<boolean>(initialLayout.metadataBarVisible);
 
+// Per-note config bar (set a "jump" hotkey for the active note). Session-only;
+// defaults hidden each launch since it's an occasional configuration action.
+export const noteConfigBarVisibleAtom = atom<boolean>(false);
+export const toggleNoteConfigBarAtom = atom(null, (get, set) => {
+	set(noteConfigBarVisibleAtom, !get(noteConfigBarVisibleAtom));
+});
+
 // Zen mode - when true, hides all UI elements for distraction-free writing
 export const zenModeAtom = atom<boolean>(false);
 // Store previous state to restore when exiting zen mode (title bar not included - stays visible)

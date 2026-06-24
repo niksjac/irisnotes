@@ -1,8 +1,14 @@
 import { useState } from "react";
 import { useAtomValue } from "jotai";
 import { itemsAtom } from "@/atoms/items";
+import { noteConfigBarVisibleAtom } from "@/atoms";
 import { NoteVersionHistoryDialog } from "@/components/dialogs";
-import { EditorContainer, NoteMetadataBar, NoteTitleBar } from "@/components/editor";
+import {
+	EditorContainer,
+	NoteConfigBar,
+	NoteMetadataBar,
+	NoteTitleBar,
+} from "@/components/editor";
 import { useItems } from "@/hooks";
 import { useEditorLayout } from "@/hooks/use-editor-layout";
 
@@ -14,6 +20,7 @@ export function EditorSourceView({ viewData }: EditorSourceViewProps) {
 	const items = useAtomValue(itemsAtom);
 	const { updateItemContent, updateItemTitle } = useItems();
 	const { titleBarVisible, metadataBarVisible } = useEditorLayout();
+	const noteConfigBarVisible = useAtomValue(noteConfigBarVisibleAtom);
 	const [historyOpen, setHistoryOpen] = useState(false);
 
 	// Get the note from viewData or fall back to selectedNote
@@ -59,6 +66,7 @@ export function EditorSourceView({ viewData }: EditorSourceViewProps) {
 					onOpenHistory={() => setHistoryOpen(true)}
 				/>
 			)}
+			{noteConfigBarVisible && <NoteConfigBar note={note} />}
 
 			{/* Source Editor */}
 			<div className="flex-1 overflow-hidden relative">

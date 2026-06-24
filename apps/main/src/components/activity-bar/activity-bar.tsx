@@ -15,6 +15,8 @@ import {
 	toggleZenModeAtom,
 	statusBarVisibleAtom,
 	toggleStatusBarAtom,
+	noteConfigBarVisibleAtom,
+	toggleNoteConfigBarAtom,
 } from "@/atoms";
 import { tabBarVisibleAtom, toggleTabBarAtom, openBrandingTabAtom, openTopNotesTabAtom } from "@/atoms/panes";
 import { brandingSettingsAtom, LOGO_OPTIONS } from "@/atoms/settings";
@@ -92,6 +94,8 @@ export function ActivityBar() {
 	const toggleTabBar = useSetAtom(toggleTabBarAtom);
 	const statusBarVisible = useAtomValue(statusBarVisibleAtom);
 	const toggleStatusBar = useSetAtom(toggleStatusBarAtom);
+	const noteConfigBarVisible = useAtomValue(noteConfigBarVisibleAtom);
+	const toggleNoteConfigBar = useSetAtom(toggleNoteConfigBarAtom);
 
 	// Live hotkey labels (reflect user overrides from hotkeys.toml)
 	const labelToggleSidebar = useHotkeyLabel("toggleSidebar");
@@ -320,6 +324,17 @@ export function ActivityBar() {
 					expanded={activityBarExpanded}
 					keyTip="8"
 					showKeyTip={altKeyHeld}
+					iconSize={16}
+					iconClassName="md:w-4 md:h-4"
+				/>
+
+				<ActivityBarButton
+					icon={Icons.Keyboard}
+					isActive={noteConfigBarVisible}
+					onClick={toggleNoteConfigBar}
+					title={`${noteConfigBarVisible ? "Hide" : "Show"} note hotkey config`}
+					label="Note Hotkey"
+					expanded={activityBarExpanded}
 					iconSize={16}
 					iconClassName="md:w-4 md:h-4"
 				/>

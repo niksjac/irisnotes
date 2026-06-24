@@ -13,6 +13,7 @@ import {
 	QuickSearchDialog,
 	StatusBar,
 } from "@/components";
+import { NoteHotkeyRegistrar } from "@/components/editor";
 import { QuickHotkeysModal } from "@/components/dialogs/quick-hotkeys-modal";
 import { ThemeSwitcherDialog } from "@/components/dialogs/theme-switcher-dialog";
 import { SymbolPickerDialog } from "@/components/dialogs/symbol-picker-dialog";
@@ -186,6 +187,9 @@ export const Layout: React.FC = () => {
 
 			{/* Nerd Font Icon Picker Dialog */}
 			<NerdFontPickerDialog />
+
+			{/* Registers per-note "jump" hotkeys app-wide (renders nothing) */}
+			<NoteHotkeyRegistrar />
 		</div>
 	);
 };

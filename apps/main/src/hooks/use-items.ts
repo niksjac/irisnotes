@@ -363,6 +363,42 @@ export const useItems = () => {
 		[updateItem]
 	);
 
+	// Merge-update an item's JSON metadata. Goes through the generic adapter
+	// updateItem (the items table is unified) so it works for notes too, which
+	// the type-specific updateNote path does not persist arbitrary metadata for.
+	// Pass a field as `undefined` to remove it (JSON.stringify drops undefined).
+	const updateItemMetadata = useCallback(
+		async (id: string, patch: Record<string, unknown>) => {
+			setError(null);
+			try {
+				if (!storageAdapter) {
+					setError("Storage not initialized");
+					return { success: false, error: "Storage not initialized" };
+				}
+				const item = items.find((i) => i.id === id);
+				if (!item) {
+					setError("Item not found");
+					return { success: false, error: "Item not found" };
+				}
+				const mergedMetadata = { ...item.metadata, ...patch };
+				const result = await storageAdapter.updateItem(id, {
+					metadata: mergedMetadata,
+				});
+				if (result.success) {
+					await loadAllItems();
+					return { success: true, data: result.data };
+				}
+				setError(result.error);
+				return result;
+			} catch (err) {
+				const errorMsg = `Failed to update item metadata: ${err}`;
+				setError(errorMsg);
+				return { success: false, error: errorMsg };
+			}
+		},
+		[storageAdapter, items, loadAllItems]
+	);
+
 	const updateItemContent = useCallback(
 		async (
 			id: string,
@@ -608,6 +644,7 @@ export const useItems = () => {
 		createSection,
 		updateItemTitle,
 		updateItemContent,
+		updateItemMetadata,
 		moveItem,
 
 		// Selection management

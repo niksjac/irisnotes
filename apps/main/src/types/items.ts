@@ -39,6 +39,8 @@ export interface ItemMetadata {
 	is_archived?: boolean;
 	word_count?: number;
 	character_count?: number;
+	// App-scoped hotkey that opens+activates this note (react-hotkeys-hook combo).
+	jumpHotkey?: string;
 
 	// Book/Section metadata
 	description?: string;
