@@ -342,25 +342,36 @@ export function autolinkPlugin(schema: Schema): Plugin[] {
 				return false;
 			},
 
-			// Open links on Ctrl/Cmd+click. We use a raw DOM `click` handler
-			// rather than ProseMirror's `handleClick` so we can preventDefault()
-			// the click itself — otherwise the webview ALSO follows the real
-			// <a href> natively, opening the URL in a second browser tab. The DOM
-			// `click` event is left-button only, so right-clicks never reach here.
+			// Ctrl/Cmd+click opens the link. We open here (handleClick reliably
+			// fires on mouseup) and return true so ProseMirror leaves the selection
+			// alone — that keeps the subsequent DOM `click` event alive, which the
+			// click handler below preventDefault()s. Without that, the webview would
+			// follow the real <a href> natively and open the URL in a second tab.
+			handleClick(view, pos, event) {
+				if (!event.ctrlKey && !event.metaKey) return false;
+
+				const $pos = view.state.doc.resolve(pos);
+				const href = $pos
+					.marks()
+					.find((m) => m.type === linkMark)?.attrs.href as
+					| string
+					| undefined;
+				if (!href) return false;
+
+				openUrl(href).catch(() => {});
+				return true;
+			},
+
 			handleDOMEvents: {
+				// Cancel the webview's native open of the anchor so the URL isn't
+				// opened a second time (handleClick already opened it).
 				click(_view, event) {
 					if (!event.ctrlKey && !event.metaKey) return false;
-
-					const target = event.target as HTMLElement | null;
-					const anchor = target?.closest("a[href]") as
-						| HTMLAnchorElement
-						| null;
-					const href = anchor?.getAttribute("href");
-					if (!href) return false;
-
-					event.preventDefault();
-					openUrl(href).catch(() => {});
-					return true;
+					const anchor = (event.target as HTMLElement | null)?.closest(
+						"a[href]"
+					);
+					if (anchor) event.preventDefault();
+					return false;
 				},
 			},
 		},
