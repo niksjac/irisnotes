@@ -35,6 +35,41 @@ All `/sync/*` requests need `Authorization: Bearer <IRIS_TOKEN>`.
 (`type`, `contentType`, `parentId`, `sortOrder`, `deletedAt`, …); `content` and
 `metadata` are opaque and never parsed server-side.
 
+## Connect the desktop app
+
+The desktop client (`apps/main`) is local-first and syncs in the background when
+enabled. It is **off by default**. To turn it on, add a `[sync]` section to your
+app config (`dev/config.toml` in dev):
+
+```toml
+[sync]
+enabled = true
+serverUrl = "http://127.0.0.1:8787"
+token = "secret123"        # must equal the server's IRIS_TOKEN
+intervalSeconds = 10
+```
+
+How it works (`apps/main/src/storage/sync/sync-engine.ts`, mounted via
+`useSync` in the layout): each cycle checks `/version`, pulls rows since the last
+cursor and applies them last-writer-wins under the `sync_ctl` guard (so pulled
+timestamps are preserved, not rewritten by the local trigger), then pushes local
+rows changed since the last push cursor. Cursors live in `localStorage` per
+server URL.
+
+### Manual round-trip test
+
+1. `cd apps/server && IRIS_TOKEN=secret123 cargo run`
+2. Add the `[sync]` block above to `dev/config.toml`, then `pnpm main`.
+3. Create/edit a note in the app — within `intervalSeconds` it pushes; confirm
+   with `curl -s -X POST localhost:8787/sync/pull -H 'authorization: Bearer secret123' -H 'content-type: application/json' -d '{}' | jq`.
+4. `POST /sync/push` a row by hand (see contract above) and watch it appear in
+   the app on the next cycle.
+
+> Recreating the schema: existing databases keep the *old* `update_items_timestamp`
+> trigger (CREATE TRIGGER IF NOT EXISTS won't replace it). For a clean dev DB with
+> the guard, run `./dev/setup-dev-db.sh`. Production DBs need a one-time migration
+> to drop & recreate that trigger.
+
 ## Phase 1 scope / known limitations
 
 - Syncs the **`items` table only** (notes/books/sections). `tags`, `item_tags`,

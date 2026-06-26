@@ -271,6 +271,19 @@ export interface StorageSettings {
 
 export type { ThemeName } from "@/config/themes";
 
+/** Remote sync (iris-server) settings. Local-first: off by default. */
+export interface SyncSettings {
+	enabled: boolean;
+	/** Base URL of iris-server, e.g. http://127.0.0.1:8787 */
+	serverUrl: string;
+	/** Bearer token the server requires (IRIS_TOKEN). */
+	token: string;
+	/** Seconds between background sync cycles (default 30). */
+	intervalSeconds?: number;
+	/** Filled at runtime from storage config — not normally in the TOML. */
+	databasePath?: string;
+}
+
 export interface AppConfig {
 	theme?: import("@/config/themes").ThemeName; // Active theme
 	editor: {
@@ -283,6 +296,7 @@ export interface AppConfig {
 		enableExampleNote: boolean;
 	};
 	storage: StorageSettings;
+	sync?: SyncSettings; // Optional remote sync (iris-server)
 	hotkeys?: HotkeyMapping; // Optional hotkey configuration
 	layout?: {
 		sidebarWidth?: number;

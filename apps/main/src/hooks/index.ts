@@ -91,3 +91,6 @@ export { useAsciiArt } from "./use-ascii-art";
 
 // Autocorrect
 export { useAutocorrect } from "./use-autocorrect";
+
+// Remote sync (iris-server)
+export { useSync } from "./use-sync";

@@ -36,6 +36,7 @@ import {
 	useQuickAppListener,
 	useAsciiArt,
 	useAutocorrect,
+	useSync,
 } from "@/hooks";
 import { mapHotkeyHandlers } from "@/utils/hotkey-mapping";
 import {
@@ -85,6 +86,9 @@ export const Layout: React.FC = () => {
 
 	// Load autocorrect rules (text replacements triggered by typing)
 	useAutocorrect();
+
+	// Background sync with iris-server (no-op unless config.sync.enabled)
+	useSync();
 
 	// Persist app state
 	useAppPersistence();

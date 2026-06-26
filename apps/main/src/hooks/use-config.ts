@@ -34,6 +34,12 @@ export const DEFAULT_CONFIG: AppConfig = {
 			database_path: "notes.db",
 		},
 	},
+	sync: {
+		enabled: false,
+		serverUrl: "http://127.0.0.1:8787",
+		token: "",
+		intervalSeconds: 30,
+	},
 	development: {
 		useLocalConfig: false,
 		configPath: "./dev/",
@@ -62,6 +68,7 @@ function mergeWithDefaults(parsed: AppConfig): AppConfig {
 		editor: { ...DEFAULT_CONFIG.editor, ...parsed.editor },
 		debug: { ...DEFAULT_CONFIG.debug, ...parsed.debug },
 		storage: { ...DEFAULT_CONFIG.storage, ...parsed.storage },
+		sync: { ...DEFAULT_CONFIG.sync, ...parsed.sync } as AppConfig["sync"],
 		hotkeys: parsed.hotkeys ?? DEFAULT_CONFIG.hotkeys,
 		development: { ...DEFAULT_CONFIG.development, ...parsed.development },
 		production: { ...DEFAULT_CONFIG.production, ...parsed.production },
@@ -149,6 +156,9 @@ export const useConfig = () => {
 				editor: { ...config.editor, ...updates.editor },
 				debug: { ...config.debug, ...updates.debug },
 				storage: { ...config.storage, ...updates.storage },
+				sync: updates.sync
+					? { ...config.sync, ...updates.sync } as AppConfig["sync"]
+					: config.sync,
 				hotkeys: updates.hotkeys
 					? { ...config.hotkeys, ...updates.hotkeys }
 					: config.hotkeys,

@@ -31,6 +31,7 @@ use axum::{
 };
 use rusqlite::Connection;
 use serde_json::json;
+use tower_http::cors::CorsLayer;
 
 /// Bumped when the schema or sync protocol changes in a way clients must match.
 const SCHEMA_VERSION: u32 = 1;
@@ -77,6 +78,10 @@ async fn main() {
         .route("/health", get(health))
         .route("/version", get(version))
         .merge(synced)
+        // Permissive CORS for local dev so the Tauri webview (origin
+        // http://localhost:1420 or tauri://localhost) can call the API.
+        // Tighten this behind Caddy before exposing to the internet.
+        .layer(CorsLayer::permissive())
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind(&bind)

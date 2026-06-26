@@ -105,6 +105,16 @@ CREATE TABLE IF NOT EXISTS settings (
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Sync control: a single-row flag (id pinned to 0) that the sync client raises
+-- while applying remote writes. The updated_at auto-bump trigger below checks it
+-- so that applying a synced row PRESERVES the originating device's updated_at
+-- (required for last-writer-wins) instead of stamping it with the local clock.
+CREATE TABLE IF NOT EXISTS sync_ctl (
+    id INTEGER PRIMARY KEY CHECK (id = 0),
+    applying INTEGER NOT NULL DEFAULT 0
+);
+INSERT OR IGNORE INTO sync_ctl (id, applying) VALUES (0, 0);
+
 -- Note version history - application-managed snapshots for restore/preview
 CREATE TABLE IF NOT EXISTS note_versions (
     id TEXT PRIMARY KEY,
@@ -176,7 +186,10 @@ CREATE TRIGGER IF NOT EXISTS items_fts_update AFTER UPDATE ON items BEGIN
 END;
 
 -- Timestamp triggers
+-- Auto-bump updated_at on edits — but NOT while the sync client is applying
+-- remote writes (sync_ctl.applying = 1), so synced timestamps survive intact.
 CREATE TRIGGER IF NOT EXISTS update_items_timestamp AFTER UPDATE ON items
+WHEN (SELECT applying FROM sync_ctl WHERE id = 0) = 0
 BEGIN
     UPDATE items SET updated_at = datetime('now') WHERE id = NEW.id;
 END;
