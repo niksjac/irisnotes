@@ -16,12 +16,37 @@ export class SqliteSchemaManager {
 			throw new Error("Database not initialized");
 		}
 
+		// Migrations that must run BEFORE the schema is (re)applied.
+		await this.runPreSchemaMigrations();
+
 		// Execute the schema SQL file
 		await this.executeSchemaSQL();
 
 		// Run any additional migrations
 		await this.addMissingColumns();
 		await this.insertDefaultData();
+	}
+
+	/**
+	 * Migrations that must run before base.sql is reapplied.
+	 *
+	 * The sync feature replaced the unguarded `update_items_timestamp` trigger
+	 * with a guarded one (it checks `sync_ctl.applying`). Because base.sql uses
+	 * CREATE TRIGGER IF NOT EXISTS, an existing database keeps the OLD trigger
+	 * forever. Dropping it here lets the schema recreate the current guarded
+	 * version. This is non-destructive — it only touches the trigger, never the
+	 * notes — and is a no-op on a fresh database.
+	 */
+	private async runPreSchemaMigrations(): Promise<void> {
+		try {
+			await this.db.execute("DROP TRIGGER IF EXISTS update_items_timestamp");
+		} catch (error: any) {
+			console.warn(
+				`pre-schema migration (drop update_items_timestamp) failed: ${
+					error?.message ?? error
+				}`,
+			);
+		}
 	}
 
 	private async executeSchemaSQL(): Promise<void> {

@@ -189,7 +189,7 @@ END;
 -- Auto-bump updated_at on edits — but NOT while the sync client is applying
 -- remote writes (sync_ctl.applying = 1), so synced timestamps survive intact.
 CREATE TRIGGER IF NOT EXISTS update_items_timestamp AFTER UPDATE ON items
-WHEN (SELECT applying FROM sync_ctl WHERE id = 0) = 0
+WHEN COALESCE((SELECT applying FROM sync_ctl WHERE id = 0), 0) = 0
 BEGIN
     UPDATE items SET updated_at = datetime('now') WHERE id = NEW.id;
 END;
