@@ -147,6 +147,9 @@ pub async fn push(
 ) -> Result<Json<PushResp>, ApiError> {
     let mut conn = state.db.lock().expect("db mutex poisoned");
     let tx = conn.transaction()?;
+    // A batch can contain a child (parent_id -> items.id) before its parent,
+    // so enforce foreign keys at COMMIT time, by which point every row exists.
+    tx.execute_batch("PRAGMA defer_foreign_keys = ON")?;
     let mut applied = 0usize;
     {
         let mut stmt = tx.prepare(UPSERT)?;

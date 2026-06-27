@@ -128,3 +128,6 @@ export * from "./editor-stats";
 
 // Import note versioning atoms
 export * from "./versioning";
+
+// Import sync state atoms
+export * from "./sync";

@@ -89,12 +89,20 @@ async function checkVersion(serverUrl: string): Promise<void> {
 // Apply remote rows under the sync_ctl guard so the local updated_at trigger
 // does NOT rewrite the timestamps we just pulled (which would ping-pong them
 // straight back to the server). Returns how many rows were actually written.
+// Insert parents before children to satisfy the parent_id foreign key: books
+// are roots, sections live under books, notes under books/sections (and a note
+// can never parent another note), so this type order is a valid topological one.
+const TYPE_RANK: Record<string, number> = { book: 0, section: 1, note: 2 };
+
 async function applyRemote(db: Database, items: WireItem[]): Promise<number> {
 	if (items.length === 0) return 0;
+	const ordered = [...items].sort(
+		(a, b) => (TYPE_RANK[a.type] ?? 3) - (TYPE_RANK[b.type] ?? 3),
+	);
 	await db.execute("UPDATE sync_ctl SET applying = 1 WHERE id = 0");
 	let applied = 0;
 	try {
-		for (const it of items) {
+		for (const it of ordered) {
 			try {
 				const res = await db.execute(UPSERT, [
 					it.id, it.type, it.title, it.content, it.contentType, it.contentRaw,

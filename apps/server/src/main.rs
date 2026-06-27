@@ -24,7 +24,7 @@ use std::sync::{Arc, Mutex};
 use axum::{
     extract::{Request, State},
     http::{header::AUTHORIZATION, StatusCode},
-    middleware::{from_fn_with_state, Next},
+    middleware::{from_fn, from_fn_with_state, Next},
     response::{IntoResponse, Response},
     routing::{get, post},
     Json, Router,
@@ -82,6 +82,7 @@ async fn main() {
         // http://localhost:1420 or tauri://localhost) can call the API.
         // Tighten this behind Caddy before exposing to the internet.
         .layer(CorsLayer::permissive())
+        .layer(from_fn(log_requests))
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind(&bind)
@@ -89,6 +90,16 @@ async fn main() {
         .expect("failed to bind");
     tracing::info!("iris-server listening on http://{bind}");
     axum::serve(listener, app).await.expect("server error");
+}
+
+/// Dev-only request log so we can see exactly what clients call.
+async fn log_requests(req: Request, next: Next) -> Response {
+    let method = req.method().clone();
+    let uri = req.uri().clone();
+    let has_auth = req.headers().contains_key(AUTHORIZATION);
+    let res = next.run(req).await;
+    tracing::info!("{method} {uri} (auth={has_auth}) -> {}", res.status());
+    res
 }
 
 async fn health() -> Json<serde_json::Value> {

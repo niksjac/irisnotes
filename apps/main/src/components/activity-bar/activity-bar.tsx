@@ -21,6 +21,7 @@ import {
 import { tabBarVisibleAtom, toggleTabBarAtom, openBrandingTabAtom, openTopNotesTabAtom } from "@/atoms/panes";
 import { brandingSettingsAtom, LOGO_OPTIONS } from "@/atoms/settings";
 import { ActivityBarButton } from "./activity-bar-button";
+import { SyncIndicatorButton } from "./sync-indicator-button";
 import { useEffect, useRef, useCallback, useMemo } from "react";
 
 export function ActivityBar() {
@@ -74,6 +75,15 @@ export function ActivityBar() {
 		return (
 			activeInPane0?.viewType === "branding-view" ||
 			activeInPane1?.viewType === "branding-view"
+		);
+	}, [pane0Tabs, pane1Tabs, pane0ActiveTab, pane1ActiveTab]);
+
+	const isSyncActive = useMemo(() => {
+		const activeInPane0 = pane0Tabs.find((t) => t.id === pane0ActiveTab);
+		const activeInPane1 = pane1Tabs.find((t) => t.id === pane1ActiveTab);
+		return (
+			activeInPane0?.viewType === "sync-view" ||
+			activeInPane1?.viewType === "sync-view"
 		);
 	}, [pane0Tabs, pane1Tabs, pane0ActiveTab, pane1ActiveTab]);
 
@@ -269,6 +279,11 @@ export function ActivityBar() {
 					expanded={activityBarExpanded}
 					keyTip="2"
 					showKeyTip={altKeyHeld}
+				/>
+
+				<SyncIndicatorButton
+					isActive={isSyncActive}
+					expanded={activityBarExpanded}
 				/>
 
 			</div>
