@@ -40,21 +40,47 @@ SCALE is Linux + Docker, so this is straightforward.
    - Port: publish `8787` (or map another host port).
 3. Confirm `http://<nas-lan-ip>:8787/health` works from a device on the LAN.
 
-## Reaching it from your phone away from home — Tailscale
+## Reaching it from anywhere — Tailscale (works for NAS *and* VPS)
 
-A NAS sits on your LAN, so the phone only reaches it directly at home. Tailscale
-fixes that with **zero public exposure**:
+Tailscale gives **zero public exposure** access from anywhere, and it applies to
+any host — a LAN NAS or a public VPS alike. The host just becomes a node on your
+tailnet; you reach iris-server at its tailnet address, not its public IP.
 
-1. Install Tailscale on the **NAS** (SCALE has a Tailscale app), the **phone**,
-   and the **desktop** — all on the same tailnet.
-2. In the app's **Sync view**, set **Server URL** to the NAS over the tailnet:
-   - MagicDNS: `http://<nas-name>.<your-tailnet>.ts.net:8787`
+1. Install Tailscale on the **host** (SCALE has a Tailscale app; on a VPS just
+   `tailscale up`), the **phone**, and the **desktop** — all one tailnet.
+2. In the app's **Sync view**, set **Server URL** to the host over the tailnet:
+   - MagicDNS: `http://<host-name>.<your-tailnet>.ts.net:8787`
    - or the tailnet IP: `http://100.x.y.z:8787`
-3. Set the **Token** to match `IRIS_TOKEN`. Done — the phone syncs from anywhere,
+3. Set the **Token** to match `IRIS_TOKEN`. The phone syncs from anywhere,
    through CGNAT, with nothing facing the public internet and traffic encrypted
-   by Tailscale.
+   by Tailscale. No port-forwarding, dynamic DNS, or certificates.
 
-No port-forwarding, no dynamic DNS, no certificates needed.
+### On a public VPS (e.g. Contabo): don't leak the port
+
+A VPS has a public IP, but iris-server need not be on it — keep it tailnet-only.
+Caveat: **Docker publishes ports on `0.0.0.0` and bypasses `ufw`**, so a plain
+`-p 8787:8787` would expose it publicly even with a firewall rule. Bind the
+published port to the tailnet instead:
+
+- Bind to the tailnet IP — in `docker-compose.yml`:
+  ```yaml
+  ports:
+    - "100.x.y.z:8787:8787"   # the VPS's Tailscale IP; not the public one
+  ```
+- Or bind to localhost and front it with Tailscale (adds in-tailnet HTTPS):
+  ```yaml
+  ports:
+    - "127.0.0.1:8787:8787"
+  ```
+  then on the host: `tailscale serve --bg http://127.0.0.1:8787`
+  → reachable at `https://<node>.<tailnet>.ts.net` inside your tailnet.
+
+This way the VPS gives you always-on uptime while access stays private. (Still
+encrypt the VPS disk/volume — the data sits on Contabo's hardware at rest.)
+
+If you instead want it reachable by **non-Tailscale** clients (a browser on a
+borrowed device), use **Tailscale Funnel** (public `https://…ts.net` URL, TLS by
+Tailscale, no open ports) or the public reverse-proxy route below.
 
 ## Switching / migrating hubs
 
@@ -67,9 +93,10 @@ You can change hubs anytime from the Sync view (e.g. NAS → Contabo, or back):
 - To clone a hub exactly, copy its `iris-server.db` (the `/data` volume) to the
   new host instead.
 
-## Exposing publicly instead of Tailscale (e.g. Contabo)
+## Exposing publicly instead of Tailscale
 
-If you expose the server to the internet rather than using Tailscale:
+Only needed if clients can't use Tailscale (e.g. a browser on a borrowed
+device). If you expose the server to the public internet:
 
 - Put **Caddy** (or another reverse proxy) in front for **TLS** — never serve
   the token over plain HTTP. Caddy gets Let's Encrypt certs automatically.
