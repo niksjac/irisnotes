@@ -1,0 +1,11 @@
+# Keep the Docker build context small. The iris-server image only needs
+# apps/server/{Cargo.toml,Cargo.lock,src} and schema/ (see apps/server/Dockerfile).
+**/target
+**/node_modules
+**/dist
+**/build
+.git
+dev/*.db
+dev/*.db-shm
+dev/*.db-wal
+**/*.log

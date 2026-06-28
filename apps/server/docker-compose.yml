@@ -1,0 +1,29 @@
+# Portable iris-server deployment — runs identically on TrueNAS SCALE, a
+# Contabo VPS, or any Docker host. Config comes entirely from .env
+# (copy .env.example -> .env). The only state is the /data volume (SQLite DB).
+#
+#   cp .env.example .env && edit IRIS_TOKEN
+#   docker compose up -d --build
+#
+services:
+  iris-server:
+    build:
+      context: ../..
+      dockerfile: apps/server/Dockerfile
+    image: iris-server:latest
+    container_name: iris-server
+    restart: unless-stopped
+    environment:
+      IRIS_TOKEN: ${IRIS_TOKEN:?set IRIS_TOKEN in .env}
+      IRIS_BIND: 0.0.0.0:8787
+      IRIS_DB_PATH: /data/iris-server.db
+    ports:
+      - "${IRIS_PORT:-8787}:8787"
+    volumes:
+      # Named volume by default (portable anywhere). On TrueNAS, swap this for a
+      # ZFS dataset bind mount to get native encryption + snapshots, e.g.:
+      #   - /mnt/tank/apps/iris:/data
+      - iris-data:/data
+
+volumes:
+  iris-data:
