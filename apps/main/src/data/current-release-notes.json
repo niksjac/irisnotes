@@ -1,11 +1,14 @@
 {
-	"version": "1.0.16",
-	"range": "010bf10..HEAD",
+	"version": "1.0.17",
+	"range": "053f216..HEAD",
 	"sections": [
 		{
 			"title": "Features",
 			"items": [
-				"Palettes: Add command palette (Ctrl+Shift+P) and tab switcher (Ctrl+R)"
+				"Server: Add iris-server sync hub (Phase 1: items pull/push)",
+				"Sync: Desktop sync client + schema guard for iris-server",
+				"Sync: Migrate existing DBs to the guarded timestamp trigger in place",
+				"Sync: Sync status indicator + settings view, fix push FK + db path"
 			]
 		}
 	]
