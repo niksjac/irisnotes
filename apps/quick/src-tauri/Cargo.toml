@@ -1,6 +1,6 @@
 [package]
 name = "irisnotes-quick"
-version = "1.0.17"
+version = "1.0.18"
 description = "Quick Search overlay for IrisNotes"
 authors = ["Niklas"]
 edition = "2021"
