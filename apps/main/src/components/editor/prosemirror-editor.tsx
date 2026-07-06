@@ -20,7 +20,13 @@ import {
 	removeHighlight,
 	clearAllFormatting,
 } from "./format-commands";
-import { openLinkAtCursor } from "./plugins/autolink";
+import {
+	openLinkAtCursor,
+	computeLinkDialogState,
+	applyLink,
+	removeLinkRange,
+	type LinkDialogState,
+} from "./plugins/autolink";
 import { DIRECT_TEXT_COLORS, DIRECT_HIGHLIGHT_COLORS } from "./format-constants";
 import { CodeBlockView,  detectLanguage } from "./codemirror-nodeview";
 import { editorSchema } from "./schema";
@@ -28,6 +34,7 @@ import { DetailsNodeView } from "./plugins/details-nodeview";
 import { ImageNodeView } from "./plugins/image-nodeview";
 import { insertTableWithSize, insertDetails } from "./prosemirror-setup";
 import { TableInsertDialog } from "./table-insert-dialog";
+import { LinkInsertDialog } from "./link-insert-dialog";
 import {
 	assetFilenameFromUrl,
 	importImageSrcToAsset,
@@ -124,6 +131,7 @@ export function ProseMirrorEditor({
 	const [activePicker, setActivePicker] = useState<FormatPickerType | null>(null);
 	const [errorToast, setErrorToast] = useState<string | null>(null);
 	const [showTableDialog, setShowTableDialog] = useState(false);
+	const [linkDialog, setLinkDialog] = useState<LinkDialogState | null>(null);
 	const openPickerRef = useRef<(type: FormatPickerType) => void>(undefined);
 	openPickerRef.current = (type) => setActivePicker(type);
 
@@ -798,6 +806,13 @@ export function ProseMirrorEditor({
 				return;
 			}
 
+			// Insert / edit link (dialog)
+			if (matchesPmKey(e, kb.insertLink.key)) {
+				e.preventDefault(); e.stopPropagation();
+				setLinkDialog(computeLinkDialogState(v.state, mySchema));
+				return;
+			}
+
 			// Insert collapsible details block (Ctrl+Shift+D)
 			if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "d" || e.key === "D") && !e.altKey) {
 				e.preventDefault(); e.stopPropagation();
@@ -1010,6 +1025,35 @@ export function ProseMirrorEditor({
 					}}
 					onClose={() => {
 						setShowTableDialog(false);
+						viewRef.current?.focus();
+					}}
+				/>
+			)}
+			{linkDialog && (
+				<LinkInsertDialog
+					initialHref={linkDialog.href}
+					initialText={linkDialog.text}
+					editing={linkDialog.editing}
+					onSubmit={(href, text) => {
+						const range = linkDialog;
+						setLinkDialog(null);
+						const v = viewRef.current;
+						if (v) {
+							applyLink(mySchema, range.from, range.to, href, text)(v.state, v.dispatch);
+							v.focus();
+						}
+					}}
+					onRemove={() => {
+						const range = linkDialog;
+						setLinkDialog(null);
+						const v = viewRef.current;
+						if (v) {
+							removeLinkRange(mySchema, range.from, range.to)(v.state, v.dispatch);
+							v.focus();
+						}
+					}}
+					onClose={() => {
+						setLinkDialog(null);
 						viewRef.current?.focus();
 					}}
 				/>

@@ -433,6 +433,113 @@ export function linkifySelection(schema: Schema) {
 	};
 }
 
+/** Normalize a user-entered URL: bare `www.` gets an https scheme, else untouched. */
+function normalizeHref(href: string): string {
+	const trimmed = href.trim();
+	return trimmed.startsWith("www.") ? `https://${trimmed}` : trimmed;
+}
+
+export interface LinkDialogState {
+	/** Range the dialog will replace when applied. */
+	from: number;
+	to: number;
+	/** Existing href, empty when creating a fresh link. */
+	href: string;
+	/** Display text to pre-fill (selection or existing link text). */
+	text: string;
+	/** True when the cursor/selection sits on an existing link. */
+	editing: boolean;
+}
+
+/**
+ * Inspect the current selection and produce the initial state for the link
+ * dialog: whether we're editing an existing link, the range to replace, and
+ * any href/text to pre-fill.
+ */
+export function computeLinkDialogState(
+	state: EditorState,
+	schema: Schema
+): LinkDialogState {
+	const linkMark = schema.marks.link;
+	const { from, to, empty } = state.selection;
+
+	if (empty) {
+		if (linkMark) {
+			const link = findLinkAtPosition(state.doc, from, linkMark);
+			if (link) {
+				return {
+					from: link.from,
+					to: link.to,
+					href: link.href,
+					text: state.doc.textBetween(link.from, link.to),
+					editing: true,
+				};
+			}
+		}
+		return { from, to, href: "", text: "", editing: false };
+	}
+
+	// Non-empty selection: use it as the display text. If it already carries a
+	// link mark, pre-fill that href so the dialog edits it in place.
+	const text = state.doc.textBetween(from, to);
+	let href = "";
+	if (linkMark) {
+		const $from = state.doc.resolve(from);
+		href =
+			($from.marks().find((m) => m.type === linkMark)?.attrs.href as
+				| string
+				| undefined) ?? "";
+	}
+	return { from, to, href, text, editing: Boolean(href) };
+}
+
+/**
+ * Command that writes a link over [from, to] with the given href and display
+ * text, replacing the range's content. Used by the link dialog for both
+ * create and edit.
+ */
+export function applyLink(
+	schema: Schema,
+	from: number,
+	to: number,
+	href: string,
+	text: string
+) {
+	const linkMark = schema.marks.link;
+	return (state: EditorState, dispatch?: (tr: Transaction) => void): boolean => {
+		if (!linkMark) return false;
+		const finalHref = normalizeHref(href);
+		if (!finalHref) return false;
+		const label = text.length > 0 ? text : finalHref;
+
+		if (dispatch) {
+			const node = schema.text(label, [linkMark.create({ href: finalHref })]);
+			const tr = state.tr
+				.replaceRangeWith(from, to, node)
+				.setMeta("preventAutolink", true)
+				.scrollIntoView();
+			dispatch(tr);
+		}
+		return true;
+	};
+}
+
+/** Command that strips the link mark from [from, to]. */
+export function removeLinkRange(schema: Schema, from: number, to: number) {
+	const linkMark = schema.marks.link;
+	return (state: EditorState, dispatch?: (tr: Transaction) => void): boolean => {
+		if (!linkMark) return false;
+		if (dispatch) {
+			dispatch(
+				state.tr
+					.removeMark(from, to, linkMark)
+					.setMeta("preventAutolink", true)
+			);
+		}
+		return true;
+	};
+}
+
 /**
  * Command to remove link mark from selection or link at cursor
  */

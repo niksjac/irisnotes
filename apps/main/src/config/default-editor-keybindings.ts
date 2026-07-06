@@ -28,6 +28,7 @@ export type EditorKeybindingId =
 	| "underline"
 	| "strikethrough"
 	| "linkify"
+	| "insertLink"
 	// Blocks
 	| "paragraph"
 	| "bulletList"
@@ -103,6 +104,11 @@ export const DEFAULT_EDITOR_KEYBINDINGS: EditorKeybindings = {
 	linkify: {
 		key: "Mod-Shift-l",
 		description: "Convert URL to Link",
+		category: "Formatting",
+	},
+	insertLink: {
+		key: "Mod-Shift-k",
+		description: "Insert / Edit Link (dialog)",
 		category: "Formatting",
 	},
 
