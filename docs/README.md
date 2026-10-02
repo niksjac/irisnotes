@@ -2,6 +2,13 @@
 
 Background documentation for IrisNotes. **Some files are partly stale** — several predate the current monorepo layout and TOML config. Verify against source before treating any doc as current. For the always-current high-signal overview, see [`/CLAUDE.md`](../CLAUDE.md) and [`.github/copilot-instructions.md`](../.github/copilot-instructions.md).
 
+## Decision Records
+
+- [decisions/](decisions/README.md) — **ADRs and RFCs.** Dated, append-only record of
+  *why* things are the way they are. Unlike the rest of `docs/`, these are not
+  expected to go stale — an old record is a snapshot, not a mistake. Start here
+  when you need the reasoning behind an architectural choice.
+
 ## Architecture & Structure
 
 - [WORKSPACE_STRUCTURE.md](WORKSPACE_STRUCTURE.md) — overall workspace layout.
