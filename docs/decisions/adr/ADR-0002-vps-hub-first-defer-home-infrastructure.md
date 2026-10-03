@@ -80,6 +80,22 @@ What adding each deferred piece will take, given the above:
   client. This is the one place where "transport has no code surface"
   (ADR-0001) is still an untested claim.
 
+  **Verified 2026-10-03 — not a problem on the Linux desktop.** The installed
+  1.0.18 release build, run against isolated scratch config and data with the
+  32 dev seed notes, completed a full cycle against a throwaway server bound
+  only to an overlay address (this machine's `100.x` Tailscale address — the
+  same address class NetBird uses). The server logged `GET /version`, `POST
+  /sync/pull` and `POST /sync/push`, each with its CORS preflight, all `200 OK`,
+  within one 5-second interval; all 32 rows arrived with matching ids and
+  `updated_at`. "Transport has no code surface" holds for the desktop.
+
+  Not covered: macOS and Windows builds (not used), and Android. Android apps
+  block plain-HTTP requests to non-local addresses by default regardless of the
+  network path, so the Phase 2 client is expected to need either sync requests
+  sent from Rust or a scoped plain-HTTP exception. Neither overlay avoids this;
+  Tailscale only offers an easier route to an `https://` URL via `tailscale
+  serve`.
+
 ## Alternatives considered
 
 - **NAS as primary hub from the start** (RFC-0001's recommendation) — not

@@ -118,12 +118,15 @@ need nameservers configured in NetBird first.
 
 Plain `http://` is fine here — WireGuard encrypts everything between peers.
 
-> **Not yet verified:** sync has only been tested against a server on
-> `127.0.0.1`. A packaged desktop build may refuse plain-HTTP requests to a
-> non-loopback address. If the Sync view reports a network error while the
-> `curl` above works from the same machine, that is the cause, and the fix is on
-> the app side (send sync requests from Rust instead of the webview). See
-> ADR-0002.
+> **Verified on the Linux desktop build (2026-10-03):** the installed 1.0.18
+> release build completed a full sync cycle — version check, pull, push — over
+> plain HTTP to a server bound only to an overlay address (`100.x.y.z`). No
+> app-side change is needed for the desktop.
+>
+> **Phone (future Android client):** Android apps refuse plain-HTTP requests to
+> non-local addresses by default, whatever the network path. This is expected to
+> need an app-side fix in Phase 2 (sync requests sent from Rust rather than the
+> webview), not a server or overlay change. See ADR-0002.
 
 ### Disk encryption and backups on the VPS
 
