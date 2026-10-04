@@ -276,7 +276,6 @@ function highlightWords(
 
 	for (const word of words) {
 		let start = 0;
-		// biome-ignore lint/suspicious/noAssignInExpressions: deliberate iteration
 		for (let idx = lower.indexOf(word, start); idx !== -1; idx = lower.indexOf(word, start)) {
 			ranges.push([idx, idx + word.length]);
 			start = idx + 1;

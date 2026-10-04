@@ -363,5 +363,3 @@ export interface PaneState {
 	activePane: 0 | 1; // 0 or 1
 	splitDirection: "horizontal"; // Future: could add vertical
 }
-
-// Test comment for prettier hook
