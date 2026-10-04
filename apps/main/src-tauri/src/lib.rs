@@ -3,6 +3,7 @@ pub mod cli;
 
 use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
@@ -533,6 +534,29 @@ async fn write_config(
         .map_err(|e| format!("Failed to write {}.toml: {}", base_name, e))
 }
 
+/// Config files the frontend reloads when they change on disk. Other files in the
+/// config directory (notes.db, .window-state.json, assets) are deliberately not
+/// watched: they change constantly and nothing reloads them.
+const WATCHED_CONFIG_FILES: [&str; 4] = ["config", "hotkeys", "autocorrect", "ascii-art"];
+
+/// Payload of the `config-file-changed` event: the file name, e.g. "hotkeys.toml".
+#[derive(Clone, Serialize)]
+struct ConfigFileChanged {
+    filename: String,
+}
+
+/// Returns the file name if `path` is one of the watched config files
+/// (`.toml`, or the legacy `.json` fallback).
+fn watched_config_file(path: &std::path::Path) -> Option<String> {
+    let stem = path.file_stem()?.to_str()?;
+    let ext = path.extension()?.to_str()?;
+    if WATCHED_CONFIG_FILES.contains(&stem) && (ext == "toml" || ext == "json") {
+        path.file_name()?.to_str().map(str::to_owned)
+    } else {
+        None
+    }
+}
+
 #[tauri::command]
 async fn setup_config_watcher(app_handle: AppHandle) -> Result<(), String> {
     let app_config_dir = get_config_dir(&app_handle)?;
@@ -565,22 +589,20 @@ async fn setup_config_watcher(app_handle: AppHandle) -> Result<(), String> {
         // Keep the watcher alive
         let _watcher = watcher;
 
-        let mut last_config_event = Instant::now();
-        let debounce_duration = Duration::from_millis(100); // 100ms debounce
+        // Debounce per file, so a change to one file never swallows another's.
+        let mut last_event: HashMap<String, Instant> = HashMap::new();
+        let debounce_duration = Duration::from_millis(100);
 
         for event in rx {
-            if let Some(path) = event.paths.first() {
-                let file_name = path.file_name();
-                let is_config_file = file_name == Some(std::ffi::OsStr::new("config.json"))
-                    || file_name == Some(std::ffi::OsStr::new("config.toml"));
-
-                if is_config_file {
-                    let now = Instant::now();
-                    if now.duration_since(last_config_event) > debounce_duration {
-                        last_config_event = now;
-                        if let Err(e) = app_handle_clone.emit("config-file-changed", ()) {
-                            eprintln!("Failed to emit config change event: {}", e);
-                        }
+            if let Some(filename) = event.paths.first().and_then(|p| watched_config_file(p)) {
+                let now = Instant::now();
+                let recent = last_event
+                    .get(&filename)
+                    .is_some_and(|last| now.duration_since(*last) <= debounce_duration);
+                if !recent {
+                    last_event.insert(filename.clone(), now);
+                    if let Err(e) = app_handle_clone.emit("config-file-changed", ConfigFileChanged { filename }) {
+                        eprintln!("Failed to emit config change event: {}", e);
                     }
                 }
             }
@@ -1242,4 +1264,32 @@ pub fn run() {
                 }
             }
         });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::watched_config_file;
+    use std::path::Path;
+
+    #[test]
+    fn watches_every_reloadable_config_file() {
+        for name in [
+            "config.toml", "config.json", "hotkeys.toml", "hotkeys.json",
+            "autocorrect.toml", "autocorrect.json", "ascii-art.toml", "ascii-art.json",
+        ] {
+            let path = Path::new("/home/u/.config/irisnotes").join(name);
+            assert_eq!(watched_config_file(&path).as_deref(), Some(name), "{name}");
+        }
+    }
+
+    #[test]
+    fn ignores_other_files_in_the_config_dir() {
+        for name in [
+            ".window-state.json", "notes.db", "notes.db-wal", "hotkeys-template.toml",
+            "quick-tray-icon.svg", "config.toml.swp", "config", "hotkeys.toml~",
+        ] {
+            let path = Path::new("/home/u/.config/irisnotes").join(name);
+            assert_eq!(watched_config_file(&path), None, "{name}");
+        }
+    }
 }

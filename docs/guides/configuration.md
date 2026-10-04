@@ -46,7 +46,8 @@ Sync is normally configured in the app's **Sync view** (activity bar), which
 writes these values back to the file. Deployment of the server is described in
 [`apps/server/DEPLOY.md`](../../apps/server/DEPLOY.md).
 
-Edits to `config.toml` made outside the app are picked up while it runs.
+`config.toml`, `hotkeys.toml`, `autocorrect.toml` and `ascii-art.toml` are
+reloaded while the app runs when you save them from another editor.
 
 ## Themes
 
@@ -97,12 +98,6 @@ to a JSON file and import them again. They are **not** synced between devices.
 
 ## Known issues
 
-- **Only `config.toml` reloads live.** The config watcher
-  (`setup_config_watcher` in `apps/main/src-tauri/src/lib.rs`) emits only for
-  `config.toml` / `config.json`. Changes to `hotkeys.toml`, `autocorrect.toml`
-  and `ascii-art.toml` take effect after a restart — or, by accident, after any
-  `config.toml` change, because their listeners also reload on a filename-less
-  event.
 - **Keys that are accepted but ignored.** `AppConfig` and the default config
   still define keys that no code reads: `[debug] enableExampleNote`,
   `[development]`, `[production]`, `[layout]`, `[editor] toolbarVisible`,

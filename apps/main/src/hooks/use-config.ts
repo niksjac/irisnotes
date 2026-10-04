@@ -121,7 +121,11 @@ export const useConfig = () => {
 		// Set up file watcher once (singleton — never unlistens).
 		invoke("setup_config_watcher")
 			.then(() =>
-				listen("config-file-changed", () => {
+				listen<{ filename?: string }>("config-file-changed", (event) => {
+					// The watcher also reports hotkeys/autocorrect/ascii-art files; those
+					// have their own listeners.
+					const filename = event.payload?.filename;
+					if (filename && filename !== "config.toml" && filename !== "config.json") return;
 					if (isWriting) return; // our own write — skip
 					loadConfigFromDisk().then((merged) => setConfig(merged));
 				}),

@@ -27,9 +27,7 @@ rich editor's keydown handling. Both are overridden from the same file.
 Only list what you change; everything else keeps its default. A `hotkeys.json`
 is read instead if no `.toml` exists.
 
-**Changes take effect on restart.** The config watcher only reacts to
-`config.toml`, so saving `hotkeys.toml` alone is not picked up while the app runs
-(see Known issues).
+Saving the file reloads it while the app runs; no restart needed.
 
 ## App hotkeys
 
@@ -84,13 +82,3 @@ moveLineUp = "Alt-ArrowUp"
   type-check` fails until every exhaustive map covers the new id.
 - Check both layers for conflicts — an app hotkey with `global = true` fires
   inside the editor too.
-
-## Known issues
-
-- **No live reload for `hotkeys.toml`.** The watcher in
-  `apps/main/src-tauri/src/lib.rs` (`setup_config_watcher`) emits only for
-  `config.toml` / `config.json`, with no filename. The hotkeys listener reloads
-  on any event without a filename, so hotkeys are re-read as a side effect of a
-  `config.toml` change, but never for a `hotkeys.toml` change. The same applies
-  to `autocorrect.toml` and `ascii-art.toml`. Fix: emit for every `.toml` in the
-  directory, with the filename in the payload.
