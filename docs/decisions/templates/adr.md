@@ -1,7 +1,9 @@
 # ADR-NNNN: <short imperative title>
 
 - **Status:** Proposed | Accepted | Superseded by ADR-NNNN
-- **Date:** YYYY-MM-DD
+- **Date:** YYYY-MM-DD (when the decision was made)
+- **Recorded:** — (only for a decision written up after the fact: the date it
+  was written and the source it was reconstructed from)
 - **Supersedes:** — (or ADR-NNNN)
 - **Related:** — (RFC-NNNN, other ADRs, relevant docs)
 

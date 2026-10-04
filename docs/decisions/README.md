@@ -63,9 +63,24 @@ you want to know what you believed then, not just what you believe now.
 |---|---|---|---|
 | [0001](adr/ADR-0001-sync-overlay-network.md) | Private overlay network for sync transport | Accepted | 2026-10-02 |
 | [0002](adr/ADR-0002-vps-hub-first-defer-home-infrastructure.md) | Single VPS hub first; NAS hub and OPNsense WireGuard deferred | Accepted | 2026-10-02 |
+| [0003](adr/ADR-0003-single-items-table.md) | One `items` table for books, sections and notes | Accepted | 2025-08-15 |
+| [0004](adr/ADR-0004-fractional-indexing-sort-order.md) | Fractional indexing for item order | Accepted | 2025-12-29 |
+| [0005](adr/ADR-0005-line-oriented-editor-schema.md) | Line-oriented ProseMirror schema | Accepted | 2026-01-11 |
+| [0006](adr/ADR-0006-quick-search-separate-app.md) | Quick search is a separate Tauri app | Accepted | 2025-12-27 |
+| [0007](adr/ADR-0007-configuration-toml-and-settings-table.md) | Configuration in TOML files, UI preferences in the settings table | Accepted | 2025-12-31 |
+| [0008](adr/ADR-0008-local-first-sync-central-hub.md) | Local-first sync through a central hub | Accepted | 2026-06-25 |
+| [0009](adr/ADR-0009-local-builds-no-ci-no-formatter.md) | Local builds and checks — no hosted CI, formatter or linter | Accepted | 2026-10-04 |
+
+ADRs 0003–0008 were written retroactively on 2026-10-04 from older design docs
+and checked against the code; their **Date** is when the decision was made, and
+each says where it was reconstructed from. Numbers follow the order records were
+written, not the order decisions were made.
 
 ### RFCs
 
 | # | Title | Status | Date |
 |---|---|---|---|
 | [0001](rfc/RFC-0001-sync-hub-topology.md) | Sync hub topology and redundancy | Accepted → ADR-0002 | 2026-10-02 |
+| [0002](rfc/RFC-0002-math-rendering.md) | Math rendering in the rich editor | Draft | 2026-01-11 |
+| [0003](rfc/RFC-0003-note-types.md) | Note types beyond rich text | Draft | 2026-01-03 |
+| [0004](rfc/RFC-0004-onenote-style-editor.md) | OneNote-style editor — remaining features | Draft | 2026-01-05 |
