@@ -31,7 +31,11 @@ export function SyncIndicatorButton({ isActive, expanded = false }: Props) {
 	return (
 		<button
 			onClick={() => openSync()}
-			title={`${meta.label} — open sync settings`}
+			title={
+				state.status === "error" && state.lastError
+					? `${meta.label}: ${state.lastError} — open sync settings`
+					: `${meta.label} — open sync settings`
+			}
 			tabIndex={-1}
 			className={clsx(
 				"relative flex items-center rounded bg-transparent cursor-pointer transition-all duration-200 font-medium p-0 outline-none",

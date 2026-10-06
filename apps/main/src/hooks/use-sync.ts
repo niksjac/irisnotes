@@ -36,7 +36,7 @@ export function useSync() {
 	useEffect(() => {
 		if (!enabled || !sync || !storageAdapter) {
 			tickRef.current = null;
-			setSyncState((s) => ({ ...s, status: "disabled" }));
+			setSyncState((s) => ({ ...s, status: "disabled", lastError: null }));
 			return;
 		}
 

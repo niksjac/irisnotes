@@ -96,8 +96,10 @@ export function SyncView() {
 							</div>
 						)}
 					</dl>
-					{state.status === "error" && state.lastError && (
+					{/* Kept visible during a retry; cleared by the next successful cycle. */}
+					{state.lastError && (
 						<p className="mt-2 text-sm text-red-600 dark:text-red-400 break-words">
+							{state.status === "syncing" && "Retrying — last attempt failed: "}
 							{state.lastError}
 						</p>
 					)}

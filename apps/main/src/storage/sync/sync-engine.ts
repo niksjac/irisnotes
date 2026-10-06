@@ -74,9 +74,30 @@ function cursorKey(serverUrl: string, which: "pull" | "push"): string {
 	return `iris.sync.${which}Cursor::${serverUrl}`;
 }
 
+/**
+ * fetch() whose errors say which step failed and what to check. A network
+ * failure otherwise surfaces as the webview's bare TypeError (e.g. "Load
+ * failed"), which names neither the server nor the step.
+ */
+export async function syncRequest(step: string, url: string, init?: RequestInit): Promise<Response> {
+	let res: Response;
+	try {
+		res = await fetch(url, init);
+	} catch (e) {
+		const reason = e instanceof Error ? e.message : String(e);
+		throw new Error(
+			`${step}: can't reach ${url} (${reason}). Is iris-server running, and is this device on its network?`,
+		);
+	}
+	if (res.status === 401) {
+		throw new Error(`${step}: the server rejected the token (HTTP 401). It must match IRIS_TOKEN on the server.`);
+	}
+	if (!res.ok) throw new Error(`${step}: HTTP ${res.status}`);
+	return res;
+}
+
 async function checkVersion(serverUrl: string): Promise<void> {
-	const res = await fetch(`${serverUrl}/version`);
-	if (!res.ok) throw new Error(`version check failed: HTTP ${res.status}`);
+	const res = await syncRequest("version check failed", `${serverUrl}/version`);
 	const v = (await res.json()) as { schemaVersion: number; syncVersion: number };
 	if (v.syncVersion !== EXPECTED_SYNC_VERSION || v.schemaVersion !== EXPECTED_SCHEMA_VERSION) {
 		throw new Error(
@@ -144,12 +165,11 @@ export async function runSync(
 
 	// ---- PULL ----
 	const pullCursor = localStorage.getItem(cursorKey(serverUrl, "pull")) ?? "";
-	const pullRes = await fetch(`${serverUrl}/sync/pull`, {
+	const pullRes = await syncRequest("pull failed", `${serverUrl}/sync/pull`, {
 		method: "POST",
 		headers,
 		body: JSON.stringify({ since: pullCursor }),
 	});
-	if (!pullRes.ok) throw new Error(`pull failed: HTTP ${pullRes.status}`);
 	const { items, cursor } = (await pullRes.json()) as {
 		items: WireItem[];
 		cursor: string;
@@ -163,12 +183,11 @@ export async function runSync(
 	const changed = await db.select<WireItem[]>(SELECT_CHANGED, [pushCursor]);
 	let pushed = 0;
 	if (changed.length > 0) {
-		const pushRes = await fetch(`${serverUrl}/sync/push`, {
+		await syncRequest("push failed", `${serverUrl}/sync/push`, {
 			method: "POST",
 			headers,
 			body: JSON.stringify({ items: changed }),
 		});
-		if (!pushRes.ok) throw new Error(`push failed: HTTP ${pushRes.status}`);
 		pushed = changed.length;
 	}
 	// Advance the push cursor past everything currently local (incl. just-applied
