@@ -1,12 +1,12 @@
 {
-	"version": "1.0.18",
-	"range": "52cfdf8..HEAD",
+	"version": "1.0.19",
+	"range": "d779194..HEAD",
 	"sections": [
 		{
-			"title": "Features",
+			"title": "Fixes",
 			"items": [
-				"Server: Portable Docker deploy (TrueNAS SCALE / Contabo / any host)",
-				"Editor: Add Insert/Edit Link dialog on Ctrl+Shift+K"
+				"Config: Reload hotkeys, autocorrect and ascii-art files on change",
+				"Sync: Show actionable sync errors in the Sync view and indicator"
 			]
 		}
 	]
