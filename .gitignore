@@ -41,3 +41,6 @@ dev/config.toml
 apps/quick/build/
 irisnotes.code-workspace
 dev/assets/
+
+# Owner's numbered GIMP working files (assets/logo.xcf stays tracked)
+assets/[0-9]*.xcf
