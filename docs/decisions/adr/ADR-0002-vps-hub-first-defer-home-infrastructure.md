@@ -4,6 +4,8 @@
 - **Date:** 2026-10-02
 - **Supersedes:** —
 - **Related:** [ADR-0001](ADR-0001-sync-overlay-network.md) (transport),
+  [ADR-0010](ADR-0010-tailscale-serve-for-first-deployment.md) (the hub runs on
+  Tailscale, not NetBird),
   [RFC-0001](../rfc/RFC-0001-sync-hub-topology.md) (resolved by this ADR),
   [`apps/server/DEPLOY.md`](../../../apps/server/DEPLOY.md)
 

@@ -1,6 +1,8 @@
 # ADR-0001: Private overlay network for sync transport
 
-- **Status:** Accepted
+- **Status:** Accepted — choice of NetBird as primary transport superseded by
+  [ADR-0010](ADR-0010-tailscale-serve-for-first-deployment.md); the private-overlay
+  invariant below still holds
 - **Date:** 2026-10-02
 - **Supersedes:** —
 - **Related:** [RFC-0001](../rfc/RFC-0001-sync-hub-topology.md) (hub topology),

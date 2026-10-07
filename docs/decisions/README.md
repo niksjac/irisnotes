@@ -61,7 +61,7 @@ you want to know what you believed then, not just what you believe now.
 
 | # | Title | Status | Date |
 |---|---|---|---|
-| [0001](adr/ADR-0001-sync-overlay-network.md) | Private overlay network for sync transport | Accepted | 2026-10-02 |
+| [0001](adr/ADR-0001-sync-overlay-network.md) | Private overlay network for sync transport | Accepted (transport choice superseded by 0010) | 2026-10-02 |
 | [0002](adr/ADR-0002-vps-hub-first-defer-home-infrastructure.md) | Single VPS hub first; NAS hub and OPNsense WireGuard deferred | Accepted | 2026-10-02 |
 | [0003](adr/ADR-0003-single-items-table.md) | One `items` table for books, sections and notes | Accepted | 2025-08-15 |
 | [0004](adr/ADR-0004-fractional-indexing-sort-order.md) | Fractional indexing for item order | Accepted | 2025-12-29 |
@@ -70,6 +70,7 @@ you want to know what you believed then, not just what you believe now.
 | [0007](adr/ADR-0007-configuration-toml-and-settings-table.md) | Configuration in TOML files, UI preferences in the settings table | Accepted | 2025-12-31 |
 | [0008](adr/ADR-0008-local-first-sync-central-hub.md) | Local-first sync through a central hub | Accepted | 2026-06-25 |
 | [0009](adr/ADR-0009-local-builds-no-ci-no-formatter.md) | Local builds and checks — no hosted CI, formatter or linter | Accepted | 2026-10-04 |
+| [0010](adr/ADR-0010-tailscale-serve-for-first-deployment.md) | Tailscale and `tailscale serve` for the first hub deployment | Accepted | 2026-10-05 |
 
 ADRs 0003–0008 were written retroactively on 2026-10-04 from older design docs
 and checked against the code; their **Date** is when the decision was made, and

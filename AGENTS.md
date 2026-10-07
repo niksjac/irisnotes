@@ -83,8 +83,10 @@ Dev builds read config and data from `dev/`; installed builds from
   `items` changes. Existing databases are migrated in place on startup — never
   require users to recreate them.
 - **Sync stays content-opaque**: never parse `content`/`metadata` in sync code.
-  `iris-server` binds only private overlay addresses and never terminates TLS
-  ([ADR-0001](docs/decisions/adr/ADR-0001-sync-overlay-network.md)).
+  `iris-server` listens only on loopback or a private overlay address — never a
+  public one — and never terminates TLS itself
+  ([ADR-0001](docs/decisions/adr/ADR-0001-sync-overlay-network.md),
+  [ADR-0010](docs/decisions/adr/ADR-0010-tailscale-serve-for-first-deployment.md)).
 - **Ask first** before anything destructive or outward-facing: deleting
   untracked files, killing processes, pushing, touching a remote host.
 
