@@ -18,7 +18,9 @@ services:
       IRIS_BIND: 0.0.0.0:8787
       IRIS_DB_PATH: /data/iris-server.db
     ports:
-      - "${IRIS_PORT:-8787}:8787"
+      # Loopback only by default: never published on a public interface.
+      # Expose it with a reverse proxy or `tailscale serve` (see DEPLOY.md).
+      - "127.0.0.1:${IRIS_PORT:-8787}:8787"
     volumes:
       # Named volume by default (portable anywhere). On TrueNAS, swap this for a
       # ZFS dataset bind mount to get native encryption + snapshots, e.g.:

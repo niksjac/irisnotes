@@ -48,8 +48,9 @@ mkdir -p /srv/iris
 
 ### 2. Override: loopback only, data in `/srv/iris`
 
-The repo's `docker-compose.yml` publishes on every interface and uses a named
-volume. Override both in a local file (untracked; `git pull` still works).
+The repo's `docker-compose.yml` publishes on `127.0.0.1` and uses a named
+volume. A local override file (untracked; `git pull` still works) pins the
+loopback binding explicitly and puts the data in `/srv/iris`.
 Written with `printf` rather than a heredoc, which pastes unreliably:
 
 ```sh
@@ -204,6 +205,6 @@ Only if a client cannot join the overlay (e.g. a browser on a borrowed device):
   entries persist, so both should come back after a reboot (expected, not yet
   tested by rebooting). Binding to `127.0.0.1` avoids any dependency on the
   overlay interface being up first.
-- **Quick local run (no overlay):** `docker compose up -d --build` without the
-  override serves on `8787` on every interface — fine on a trusted LAN, never on
-  a host with a public IP.
+- **Quick local run:** `docker compose up -d --build` without the override
+  serves on `127.0.0.1:8787` with data in a named volume — reachable only from
+  the same machine.
