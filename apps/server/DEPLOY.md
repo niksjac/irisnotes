@@ -144,6 +144,22 @@ sqlite3 /srv/iris/iris-server.db ".backup '/srv/iris-backup/iris-$(date +%F).db'
 
 …and copy the results off the VPS.
 
+## Encryption at rest
+
+**Not set up on the production hub** (owner's choice, 2026-10-05): the database
+in `/srv/iris` is a plain file on the VPS disk. Data in transit is encrypted
+(WireGuard + HTTPS). What disk encryption on a VPS can and cannot do:
+
+- It protects against leaked disk images, snapshots and decommissioned drives.
+- It does **not** protect against the provider while the VM runs — the
+  hypervisor can read memory, including the unlock key. Only end-to-end
+  encryption of note content in the app would (deferred, ADR-0008).
+
+Options when this is taken up: a LUKS volume at `/srv/iris` unlocked by
+passphrase after each reboot (guard against the container starting on the
+empty, unencrypted mount point before it is unlocked), or moving the hub to the
+NAS with ZFS encryption (below).
+
 ## Later: other hubs and transports
 
 ### TrueNAS SCALE as a standby or replacement hub

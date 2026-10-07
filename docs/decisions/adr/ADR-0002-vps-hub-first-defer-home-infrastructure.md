@@ -1,6 +1,9 @@
 # ADR-0002: Single VPS hub first; NAS hub and OPNsense WireGuard deferred
 
-- **Status:** Accepted
+- **Status:** Accepted — "reached over NetBird" superseded by
+  [ADR-0010](ADR-0010-tailscale-serve-for-first-deployment.md) (the hub runs on
+  Tailscale); the rest stands. Note 2026-10-07: the VPS volume encryption this
+  record assumes is not in place — see the Current state in `docs/README.md`.
 - **Date:** 2026-10-02
 - **Supersedes:** —
 - **Related:** [ADR-0001](ADR-0001-sync-overlay-network.md) (transport),

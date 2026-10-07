@@ -38,8 +38,10 @@ All `/sync/*` requests need `Authorization: Bearer <IRIS_TOKEN>`.
 ## Connect the desktop app
 
 The desktop client (`apps/main`) is local-first and syncs in the background when
-enabled. It is **off by default**. To turn it on, add a `[sync]` section to your
-app config (`dev/config.toml` in dev):
+enabled. It is **off by default**. In the installed app, turn it on in the **Sync
+view** (activity bar), which writes the `[sync]` section of `config.toml` for
+you; a failed cycle shows its reason there. For a dev build, the same section can
+be added to `dev/config.toml` by hand:
 
 ```toml
 [sync]
@@ -65,10 +67,11 @@ server URL.
 4. `POST /sync/push` a row by hand (see contract above) and watch it appear in
    the app on the next cycle.
 
-> Recreating the schema: existing databases keep the *old* `update_items_timestamp`
-> trigger (CREATE TRIGGER IF NOT EXISTS won't replace it). For a clean dev DB with
-> the guard, run `./dev/setup-dev-db.sh`. Production DBs need a one-time migration
-> to drop & recreate that trigger.
+> Older databases: the guarded `update_items_timestamp` trigger replaces an
+> unguarded one. The app migrates existing databases in place on startup
+> (`runPreSchemaMigrations` in
+> `apps/main/src/storage/adapters/sqlite/sqlite-schema.ts`), so nothing needs to
+> be recreated. `./dev/setup-dev-db.sh` still gives a clean dev database.
 
 ## Phase 1 scope / known limitations
 
@@ -77,6 +80,8 @@ server URL.
 - `updated_at` has **second granularity** (SQLite `datetime('now')`); the pull
   cursor uses strict `>`. Fine for a single user who never edits two devices in
   the same second — revisit if that assumption changes.
-- Bearer token uses a plain `==` compare — switch to constant-time before
-  exposing to the public internet, and always run behind TLS (Caddy).
+- Bearer token uses a plain `==` compare — switch to constant-time before any
+  public exposure. The server itself speaks plain HTTP: in production it listens
+  on loopback and TLS is terminated in front of it (`tailscale serve`, see
+  [DEPLOY.md](DEPLOY.md)).
 - No pagination on pull yet (whole changed-set in one response).

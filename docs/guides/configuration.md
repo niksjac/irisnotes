@@ -37,7 +37,7 @@ theme = "nord"            # see Themes below
 
 [sync]                    # remote sync, off by default
 enabled = false
-serverUrl = "http://127.0.0.1:8787"
+serverUrl = "http://127.0.0.1:8787"   # default; production: https://<machine>.<tailnet>.ts.net:8787
 token = ""
 intervalSeconds = 30
 ```

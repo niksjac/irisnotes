@@ -62,7 +62,7 @@ you want to know what you believed then, not just what you believe now.
 | # | Title | Status | Date |
 |---|---|---|---|
 | [0001](adr/ADR-0001-sync-overlay-network.md) | Private overlay network for sync transport | Accepted (transport choice superseded by 0010) | 2026-10-02 |
-| [0002](adr/ADR-0002-vps-hub-first-defer-home-infrastructure.md) | Single VPS hub first; NAS hub and OPNsense WireGuard deferred | Accepted | 2026-10-02 |
+| [0002](adr/ADR-0002-vps-hub-first-defer-home-infrastructure.md) | Single VPS hub first; NAS hub and OPNsense WireGuard deferred | Accepted (overlay superseded by 0010) | 2026-10-02 |
 | [0003](adr/ADR-0003-single-items-table.md) | One `items` table for books, sections and notes | Accepted | 2025-08-15 |
 | [0004](adr/ADR-0004-fractional-indexing-sort-order.md) | Fractional indexing for item order | Accepted | 2025-12-29 |
 | [0005](adr/ADR-0005-line-oriented-editor-schema.md) | Line-oriented ProseMirror schema | Accepted | 2026-01-11 |
