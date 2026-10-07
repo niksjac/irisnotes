@@ -8,6 +8,8 @@ duplicate rules elsewhere.
 When this file, a doc and the code disagree: **the code is right**, then this
 file, then `docs/`. Fix the stale one as part of your change, or say so.
 
+**Where things stand and what's next:** [docs/README.md — Current state](docs/README.md#current-state).
+
 ## Project
 
 IrisNotes is a local-first desktop notes app (OneNote/Trilium-inspired), built
@@ -65,6 +67,9 @@ Dev builds read config and data from `dev/`; installed builds from
 - TypeScript changed → `pnpm run type-check` must pass. Logic with tests →
   `pnpm test`. Rust crate changed → `cargo check` in that crate.
 - UI behaviour can only be confirmed in the running app; say when you couldn't.
+- Sync changes: test against a local hub (`cd apps/server && IRIS_TOKEN=… cargo
+  run`) and an isolated app instance (`XDG_CONFIG_HOME=<scratch dir>`), never
+  against the production hub or real notes.
 - Report exactly what you ran and what you didn't. Never describe something as
   tested or working that you didn't verify.
 
@@ -77,7 +82,8 @@ Dev builds read config and data from `dev/`; installed builds from
 - **Never commit secrets or local state**: `dev/config.toml` (may hold a sync
   token), `dev/notes.db`, `apps/server/.env`. All are gitignored — keep it so.
 - **Schema** changes go in `schema/base.sql` only. It is embedded by the main
-  app, `iris-server` and read by `apps/quick`; check all three, and the sync
+  app and `iris-server`, and `apps/quick` queries the same tables (`items`,
+  `items_fts`) with hand-written SQL; check all three, and the sync
   contract version (`EXPECTED_*_VERSION` in
   `apps/main/src/storage/sync/sync-engine.ts`, `/version` in the server) when
   `items` changes. Existing databases are migrated in place on startup — never
@@ -87,14 +93,25 @@ Dev builds read config and data from `dev/`; installed builds from
   public one — and never terminates TLS itself
   ([ADR-0001](docs/decisions/adr/ADR-0001-sync-overlay-network.md),
   [ADR-0010](docs/decisions/adr/ADR-0010-tailscale-serve-for-first-deployment.md)).
+- **Remote hosts and secrets stay with the owner.** Agents get no direct access
+  to the sync VPS or any other remote host, and never see secrets (the sync
+  token, Tailscale/NetBird keys). For remote work, write the commands for the
+  owner to run, ask only for output that contains no secrets, and verify what
+  you can from this machine (requests over the tailnet, checks against the
+  public IP). Never ask for a token to be pasted, and never print one — e.g.
+  `docker compose config --no-interpolate`, `… | wl-copy` instead of `cat`.
 - **Ask first** before anything destructive or outward-facing: deleting
-  untracked files, killing processes, pushing, touching a remote host.
+  untracked files, killing processes, pushing.
 
 ## Git
 
 - **Conventional Commits** (`feat(editor): …`, `fix(sync): …`, `docs: …`,
   `chore(repo): …`). One logical change per commit; split mixed worktrees into
   several commits.
+- **Stage explicit paths** (`git add <files>`), never `git add -A` or `git add .`:
+  the worktree can hold the owner's untracked files — e.g. design work in
+  `assets/` — which are not yours to commit or delete. Check `git status` before
+  committing.
 - **No AI attribution** — no `Co-Authored-By` or similar trailers naming an AI.
 - Work on `master` unless asked to branch. **Never push unless asked.** Never
   force-push or rewrite pushed history.
@@ -147,6 +164,8 @@ installs them to `~/.local`, and commits `chore(release): bump apps to X.Y.Z`.
   dated note recording a verification result is fine.
 - `docs/guides/` — how-to guides, each checked against source and dated. When
   you change behaviour a guide describes, update the guide in the same commit.
+- When a milestone lands or a priority changes, update **Current state** in
+  `docs/README.md` in the same commit.
 - Don't add new top-level docs; put decisions in `docs/decisions/`, how-tos in
   `docs/guides/`. Known bugs are listed under "Known issues" in the guides and
   the "Bad" consequences of ADRs.
