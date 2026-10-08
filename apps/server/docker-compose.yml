@@ -19,7 +19,7 @@ services:
       IRIS_DB_PATH: /data/iris-server.db
     ports:
       # Loopback only by default: never published on a public interface.
-      # Expose it with a reverse proxy or `tailscale serve` (see DEPLOY.md).
+      # Expose it with a reverse proxy or `tailscale serve` (see docs/guides/sync-hub.md).
       - "127.0.0.1:${IRIS_PORT:-8787}:8787"
     volumes:
       # Named volume by default (portable anywhere). On TrueNAS, swap this for a

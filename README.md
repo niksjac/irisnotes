@@ -31,4 +31,4 @@ Prerequisites and releases: [docs/guides/building.md](docs/guides/building.md).
 
 - [AGENTS.md](AGENTS.md) — how to work in this repo (for people and coding agents)
 - [docs/](docs/README.md) — current state, decision records (ADRs/RFCs), guides
-- [apps/server/DEPLOY.md](apps/server/DEPLOY.md) — running the sync hub
+- [docs/guides/sync-hub.md](docs/guides/sync-hub.md) — running the sync hub

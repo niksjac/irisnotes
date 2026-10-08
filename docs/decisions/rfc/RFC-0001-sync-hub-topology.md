@@ -6,7 +6,7 @@
 - **Resolved:** 2026-10-02, by
   [ADR-0002](../adr/ADR-0002-vps-hub-first-defer-home-infrastructure.md)
 - **Related:** [ADR-0001](../adr/ADR-0001-sync-overlay-network.md) (transport —
-  decided), [`apps/server/DEPLOY.md`](../../../apps/server/DEPLOY.md)
+  decided), [`docs/guides/sync-hub.md`](../../guides/sync-hub.md)
 
 ## Problem
 

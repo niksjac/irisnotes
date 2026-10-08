@@ -6,7 +6,7 @@
   ADR-0001's invariant (private overlay only, no public listener) still holds.
 - **Related:** [ADR-0001](ADR-0001-sync-overlay-network.md),
   [ADR-0002](ADR-0002-vps-hub-first-defer-home-infrastructure.md),
-  [`apps/server/DEPLOY.md`](../../../apps/server/DEPLOY.md)
+  [`docs/guides/sync-hub.md`](../../guides/sync-hub.md)
 
 ## Context
 

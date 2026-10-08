@@ -1,4 +1,8 @@
-# Deploying iris-server
+# The sync hub (iris-server)
+
+How to deploy, operate and update `iris-server`, the hub your devices sync through
+(the code is in `apps/server/`). Verified against the production deployment on
+2026-10-05 – 2026-10-07.
 
 iris-server is **hub-agnostic**: one small Docker image (~13 MB), configured
 entirely by environment variables, with the only state in a `/data` volume (the
@@ -9,9 +13,9 @@ The app side is equally flexible: a hub is just the **Server URL** and **Token**
 in the app's Sync view. Sync cursors are stored per URL, so pointing the app at a
 different hub re-syncs cleanly against it.
 
-Why it is set up this way: [ADR-0001](../../docs/decisions/adr/ADR-0001-sync-overlay-network.md)
-(private overlay only), [ADR-0002](../../docs/decisions/adr/ADR-0002-vps-hub-first-defer-home-infrastructure.md)
-(VPS hub first), [ADR-0010](../../docs/decisions/adr/ADR-0010-tailscale-serve-for-first-deployment.md)
+Why it is set up this way: [ADR-0001](../decisions/adr/ADR-0001-sync-overlay-network.md)
+(private overlay only), [ADR-0002](../decisions/adr/ADR-0002-vps-hub-first-defer-home-infrastructure.md)
+(VPS hub first), [ADR-0010](../decisions/adr/ADR-0010-tailscale-serve-for-first-deployment.md)
 (Tailscale and `tailscale serve`).
 
 **The one rule:** iris-server never listens on a public address. It publishes

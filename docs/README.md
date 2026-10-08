@@ -17,7 +17,7 @@ or a priority changes.
   the owner's Tailscale tailnet, at `https://hub.tailcb3cd9.ts.net:8787`. Code in
   `/opt/irisnotes`, database in `/srv/iris`
   ([ADR-0010](decisions/adr/ADR-0010-tailscale-serve-for-first-deployment.md),
-  [DEPLOY.md](../apps/server/DEPLOY.md)). The installed app syncs with it.
+  [sync-hub.md](guides/sync-hub.md)). The installed app syncs with it.
 
 **Not protected yet — known and accepted for now**
 
@@ -31,7 +31,7 @@ or a priority changes.
 
 **Next, roughly in order**
 
-1. Hub backups: nightly SQLite backup copied off the VPS ([DEPLOY.md — Backups](../apps/server/DEPLOY.md#backups)).
+1. Hub backups: nightly SQLite backup copied off the VPS ([sync-hub.md — Backups](guides/sync-hub.md#backups)).
 2. Encryption at rest: full-disk encryption on the desktop; for the hub, a
    passphrase LUKS volume or moving it to the NAS later
    ([ADR-0002](decisions/adr/ADR-0002-vps-hub-first-defer-home-infrastructure.md)).
@@ -75,9 +75,10 @@ and dated; if code and guide disagree, the code wins and the guide needs fixing.
 - [editor.md](guides/editor.md) — editor appearance settings and the custom
   cursor
 - [icons.md](guides/icons.md) — app, launcher and tray icons on Linux
+- [sync-hub.md](guides/sync-hub.md) — deploying, updating and operating the sync
+  hub (`iris-server`)
 
 ## Elsewhere
 
 - [`apps/server/README.md`](../apps/server/README.md) — sync server, contract
-- [`apps/server/DEPLOY.md`](../apps/server/DEPLOY.md) — deploying the sync server
 - [`schema/base.sql`](../schema/base.sql) — the database schema (source of truth)

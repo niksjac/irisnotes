@@ -44,7 +44,7 @@ intervalSeconds = 30
 
 Sync is normally configured in the app's **Sync view** (activity bar), which
 writes these values back to the file. Deployment of the server is described in
-[`apps/server/DEPLOY.md`](../../apps/server/DEPLOY.md).
+[`docs/guides/sync-hub.md`](sync-hub.md).
 
 `config.toml`, `hotkeys.toml`, `autocorrect.toml` and `ascii-art.toml` are
 reloaded while the app runs when you save them from another editor.

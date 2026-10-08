@@ -8,7 +8,7 @@
 - **Related:** [RFC-0001](../rfc/RFC-0001-sync-hub-topology.md) (hub topology),
   [ADR-0002](ADR-0002-vps-hub-first-defer-home-infrastructure.md) (rollout order —
   the secondary transport below is deferred),
-  [`apps/server/DEPLOY.md`](../../../apps/server/DEPLOY.md)
+  [`docs/guides/sync-hub.md`](../../guides/sync-hub.md)
 
 ## Context
 

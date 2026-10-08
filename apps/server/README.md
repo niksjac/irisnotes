@@ -7,6 +7,10 @@ browser) push to and pull from. Single-user, last-writer-wins.
 Schema is single-sourced from `schema/base.sql` (embedded via `include_str!`),
 so the server can never drift from the app on table structure.
 
+**Deploying, updating and operating the hub:**
+[docs/guides/sync-hub.md](../../docs/guides/sync-hub.md). This README covers
+local development and the sync contract.
+
 ## Run (local dev)
 
 ```sh
@@ -83,5 +87,5 @@ server URL.
 - Bearer token uses a plain `==` compare — switch to constant-time before any
   public exposure. The server itself speaks plain HTTP: in production it listens
   on loopback and TLS is terminated in front of it (`tailscale serve`, see
-  [DEPLOY.md](DEPLOY.md)).
+  [sync-hub.md](../../docs/guides/sync-hub.md)).
 - No pagination on pull yet (whole changed-set in one response).

@@ -10,7 +10,7 @@
   [ADR-0010](ADR-0010-tailscale-serve-for-first-deployment.md) (the hub runs on
   Tailscale, not NetBird),
   [RFC-0001](../rfc/RFC-0001-sync-hub-topology.md) (resolved by this ADR),
-  [`apps/server/DEPLOY.md`](../../../apps/server/DEPLOY.md)
+  [`docs/guides/sync-hub.md`](../../guides/sync-hub.md)
 
 ## Context
 
