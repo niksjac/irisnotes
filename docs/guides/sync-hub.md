@@ -126,14 +126,42 @@ The first cycle against an empty hub pushes all your notes. If it fails, the
 Sync view says which step failed and why (unreachable server, rejected token, or
 an HTTP status).
 
-### 7. Updating the server
+### 7. Updating the hub
+
+The image is built on the VPS from the clone in `/opt/irisnotes`, so updating
+means pulling and rebuilding there.
+
+**When it's needed.** Only when `apps/server/` or `schema/base.sql` changed.
+Desktop releases don't need a hub update unless they change the sync contract;
+the app checks the hub's `/version` on every cycle, and a mismatch shows as a
+sync error in the Sync view (local notes are unaffected). Check first:
 
 ```sh
-cd /opt/irisnotes && git pull
-cd apps/server && docker compose up -d --build
+cd /opt/irisnotes
+git fetch
+git log --oneline HEAD..origin/master -- apps/server schema   # empty = nothing for the hub
 ```
 
-The override file and `.env` survive the pull.
+**Updating:**
+
+```sh
+cd /opt/irisnotes && git pull --ff-only
+cd apps/server
+docker compose config --no-interpolate | grep -E -A6 '^    (ports|volumes):'   # override still applied?
+docker compose up -d --build
+docker ps --filter name=iris-server --format '{{.Names}}  {{.Status}}  {{.Ports}}'
+curl -s http://127.0.0.1:8787/health; echo
+```
+
+- The override file and `.env` are untracked, so they survive the pull. Never
+  edit tracked files on the VPS; `--ff-only` refuses to merge if someone did.
+- The container is replaced once the new image is built: a few seconds without
+  a hub. Clients just retry on their next cycle.
+- If the update changes the schema or the sync contract, copy the database
+  first (until backups exist):
+  `docker compose stop && cp /srv/iris/iris-server.db /srv/iris/iris-server.db.pre-update && docker compose up -d --build`
+- Old images pile up over time. `docker image prune` removes only dangling ones,
+  which is safe next to other containers on the host.
 
 ## Backups
 
