@@ -1,41 +1,29 @@
 import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { useConfig } from "./use-config";
 import { createStorageAdapter } from "@/storage";
 import type { StorageAdapter } from "@/storage";
 
 export const useNotesStorage = () => {
-	const { config, loading: configLoading } = useConfig();
 	const [storageAdapter, setStorageAdapter] = useState<StorageAdapter | null>(
 		null
 	);
 	const [isInitialized, setIsInitialized] = useState(false);
 
-	// Initialize storage when config loads or changes
+	// Initialize storage once
 	useEffect(() => {
 		// Prevent multiple initialization attempts
-		if (configLoading || isInitialized) {
+		if (isInitialized) {
 			return;
 		}
 
 		const initializeStorage = async () => {
 			try {
-				// Create storage config based on backend type
-				let storageConfig = { ...config.storage };
-
-				if (config.storage.backend === "sqlite") {
-					// Get the actual database path from Tauri backend (handles dev vs prod)
-					const databasePath = await invoke<string>("get_database_path");
-					storageConfig = {
-						...storageConfig,
-						sqlite: {
-							...config.storage.sqlite,
-							database_path: databasePath,
-						},
-					};
-				}
-
-				const adapter = createStorageAdapter(storageConfig);
+				// SQLite only; the backend resolves the path (dev/ vs ~/.config/irisnotes/)
+				const databasePath = await invoke<string>("get_database_path");
+				const adapter = createStorageAdapter({
+					backend: "sqlite",
+					sqlite: { database_path: databasePath },
+				});
 
 				// Initialize the adapter
 				const result = await adapter.init();
@@ -56,7 +44,7 @@ export const useNotesStorage = () => {
 		};
 
 		initializeStorage();
-	}, [configLoading, config.storage, isInitialized]);
+	}, [isInitialized]);
 
 	const syncStorage = useCallback(async () => {
 		if (!storageAdapter?.sync) {

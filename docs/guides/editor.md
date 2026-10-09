@@ -8,9 +8,10 @@ can and can't do yet is listed in
 
 ## Changing settings
 
-Open **Settings** with **Ctrl+Shift+,**. Changes apply immediately and are
-saved in the `settings` table of `notes.db` (key `editor`), so they are per
-device and can be exported and imported from the same view.
+Open **Settings** with **Ctrl+Shift+,**. Changes apply immediately and are kept
+per device: in local storage, with a copy in the `settings` table of `notes.db`
+(key `editor`). They can be exported from the same view; importing currently has
+no effect (see [configuration.md — Known issues](configuration.md#known-issues)).
 
 **Ctrl+E** switches a note between the rich editor (ProseMirror) and its HTML
 source (CodeMirror).

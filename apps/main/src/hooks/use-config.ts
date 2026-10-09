@@ -19,32 +19,12 @@ import { DEFAULT_THEME } from "@/config/themes";
 
 export const DEFAULT_CONFIG: AppConfig = {
 	theme: DEFAULT_THEME,
-	editor: {
-		lineWrapping: false,
-		toolbarVisible: true,
-		titleBarVisible: true,
-		metadataBarVisible: true,
-	},
-	debug: {
-		enableExampleNote: false,
-	},
-	storage: {
-		backend: "sqlite",
-		sqlite: {
-			database_path: "notes.db",
-		},
-	},
 	sync: {
 		enabled: false,
 		serverUrl: "http://127.0.0.1:8787",
 		token: "",
 		intervalSeconds: 30,
 	},
-	development: {
-		useLocalConfig: false,
-		configPath: "./dev/",
-	},
-	production: {},
 };
 
 // ─── Module-level singletons ───────────────────────────────────────────────
@@ -62,16 +42,11 @@ let initialized = false;
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
 function mergeWithDefaults(parsed: AppConfig): AppConfig {
+	// Unknown keys from older files are kept (and written back) but never read.
 	return {
 		...DEFAULT_CONFIG,
 		...parsed,
-		editor: { ...DEFAULT_CONFIG.editor, ...parsed.editor },
-		debug: { ...DEFAULT_CONFIG.debug, ...parsed.debug },
-		storage: { ...DEFAULT_CONFIG.storage, ...parsed.storage },
 		sync: { ...DEFAULT_CONFIG.sync, ...parsed.sync } as AppConfig["sync"],
-		hotkeys: parsed.hotkeys ?? DEFAULT_CONFIG.hotkeys,
-		development: { ...DEFAULT_CONFIG.development, ...parsed.development },
-		production: { ...DEFAULT_CONFIG.production, ...parsed.production },
 	};
 }
 
@@ -89,10 +64,7 @@ async function loadConfigFromDisk(): Promise<AppConfig> {
 		const raw = await invoke<string>("read_config", { filename: "config" });
 		return mergeWithDefaults(JSON.parse(raw) as AppConfig);
 	} catch {
-		const isDev = import.meta.env.DEV;
-		return isDev
-			? { ...DEFAULT_CONFIG, development: { useLocalConfig: true, configPath: "./dev/" } }
-			: DEFAULT_CONFIG;
+		return DEFAULT_CONFIG;
 	}
 }
 
@@ -157,20 +129,9 @@ export const useConfig = () => {
 			const newConfig: AppConfig = {
 				...config,
 				...updates,
-				editor: { ...config.editor, ...updates.editor },
-				debug: { ...config.debug, ...updates.debug },
-				storage: { ...config.storage, ...updates.storage },
 				sync: updates.sync
 					? { ...config.sync, ...updates.sync } as AppConfig["sync"]
 					: config.sync,
-				hotkeys: updates.hotkeys
-					? { ...config.hotkeys, ...updates.hotkeys }
-					: config.hotkeys,
-				layout: updates.layout
-					? { ...config.layout, ...updates.layout }
-					: config.layout,
-				development: { ...config.development, ...updates.development },
-				production: { ...config.production, ...updates.production },
 			};
 
 			// Optimistic update — all consumers re-render in one pass.

@@ -284,34 +284,14 @@ export interface SyncSettings {
 	databasePath?: string;
 }
 
+/**
+ * config.toml. Only theme and sync are read; hotkeys, autocorrect and ASCII art
+ * have their own TOML files, and UI preferences live in atoms (see ADR-0007).
+ * Unknown keys in an existing file are preserved on save but ignored.
+ */
 export interface AppConfig {
 	theme?: import("@/config/themes").ThemeName; // Active theme
-	editor: {
-		lineWrapping: boolean;
-		toolbarVisible: boolean;
-		titleBarVisible?: boolean;
-		metadataBarVisible?: boolean;
-	};
-	debug: {
-		enableExampleNote: boolean;
-	};
-	storage: StorageSettings;
 	sync?: SyncSettings; // Optional remote sync (iris-server)
-	hotkeys?: HotkeyMapping; // Optional hotkey configuration
-	layout?: {
-		sidebarWidth?: number;
-		activityBarVisible?: boolean;
-		sidebarCollapsed?: boolean;
-	};
-	development: {
-		useLocalConfig: boolean;
-		configPath: string;
-	};
-	production: {
-		customConfigPath?: string;
-		customDatabasePath?: string;
-		customNotesPath?: string;
-	};
 }
 
 // UI and Layout types

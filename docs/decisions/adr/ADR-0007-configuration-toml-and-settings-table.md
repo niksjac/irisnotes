@@ -1,6 +1,9 @@
 # ADR-0007: Configuration in TOML files, UI preferences in the settings table
 
-- **Status:** Accepted
+- **Status:** Accepted. Note 2026-10-09: in practice UI preferences are read
+  from local storage and the `settings` table is a write-only copy, so settings
+  import has no effect (see the configuration guide's Known issues); the unused
+  `theme` and `layout` settings were removed
 - **Date:** 2025-12-31 (`config.toml`, documented in commit `2b7ef39`);
   2026-01-05 (SQLite `settings` table)
 - **Recorded:** 2026-10-04, retroactively, from `docs/CONFIGURATION.md`,

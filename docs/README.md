@@ -52,9 +52,15 @@ and any agent can run it from the desktop)
   2026-10-05:
   `echo | openssl s_client -connect hub.tailcb3cd9.ts.net:8787 2>/dev/null | openssl x509 -noout -dates`
 
-**Smaller known issues** are listed under "Known issues" in the guides — for
-example several `config.toml` keys that are accepted but ignored — and as "Bad"
-consequences in the ADRs. Two CLIs overlap in function (see `AGENTS.md`).
+**Small tasks**
+
+- Settings import in the Config view has no effect
+  ([configuration.md — Known issues](guides/configuration.md#known-issues)).
+- Two CLIs overlap in function — the Bun `iris` in `apps/cli` and the Rust one in
+  `apps/main/src-tauri/src/cli.rs`. Decide which to keep.
+
+Other known issues are listed under "Known issues" in the guides and as "Bad"
+consequences in the ADRs.
 
 ## [Decision records](decisions/README.md)
 

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTheme } from "@/hooks";
 import { useConfig } from "@/hooks/use-config";
+import { useAppInfo } from "@/hooks/use-app-info";
 import { useEditorSettings } from "@/hooks/use-editor-settings";
 import { useAtomValue, useSetAtom } from "jotai";
 import { itemsAtom, notesAtom, booksAtom, sectionsAtom } from "@/atoms/items";
@@ -137,6 +138,7 @@ function CollapsibleSection({ icon, title, children, defaultOpen = false, forceO
 export function ConfigView() {
 	const { themeName, setTheme } = useTheme();
 	const { config } = useConfig();
+	const { appInfo } = useAppInfo();
 	const { settings: editorSettings, updateSetting, resetSettings, constraints } = useEditorSettings();
 	const openAsciiArtTab = useSetAtom(openAsciiArtTabAtom);
 	const openAutocorrectTab = useSetAtom(openAutocorrectTabAtom);
@@ -455,13 +457,13 @@ export function ConfigView() {
 								</div>
 								<div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
 									Fast, reliable local database.
-									{config.storage.sqlite?.database_path && (
+									{appInfo?.database_path && (
 										<div className="mt-2">
 											<span className="text-gray-600 dark:text-gray-400">
 												Path:{" "}
 											</span>
 											<code className="text-xs bg-gray-100 dark:bg-gray-600 px-1.5 py-0.5 rounded">
-												{config.storage.sqlite.database_path}
+												{appInfo.database_path}
 											</code>
 										</div>
 									)}

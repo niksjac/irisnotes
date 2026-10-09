@@ -1,7 +1,7 @@
 # Configuration and themes
 
 Where IrisNotes keeps its settings and which ones you can edit by hand.
-Verified against source on 2026-10-04. The reasoning behind the split is in
+Verified against source on 2026-10-04, updated 2026-10-09. The reasoning behind the split is in
 [ADR-0007](../decisions/adr/ADR-0007-configuration-toml-and-settings-table.md).
 
 ## Where things live
@@ -89,22 +89,27 @@ description = "Insert arrow"
 key = "ctrl+shift+alt+3"
 ```
 
-## Preferences stored in the database
+## Preferences kept by the app
 
 Editor appearance (font, size, line height, cursor — see
-[editor.md](editor.md)), layout and branding are set from the UI and stored in
-the `settings` table of `notes.db`, not in TOML. The Config view can export them
-to a JSON file and import them again. They are **not** synced between devices.
+[editor.md](editor.md)) and branding are set from the UI. They live in the app's
+local storage (`setting:editor`, `setting:branding`), and every change is also
+written to the `settings` table of `notes.db`. Window layout (sidebar, toolbar,
+title and metadata bars, panes and tabs) lives in local storage only. None of
+these are in TOML, and none are synced between devices.
+
+The Config view can export the database copy to a JSON file; importing it
+currently has no effect (see Known issues).
 
 ## Known issues
 
-- **Keys that are accepted but ignored.** `AppConfig` and the default config
-  still define keys that no code reads: `[debug] enableExampleNote`,
-  `[development]`, `[production]`, `[layout]`, `[editor] toolbarVisible`,
-  `titleBarVisible`, `metadataBarVisible` (these three come from persisted
-  layout state instead), `[editor] lineWrapping` (written when you toggle
-  wrapping, but the editor setting in the database always takes precedence),
-  and `[storage.sqlite] database_path` (replaced at startup by the fixed path).
-  Writing them has no effect.
-- **A dead `theme` setting.** The `settings` table also defines a `theme` key
-  that nothing reads; see ADR-0007.
+- **Importing settings has no effect.** The import writes the `settings` table
+  and reloads the window, but preferences are read from local storage, which the
+  import never touches. `atomWithPersistence` (`apps/main/src/atoms/settings.ts`)
+  reads the database only through its `initAtom`, and nothing calls it. Fix:
+  load the init atoms at startup (making the database the source), or have the
+  import write local storage as well.
+- **Older `config.toml` files may hold keys from earlier versions** — `[debug]`,
+  `[development]`, `[production]`, `[layout]`, `[storage]`, `hotkeys`, and
+  `[editor]` visibility and line-wrapping keys. They are ignored and kept when
+  the app saves the file; delete them by hand if you like.

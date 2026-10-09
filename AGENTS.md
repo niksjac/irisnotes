@@ -150,8 +150,10 @@ installs them to `~/.local`, and commits `chore(release): bump apps to X.Y.Z`.
   (react-hotkeys-hook names: `comma`, `period`, not `,` `.`); editor keybindings
   in `apps/main/src/config/default-editor-keybindings.ts` (ProseMirror notation:
   `Mod-b`). Details: [docs/guides/hotkeys.md](docs/guides/hotkeys.md).
-- **Config**: TOML files for configuration, the SQLite `settings` table for UI
-  preferences
+- **Config**: `config.toml` holds only `theme` and `[sync]`; hotkeys,
+  autocorrect and ASCII art have their own TOML files. UI preferences live in
+  Jotai atoms backed by local storage (editor and branding are mirrored to the
+  SQLite `settings` table)
   ([ADR-0007](docs/decisions/adr/ADR-0007-configuration-toml-and-settings-table.md),
   [docs/guides/configuration.md](docs/guides/configuration.md)).
 
