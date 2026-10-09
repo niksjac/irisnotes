@@ -3,14 +3,14 @@
 # Requires: rsvg-convert (librsvg) or inkscape
 #
 # Usage: ./scripts/generate-icons.sh [svg-source]
-# Default source: assets/icon.svg
+# Default source: assets/logo-transparent.svg (the current app logo)
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
-SVG_SOURCE="${1:-$ROOT_DIR/assets/icon.svg}"
+SVG_SOURCE="${1:-$ROOT_DIR/assets/logo-transparent.svg}"
 
 if [ ! -f "$SVG_SOURCE" ]; then
     echo "Error: SVG source not found: $SVG_SOURCE"

@@ -17,10 +17,10 @@ change them. Verified against source on 2026-10-04.
 1. Edit the source SVG (the current logo is `assets/logo-transparent.svg`).
 2. Regenerate the embedded PNG sizes for both apps:
    ```sh
-   ./scripts/generate-icons.sh assets/logo-transparent.svg
+   ./scripts/generate-icons.sh            # or pass another SVG as the argument
    ```
-   Needs `rsvg-convert` (`librsvg`) or Inkscape. Pass the path explicitly — see
-   Known issues.
+   Needs `rsvg-convert` (`librsvg`) or Inkscape. Without an argument it uses
+   `assets/logo-transparent.svg`.
 3. Rebuild and reinstall: `./install-local.sh` (it also refreshes the hicolor
    icons and desktop entries, below).
 
@@ -68,8 +68,3 @@ grep -E 'Icon|StartupWMClass' ~/.local/share/applications/irisnotes*.desktop
 A taskbar showing a generic icon usually means the window class does not match
 a desktop file's `StartupWMClass` — check that the dev and installed builds
 aren't being confused.
-
-## Known issues
-
-- `scripts/generate-icons.sh` defaults to `assets/icon.svg`, which does not
-  exist; run it with an explicit path.
