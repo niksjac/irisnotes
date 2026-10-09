@@ -14,7 +14,6 @@ Development setup, builds and local releases. Verified against source on
   ```
   (other distributions: see the Tauri v2 prerequisites for your platform)
 - **sqlite3** — for `dev/setup-dev-db.sh`
-- **Bun** — only for the `iris` CLI in `apps/cli`
 - **Docker** — only to run `iris-server` in a container
 
 Then, from the repo root:
@@ -32,8 +31,7 @@ pnpm install
 | `pnpm main` / `pnpm quick` | one app |
 | `pnpm run type-check` | `tsc --noEmit` for the main app — the required check |
 | `pnpm test` / `pnpm test:e2e` | Vitest unit tests / Playwright e2e |
-| `pnpm cli -- <args>` | the Rust CLI built into the main app |
-| `pnpm -C apps/cli dev -- <args>` | the Bun `iris` CLI |
+| `pnpm cli <args>` | the CLI built into the main app (installed: `irisnotes <command>`) |
 | `cd apps/server && IRIS_TOKEN=… cargo run` | the sync server (see its README) |
 
 Development builds use `tauri.dev.conf.json`: they run as **IrisNotes Dev** /

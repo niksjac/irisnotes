@@ -56,7 +56,7 @@ Reserve Option B for if a type proves permanent enough to deserve validation.
 - Does Markdown need a live preview, or is highlighted source enough?
 - Can a note change type after creation, and what happens to its content?
 - How should the tree show a note's type (icon per type)?
-- How do quick search and the CLIs display non-HTML content?
+- How do quick search and the CLI display non-HTML content?
 
 ## Resolution
 

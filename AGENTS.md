@@ -19,14 +19,13 @@ and used by one person on Arch Linux. pnpm workspace (`packages: apps/*`):
 |---|---|---|
 | `apps/main` | the notes app — most work happens here | Tauri v2, React 19, TypeScript (strict), Tailwind v4, Jotai, ProseMirror, CodeMirror 6 |
 | `apps/quick` | global quick-search overlay ([ADR-0006](docs/decisions/adr/ADR-0006-quick-search-separate-app.md)) | Tauri v2, React; plain Tauri `invoke`/events, **no Jotai** |
-| `apps/cli` | `iris` CLI: list/search/show/open | Bun, Commander |
 | `apps/server` | `iris-server` sync hub ([ADR-0008](docs/decisions/adr/ADR-0008-local-first-sync-central-hub.md)) | Rust, axum, rusqlite |
 
 - Main app source: `apps/main/src`; alias `@/` → there, `@schema/*` → root
   `schema/*`. Rust backend: `apps/main/src-tauri/src` (`lib.rs`, `cli.rs`).
-- There are two CLIs with overlapping commands: the Bun `iris` in `apps/cli`
-  and a Rust one in `apps/main/src-tauri/src/cli.rs`. Check which one a task
-  means.
+- The command-line interface is built into the main app's binary
+  (`apps/main/src-tauri/src/cli.rs`): `irisnotes list | search | show | open |
+  tree | id` when installed, `pnpm cli <args>` in development.
 
 ## Commands
 
@@ -38,8 +37,7 @@ From the repo root:
 | `pnpm main` / `pnpm quick` | one app |
 | `pnpm run type-check` | `tsc --noEmit`, main app — **required check for TS changes** |
 | `pnpm test` / `pnpm test:e2e` | Vitest / Playwright (main app) |
-| `pnpm cli -- <args>` | the Rust CLI |
-| `pnpm -C apps/cli dev -- <args>` | the Bun `iris` CLI |
+| `pnpm cli <args>` | the CLI (installed: `irisnotes <command>`) |
 | `./dev/setup-dev-db.sh` | recreate `dev/notes.db` from `schema/base.sql` + `schema/seed-dev.sql` |
 | `cd apps/server && IRIS_TOKEN=… cargo run` | sync server, local |
 | `./install-local.sh --bump --commit` | local release — see Releases |

@@ -72,7 +72,7 @@ exist.
 ## Open questions
 
 - Internal links: `href` format (`iris://note/<id>`?), behaviour in quick search
-  and the CLIs, and what happens when the target is deleted.
+  and the CLI, and what happens when the target is deleted.
 - Task lists: a new node type or a list-item attribute? Either affects HTML
   export.
 

@@ -10,9 +10,8 @@ This is a personal project, built and used by one person on Arch Linux.
 
 | Path | What |
 |---|---|
-| `apps/main` | the notes app — Tauri v2, React, ProseMirror (rich editor), CodeMirror (source view) |
+| `apps/main` | the notes app — Tauri v2, React, ProseMirror (rich editor), CodeMirror (source view); its binary is also the CLI (`irisnotes list`, `irisnotes search …`) |
 | `apps/quick` | a global quick-search overlay |
-| `apps/cli` | the `iris` command-line tool |
 | `apps/server` | `iris-server`, the sync hub (Rust) |
 | `schema/base.sql` | the database schema |
 | `docs/` | decision records and guides |

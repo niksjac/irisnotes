@@ -10,7 +10,8 @@ or a priority changes.
 
 **Working**
 
-- Desktop app (`apps/main`), quick-search overlay (`apps/quick`), both CLIs.
+- Desktop app (`apps/main`, whose binary is also the CLI) and the quick-search
+  overlay (`apps/quick`).
 - Sync phase 1: local-first clients reconciling `items` with one hub
   ([ADR-0008](decisions/adr/ADR-0008-local-first-sync-central-hub.md)).
 - The hub is live: Contabo VPS (Ubuntu 22.04, shared with another service), on
@@ -56,8 +57,6 @@ and any agent can run it from the desktop)
 
 - Settings import in the Config view has no effect
   ([configuration.md — Known issues](guides/configuration.md#known-issues)).
-- Two CLIs overlap in function — the Bun `iris` in `apps/cli` and the Rust one in
-  `apps/main/src-tauri/src/cli.rs`. Decide which to keep.
 
 Other known issues are listed under "Known issues" in the guides and as "Bad"
 consequences in the ADRs.
