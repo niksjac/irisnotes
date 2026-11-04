@@ -285,7 +285,7 @@ export const copyLineDown: Command = (state, dispatch) => {
  * Helper: Find word boundaries at a given position
  * Returns {from, to} of the word, or null if cursor is not on a word
  */
-function getWordAt(
+export function getWordAt(
 	doc: PMNode,
 	pos: number
 ): { from: number; to: number } | null {

@@ -49,6 +49,7 @@ export type EditorKeybindingId =
 	| "selectPrevious"
 	| "deleteLine"
 	| "smartSelectAll"
+	| "cycleCase"
 	// History
 	| "undo"
 	| "redo"
@@ -189,6 +190,11 @@ export const DEFAULT_EDITOR_KEYBINDINGS: EditorKeybindings = {
 	smartSelectAll: {
 		key: "Mod-a",
 		description: "Smart Select All (progressive)",
+		category: "Line Operations",
+	},
+	cycleCase: {
+		key: "Shift-F3",
+		description: "Cycle Case (lower, UPPER, Title, snake, kebab, camel)",
 		category: "Line Operations",
 	},
 

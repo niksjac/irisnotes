@@ -24,6 +24,7 @@ import { tightSelectionPlugin } from "./plugins/tight-selection";
 import { customCursorPlugin } from "./plugins/custom-cursor";
 import { activeLinePlugin } from "./plugins/active-line";
 import { buildLineCommandsKeymap, resetSmartSelectLevel } from "./plugins/line-commands";
+import { cycleCase } from "./plugins/case-commands";
 import { searchPlugin } from "./plugins/search";
 import { autocorrectPlugin } from "./plugins/autocorrect";
 import { deleteChunkBackward, deleteChunkForward, jumpParagraphDown, jumpParagraphUp } from "./plugins/chunk-commands";
@@ -240,6 +241,7 @@ export function customSetup(options: SetupOptions): Plugin[] {
 	// Line commands FIRST - must come before base keymap to override Mod-a
 	// (Alt+Up/Down to move lines, Alt+Shift+Up/Down to copy, Ctrl+A smart select, etc.)
 	plugins.push(keymap(buildLineCommandsKeymap(kb)));
+	plugins.push(keymap({ [kb.cycleCase.key]: cycleCase }));
 
 	// Line-based model: Both Enter and Shift+Enter create new blocks with preserved formatting
 	// This enforces the concept that each "paragraph" is really a "line"

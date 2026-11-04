@@ -377,6 +377,7 @@ global = true
 # selectPrevious = "Mod-Shift-d"
 # deleteLine = "Shift-Delete"
 # smartSelectAll = "Mod-a"
+# cycleCase = "Shift-F3"
 #
 # # History
 # undo = "Mod-z"
