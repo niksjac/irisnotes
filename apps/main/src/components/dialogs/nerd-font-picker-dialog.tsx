@@ -1,9 +1,16 @@
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, useMemo, type FC } from "react";
 import { Search } from "lucide-react";
-import { useAtom } from "jotai";
-import { nerdFontPickerOpenAtom } from "@/atoms";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import {
+	hotkeysAtom,
+	nerdFontPickerOpenAtom,
+	symbolPickerInitialQueryAtom,
+	symbolPickerOpenAtom,
+} from "@/atoms";
 import { activeEditorViewStore } from "@/components/editor/active-editor-view-store";
+import { UNICODE_SYMBOLS } from "@/data/unicode-symbols";
+import { formatHotkeyKey } from "@/utils/format-hotkey-key";
 
 // Shape mirrors the generated data module. Imported lazily (see useEffect).
 interface NerdFontIcon {
@@ -28,6 +35,9 @@ let iconsModuleCache: IconsModule | null = null;
 
 export const NerdFontPickerDialog: FC = () => {
 	const [isOpen, setIsOpen] = useAtom(nerdFontPickerOpenAtom);
+	const setSymbolPickerOpen = useSetAtom(symbolPickerOpenAtom);
+	const setSymbolPickerQuery = useSetAtom(symbolPickerInitialQueryAtom);
+	const hotkeys = useAtomValue(hotkeysAtom);
 	const [query, setQuery] = useState("");
 	const [activeCategory, setActiveCategory] = useState<string | null>(null);
 	const [selectedIndex, setSelectedIndex] = useState(0);
@@ -84,6 +94,23 @@ export const NerdFontPickerDialog: FC = () => {
 
 		return results.slice(0, MAX_RESULTS);
 	}, [query, activeCategory, iconsModule]);
+
+	// Unicode symbols (Greek letters, math, arrows, …) matching the query live in
+	// the Symbol Picker; count them so we can point there instead.
+	const unicodeMatchCount = useMemo((): number => {
+		const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+		if (words.length === 0) return 0;
+		return UNICODE_SYMBOLS.filter((sym) => {
+			const haystack = `${sym.name} ${sym.keywords} ${sym.char} ${sym.code}`.toLowerCase();
+			return words.every((w) => haystack.includes(w));
+		}).length;
+	}, [query]);
+
+	const openSymbolPickerWithQuery = () => {
+		setSymbolPickerQuery(query.trim());
+		setIsOpen(false);
+		setSymbolPickerOpen(true);
+	};
 
 	useEffect(() => {
 		setSelectedIndex(0);
@@ -308,6 +335,22 @@ export const NerdFontPickerDialog: FC = () => {
 						</div>
 					)}
 				</div>
+
+				{unicodeMatchCount > 0 && (
+					<button
+						onClick={openSymbolPickerWithQuery}
+						className="flex items-center gap-2 px-3 py-2 border-t border-gray-200 dark:border-gray-700 text-xs text-left text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+					>
+						<span>
+							Looking for a Unicode symbol? {unicodeMatchCount}{" "}
+							{unicodeMatchCount === 1 ? "symbol matches" : "symbols match"} “
+							{query.trim()}” in the Symbol Picker
+						</span>
+						<span className="ml-auto font-mono whitespace-nowrap text-gray-500 dark:text-gray-400">
+							{formatHotkeyKey(hotkeys.openSymbolPicker.key)}
+						</span>
+					</button>
+				)}
 
 				<div className="flex items-center gap-3 px-3 py-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900">
 					{selectedIcon ? (

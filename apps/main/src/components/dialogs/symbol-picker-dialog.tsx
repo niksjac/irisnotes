@@ -2,7 +2,7 @@ import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, useMemo, type FC } from "react";
 import { Search } from "lucide-react";
 import { useAtom } from "jotai";
-import { symbolPickerOpenAtom } from "@/atoms";
+import { symbolPickerInitialQueryAtom, symbolPickerOpenAtom } from "@/atoms";
 import { activeEditorViewStore } from "@/components/editor/active-editor-view-store";
 import {
 	UNICODE_SYMBOLS,
@@ -14,6 +14,7 @@ const MAX_RESULTS = 200;
 
 export const SymbolPickerDialog: FC = () => {
 	const [isOpen, setIsOpen] = useAtom(symbolPickerOpenAtom);
+	const [initialQuery, setInitialQuery] = useAtom(symbolPickerInitialQueryAtom);
 	const [query, setQuery] = useState("");
 	const [activeCategory, setActiveCategory] = useState<string | null>(null);
 	const [selectedIndex, setSelectedIndex] = useState(0);
@@ -63,10 +64,12 @@ export const SymbolPickerDialog: FC = () => {
 	useEffect(() => {
 		if (isOpen) {
 			inputRef.current?.focus();
-			setQuery("");
+			setQuery(initialQuery);
+			setInitialQuery("");
 			setActiveCategory(null);
 			setSelectedIndex(0);
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [isOpen]);
 
 	// Compute columns for keyboard grid navigation

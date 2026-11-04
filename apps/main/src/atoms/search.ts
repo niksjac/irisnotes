@@ -54,6 +54,9 @@ export const hideQuickHotkeysAtom = atom(null, (_get, set) => {
 // Symbol picker dialog
 export const symbolPickerOpenAtom = atom<boolean>(false);
 
+// Query to prefill when the symbol picker opens (e.g. handed over from the Nerd Font picker)
+export const symbolPickerInitialQueryAtom = atom<string>("");
+
 export const openSymbolPickerAtom = atom(null, (_get, set) => {
 	set(symbolPickerOpenAtom, true);
 });
