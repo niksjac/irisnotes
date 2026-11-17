@@ -103,9 +103,10 @@ export type LogoVariant =
 	| "iris-detailed-mono-light";
 
 export interface BrandingSettings {
-	activityBarLogo: LogoVariant;
-	/** quick app tray icon variant (applied next launch) */
-	quickTrayLogo: LogoVariant;
+	/** app logo: activity bar and the quick app's tray icon */
+	logo: LogoVariant;
+	/** earlier name of `logo`, still read from settings saved before the rename */
+	activityBarLogo?: LogoVariant;
 }
 
 export const LOGO_OPTIONS: { id: LogoVariant; label: string; file: string }[] = [
@@ -120,9 +121,14 @@ export const LOGO_OPTIONS: { id: LogoVariant; label: string; file: string }[] = 
 ];
 
 const DEFAULT_BRANDING_SETTINGS: BrandingSettings = {
-	activityBarLogo: "logo-purple",
-	quickTrayLogo: "logo-purple",
+	logo: "logo-purple",
 };
+
+/** The logo option in effect, falling back to the legacy field and then the default */
+export function getBrandingLogo(branding: BrandingSettings) {
+	const id = branding.logo ?? branding.activityBarLogo;
+	return LOGO_OPTIONS.find((o) => o.id === id) ?? LOGO_OPTIONS[0]!;
+}
 
 const brandingStorage = atomWithPersistence<BrandingSettings>(
 	"branding",

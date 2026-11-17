@@ -290,7 +290,7 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 	},
 	openBranding: {
 		key: "f1",
-		description: "Open Branding & About",
+		description: "Open About",
 		category: "Views",
 		global: true,
 	},

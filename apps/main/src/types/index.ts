@@ -301,7 +301,6 @@ export type ViewType =
 	| "hotkeys-view"
 	| "ascii-art-view"
 	| "autocorrect-view"
-	| "icon-editor-view"
 	| "editor-rich-view"
 	| "editor-source-view"
 	| "section-view"

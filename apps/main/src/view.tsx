@@ -7,7 +7,6 @@ import {
 	BrandingView,
 	ConfigView,
 	HotkeysView,
-	IconEditorView,
 	EditorRichView,
 	EditorSourceView,
 	SectionView,
@@ -34,8 +33,6 @@ export const View: FC<ViewProps> = ({ viewType, viewData }) => {
 			return <ConfigView />;
 		case "hotkeys-view":
 			return <HotkeysView />;
-		case "icon-editor-view":
-			return <IconEditorView />;
 		case "editor-rich-view":
 			return <EditorRichView viewData={viewData} />;
 		case "editor-source-view":

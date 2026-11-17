@@ -19,7 +19,7 @@ import {
 	toggleNoteConfigBarAtom,
 } from "@/atoms";
 import { tabBarVisibleAtom, toggleTabBarAtom, openBrandingTabAtom, openTopNotesTabAtom } from "@/atoms/panes";
-import { brandingSettingsAtom, LOGO_OPTIONS } from "@/atoms/settings";
+import { brandingSettingsAtom, getBrandingLogo } from "@/atoms/settings";
 import { ActivityBarButton } from "./activity-bar-button";
 import { SyncIndicatorButton } from "./sync-indicator-button";
 import { useEffect, useRef, useCallback, useMemo } from "react";
@@ -197,11 +197,11 @@ export function ActivityBar() {
 						activityBarExpanded ? "w-8 h-8" : "w-6 h-6"
 					)}
 					onClick={openBrandingTab}
-					title="IrisNotes — Branding & About"
+					title="About IrisNotes"
 					tabIndex={-1}
 				>
 					<img
-						src={LOGO_OPTIONS.find((o) => o.id === branding.activityBarLogo)?.file ?? "/logo-purple.png"}
+						src={getBrandingLogo(branding).file}
 						alt="IrisNotes"
 						style={{ width: activityBarExpanded ? 28 : 22, height: activityBarExpanded ? 28 : 22 }}
 						className="object-contain"

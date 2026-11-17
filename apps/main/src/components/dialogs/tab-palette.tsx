@@ -21,13 +21,11 @@ function tabMeta(viewType: ViewType): { type: string; Icon: Icons.LucideIcon } {
 		case "hotkeys-view":
 			return { type: "Hotkeys", Icon: Icons.Keyboard };
 		case "branding-view":
-			return { type: "Branding", Icon: Icons.Palette };
+			return { type: "About", Icon: Icons.Info };
 		case "ascii-art-view":
 			return { type: "ASCII Art", Icon: Icons.Type };
 		case "autocorrect-view":
 			return { type: "Autocorrect", Icon: Icons.SpellCheck };
-		case "icon-editor-view":
-			return { type: "Icons", Icon: Icons.Smile };
 		case "top-notes-view":
 			return { type: "Top Notes", Icon: Icons.Flame };
 		case "section-view":

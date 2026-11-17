@@ -75,7 +75,7 @@ export function ActionPalette() {
 		{ id: "open-top-notes", label: "Open Top Notes", hint: "Open", icon: icon(Icons.Flame), run: () => openTopNotes() },
 		{ id: "open-ascii", label: "Open ASCII Art", hint: "Open", icon: icon(Icons.Type), run: () => openAsciiArt() },
 		{ id: "open-autocorrect", label: "Open Autocorrect", hint: "Open", icon: icon(Icons.SpellCheck), run: () => openAutocorrect() },
-		{ id: "open-branding", label: "Open Branding", hint: "Open", icon: icon(Icons.Palette), run: handlers.openBranding },
+		{ id: "open-branding", label: "Open About", hint: "Open", icon: icon(Icons.Palette), run: handlers.openBranding },
 		{ id: "open-config-folder", label: "Open Config Folder", hint: "Open", icon: icon(Icons.FolderOpen), run: handlers.openConfigFolder },
 
 		// Search & pickers

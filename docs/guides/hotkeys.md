@@ -51,7 +51,7 @@ global = true
   `down`. Punctuation by name: `comma`, `period`.
 - Keys are matched by **physical key position** (`KeyboardEvent.code`), so
   `ctrl+comma` works the same on Nordic, US and other layouts.
-- `F1` is reserved for Branding & About; a `showQuickHotkeys` binding set to
+- `F1` is reserved for About; a `showQuickHotkeys` binding set to
   `f1` is ignored and the default kept.
 
 ## Editor keybindings
