@@ -1,12 +1,28 @@
 {
-	"version": "1.0.19",
-	"range": "d779194..HEAD",
+	"version": "1.0.20",
+	"range": "852fdde..HEAD",
 	"sections": [
+		{
+			"title": "Features",
+			"items": [
+				"Editor: Cycle text case with Shift+F3",
+				"Pickers: Point Nerd Font picker searches to the Symbol Picker",
+				"Quick: Show the configured logo as the tray icon"
+			]
+		},
 		{
 			"title": "Fixes",
 			"items": [
-				"Config: Reload hotkeys, autocorrect and ascii-art files on change",
-				"Sync: Show actionable sync errors in the Sync view and indicator"
+				"Server: Publish iris-server on loopback by default",
+				"Scripts: Default generate-icons.sh to the current logo"
+			]
+		},
+		{
+			"title": "Improvements",
+			"items": [
+				"Config: Remove config keys and settings nothing reads",
+				"Cli: Remove the Bun iris CLI, keep the one built into the app",
+				"About: One icon setting, remove the Icon Editor"
 			]
 		}
 	]
