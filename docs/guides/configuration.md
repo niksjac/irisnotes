@@ -94,7 +94,8 @@ key = "ctrl+shift+alt+3"
 Editor appearance (font, size, line height, cursor — see
 [editor.md](editor.md)) and branding are set from the UI. They live in the app's
 local storage (`setting:editor`, `setting:branding`), and every change is also
-written to the `settings` table of `notes.db`. Window layout (sidebar, toolbar,
+written to the `settings` table of `notes.db`; the quick app reads the
+`branding` row there for its tray icon. Window layout (sidebar, toolbar,
 title and metadata bars, panes and tabs) lives in local storage only. None of
 these are in TOML, and none are synced between devices.
 

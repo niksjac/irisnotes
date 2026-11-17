@@ -103,15 +103,6 @@ EOF
 # Update icon cache
 gtk-update-icon-cache "$ICON_DIR" 2>/dev/null || true
 
-# --- Generate dev tray icon for quick app ---
-
-DEV_TRAY_ICON="$PROJECT_ROOT/dev/quick-tray-icon.png"
-if [ -f "$ICON_SRC/icon.png" ]; then
-    echo "Generating dev tray icon..."
-    generate_dev_icon "$ICON_SRC/icon.png" "$DEV_TRAY_ICON" 512
-    echo "  → $DEV_TRAY_ICON"
-fi
-
 echo ""
 echo "✓ Dev desktop entries and icons installed!"
 echo ""
@@ -123,5 +114,3 @@ echo "Dev icons installed as 'irisnotes-dev' in hicolor theme"
 if [ "$HAS_MAGICK" = true ]; then
     echo "  (with red DEV badge)"
 fi
-echo ""
-echo "Dev tray icon: $DEV_TRAY_ICON"

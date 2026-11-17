@@ -1,7 +1,7 @@
 # Icons
 
 How IrisNotes' icons are produced, installed and resolved on Linux, and how to
-change them. Verified against source on 2026-10-04.
+change them. Verified against source on 2026-11-17.
 
 ## Where each icon comes from
 
@@ -9,8 +9,8 @@ change them. Verified against source on 2026-10-04.
 |---|---|
 | App window, bundles | `apps/main/src-tauri/icons/`, `apps/quick/src-tauri/icons/` (embedded at build time) |
 | Launcher, taskbar | `irisnotes.desktop` / `irisnotes-quick.desktop` with `Icon=irisnotes`, resolved through the **hicolor** icon theme |
-| Quick app's tray icon | a custom file in the config directory if present, otherwise the bundled icon |
-| In-app logo | Branding view (**F1**); the Icon Editor opens from there |
+| Quick app's tray icon | the logo chosen in the About view, embedded in the quick app at build time |
+| In-app logo | About view (**F1**) |
 
 ## Changing the app icon
 
@@ -46,16 +46,17 @@ distinguishable in the taskbar.
 
 ## Tray icon (quick app)
 
-The quick app looks for a custom tray icon in this order, SVG before PNG:
+The About view (**F1**) sets one logo for the activity bar and the quick
+app's tray. The choice is saved as the `branding` row of the `settings` table
+(`{"logo": "<variant>"}`), which the quick app reads at startup and re-checks
+every 3 seconds, so a change reaches the tray without a restart.
 
-1. `quick-tray-icon-light.{svg,png}` when the desktop theme is dark, or
-   `quick-tray-icon-dark.{svg,png}` when it is light (the contrasting variant);
-2. `quick-tray-icon.{svg,png}`;
-3. the bundled icon.
-
-The directory is `~/.config/irisnotes/`; development builds check `dev/` first.
-The Icon Editor (Branding view) writes `quick-tray-icon.svg` and a 512 px
-`quick-tray-icon.png` there.
+The quick app embeds the same logo files the main app offers
+(`apps/main/public`) from `LOGOS` in `apps/quick/src-tauri/src/lib.rs`; adding
+a variant to `LOGO_OPTIONS` in `apps/main/src/atoms/settings.ts` means adding
+it there too. An unknown or missing choice falls back to the purple logo.
+Files named `quick-tray-icon.{svg,png}` in the config directory are no longer
+read.
 
 ## Troubleshooting
 

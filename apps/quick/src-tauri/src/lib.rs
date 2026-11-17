@@ -598,28 +598,54 @@ fn toggle_window(app: &AppHandle) {
     }
 }
 
-// Load custom tray icon from config directory (or dev folder in debug mode)
-// Supports both SVG and PNG formats
-// Theme-specific icons: quick-tray-icon-dark.{svg,png} and quick-tray-icon-light.{svg,png}
-fn load_custom_tray_icon() -> Option<Image<'static>> {
-    let icon_path = get_tray_icon_path()?;
-    
-    if !icon_path.exists() {
-        return None;
-    }
-    
-    let file_bytes = std::fs::read(&icon_path).ok()?;
-    
-    // Check if it's an SVG file
-    let extension = icon_path.extension()?.to_str()?;
-    
-    if extension.eq_ignore_ascii_case("svg") {
-        // Render SVG to RGBA using resvg
-        load_svg_icon(&file_bytes)
+// Logos selectable in the main app's Branding view (apps/main/public, mirrored
+// from LOGO_OPTIONS in apps/main/src/atoms/settings.ts). The first is the default.
+const LOGOS: &[(&str, &[u8])] = &[
+    ("logo-purple", include_bytes!("../../../main/public/logo-purple.png")),
+    ("logo-white", include_bytes!("../../../main/public/logo-white.png")),
+    ("logo-transparent", include_bytes!("../../../main/public/logo-transparent.svg")),
+    ("iris-detailed-blue", include_bytes!("../../../main/public/iris-detailed-blue.svg")),
+    ("iris-detailed-purple", include_bytes!("../../../main/public/iris-detailed-purple.svg")),
+    ("iris-detailed-periwinkle", include_bytes!("../../../main/public/iris-detailed-periwinkle.svg")),
+    ("iris-detailed-mono-dark", include_bytes!("../../../main/public/iris-detailed-mono-dark.svg")),
+    ("iris-detailed-mono-light", include_bytes!("../../../main/public/iris-detailed-mono-light.svg")),
+];
+
+// Read the logo chosen in the main app from the shared settings table
+// (key "branding", JSON written by the main app). `activityBarLogo` is the
+// field's earlier name.
+fn read_configured_logo(conn: &Connection) -> Option<String> {
+    let value: String = conn
+        .query_row("SELECT value FROM settings WHERE key = 'branding'", [], |row| row.get(0))
+        .ok()?;
+    let branding: serde_json::Value = serde_json::from_str(&value).ok()?;
+    branding
+        .get("logo")
+        .or_else(|| branding.get("activityBarLogo"))?
+        .as_str()
+        .map(str::to_string)
+}
+
+// Render a logo variant as a tray image, falling back to the default logo
+fn tray_icon_for(logo: Option<&str>) -> Option<Image<'static>> {
+    let (_, bytes) = LOGOS
+        .iter()
+        .find(|(id, _)| Some(*id) == logo)
+        .or_else(|| LOGOS.first())?;
+    if bytes.starts_with(b"\x89PNG") {
+        load_raster_icon(bytes)
     } else {
-        // Load PNG/other raster formats with image crate
-        load_raster_icon(&file_bytes)
+        load_svg_icon(bytes)
     }
+}
+
+// Open the shared database read-only for polling the branding setting
+fn open_settings_connection() -> Option<Connection> {
+    Connection::open_with_flags(
+        get_database_path(),
+        rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY | rusqlite::OpenFlags::SQLITE_OPEN_NO_MUTEX,
+    )
+    .ok()
 }
 
 // Render SVG to RGBA image using resvg
@@ -673,109 +699,6 @@ fn load_raster_icon(image_data: &[u8]) -> Option<Image<'static>> {
     Some(Image::new_owned(rgba.into_raw(), width, height))
 }
 
-// Detect if system is using dark theme
-fn is_dark_theme() -> bool {
-    // Try to detect dark theme from environment/settings
-    // Linux: Check GTK theme or XDG_CURRENT_DESKTOP hints
-    #[cfg(target_os = "linux")]
-    {
-        // Check GNOME/GTK color scheme
-        if let Ok(output) = std::process::Command::new("gsettings")
-            .args(["get", "org.gnome.desktop.interface", "color-scheme"])
-            .output()
-        {
-            let result = String::from_utf8_lossy(&output.stdout);
-            if result.contains("dark") {
-                return true;
-            }
-            if result.contains("light") {
-                return false;
-            }
-        }
-        
-        // Check GTK theme name as fallback
-        if let Ok(output) = std::process::Command::new("gsettings")
-            .args(["get", "org.gnome.desktop.interface", "gtk-theme"])
-            .output()
-        {
-            let result = String::from_utf8_lossy(&output.stdout).to_lowercase();
-            if result.contains("dark") {
-                return true;
-            }
-        }
-    }
-    
-    // Default to dark theme (most users prefer dark)
-    true
-}
-
-fn get_tray_icon_path() -> Option<PathBuf> {
-    let is_dark = is_dark_theme();
-    
-    // Theme-specific icon names (use opposite color for visibility)
-    // Dark theme -> use light icon, Light theme -> use dark icon
-    let theme_suffix = if is_dark { "-light" } else { "-dark" };
-    
-    // Extensions to try, in order of preference (SVG first for quality)
-    let extensions = ["svg", "png"];
-    
-    #[cfg(debug_assertions)]
-    {
-        // In development, check dev folder first
-        let exe_path = std::env::current_exe().ok();
-        let mut project_root = exe_path
-            .and_then(|p| p.parent().map(|p| p.to_path_buf()))
-            .unwrap_or_else(|| std::env::current_dir().unwrap_or_default());
-
-        // Navigate up to find monorepo root
-        loop {
-            if project_root.join("pnpm-workspace.yaml").exists() {
-                break;
-            }
-            if !project_root.pop() {
-                break;
-            }
-        }
-
-        // Try theme-specific icons first (SVG then PNG)
-        for ext in &extensions {
-            let themed_path = project_root.join(format!("dev/quick-tray-icon{}.{}", theme_suffix, ext));
-            if themed_path.exists() {
-                return Some(themed_path);
-            }
-        }
-        
-        // Fall back to generic icons (SVG then PNG)
-        for ext in &extensions {
-            let dev_path = project_root.join(format!("dev/quick-tray-icon.{}", ext));
-            if dev_path.exists() {
-                return Some(dev_path);
-            }
-        }
-    }
-    
-    // Production: check config dir
-    let config_dir = dirs::config_dir()?.join("irisnotes");
-    
-    // Try theme-specific icons first (SVG then PNG)
-    for ext in &extensions {
-        let themed_path = config_dir.join(format!("quick-tray-icon{}.{}", theme_suffix, ext));
-        if themed_path.exists() {
-            return Some(themed_path);
-        }
-    }
-    
-    // Fall back to generic icons (SVG then PNG)
-    for ext in &extensions {
-        let config_path = config_dir.join(format!("quick-tray-icon.{}", ext));
-        if config_path.exists() {
-            return Some(config_path);
-        }
-    }
-    
-    None
-}
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // Set the program name before Tauri/GTK init so Wayland app_id and X11 WM_CLASS
@@ -811,7 +734,9 @@ pub fn run() {
             let show = MenuItem::with_id(app, "show", "Show Search", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show, &quit])?;
 
-            // Build tray icon - use custom icon from config dir if available
+            // Build tray icon with the logo configured in the main app
+            let mut settings_conn = open_settings_connection();
+            let mut current_logo = settings_conn.as_ref().and_then(read_configured_logo);
             let mut tray_builder = TrayIconBuilder::new()
                 .menu(&menu)
                 .tooltip("IrisNotes Quick Search")
@@ -830,12 +755,27 @@ pub fn run() {
                     }
                 });
 
-            // Try to load custom icon from config dir
-            if let Some(icon) = load_custom_tray_icon() {
+            if let Some(icon) = tray_icon_for(current_logo.as_deref()) {
                 tray_builder = tray_builder.icon(icon);
             }
 
-            let _tray = tray_builder.build(app)?;
+            let tray = tray_builder.build(app)?;
+
+            // Follow logo changes made in the main app while we run
+            std::thread::spawn(move || loop {
+                std::thread::sleep(std::time::Duration::from_secs(3));
+                if settings_conn.is_none() {
+                    settings_conn = open_settings_connection();
+                }
+                let Some(conn) = settings_conn.as_ref() else { continue };
+                let logo = read_configured_logo(conn);
+                if logo != current_logo {
+                    if let Some(icon) = tray_icon_for(logo.as_deref()) {
+                        let _ = tray.set_icon(Some(icon));
+                    }
+                    current_logo = logo;
+                }
+            });
 
             if let Some(window) = app.get_webview_window("main") {
                 let state_path = window_state_file_path();
@@ -882,4 +822,38 @@ pub fn run() {
                 }
             }
         });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn renders_every_logo_variant() {
+        for (id, _) in LOGOS {
+            let icon = tray_icon_for(Some(id)).unwrap_or_else(|| panic!("{id} did not render"));
+            assert!(icon.width() > 0 && icon.height() > 0, "{id}");
+        }
+    }
+
+    #[test]
+    fn unknown_logo_falls_back_to_default() {
+        assert!(tray_icon_for(Some("no-such-logo")).is_some());
+        assert!(tray_icon_for(None).is_some());
+    }
+
+    #[test]
+    fn reads_logo_and_legacy_field_from_settings() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch("CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)").unwrap();
+        assert_eq!(read_configured_logo(&conn), None);
+
+        let set = |json: &str| {
+            conn.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('branding', ?1)", [json]).unwrap();
+        };
+        set(r#"{"activityBarLogo":"logo-white","quickTrayLogo":"logo-purple"}"#);
+        assert_eq!(read_configured_logo(&conn).as_deref(), Some("logo-white"));
+        set(r#"{"logo":"iris-detailed-blue"}"#);
+        assert_eq!(read_configured_logo(&conn).as_deref(), Some("iris-detailed-blue"));
+    }
 }
