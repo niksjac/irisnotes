@@ -40,7 +40,10 @@ export function useHotkeysConfig() {
 				setEditorKeybindings(mergeEditorKeybindings(editorOverrides));
 			}
 
-			const parsedHotkeys = parsed as Partial<HotkeyMapping>;
+			// Ignore overrides for actions that no longer exist (e.g. removed hotkeys)
+			const parsedHotkeys = Object.fromEntries(
+				Object.entries(parsed).filter(([action]) => action in DEFAULT_HOTKEYS),
+			) as Partial<HotkeyMapping>;
 
 			// Merge user hotkeys with defaults
 			const mergedHotkeys: HotkeyMapping = {

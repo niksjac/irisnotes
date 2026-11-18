@@ -1,16 +1,18 @@
 import { useAtomValue } from "jotai";
 import { useEffect, useRef } from "react";
 import {
-	sidebarWidth, activityBarVisible, sidebarCollapsed, titleBarVisibleAtom, toolbarVisibleAtom,
-	metadataBarVisibleAtom,
+	sidebarWidth, windowTitleBarVisibleAtom, appToolbarVisibleAtom, sidebarCollapsed, statusBarVisibleAtom,
+	titleBarVisibleAtom, toolbarVisibleAtom, metadataBarVisibleAtom,
 	paneStateAtom, pane0TabsAtom, pane1TabsAtom, pane0ActiveTabAtom, pane1ActiveTabAtom, tabBarVisibleAtom,
 	PANE_STORAGE_KEY,
 } from "@/atoms";
 
 interface LayoutState {
 	sidebarWidth: number;
-	activityBarVisible: boolean;
+	windowTitleBarVisible: boolean;
+	appToolbarVisible: boolean;
 	sidebarCollapsed: boolean;
+	statusBarVisible: boolean;
 	titleBarVisible: boolean;
 	metadataBarVisible: boolean;
 	toolbarVisible: boolean;
@@ -19,8 +21,10 @@ interface LayoutState {
 const LAYOUT_STORAGE_KEY = "irisnotes-layout-state";
 const DEFAULT_LAYOUT: LayoutState = {
 	sidebarWidth: 300,
-	activityBarVisible: true,
+	windowTitleBarVisible: true,
+	appToolbarVisible: true,
 	sidebarCollapsed: false,
+	statusBarVisible: true,
 	titleBarVisible: true,
 	metadataBarVisible: true,
 	toolbarVisible: false,
@@ -57,12 +61,14 @@ export const loadLayoutState = (): LayoutState => {
 /**
  * Hook to persist layout state to localStorage with debouncing
  * - Sidebar width: debounced (500ms after last change)
- * - Activity bar & collapsed: immediate save
+ * - Bar visibility & collapsed: immediate save
  */
 export const useLayoutPersistence = () => {
 	const sidebarWidthValue = useAtomValue(sidebarWidth);
-	const activityBarVisibleValue = useAtomValue(activityBarVisible);
+	const windowTitleBarVisibleValue = useAtomValue(windowTitleBarVisibleAtom);
+	const appToolbarVisibleValue = useAtomValue(appToolbarVisibleAtom);
 	const sidebarCollapsedValue = useAtomValue(sidebarCollapsed);
+	const statusBarVisibleValue = useAtomValue(statusBarVisibleAtom);
 	const titleBarVisibleValue = useAtomValue(titleBarVisibleAtom);
 	const metadataBarVisibleValue = useAtomValue(metadataBarVisibleAtom);
 	const toolbarVisibleValue = useAtomValue(toolbarVisibleAtom);
@@ -94,10 +100,19 @@ export const useLayoutPersistence = () => {
 		};
 	}, [sidebarWidthValue]);
 
-	// Immediate save for activity bar visibility
+	// Immediate save for window title bar and app toolbar visibility
 	useEffect(() => {
-		saveLayoutState({ activityBarVisible: activityBarVisibleValue });
-	}, [activityBarVisibleValue]);
+		saveLayoutState({ windowTitleBarVisible: windowTitleBarVisibleValue });
+	}, [windowTitleBarVisibleValue]);
+
+	useEffect(() => {
+		saveLayoutState({ appToolbarVisible: appToolbarVisibleValue });
+	}, [appToolbarVisibleValue]);
+
+	// Immediate save for status bar visibility
+	useEffect(() => {
+		saveLayoutState({ statusBarVisible: statusBarVisibleValue });
+	}, [statusBarVisibleValue]);
 
 	// Immediate save for sidebar collapsed state
 	useEffect(() => {

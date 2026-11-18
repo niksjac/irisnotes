@@ -218,8 +218,6 @@ export function ProseMirrorEditor({
 			history: true,
 			editorKeybindings,
 			appShortcuts: [
-				"Mod-g", // Toggle sidebar
-				"Mod-j", // Toggle activity bar
 				"Mod-w", // Close tab
 				"Mod-e", // Toggle editor view
 				"Shift-Mod-,", // Open settings

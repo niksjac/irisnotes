@@ -638,56 +638,6 @@ export const moveTabToPaneRightAtom = atom(null, (get, set) => {
 	set(paneStateAtom, { ...paneState, activePane: 1 });
 });
 
-// Tab focus by number actions
-export const focusTabByNumberAtom = atom(
-	null,
-	(get, set, tabNumber: number) => {
-		const paneState = get(paneStateAtom);
-		const activePane = paneState.activePane;
-		const tabs = activePane === 0 ? get(pane0TabsAtom) : get(pane1TabsAtom);
-
-		if (tabNumber >= 1 && tabNumber <= tabs.length) {
-			const targetTab = tabs[tabNumber - 1]; // Convert to 0-based index
-			if (targetTab) {
-				if (activePane === 0) {
-					set(pane0ActiveTabAtom, targetTab.id);
-				} else {
-					set(pane1ActiveTabAtom, targetTab.id);
-				}
-			}
-		}
-	}
-);
-
-// Individual tab focus atoms for hotkeys
-export const focusTab1Atom = atom(null, (_, set) =>
-	set(focusTabByNumberAtom, 1)
-);
-export const focusTab2Atom = atom(null, (_, set) =>
-	set(focusTabByNumberAtom, 2)
-);
-export const focusTab3Atom = atom(null, (_, set) =>
-	set(focusTabByNumberAtom, 3)
-);
-export const focusTab4Atom = atom(null, (_, set) =>
-	set(focusTabByNumberAtom, 4)
-);
-export const focusTab5Atom = atom(null, (_, set) =>
-	set(focusTabByNumberAtom, 5)
-);
-export const focusTab6Atom = atom(null, (_, set) =>
-	set(focusTabByNumberAtom, 6)
-);
-export const focusTab7Atom = atom(null, (_, set) =>
-	set(focusTabByNumberAtom, 7)
-);
-export const focusTab8Atom = atom(null, (_, set) =>
-	set(focusTabByNumberAtom, 8)
-);
-export const focusTab9Atom = atom(null, (_, set) =>
-	set(focusTabByNumberAtom, 9)
-);
-
 // Tab navigation atoms
 export const focusNextTabAtom = atom(null, (get, set) => {
 	const paneState = get(paneStateAtom);

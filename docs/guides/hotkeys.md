@@ -1,7 +1,7 @@
 # Hotkeys
 
 How keyboard shortcuts are defined and how to override them. Verified against
-source on 2026-10-04.
+source on 2026-11-18.
 
 To see every active shortcut in the app: **Ctrl+Shift+.** opens the Keyboard
 Shortcuts view; **F12** shows a quick reference overlay.
@@ -16,6 +16,33 @@ Shortcuts view; **F12** shows a quick reference overlay.
 App hotkeys are registered with `useHotkeys` in
 `apps/main/src/hooks/use-app-hotkeys.ts`. Editor keybindings are matched in the
 rich editor's keydown handling. Both are overridden from the same file.
+
+## Layout toggles (Ctrl+1–9)
+
+Each number shows or hides one part of the window, in the same scheme as the
+owner's GTK apps (falcon, K9: 1 title bar, 2 toolbar, 3 sidebar, 4 status bar):
+
+| Key | Part | Action id |
+|---|---|---|
+| Ctrl+1 | Window title bar (logo, tab title, close) | `toggleWindowTitleBar` |
+| Ctrl+2 | Toolbar | `toggleAppToolbar` |
+| Ctrl+3 | Notes sidebar | `toggleSidebar` |
+| Ctrl+4 | Status bar | `toggleStatusBar` |
+| Ctrl+5 | Tab bar | `toggleTabBar` |
+| Ctrl+6 | Formatting toolbar (per pane) | `toggleToolbar` |
+| Ctrl+7 | Note title (per pane) | `toggleTitleBar` |
+| Ctrl+8 | Note info bar | `toggleMetadataBar` |
+| Ctrl+9 | Note hotkey bar | `toggleNoteConfigBar` |
+
+The toolbar's **More** menu (⋯) lists the same toggles with their current keys.
+Visibility is remembered across restarts, except the note hotkey bar. When both
+the title bar and the toolbar are hidden, the keys and the command palette
+(Ctrl+Shift+P) bring them back.
+
+These keys used to focus tabs 1–9; numbered tab focus is gone (use Ctrl+Tab or
+the tab palette). Overrides for action ids that no longer exist are ignored, so
+an old `[focusTab1]` entry in `hotkeys.toml` does nothing — but an old
+`[toggleSidebar] key = "ctrl+g"` still wins over the new default.
 
 ## Where to override
 

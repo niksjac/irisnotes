@@ -56,7 +56,6 @@
   /* Essential layout dimensions */
   --sidebar-width: 300px;
   --sidebar-collapsed-width: 0px;
-  --activity-bar-width: 48px;
 
   /* Focus indicator colors - solid colors to avoid opacity blending issues */
   --color-focus-light: #dbeafe;  /* blue-100 */

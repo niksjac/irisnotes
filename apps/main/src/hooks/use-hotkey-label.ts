@@ -7,7 +7,7 @@ import type { HotkeyMapping } from "@/types";
  * Returns a human-readable label for a hotkey action, reflecting
  * the current live configuration (user overrides + defaults).
  *
- * Example: useHotkeyLabel("toggleSidebar") → "Ctrl+G"
+ * Example: useHotkeyLabel("toggleSidebar") → "Ctrl+3"
  */
 export function useHotkeyLabel(action: keyof HotkeyMapping): string {
 	const hotkeys = useAtomValue(hotkeysAtom);

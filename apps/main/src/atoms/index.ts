@@ -6,8 +6,10 @@ const LAYOUT_STORAGE_KEY = "irisnotes-layout-state";
 
 interface LayoutState {
 	sidebarWidth: number;
-	activityBarVisible: boolean;
+	windowTitleBarVisible: boolean;
+	appToolbarVisible: boolean;
 	sidebarCollapsed: boolean;
+	statusBarVisible: boolean;
 	titleBarVisible: boolean;
 	metadataBarVisible: boolean;
 	toolbarVisible: boolean;
@@ -15,8 +17,10 @@ interface LayoutState {
 
 const DEFAULT_LAYOUT: LayoutState = {
 	sidebarWidth: 300,
-	activityBarVisible: true,
+	windowTitleBarVisible: true,
+	appToolbarVisible: true,
 	sidebarCollapsed: false,
+	statusBarVisible: true,
 	titleBarVisible: true,
 	metadataBarVisible: true,
 	toolbarVisible: false,
@@ -57,11 +61,20 @@ export { hotkeysAtom } from "./hotkeys";
 export const sidebarCollapsed = atom<boolean>(initialLayout.sidebarCollapsed);
 export const sidebarWidth = atom<number>(initialLayout.sidebarWidth);
 export const sidebarHeight = atom<number>(200); // Default height for mobile
-export const activityBarVisible = atom<boolean>(initialLayout.activityBarVisible);
-export const activityBarExpanded = atom<boolean>(false); // Expanded shows labels
+
+// Window chrome: the title bar (logo, active tab title, close) and the app
+// toolbar under it
+export const windowTitleBarVisibleAtom = atom<boolean>(initialLayout.windowTitleBarVisible);
+export const toggleWindowTitleBarAtom = atom(null, (get, set) => {
+	set(windowTitleBarVisibleAtom, !get(windowTitleBarVisibleAtom));
+});
+export const appToolbarVisibleAtom = atom<boolean>(initialLayout.appToolbarVisible);
+export const toggleAppToolbarAtom = atom(null, (get, set) => {
+	set(appToolbarVisibleAtom, !get(appToolbarVisibleAtom));
+});
 
 // Focus area: tracks which major UI section has focus (mutually exclusive)
-export type FocusArea = "activity-bar" | "tree" | "pane-0" | "pane-1" | null;
+export type FocusArea = "tree" | "pane-0" | "pane-1" | null;
 export const focusAreaAtom = atom<FocusArea>(null);
 
 export const toolbarVisibleAtom = atom<boolean>(initialLayout.toolbarVisible);
@@ -80,7 +93,8 @@ export const zenModeAtom = atom<boolean>(false);
 // Store previous state to restore when exiting zen mode (title bar not included - stays visible)
 export const zenModePreviousStateAtom = atom<{
 	sidebarCollapsed: boolean;
-	activityBarVisible: boolean;
+	windowTitleBarVisible: boolean;
+	appToolbarVisible: boolean;
 	toolbarVisible: boolean;
 	metadataBarVisible: boolean;
 	tabBarVisible: boolean;
@@ -88,7 +102,7 @@ export const zenModePreviousStateAtom = atom<{
 } | null>(null);
 
 // Status bar visibility
-export const statusBarVisibleAtom = atom<boolean>(true);
+export const statusBarVisibleAtom = atom<boolean>(initialLayout.statusBarVisible);
 export const toggleStatusBarAtom = atom(null, (get, set) => {
 	set(statusBarVisibleAtom, !get(statusBarVisibleAtom));
 });

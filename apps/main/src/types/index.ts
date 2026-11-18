@@ -35,10 +35,13 @@ export interface HotkeyConfig {
 }
 
 export interface HotkeyMapping {
-	// Layout hotkeys
+	// Layout toggles (Ctrl+1–9)
+	toggleWindowTitleBar: HotkeyConfig;
+	toggleAppToolbar: HotkeyConfig;
 	toggleSidebar: HotkeyConfig;
-	toggleActivityBar: HotkeyConfig;
-	expandActivityBar: HotkeyConfig;
+	toggleStatusBar: HotkeyConfig;
+	toggleMetadataBar: HotkeyConfig;
+	toggleNoteConfigBar: HotkeyConfig;
 
 	// Tab hotkeys
 	closeTab: HotkeyConfig;
@@ -68,17 +71,6 @@ export interface HotkeyMapping {
 	// Tab movement between panes
 	moveTabToPaneLeft: HotkeyConfig;
 	moveTabToPaneRight: HotkeyConfig;
-
-	// Tab focus by number
-	focusTab1: HotkeyConfig;
-	focusTab2: HotkeyConfig;
-	focusTab3: HotkeyConfig;
-	focusTab4: HotkeyConfig;
-	focusTab5: HotkeyConfig;
-	focusTab6: HotkeyConfig;
-	focusTab7: HotkeyConfig;
-	focusTab8: HotkeyConfig;
-	focusTab9: HotkeyConfig;
 
 	// Tab navigation
 	focusNextTab: HotkeyConfig;
@@ -150,9 +142,12 @@ export interface HotkeyMapping {
 
 export interface AppHotkeysProps {
 	// Layout hotkeys
+	onToggleWindowTitleBar?: () => void;
+	onToggleAppToolbar?: () => void;
 	onToggleSidebar?: () => void;
-	onToggleActivityBar?: () => void;
-	onExpandActivityBar?: () => void;
+	onToggleStatusBar?: () => void;
+	onToggleMetadataBar?: () => void;
+	onToggleNoteConfigBar?: () => void;
 	onToggleZenMode?: () => void;
 
 	// Tab hotkeys
@@ -177,17 +172,6 @@ export interface AppHotkeysProps {
 	// Tab movement between panes hotkeys
 	onMoveTabToPaneLeft?: () => void;
 	onMoveTabToPaneRight?: () => void;
-
-	// Tab focus by number hotkeys
-	onFocusTab1?: () => void;
-	onFocusTab2?: () => void;
-	onFocusTab3?: () => void;
-	onFocusTab4?: () => void;
-	onFocusTab5?: () => void;
-	onFocusTab6?: () => void;
-	onFocusTab7?: () => void;
-	onFocusTab8?: () => void;
-	onFocusTab9?: () => void;
 
 	// Tab navigation hotkeys
 	onFocusNextTab?: () => void;

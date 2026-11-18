@@ -7,7 +7,6 @@ import { getTreeViewCallbacks } from "@/atoms/tree";
  */
 export function mapHotkeyHandlers(
 	sidebar: { toggle: () => void; collapsed: boolean; setCollapsed: (collapsed: boolean) => void },
-	views: { toggleActivityBar: () => void },
 	handlers: {
 		closeActiveTab: () => void;
 		reopenLastClosedTab: () => void;
@@ -22,15 +21,6 @@ export function mapHotkeyHandlers(
 		focusPane2: () => void;
 		moveTabToPaneLeft: () => void;
 		moveTabToPaneRight: () => void;
-		focusTab1: () => void;
-		focusTab2: () => void;
-		focusTab3: () => void;
-		focusTab4: () => void;
-		focusTab5: () => void;
-		focusTab6: () => void;
-		focusTab7: () => void;
-		focusTab8: () => void;
-		focusTab9: () => void;
 		focusNextTab: () => void;
 		focusPreviousTab: () => void;
 		focusNextSpawnedTab: () => void;
@@ -39,7 +29,11 @@ export function mapHotkeyHandlers(
 		toggleLineWrapping: () => void;
 		toggleToolbar: () => void;
 		toggleTitleBar: () => void;
-		toggleActivityBarExpanded: () => void;
+		toggleWindowTitleBar: () => void;
+		toggleAppToolbar: () => void;
+		toggleStatusBar: () => void;
+		toggleMetadataBar: () => void;
+		toggleNoteConfigBar: () => void;
 		toggleTabBar: () => void;
 		toggleZenMode: () => void;
 		createNoteInRoot: () => void;
@@ -62,9 +56,12 @@ export function mapHotkeyHandlers(
 ): AppHotkeysProps {
 	return {
 		// Layout hotkeys
+		onToggleWindowTitleBar: handlers.toggleWindowTitleBar,
+		onToggleAppToolbar: handlers.toggleAppToolbar,
 		onToggleSidebar: sidebar.toggle,
-		onToggleActivityBar: views.toggleActivityBar,
-		onExpandActivityBar: handlers.toggleActivityBarExpanded,
+		onToggleStatusBar: handlers.toggleStatusBar,
+		onToggleMetadataBar: handlers.toggleMetadataBar,
+		onToggleNoteConfigBar: handlers.toggleNoteConfigBar,
 		onToggleZenMode: handlers.toggleZenMode,
 		// Tab hotkeys
 		onCloseTab: handlers.closeActiveTab,
@@ -84,16 +81,6 @@ export function mapHotkeyHandlers(
 		// Tab movement between panes hotkeys
 		onMoveTabToPaneLeft: handlers.moveTabToPaneLeft,
 		onMoveTabToPaneRight: handlers.moveTabToPaneRight,
-		// Tab focus by number hotkeys
-		onFocusTab1: handlers.focusTab1,
-		onFocusTab2: handlers.focusTab2,
-		onFocusTab3: handlers.focusTab3,
-		onFocusTab4: handlers.focusTab4,
-		onFocusTab5: handlers.focusTab5,
-		onFocusTab6: handlers.focusTab6,
-		onFocusTab7: handlers.focusTab7,
-		onFocusTab8: handlers.focusTab8,
-		onFocusTab9: handlers.focusTab9,
 		// Tab navigation hotkeys
 		onFocusNextTab: handlers.focusNextTab,
 		onFocusPreviousTab: handlers.focusPreviousTab,

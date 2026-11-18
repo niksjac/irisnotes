@@ -5,22 +5,58 @@ import type { HotkeyMapping, HotkeyConfig } from "@/types";
  * These are the default key combinations that can be overridden by user configuration
  */
 export const DEFAULT_HOTKEYS: HotkeyMapping = {
-	// Layout hotkeys
+	// Layout toggles: Ctrl+1–9 show/hide one part of the window each
+	toggleWindowTitleBar: {
+		key: "ctrl+1",
+		description: "Toggle Title Bar",
+		category: "Layout",
+		global: true,
+	},
+	toggleAppToolbar: {
+		key: "ctrl+2",
+		description: "Toggle Toolbar",
+		category: "Layout",
+		global: true,
+	},
 	toggleSidebar: {
-		key: "ctrl+g",
+		key: "ctrl+3",
 		description: "Toggle Notes Sidebar",
 		category: "Layout",
 		global: true,
 	},
-	toggleActivityBar: {
-		key: "ctrl+j",
-		description: "Toggle Activity Bar",
+	toggleStatusBar: {
+		key: "ctrl+4",
+		description: "Toggle Status Bar",
 		category: "Layout",
 		global: true,
 	},
-	expandActivityBar: {
-		key: "ctrl+shift+j",
-		description: "Expand/Collapse Activity Bar",
+	toggleTabBar: {
+		key: "ctrl+5",
+		description: "Toggle Tab Bar",
+		category: "Layout",
+		global: true,
+	},
+	toggleToolbar: {
+		key: "ctrl+6",
+		description: "Toggle Formatting Toolbar",
+		category: "Layout",
+		global: true,
+	},
+	toggleTitleBar: {
+		key: "ctrl+7",
+		description: "Toggle Note Title Bar",
+		category: "Layout",
+		global: true,
+	},
+	toggleMetadataBar: {
+		key: "ctrl+8",
+		description: "Toggle Note Info Bar",
+		category: "Layout",
+		global: true,
+	},
+	toggleNoteConfigBar: {
+		key: "ctrl+9",
+		description: "Toggle Note Hotkey Bar",
 		category: "Layout",
 		global: true,
 	},
@@ -69,18 +105,6 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 	toggleLineWrapping: {
 		key: "alt+z",
 		description: "Toggle Line Wrapping",
-		category: "Editor",
-		global: true,
-	},
-	toggleToolbar: {
-		key: "f9",
-		description: "Toggle Editor Toolbar",
-		category: "Editor",
-		global: true,
-	},
-	toggleTitleBar: {
-		key: "f8",
-		description: "Toggle Note Title Bar",
 		category: "Editor",
 		global: true,
 	},
@@ -136,62 +160,6 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		key: "ctrl+alt+right",
 		description: "Move Tab to Right Pane",
 		category: "Tab Movement",
-		global: true,
-	},
-
-	// Tab focus by number
-	focusTab1: {
-		key: "ctrl+1",
-		description: "Focus Tab 1",
-		category: "Tab Focus",
-		global: true,
-	},
-	focusTab2: {
-		key: "ctrl+2",
-		description: "Focus Tab 2",
-		category: "Tab Focus",
-		global: true,
-	},
-	focusTab3: {
-		key: "ctrl+3",
-		description: "Focus Tab 3",
-		category: "Tab Focus",
-		global: true,
-	},
-	focusTab4: {
-		key: "ctrl+4",
-		description: "Focus Tab 4",
-		category: "Tab Focus",
-		global: true,
-	},
-	focusTab5: {
-		key: "ctrl+5",
-		description: "Focus Tab 5",
-		category: "Tab Focus",
-		global: true,
-	},
-	focusTab6: {
-		key: "ctrl+6",
-		description: "Focus Tab 6",
-		category: "Tab Focus",
-		global: true,
-	},
-	focusTab7: {
-		key: "ctrl+7",
-		description: "Focus Tab 7",
-		category: "Tab Focus",
-		global: true,
-	},
-	focusTab8: {
-		key: "ctrl+8",
-		description: "Focus Tab 8",
-		category: "Tab Focus",
-		global: true,
-	},
-	focusTab9: {
-		key: "ctrl+9",
-		description: "Focus Tab 9",
-		category: "Tab Focus",
 		global: true,
 	},
 
@@ -256,14 +224,6 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		key: "ctrl+alt+o",
 		description: "Focus Tab Bar",
 		category: "Focus",
-		global: true,
-	},
-
-	// Tab bar visibility
-	toggleTabBar: {
-		key: "ctrl+alt+b",
-		description: "Toggle Tab Bar Visibility",
-		category: "Layout",
 		global: true,
 	},
 

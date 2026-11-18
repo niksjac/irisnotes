@@ -12,7 +12,7 @@ import { runSync } from "@/storage/sync/sync-engine";
  * this just reconciles with iris-server when enabled. Runs once on mount and
  * then every `intervalSeconds`, and on demand via syncNowRequestAtom.
  *
- * Reports progress into syncStateAtom (shown by the activity-bar indicator).
+ * Reports progress into syncStateAtom (shown by the toolbar indicator).
  * Disabled by default (config.sync.enabled). When re-enabled after working
  * offline, the persisted push cursor means the first cycle pushes everything
  * changed in the meantime — no special catch-up logic needed.

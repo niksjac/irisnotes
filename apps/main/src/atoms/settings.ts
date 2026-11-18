@@ -103,7 +103,7 @@ export type LogoVariant =
 	| "iris-detailed-mono-light";
 
 export interface BrandingSettings {
-	/** app logo: activity bar and the quick app's tray icon */
+	/** app logo: window title bar and the quick app's tray icon */
 	logo: LogoVariant;
 	/** earlier name of `logo`, still read from settings saved before the rename */
 	activityBarLogo?: LogoVariant;

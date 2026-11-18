@@ -2,7 +2,8 @@ import type React from "react";
 import { useEffect } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import {
-	ActivityBar,
+	WindowTitleBar,
+	AppToolbar,
 	SidebarResizer,
 	Sidebar,
 	PaneContainer,
@@ -47,7 +48,7 @@ import {
 } from "@/atoms/panes";
 
 export const Layout: React.FC = () => {
-	const { sidebar, views } = useLayout();
+	const { sidebar } = useLayout();
 	const hotkeyHandlers = useHotkeyHandlers();
 	const {
 		isNewNoteDialogOpen,
@@ -112,7 +113,7 @@ export const Layout: React.FC = () => {
 	}, [setPane0Tabs, setPane1Tabs, setPane0ActiveTab, setPane1ActiveTab]);
 
 	// Fixed hotkey setup with proper name mapping
-	useAppHotkeys(mapHotkeyHandlers(sidebar, views, hotkeyHandlers));
+	useAppHotkeys(mapHotkeyHandlers(sidebar, hotkeyHandlers));
 
 	const isDev = import.meta.env.DEV;
 
@@ -122,12 +123,12 @@ export const Layout: React.FC = () => {
 			{isDev && (
 				<div className="flex-shrink-0 h-0.5 bg-amber-400 dark:bg-amber-500" />
 			)}
+			{/* Window chrome: title bar (Ctrl+1) and app toolbar (Ctrl+2) */}
+			<WindowTitleBar />
+			<AppToolbar />
 			<div className="flex-1 overflow-hidden">
 				{/* Responsive layout using CSS-only approach */}
 				<div className="overflow-hidden h-full flex flex-col md:flex-row">
-					{/* Activity Bar */}
-					<ActivityBar />
-
 					{/* Resizable Sidebar */}
 					<SidebarResizer
 						isCollapsed={sidebar.collapsed}

@@ -1,8 +1,5 @@
 // UI Components - Barrel Exports
-export {
-	ActivityBar,
-	ActivityBarButton,
-} from "./activity-bar";
+export { WindowTitleBar, AppToolbar } from "./window-chrome";
 export { RightClickMenu } from "./right-click-menu";
 export { EditorContainer } from "./editor";
 export { Sidebar, SidebarResizer, SearchSidebar } from "./sidebar";

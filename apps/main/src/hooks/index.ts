@@ -11,7 +11,6 @@ export { useEditorLayout } from "./use-editor-layout";
 export { usePerformance } from "./use-performance";
 // Layout and UI state
 export { useSidebar } from "./use-sidebar";
-export { useView } from "./use-view";
 // Consolidated layout hook
 export { useLayout } from "./use-layout";
 export {

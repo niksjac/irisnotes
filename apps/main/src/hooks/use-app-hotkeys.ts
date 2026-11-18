@@ -39,14 +39,29 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHotkeyOptions(hotkeyMapping.toggleSidebar.global)
 	);
 	useHotkeys(
-		hotkeyMapping.toggleActivityBar.key,
-		createHandler(handlers.onToggleActivityBar),
-		createHotkeyOptions(hotkeyMapping.toggleActivityBar.global)
+		hotkeyMapping.toggleWindowTitleBar.key,
+		createHandler(handlers.onToggleWindowTitleBar),
+		createHotkeyOptions(hotkeyMapping.toggleWindowTitleBar.global)
 	);
 	useHotkeys(
-		hotkeyMapping.expandActivityBar.key,
-		createHandler(handlers.onExpandActivityBar),
-		createHotkeyOptions(hotkeyMapping.expandActivityBar.global)
+		hotkeyMapping.toggleAppToolbar.key,
+		createHandler(handlers.onToggleAppToolbar),
+		createHotkeyOptions(hotkeyMapping.toggleAppToolbar.global)
+	);
+	useHotkeys(
+		hotkeyMapping.toggleStatusBar.key,
+		createHandler(handlers.onToggleStatusBar),
+		createHotkeyOptions(hotkeyMapping.toggleStatusBar.global)
+	);
+	useHotkeys(
+		hotkeyMapping.toggleMetadataBar.key,
+		createHandler(handlers.onToggleMetadataBar),
+		createHotkeyOptions(hotkeyMapping.toggleMetadataBar.global)
+	);
+	useHotkeys(
+		hotkeyMapping.toggleNoteConfigBar.key,
+		createHandler(handlers.onToggleNoteConfigBar),
+		createHotkeyOptions(hotkeyMapping.toggleNoteConfigBar.global)
 	);
 	useHotkeys(
 		hotkeyMapping.toggleZenMode.key,
@@ -127,53 +142,6 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		hotkeyMapping.moveTabToPaneRight.key,
 		createHandler(handlers.onMoveTabToPaneRight),
 		createHotkeyOptions(hotkeyMapping.moveTabToPaneRight.global)
-	);
-
-	// Tab focus by number
-	useHotkeys(
-		hotkeyMapping.focusTab1.key,
-		createHandler(handlers.onFocusTab1),
-		createHotkeyOptions(hotkeyMapping.focusTab1.global)
-	);
-	useHotkeys(
-		hotkeyMapping.focusTab2.key,
-		createHandler(handlers.onFocusTab2),
-		createHotkeyOptions(hotkeyMapping.focusTab2.global)
-	);
-	useHotkeys(
-		hotkeyMapping.focusTab3.key,
-		createHandler(handlers.onFocusTab3),
-		createHotkeyOptions(hotkeyMapping.focusTab3.global)
-	);
-	useHotkeys(
-		hotkeyMapping.focusTab4.key,
-		createHandler(handlers.onFocusTab4),
-		createHotkeyOptions(hotkeyMapping.focusTab4.global)
-	);
-	useHotkeys(
-		hotkeyMapping.focusTab5.key,
-		createHandler(handlers.onFocusTab5),
-		createHotkeyOptions(hotkeyMapping.focusTab5.global)
-	);
-	useHotkeys(
-		hotkeyMapping.focusTab6.key,
-		createHandler(handlers.onFocusTab6),
-		createHotkeyOptions(hotkeyMapping.focusTab6.global)
-	);
-	useHotkeys(
-		hotkeyMapping.focusTab7.key,
-		createHandler(handlers.onFocusTab7),
-		createHotkeyOptions(hotkeyMapping.focusTab7.global)
-	);
-	useHotkeys(
-		hotkeyMapping.focusTab8.key,
-		createHandler(handlers.onFocusTab8),
-		createHotkeyOptions(hotkeyMapping.focusTab8.global)
-	);
-	useHotkeys(
-		hotkeyMapping.focusTab9.key,
-		createHandler(handlers.onFocusTab9),
-		createHotkeyOptions(hotkeyMapping.focusTab9.global)
 	);
 
 	// Tab navigation

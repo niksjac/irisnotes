@@ -6,6 +6,8 @@ import {
 	openTabPaletteAtom,
 	toggleStatusBarAtom,
 	toggleNoteConfigBarAtom,
+	toggleWindowTitleBarAtom,
+	toggleAppToolbarAtom,
 } from "@/atoms";
 import {
 	openTopNotesTabAtom,
@@ -13,7 +15,7 @@ import {
 	openAutocorrectTabAtom,
 } from "@/atoms/panes";
 import { useHotkeyHandlers } from "@/hooks/use-hotkey-handlers";
-import { useSidebar, useView, useEditorLayout, useTheme } from "@/hooks";
+import { useSidebar, useEditorLayout, useTheme } from "@/hooks";
 import { THEMES } from "@/config/themes";
 
 const icon = (Icon: Icons.LucideIcon) => <Icon className="w-4 h-4" />;
@@ -28,7 +30,8 @@ export function ActionPalette() {
 
 	const handlers = useHotkeyHandlers();
 	const { toggleSidebar } = useSidebar();
-	const { toggleActivityBar } = useView();
+	const toggleWindowTitleBar = useSetAtom(toggleWindowTitleBarAtom);
+	const toggleAppToolbar = useSetAtom(toggleAppToolbarAtom);
 	const { toggleMetadataBar } = useEditorLayout();
 	const { setTheme } = useTheme();
 	const toggleStatusBar = useSetAtom(toggleStatusBarAtom);
@@ -40,10 +43,10 @@ export function ActionPalette() {
 
 	const items: PaletteItem[] = [
 		// View / layout toggles
+		{ id: "toggle-window-title-bar", label: "Toggle Title Bar", hint: "View", icon: icon(Icons.AppWindow), run: toggleWindowTitleBar },
+		{ id: "toggle-app-toolbar", label: "Toggle Toolbar", hint: "View", icon: icon(Icons.PanelTop), run: toggleAppToolbar },
 		{ id: "toggle-sidebar", label: "Toggle Sidebar", hint: "View", icon: icon(Icons.PanelLeft), run: toggleSidebar },
-		{ id: "toggle-activity-bar", label: "Toggle Activity Bar", hint: "View", icon: icon(Icons.Sidebar), run: toggleActivityBar },
-		{ id: "toggle-activity-labels", label: "Toggle Activity Bar Labels", hint: "View", icon: icon(Icons.Tags), run: handlers.toggleActivityBarExpanded },
-		{ id: "toggle-toolbar", label: "Toggle Editor Toolbar", hint: "View", icon: icon(Icons.Wrench), run: handlers.toggleToolbar },
+		{ id: "toggle-toolbar", label: "Toggle Formatting Toolbar", hint: "View", icon: icon(Icons.Wrench), run: handlers.toggleToolbar },
 		{ id: "toggle-title-bar", label: "Toggle Note Title Bar", hint: "View", icon: icon(Icons.Heading), run: handlers.toggleTitleBar },
 		{ id: "toggle-info-bar", label: "Toggle Note Info Bar", hint: "View", icon: icon(Icons.Info), run: toggleMetadataBar },
 		{ id: "toggle-hotkey-bar", label: "Toggle Note Hotkey Bar", hint: "View", icon: icon(Icons.Keyboard), run: toggleNoteConfigBar },

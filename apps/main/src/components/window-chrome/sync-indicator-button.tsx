@@ -3,6 +3,7 @@ import * as Icons from "lucide-react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { syncStateAtom, type SyncStatus } from "@/atoms/sync";
 import { openSyncTabAtom } from "@/atoms/panes";
+import { TOOLBAR_BUTTON_CLASS, TOOLBAR_BUTTON_ACTIVE_CLASS } from "./toolbar-button";
 
 const STATUS: Record<
 	SyncStatus,
@@ -16,14 +17,13 @@ const STATUS: Record<
 
 interface Props {
 	isActive: boolean;
-	expanded?: boolean;
 }
 
 /**
- * Activity-bar sync status indicator. Reflects the live sync state (animated
+ * Toolbar sync status indicator. Reflects the live sync state (animated
  * while syncing) and opens the Sync settings view when clicked.
  */
-export function SyncIndicatorButton({ isActive, expanded = false }: Props) {
+export function SyncIndicatorButton({ isActive }: Props) {
 	const state = useAtomValue(syncStateAtom);
 	const openSync = useSetAtom(openSyncTabAtom);
 	const meta = STATUS[state.status];
@@ -37,27 +37,15 @@ export function SyncIndicatorButton({ isActive, expanded = false }: Props) {
 					: `${meta.label} — open sync settings`
 			}
 			tabIndex={-1}
-			className={clsx(
-				"relative flex items-center rounded bg-transparent cursor-pointer transition-all duration-200 font-medium p-0 outline-none",
-				"focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset",
-				"justify-center w-8 h-8",
-				expanded
-					? "md:justify-start md:gap-2 md:w-full md:px-2 md:h-7"
-					: "md:w-6 md:h-6 md:hover:scale-110",
-				expanded && "md:hover:bg-gray-200 md:dark:hover:bg-gray-700",
-				isActive && "bg-gray-300/80 dark:bg-gray-600/75 shadow-inner",
-			)}
+			className={clsx(TOOLBAR_BUTTON_CLASS, isActive && TOOLBAR_BUTTON_ACTIVE_CLASS)}
 		>
 			<meta.Icon
-				size={18}
-				className={clsx("md:w-5 md:h-5 flex-shrink-0", meta.color, meta.spin && "animate-spin")}
+				size={16}
+				className={clsx("flex-shrink-0", meta.color, meta.spin && "animate-spin")}
 			/>
-			{expanded && (
-				<span className="hidden md:inline text-xs truncate">Sync</span>
-			)}
-			{/* Tiny error dot when collapsed, so problems are visible at a glance. */}
-			{!expanded && state.status === "error" && (
-				<span className="absolute top-0 right-0 md:-top-0.5 md:-right-0.5 w-2 h-2 rounded-full bg-red-500 ring-1 ring-white dark:ring-gray-800" />
+			{/* Tiny error dot, so problems are visible at a glance. */}
+			{state.status === "error" && (
+				<span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-red-500 ring-1 ring-white dark:ring-gray-800" />
 			)}
 		</button>
 	);

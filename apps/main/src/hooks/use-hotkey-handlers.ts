@@ -14,15 +14,6 @@ import {
 	focusPane2Atom,
 	moveTabToPaneLeftAtom,
 	moveTabToPaneRightAtom,
-	focusTab1Atom,
-	focusTab2Atom,
-	focusTab3Atom,
-	focusTab4Atom,
-	focusTab5Atom,
-	focusTab6Atom,
-	focusTab7Atom,
-	focusTab8Atom,
-	focusTab9Atom,
 	focusNextTabAtom,
 	focusPreviousTabAtom,
 	focusNextSpawnedTabAtom,
@@ -34,6 +25,10 @@ import {
 	openSearchSidebarAtom,
 	sidebarCollapsed,
 	toggleTabBarAtom,
+	toggleWindowTitleBarAtom,
+	toggleAppToolbarAtom,
+	toggleStatusBarAtom,
+	toggleNoteConfigBarAtom,
 	showQuickHotkeysAtom,
 	toggleZenModeAtom,
 	openThemeSwitcherAtom,
@@ -46,7 +41,6 @@ import { useEditorViewToggle } from "./use-editor-view-toggle";
 import { useLineWrapping } from "./use-line-wrapping";
 import { useEditorLayout } from "./use-editor-layout";
 import { useNoteActions } from "./use-note-actions";
-import { useView } from "./use-view";
 
 /**
  * Hook that provides all hotkey handler functions
@@ -55,9 +49,8 @@ import { useView } from "./use-view";
 export function useHotkeyHandlers() {
 	const { toggleEditorView } = useEditorViewToggle();
 	const { toggleLineWrapping } = useLineWrapping();
-	const { toggleToolbar, toggleTitleBar } = useEditorLayout();
+	const { toggleToolbar, toggleTitleBar, toggleMetadataBar } = useEditorLayout();
 	const { createNoteInRoot, openLocationDialog, openNewBookDialog, openNewSectionDialog } = useNoteActions();
-	const { toggleActivityBarExpanded } = useView();
 	// Tab actions
 	const closeActiveTab = useSetAtom(closeActiveTabAtom);
 	const reopenLastClosedTab = useSetAtom(reopenLastClosedTabAtom);
@@ -80,17 +73,6 @@ export function useHotkeyHandlers() {
 	// Tab movement between panes
 	const moveTabToPaneLeft = useSetAtom(moveTabToPaneLeftAtom);
 	const moveTabToPaneRight = useSetAtom(moveTabToPaneRightAtom);
-
-	// Tab focus by number
-	const focusTab1 = useSetAtom(focusTab1Atom);
-	const focusTab2 = useSetAtom(focusTab2Atom);
-	const focusTab3 = useSetAtom(focusTab3Atom);
-	const focusTab4 = useSetAtom(focusTab4Atom);
-	const focusTab5 = useSetAtom(focusTab5Atom);
-	const focusTab6 = useSetAtom(focusTab6Atom);
-	const focusTab7 = useSetAtom(focusTab7Atom);
-	const focusTab8 = useSetAtom(focusTab8Atom);
-	const focusTab9 = useSetAtom(focusTab9Atom);
 
 	// Tab navigation
 	const focusNextTab = useSetAtom(focusNextTabAtom);
@@ -122,17 +104,6 @@ export function useHotkeyHandlers() {
 		moveTabToPaneLeft,
 		moveTabToPaneRight,
 
-		// Tab focus by number
-		focusTab1,
-		focusTab2,
-		focusTab3,
-		focusTab4,
-		focusTab5,
-		focusTab6,
-		focusTab7,
-		focusTab8,
-		focusTab9,
-
 		// Tab navigation
 		focusNextTab,
 		focusPreviousTab,
@@ -145,10 +116,12 @@ export function useHotkeyHandlers() {
 		toggleToolbar,
 		toggleTitleBar,
 
-		// Activity bar
-		toggleActivityBarExpanded,
-
-		// Tab bar visibility
+		// Layout toggles
+		toggleWindowTitleBar: useSetAtom(toggleWindowTitleBarAtom),
+		toggleAppToolbar: useSetAtom(toggleAppToolbarAtom),
+		toggleStatusBar: useSetAtom(toggleStatusBarAtom),
+		toggleMetadataBar,
+		toggleNoteConfigBar: useSetAtom(toggleNoteConfigBarAtom),
 		toggleTabBar: useSetAtom(toggleTabBarAtom),
 
 		// Zen mode

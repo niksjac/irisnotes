@@ -42,7 +42,7 @@ token = ""
 intervalSeconds = 30
 ```
 
-Sync is normally configured in the app's **Sync view** (activity bar), which
+Sync is normally configured in the app's **Sync view** (sync button in the toolbar), which
 writes these values back to the file. Deployment of the server is described in
 [`docs/guides/sync-hub.md`](sync-hub.md).
 

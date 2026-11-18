@@ -1,6 +1,6 @@
 import { atom } from "jotai";
 
-/** High-level state of the background sync loop, surfaced in the activity bar. */
+/** High-level state of the background sync loop, surfaced in the toolbar. */
 export type SyncStatus = "disabled" | "idle" | "syncing" | "error";
 
 export interface SyncState {

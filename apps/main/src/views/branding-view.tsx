@@ -104,7 +104,7 @@ export function BrandingView() {
 						/>
 					</div>
 					<p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-						Shown in the activity bar and as the Quick Search tray icon.
+						Shown in the title bar and as the Quick Search tray icon.
 					</p>
 				</section>
 

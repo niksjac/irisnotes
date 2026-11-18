@@ -46,7 +46,7 @@ distinguishable in the taskbar.
 
 ## Tray icon (quick app)
 
-The About view (**F1**) sets one logo for the activity bar and the quick
+The About view (**F1**) sets one logo for the window title bar and the quick
 app's tray. The choice is saved as the `branding` row of the `settings` table
 (`{"logo": "<variant>"}`), which the quick app reads at startup and re-checks
 every 3 seconds, so a change reaches the tray without a restart.

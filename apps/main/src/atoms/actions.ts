@@ -1,6 +1,7 @@
 import { atom } from "jotai";
 import {
-	activityBarVisible,
+	windowTitleBarVisibleAtom,
+	appToolbarVisibleAtom,
 	sidebarCollapsed,
 	metadataBarVisibleAtom,
 	toolbarVisibleAtom,
@@ -14,11 +15,6 @@ import { tabBarVisibleAtom } from "./panes";
 export const toggleSidebarAtom = atom(null, (get, set) => {
 	const current = get(sidebarCollapsed);
 	set(sidebarCollapsed, !current);
-});
-
-export const toggleActivityBarAtom = atom(null, (get, set) => {
-	const current = get(activityBarVisible);
-	set(activityBarVisible, !current);
 });
 
 export const toggleToolbarAtom = atom(null, (get, set) => {
@@ -35,7 +31,8 @@ export const toggleZenModeAtom = atom(null, (get, set) => {
 		// Entering zen mode - save current state and hide everything except title
 		const previousState = {
 			sidebarCollapsed: get(sidebarCollapsed),
-			activityBarVisible: get(activityBarVisible),
+			windowTitleBarVisible: get(windowTitleBarVisibleAtom),
+			appToolbarVisible: get(appToolbarVisibleAtom),
 			toolbarVisible: get(toolbarVisibleAtom),
 			metadataBarVisible: get(metadataBarVisibleAtom),
 			tabBarVisible: get(tabBarVisibleAtom),
@@ -45,7 +42,8 @@ export const toggleZenModeAtom = atom(null, (get, set) => {
 		
 		// Hide UI elements (keep title bar visible)
 		set(sidebarCollapsed, true);
-		set(activityBarVisible, false);
+		set(windowTitleBarVisibleAtom, false);
+		set(appToolbarVisibleAtom, false);
 		set(toolbarVisibleAtom, false);
 		set(metadataBarVisibleAtom, false);
 		set(tabBarVisibleAtom, false);
@@ -54,7 +52,8 @@ export const toggleZenModeAtom = atom(null, (get, set) => {
 	} else {
 		// Exiting zen mode - always restore full visibility so everything comes back on
 		set(sidebarCollapsed, false);
-		set(activityBarVisible, true);
+		set(windowTitleBarVisibleAtom, true);
+		set(appToolbarVisibleAtom, true);
 		set(toolbarVisibleAtom, true);
 		set(metadataBarVisibleAtom, true);
 		set(tabBarVisibleAtom, true);

@@ -223,8 +223,6 @@ export function customSetup(options: SetupOptions): Plugin[] {
 
 	// App-aware keymap (must come first to intercept app shortcuts)
 	const appShortcuts = options.appShortcuts || [
-		"Mod-g", // Toggle sidebar (changed from Mod-b to free up bold)
-		"Mod-j", // Toggle activity bar
 		"Mod-w", // Close tab
 		"Mod-e", // Toggle editor view
 	];
