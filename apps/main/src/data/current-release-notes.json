@@ -1,11 +1,11 @@
 {
-	"version": "1.0.21",
-	"range": "76e1932..HEAD",
+	"version": "1.0.22",
+	"range": "9a45db7..HEAD",
 	"sections": [
 		{
 			"title": "Features",
 			"items": [
-				"Layout: Title bar and toolbar replace the activity bar, Ctrl+1–9 toggle window parts"
+				"Hotkeys: Change app hotkeys from the Keyboard Shortcuts view"
 			]
 		}
 	]
