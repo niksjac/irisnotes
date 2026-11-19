@@ -78,7 +78,7 @@ const codeAliases: Record<string, string> = {
 	ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right",
 };
 
-function normalizeCode(code: string): string {
+export function normalizeCode(code: string): string {
 	const trimmed = code.trim();
 	return (codeAliases[trimmed] || trimmed).toLowerCase().replace(/key|digit|numpad/, "");
 }

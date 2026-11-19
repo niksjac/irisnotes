@@ -56,6 +56,18 @@ is read instead if no `.toml` exists.
 
 Saving the file reloads it while the app runs; no restart needed.
 
+### Changing app hotkeys in the app
+
+In the Keyboard Shortcuts view, click an **App** shortcut and press the new
+combination (Esc cancels). It needs Ctrl, Alt or Meta, except F-keys. If another
+app action already uses the key, the view says which and asks before assigning
+it; both then share the key. A changed key is highlighted with a reset button
+next to it.
+
+Saving rewrites `hotkeys.toml`: comments are lost, the `[editor]` section is
+kept, entries for actions that no longer exist are dropped, and a changed key is
+written as just `key = …`. Editor keybindings can only be changed in the file.
+
 ## App hotkeys
 
 Each override is a table named after the action id (the keys of
@@ -64,14 +76,9 @@ Each override is a table named after the action id (the keys of
 ```toml
 [toggleSidebar]
 key = "ctrl+g"
-description = "Toggle Notes Sidebar"
-category = "Layout"
-global = true
 ```
 
-- An override **replaces the whole default entry**, so give all four fields —
-  leaving out `description` or `category` leaves them empty in the Shortcuts
-  view.
+- Fields left out (`description`, `category`, `global`) keep their defaults.
 - `global = true` lets the hotkey fire while focus is in the editor or in an
   input field; `false` limits it to when neither has focus.
 - Modifiers: `ctrl`, `shift`, `alt`, `meta`. Arrow keys: `left`, `right`, `up`,

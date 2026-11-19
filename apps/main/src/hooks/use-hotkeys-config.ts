@@ -8,7 +8,7 @@ import type { EditorKeybindingOverrides } from "@/config/default-editor-keybindi
 import { editorKeybindingsAtom } from "@/atoms/editor-keybindings";
 import { hotkeysAtom } from "@/atoms/hotkeys";
 import { updateAppHotkeyPatterns } from "@/utils/app-hotkeys";
-import type { HotkeyMapping } from "@/types";
+import type { HotkeyConfig, HotkeyMapping } from "@/types";
 
 /**
  * Hook for loading hotkeys from hotkeys.toml config file
@@ -40,9 +40,15 @@ export function useHotkeysConfig() {
 				setEditorKeybindings(mergeEditorKeybindings(editorOverrides));
 			}
 
-			// Ignore overrides for actions that no longer exist (e.g. removed hotkeys)
+			// Ignore overrides for actions that no longer exist (e.g. removed hotkeys).
+			// An override may set only `key`; the rest comes from the default.
 			const parsedHotkeys = Object.fromEntries(
-				Object.entries(parsed).filter(([action]) => action in DEFAULT_HOTKEYS),
+				Object.entries(parsed)
+					.filter(([action]) => action in DEFAULT_HOTKEYS)
+					.map(([action, override]) => [
+						action,
+						{ ...DEFAULT_HOTKEYS[action as keyof HotkeyMapping], ...(override as Partial<HotkeyConfig>) },
+					]),
 			) as Partial<HotkeyMapping>;
 
 			// Merge user hotkeys with defaults
@@ -68,52 +74,36 @@ export function useHotkeysConfig() {
 		}
 	}, []);
 
-	const saveHotkeys = useCallback(
-		async (newHotkeys: Partial<HotkeyMapping>) => {
+	/**
+	 * Set the key for one app action and rewrite hotkeys.toml (comments are not
+	 * kept). `null` or the default key removes the override. The [editor] section
+	 * is kept; overrides for actions that no longer exist are dropped.
+	 */
+	const setHotkeyKey = useCallback(
+		async (action: keyof HotkeyMapping, key: string | null) => {
+			let file: Record<string, unknown> = {};
 			try {
-				// Backend converts JSON to TOML and saves as hotkeys.toml
-				await invoke("write_config", {
-					filename: "hotkeys",
-					content: JSON.stringify(newHotkeys, null, 2),
-				});
-
-				// Merge with defaults for immediate use
-				const mergedHotkeys: HotkeyMapping = {
-					...DEFAULT_HOTKEYS,
-					...newHotkeys,
-				};
-				// Update CodeMirror app hotkey patterns
-				updateAppHotkeyPatterns(mergedHotkeys);
-				setHotkeys(mergedHotkeys);
-				setHotkeysAtom(mergedHotkeys);
+				file = JSON.parse(await invoke<string>("read_config", { filename: "hotkeys" }));
 			} catch (error) {
-				console.error("Failed to save hotkeys:", error);
+				// A missing file starts empty; never overwrite one that failed to parse
+				if (!String(error).includes("does not exist")) throw error;
 			}
-		},
-		[]
-	);
 
-	const updateHotkeys = useCallback(
-		async (updates: Partial<HotkeyMapping>) => {
-			// Only save the user's custom hotkeys, not the defaults
-			const currentCustomHotkeys: Partial<HotkeyMapping> = {};
+			const next: Record<string, unknown> = {};
+			for (const [id, value] of Object.entries(file)) {
+				if (id === "editor" || (id in DEFAULT_HOTKEYS && id !== action)) next[id] = value;
+			}
+			if (key && key !== DEFAULT_HOTKEYS[action].key) next[action] = { key };
 
-			// Extract only the customized hotkeys
-			Object.entries(hotkeys).forEach(([action, config]) => {
-				const defaultConfig = DEFAULT_HOTKEYS[action as keyof HotkeyMapping];
-				if (JSON.stringify(config) !== JSON.stringify(defaultConfig)) {
-					currentCustomHotkeys[action as keyof HotkeyMapping] = config;
-				}
+			// Backend converts JSON to TOML and saves as hotkeys.toml
+			await invoke("write_config", {
+				filename: "hotkeys",
+				content: JSON.stringify(next, null, 2),
 			});
-
-			const newCustomHotkeys = {
-				...currentCustomHotkeys,
-				...updates,
-			};
-
-			await saveHotkeys(newCustomHotkeys);
+			// The file watcher reloads every other user; reload this one right away
+			await loadHotkeys();
 		},
-		[hotkeys, saveHotkeys]
+		[loadHotkeys]
 	);
 
 	useEffect(() => {
@@ -157,8 +147,7 @@ export function useHotkeysConfig() {
 	return {
 		hotkeys,
 		loading,
-		updateHotkeys,
 		loadHotkeys,
-		saveHotkeys,
+		setHotkeyKey,
 	};
 }
