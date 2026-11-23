@@ -8,6 +8,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { editorSettingsAtom } from "@/atoms/settings";
 import { EDITOR_SETTINGS_CONSTRAINTS } from "@/types/editor-settings";
 import { setTextAlign, setTableAlign, setCellContentAlign, fitColumnWidths, resetTableFormatting } from "./format-commands";
+import { insertTableWithSize } from "./prosemirror-setup";
 import { isInTable, addRowAfter, addColumnAfter, deleteRow, deleteColumn, deleteTable, setCellAttr, CellSelection, mergeCells, splitCell } from "prosemirror-tables";
 import {
 	PRESET_COLORS,
@@ -157,6 +158,185 @@ function ColorGrid({ colors, onSelectColor, onRemoveColor, removeLabel, columns 
 				{removeLabel}
 			</button>
 		</div>
+	);
+}
+
+// Insert-table dropdown: hover/arrow-key grid picker plus exact row/column inputs
+const TABLE_GRID_ROWS = 8;
+const TABLE_GRID_COLS = 10;
+const TABLE_MAX_ROWS = 50;
+const TABLE_MAX_COLS = 20;
+
+function InsertTableDropdown({ editorView, schema }: { editorView: EditorView; schema: any }) {
+	const [open, setOpen] = useState(false);
+	const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+	const [hover, setHover] = useState({ rows: 1, cols: 1 });
+	const [rows, setRows] = useState(3);
+	const [cols, setCols] = useState(3);
+	const btnRef = useRef<HTMLButtonElement>(null);
+	const panelRef = useRef<HTMLDivElement>(null);
+	const gridRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (!open) return;
+		if (btnRef.current) {
+			const rect = btnRef.current.getBoundingClientRect();
+			setPos({ top: rect.bottom + 4, left: rect.left });
+		}
+		const handleClick = (e: MouseEvent) => {
+			if (panelRef.current && !panelRef.current.contains(e.target as Node) && !btnRef.current?.contains(e.target as Node)) {
+				setOpen(false);
+			}
+		};
+		document.addEventListener("mousedown", handleClick);
+		return () => document.removeEventListener("mousedown", handleClick);
+	}, [open]);
+
+	// Focus the grid once the panel is positioned so arrow keys work immediately
+	useEffect(() => {
+		if (open && pos) gridRef.current?.focus();
+	}, [open, pos]);
+
+	const insert = (r: number, c: number) => {
+		const rr = Math.max(1, Math.min(r, TABLE_MAX_ROWS));
+		const cc = Math.max(1, Math.min(c, TABLE_MAX_COLS));
+		setOpen(false);
+		insertTableWithSize(schema, rr, cc)(editorView.state, editorView.dispatch);
+		editorView.focus();
+	};
+
+	const close = () => {
+		setOpen(false);
+		btnRef.current?.focus();
+	};
+
+	const handleGridKey = (e: React.KeyboardEvent) => {
+		let { rows: r, cols: c } = hover;
+		switch (e.key) {
+			case "ArrowRight": c = Math.min(c + 1, TABLE_GRID_COLS); break;
+			case "ArrowLeft": c = Math.max(c - 1, 1); break;
+			case "ArrowDown": r = Math.min(r + 1, TABLE_GRID_ROWS); break;
+			case "ArrowUp": r = Math.max(r - 1, 1); break;
+			case "Enter":
+			case " ":
+				e.preventDefault();
+				e.stopPropagation();
+				insert(r, c);
+				return;
+			default:
+				return;
+		}
+		e.preventDefault();
+		e.stopPropagation(); // keep the toolbar's ArrowLeft/Right roving focus out of the grid
+		setHover({ rows: r, cols: c });
+	};
+
+	return (
+		<>
+			<button
+				ref={btnRef}
+				type="button"
+				tabIndex={0}
+				className={`relative flex-shrink-0 h-7 flex items-center gap-0.5 px-1 rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset text-gray-700 dark:text-gray-300 ${
+					open ? "bg-gray-200 dark:bg-gray-600" : "hover:bg-gray-200 dark:hover:bg-gray-700"
+				}`}
+				onClick={() => setOpen((v) => !v)}
+				onKeyDown={(e) => {
+					if (!open && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+						e.preventDefault();
+						setOpen(true);
+					}
+				}}
+				title="Insert Table (Shift+Alt+T)"
+			>
+				<Table size={15} />
+				<ChevronDown size={9} className={`opacity-50 transition-transform ${open ? "rotate-180" : ""}`} />
+			</button>
+			{open && pos && (
+				<div
+					ref={panelRef}
+					className="fixed p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-lg z-[100]"
+					style={{ top: pos.top, left: pos.left }}
+					onKeyDown={(e) => {
+						if (e.key === "Escape") {
+							e.preventDefault();
+							e.stopPropagation(); // don't let the toolbar's Escape handler move focus to the editor
+							close();
+						} else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+							e.stopPropagation(); // let the number inputs move their caret
+						}
+					}}
+				>
+					<div
+						ref={gridRef}
+						tabIndex={0}
+						role="grid"
+						aria-label="Table size"
+						className="grid gap-0.5 outline-none rounded focus-visible:ring-2 focus-visible:ring-blue-500 p-0.5"
+						style={{ gridTemplateColumns: `repeat(${TABLE_GRID_COLS}, 1rem)` }}
+						onKeyDown={handleGridKey}
+					>
+						{Array.from({ length: TABLE_GRID_ROWS * TABLE_GRID_COLS }, (_, i) => {
+							const r = Math.floor(i / TABLE_GRID_COLS) + 1;
+							const c = (i % TABLE_GRID_COLS) + 1;
+							const active = r <= hover.rows && c <= hover.cols;
+							return (
+								<div
+									key={i}
+									role="gridcell"
+									className={`w-4 h-4 rounded-sm border cursor-pointer ${
+										active
+											? "bg-blue-200 dark:bg-blue-800 border-blue-500"
+											: "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+									}`}
+									onMouseEnter={() => setHover({ rows: r, cols: c })}
+									onMouseDown={(e) => e.preventDefault()}
+									onClick={() => insert(r, c)}
+								/>
+							);
+						})}
+					</div>
+					<div className="text-center text-[11px] tabular-nums text-gray-600 dark:text-gray-300 py-1 select-none">
+						{hover.rows} × {hover.cols}
+					</div>
+					<form
+						className="flex items-center gap-1.5 pt-1.5 border-t border-gray-200 dark:border-gray-700 text-[11px] text-gray-500 dark:text-gray-400"
+						onSubmit={(e) => {
+							e.preventDefault();
+							insert(rows, cols);
+						}}
+					>
+						<input
+							type="number"
+							min={1}
+							max={TABLE_MAX_ROWS}
+							value={rows}
+							onChange={(e) => setRows(Number(e.target.value))}
+							aria-label="Rows"
+							title="Rows"
+							className="w-11 px-1 py-0.5 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+						/>
+						<span>×</span>
+						<input
+							type="number"
+							min={1}
+							max={TABLE_MAX_COLS}
+							value={cols}
+							onChange={(e) => setCols(Number(e.target.value))}
+							aria-label="Columns"
+							title="Columns"
+							className="w-11 px-1 py-0.5 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+						/>
+						<button
+							type="submit"
+							className="ml-auto px-2 py-0.5 text-xs rounded bg-blue-600 text-white hover:bg-blue-700"
+						>
+							Insert
+						</button>
+					</form>
+				</div>
+			)}
+		</>
 	);
 }
 
@@ -1072,6 +1252,7 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 						</button>
 					);
 				})}
+				<InsertTableDropdown editorView={editorView} schema={schema} />
 			</div>
 
 			<div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
