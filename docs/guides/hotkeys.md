@@ -1,7 +1,7 @@
 # Hotkeys
 
 How keyboard shortcuts are defined and how to override them. Verified against
-source on 2026-11-18.
+source on 2026-11-23.
 
 To see every active shortcut in the app: **Ctrl+Shift+.** opens the Keyboard
 Shortcuts view; **F12** shows a quick reference overlay.
@@ -34,7 +34,9 @@ owner's GTK apps (falcon, K9: 1 title bar, 2 toolbar, 3 sidebar, 4 status bar):
 | Ctrl+8 | Note info bar | `toggleMetadataBar` |
 | Ctrl+9 | Note hotkey bar | `toggleNoteConfigBar` |
 
-The toolbar's **More** menu (⋯) lists the same toggles with their current keys.
+The toolbar's **More** menu (⋯) lists the same toggles with their current keys,
+and the window title bar has one show/hide button per part, in the same order,
+left of Close (dimmed while that part is hidden).
 Visibility is remembered across restarts, except the note hotkey bar. When both
 the title bar and the toolbar are hidden, the keys and the command palette
 (Ctrl+Shift+P) bring them back.
