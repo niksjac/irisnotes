@@ -1,11 +1,11 @@
 {
-	"version": "1.0.22",
-	"range": "9a45db7..HEAD",
+	"version": "1.0.23",
+	"range": "cb280a4..HEAD",
 	"sections": [
 		{
 			"title": "Features",
 			"items": [
-				"Hotkeys: Change app hotkeys from the Keyboard Shortcuts view"
+				"Editor: Insert-table toolbar button with size picker"
 			]
 		}
 	]
