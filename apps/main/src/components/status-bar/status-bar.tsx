@@ -80,13 +80,16 @@ export function StatusBar() {
 	// Hide status bar when not visible (e.g., in zen mode)
 	if (!statusBarVisible) return null;
 
+	// 21px with line-height 1: the 1px top border plus an even inner height
+	// leaves DejaVu Sans' capitals and digits exactly centered (measured; the
+	// default 1.5 line-height put them 1.5px high)
 	return (
-		<div className="flex-shrink-0 h-5 px-3 flex items-center justify-between gap-4 text-[11px] text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 select-none overflow-hidden">
+		<div className="flex-shrink-0 h-[21px] px-3 flex items-center justify-between gap-4 text-[11px] leading-none text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 select-none overflow-hidden">
 			{/* Left side - editor stats */}
 			<div className="flex items-center gap-3 tabular-nums overflow-hidden min-w-0">
 				{isDev && (
 					<>
-						<span className="px-1.5 rounded font-semibold text-[10px] bg-amber-400 text-amber-900 dark:bg-amber-500 dark:text-amber-950 flex-shrink-0">
+						<span className="px-1.5 py-0.5 rounded font-semibold text-[10px] bg-amber-400 text-amber-900 dark:bg-amber-500 dark:text-amber-950 flex-shrink-0">
 							DEV
 						</span>
 						<span className="text-gray-300 dark:text-gray-600 flex-shrink-0">|</span>
