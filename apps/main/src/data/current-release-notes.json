@@ -1,11 +1,11 @@
 {
-	"version": "1.0.23",
-	"range": "cb280a4..HEAD",
+	"version": "1.0.24",
+	"range": "05bb9e6..HEAD",
 	"sections": [
 		{
 			"title": "Features",
 			"items": [
-				"Editor: Insert-table toolbar button with size picker"
+				"Layout: Show/hide buttons for each window part in the title bar"
 			]
 		}
 	]
