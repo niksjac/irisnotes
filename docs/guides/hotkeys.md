@@ -1,7 +1,7 @@
 # Hotkeys
 
 How keyboard shortcuts are defined and how to override them. Verified against
-source on 2026-11-23.
+source on 2026-11-24.
 
 To see every active shortcut in the app: **Ctrl+Shift+.** opens the Keyboard
 Shortcuts view; **F12** shows a quick reference overlay.
@@ -27,7 +27,7 @@ toggle of its own and is hidden only by zen mode (F11).
 | Key | Part | Action id |
 |---|---|---|
 | Ctrl+2 | Toolbar | `toggleAppToolbar` |
-| Ctrl+3 | Notes sidebar | `toggleSidebar` |
+| Ctrl+3 (also Ctrl+G) | Notes sidebar | `toggleSidebar` |
 | Ctrl+4 | Status bar | `toggleStatusBar` |
 | Ctrl+5 | Tab bar | `toggleTabBar` |
 | Ctrl+6 | Formatting toolbar (per pane) | `toggleToolbar` |
@@ -44,7 +44,8 @@ toolbar is hidden, its key and the command palette (Ctrl+Shift+P) bring it back.
 These keys used to focus tabs 1–9; numbered tab focus is gone (use Ctrl+Tab or
 the tab palette). Overrides for action ids that no longer exist are ignored, so
 an old `[focusTab1]` entry in `hotkeys.toml` does nothing — but an old
-`[toggleSidebar] key = "ctrl+g"` still wins over the new default.
+`[toggleSidebar] key = "ctrl+g"` still wins over the default (which has both
+Ctrl+3 and Ctrl+G); remove it to get both back.
 
 ## Where to override
 
@@ -61,14 +62,16 @@ Saving the file reloads it while the app runs; no restart needed.
 ### Changing app hotkeys in the app
 
 In the Keyboard Shortcuts view, click an **App** shortcut and press the new
-combination (Esc cancels). It needs Ctrl, Alt or Meta, except F-keys. If another
-app action already uses the key, the view says which and asks before assigning
-it; both then share the key. A changed key is highlighted with a reset button
-next to it.
+combination (Esc cancels); it replaces all of the action's keys. The **+** next
+to it records one more key instead, so the action keeps its existing keys. A
+key needs Ctrl, Alt or Meta, except F-keys. If another app action already uses
+the key, the view says which and asks before assigning it; both then share the
+key. A changed key is highlighted with a reset button next to it, which
+restores all default keys.
 
 Saving rewrites `hotkeys.toml`: comments are lost, the `[editor]` section is
 kept, entries for actions that no longer exist are dropped, and a changed key is
-written as just `key = …`. Editor keybindings can only be changed in the file.
+written as just `key = …` (an array when the action has several keys). Editor keybindings can only be changed in the file.
 
 ## App hotkeys
 
@@ -76,10 +79,17 @@ Each override is a table named after the action id (the keys of
 `DEFAULT_HOTKEYS`):
 
 ```toml
+[toggleDualPane]
+key = "ctrl+alt+s"
+
+# several keys for one action: an array, or one string separated by ","
 [toggleSidebar]
-key = "ctrl+g"
+key = ["ctrl+3", "ctrl+g"]
 ```
 
+- An action can have several keys; any of them runs it. Labels show them as
+  `Ctrl+3 / Ctrl+G`. An override replaces all default keys, so list every key
+  you want to keep.
 - Fields left out (`description`, `category`, `global`) keep their defaults.
 - `global = true` lets the hotkey fire while focus is in the editor or in an
   input field; `false` limits it to when neither has focus.

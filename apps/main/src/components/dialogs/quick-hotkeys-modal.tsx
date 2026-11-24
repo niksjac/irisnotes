@@ -4,6 +4,7 @@ import { useHotkeysConfig } from "@/hooks/use-hotkeys-config";
 import {
 	PROSEMIRROR_HOTKEYS,
 } from "@/config/editor-hotkeys";
+import { splitHotkeyKeys } from "@/utils/format-hotkey-key";
 
 interface QuickHotkeysModalProps {
 	isOpen: boolean;
@@ -15,6 +16,10 @@ interface QuickHotkeysModalProps {
  */
 function formatHotkey(key: string | undefined): string {
 	if (!key) return "";
+	return splitHotkeyKeys(key).map(formatSingleHotkey).join(" / ");
+}
+
+function formatSingleHotkey(key: string): string {
 	return key
 		.split("+")
 		.map((part) => {

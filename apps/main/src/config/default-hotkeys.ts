@@ -14,7 +14,7 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		global: true,
 	},
 	toggleSidebar: {
-		key: "ctrl+3",
+		key: "ctrl+3,ctrl+g",
 		description: "Toggle Notes Sidebar",
 		category: "Layout",
 		global: true,

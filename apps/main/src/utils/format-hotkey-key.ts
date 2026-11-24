@@ -46,7 +46,24 @@ const WORD_TO_SYMBOL: Record<string, string> = {
 	right: "→",
 };
 
+/**
+ * The keys bound to one action. Several keys are separated by "," — the
+ * separator react-hotkeys-hook uses; the comma key itself is spelled "comma".
+ * "ctrl+3, ctrl+g" → ["ctrl+3", "ctrl+g"]
+ */
+export function splitHotkeyKeys(key: string): string[] {
+	return key
+		.split(",")
+		.map((k) => k.trim())
+		.filter(Boolean);
+}
+
+/** Formats one key or several ("ctrl+3,ctrl+g" → "Ctrl+3 / Ctrl+G") */
 export function formatHotkeyKey(key: string): string {
+	return splitHotkeyKeys(key).map(formatSingleKey).join(" / ");
+}
+
+function formatSingleKey(key: string): string {
 	return key
 		.split("+")
 		.map((part) => {

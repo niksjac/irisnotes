@@ -8,7 +8,24 @@ import type { EditorKeybindingOverrides } from "@/config/default-editor-keybindi
 import { editorKeybindingsAtom } from "@/atoms/editor-keybindings";
 import { hotkeysAtom } from "@/atoms/hotkeys";
 import { updateAppHotkeyPatterns } from "@/utils/app-hotkeys";
+import { splitHotkeyKeys } from "@/utils/format-hotkey-key";
 import type { HotkeyConfig, HotkeyMapping } from "@/types";
+
+/**
+ * An override's `key` as one string: a TOML array (`key = ["ctrl+3", "ctrl+g"]`)
+ * becomes "ctrl+3,ctrl+g", react-hotkeys-hook's list of alternative keys.
+ */
+function normalizeOverride(override: unknown): Partial<HotkeyConfig> {
+	const config = { ...(override as Record<string, unknown>) };
+	if (Array.isArray(config.key)) config.key = config.key.map(String).join(",");
+	return config as Partial<HotkeyConfig>;
+}
+
+/** Same keys, ignoring order, case and spacing */
+function sameKeys(a: string, b: string): boolean {
+	const norm = (k: string) => splitHotkeyKeys(k.toLowerCase()).sort().join(",");
+	return norm(a) === norm(b);
+}
 
 /**
  * Hook for loading hotkeys from hotkeys.toml config file
@@ -47,7 +64,7 @@ export function useHotkeysConfig() {
 					.filter(([action]) => action in DEFAULT_HOTKEYS)
 					.map(([action, override]) => [
 						action,
-						{ ...DEFAULT_HOTKEYS[action as keyof HotkeyMapping], ...(override as Partial<HotkeyConfig>) },
+						{ ...DEFAULT_HOTKEYS[action as keyof HotkeyMapping], ...normalizeOverride(override) },
 					]),
 			) as Partial<HotkeyMapping>;
 
@@ -75,9 +92,10 @@ export function useHotkeysConfig() {
 	}, []);
 
 	/**
-	 * Set the key for one app action and rewrite hotkeys.toml (comments are not
-	 * kept). `null` or the default key removes the override. The [editor] section
-	 * is kept; overrides for actions that no longer exist are dropped.
+	 * Set the key(s) for one app action and rewrite hotkeys.toml (comments are not
+	 * kept). Several keys ("ctrl+3,ctrl+g") are written as a TOML array. `null`
+	 * or the default keys remove the override. The [editor] section is kept;
+	 * overrides for actions that no longer exist are dropped.
 	 */
 	const setHotkeyKey = useCallback(
 		async (action: keyof HotkeyMapping, key: string | null) => {
@@ -93,7 +111,10 @@ export function useHotkeysConfig() {
 			for (const [id, value] of Object.entries(file)) {
 				if (id === "editor" || (id in DEFAULT_HOTKEYS && id !== action)) next[id] = value;
 			}
-			if (key && key !== DEFAULT_HOTKEYS[action].key) next[action] = { key };
+			if (key && !sameKeys(key, DEFAULT_HOTKEYS[action].key)) {
+				const keys = splitHotkeyKeys(key);
+				next[action] = { key: keys.length === 1 ? keys[0] : keys };
+			}
 
 			// Backend converts JSON to TOML and saves as hotkeys.toml
 			await invoke("write_config", {

@@ -28,7 +28,7 @@ export type {
 
 // Hotkey configuration types
 export interface HotkeyConfig {
-	key: string; // Key combination like "ctrl+b", "ctrl+shift+alt+left"
+	key: string; // Key combination like "ctrl+b", "ctrl+shift+alt+left"; several separated by "," ("ctrl+3,ctrl+g")
 	description: string; // Human-readable description
 	category: string; // Category for organization
 	global?: boolean; // Whether hotkey works in form fields

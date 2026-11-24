@@ -11,6 +11,7 @@ import {
 import { editorKeybindingsAtom } from "@/atoms/editor-keybindings";
 import { DEFAULT_HOTKEYS } from "@/config/default-hotkeys";
 import { normalizeCode } from "@/utils/app-hotkeys";
+import { splitHotkeyKeys } from "@/utils/format-hotkey-key";
 import type { HotkeyConfig, HotkeyMapping } from "@/types";
 
 interface HotkeyEntry {
@@ -27,9 +28,15 @@ interface HotkeyEntry {
 /** A recorded key that is already bound to other app actions */
 interface PendingConflict {
 	actionId: keyof HotkeyMapping;
+	/** The key that was pressed */
+	recorded: string;
+	/** The action's full key list to save if accepted */
 	key: string;
 	usedBy: string[];
 }
+
+/** Recording replaces the action's keys, or adds one more */
+type RecordMode = "replace" | "add";
 
 const MODIFIER_ORDER = ["ctrl", "shift", "alt", "meta"];
 
@@ -52,12 +59,22 @@ function hotkeyFromEvent(e: KeyboardEvent): string | null {
 	return [...mods, key].join("+");
 }
 
+/** Same set of keys, ignoring order and modifier spelling */
+function sameKeyList(a: string, b: string): boolean {
+	const norm = (k: string) => splitHotkeyKeys(k).map(canonicalHotkey).sort().join(",");
+	return norm(a) === norm(b);
+}
+
 /**
  * Format a hotkey string for display
- * Converts "ctrl+shift+comma" to "Ctrl+Shift+,"
+ * Converts "ctrl+shift+comma" to "Ctrl+Shift+,", "ctrl+3,ctrl+g" to "Ctrl+3 / Ctrl+G"
  */
 function formatHotkeyForDisplay(key: string | undefined): string {
 	if (!key) return "";
+	return splitHotkeyKeys(key).map(formatSingleHotkey).join(" / ");
+}
+
+function formatSingleHotkey(key: string): string {
 	return key
 		.split("+")
 		.map((part) => {
@@ -96,6 +113,7 @@ export function HotkeysView() {
 	const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
 	const searchRef = useRef<HTMLInputElement>(null);
 	const [recordingId, setRecordingId] = useState<keyof HotkeyMapping | null>(null);
+	const [recordMode, setRecordMode] = useState<RecordMode>("replace");
 	const [recordHint, setRecordHint] = useState<string | null>(null);
 	const [conflict, setConflict] = useState<PendingConflict | null>(null);
 	const [saveError, setSaveError] = useState<string | null>(null);
@@ -110,8 +128,8 @@ export function HotkeysView() {
 		}
 	};
 
-	// While recording, the next key combination becomes the action's key.
-	// Capture phase on window, so no app hotkey fires meanwhile.
+	// While recording, the next key combination becomes the action's key (or is
+	// added to its keys). Capture phase on window, so no app hotkey fires meanwhile.
 	useEffect(() => {
 		if (!recordingId) return;
 		const stop = () => {
@@ -134,13 +152,21 @@ export function HotkeysView() {
 				return;
 			}
 			stop();
+			const current = splitHotkeyKeys(appHotkeys[recordingId].key);
+			if (recordMode === "add" && current.some((k) => canonicalHotkey(k) === canonicalHotkey(key))) return;
+			const next = recordMode === "add" ? [...current, key].join(",") : key;
 			const usedBy = (Object.entries(appHotkeys) as [keyof HotkeyMapping, HotkeyConfig][])
-				.filter(([id, config]) => id !== recordingId && config.key && canonicalHotkey(config.key) === canonicalHotkey(key))
+				.filter(
+					([id, config]) =>
+						id !== recordingId &&
+						config.key &&
+						splitHotkeyKeys(config.key).some((k) => canonicalHotkey(k) === canonicalHotkey(key)),
+				)
 				.map(([, config]) => config.description);
 			if (usedBy.length > 0) {
-				setConflict({ actionId: recordingId, key, usedBy });
+				setConflict({ actionId: recordingId, recorded: key, key: next, usedBy });
 			} else {
-				void saveKey(recordingId, key);
+				void saveKey(recordingId, next);
 			}
 		};
 		const onMouseDown = (e: MouseEvent) => {
@@ -152,7 +178,7 @@ export function HotkeysView() {
 			window.removeEventListener("keydown", onKeyDown, true);
 			window.removeEventListener("mousedown", onMouseDown, true);
 		};
-	}, [recordingId, appHotkeys]);
+	}, [recordingId, recordMode, appHotkeys]);
 
 	// Ctrl+F focuses the filter input from anywhere in the hotkeys view.
 	useHotkeys(
@@ -183,7 +209,7 @@ export function HotkeysView() {
 				context: "App",
 				category: config.category,
 				actionId,
-				customized: config.key !== DEFAULT_HOTKEYS[actionId]?.key,
+				customized: !sameKeyList(config.key, DEFAULT_HOTKEYS[actionId]?.key ?? ""),
 			});
 		}
 
@@ -269,7 +295,7 @@ export function HotkeysView() {
 							Keyboard Shortcuts
 						</h1>
 						<p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-							{filteredHotkeys.length} of {allHotkeys.length} shortcuts · click an App shortcut to change it
+							{filteredHotkeys.length} of {allHotkeys.length} shortcuts · click an App shortcut to change it, + to add another key
 						</p>
 					</div>
 					{/* Search Bar */}
@@ -385,12 +411,14 @@ export function HotkeysView() {
 													{hotkey.actionId ? (
 														<KeyCell
 															hotkey={hotkey}
-															recording={recordingId === hotkey.actionId}
+															recording={recordingId === hotkey.actionId ? recordMode : null}
 															hint={recordHint}
-															onRecord={() => {
+															onRecord={(mode) => {
 																setConflict(null);
 																setRecordHint(null);
-																setRecordingId(recordingId === hotkey.actionId ? null : hotkey.actionId ?? null);
+																setRecordMode(mode);
+																const same = recordingId === hotkey.actionId && recordMode === mode;
+																setRecordingId(same ? null : hotkey.actionId ?? null);
 															}}
 															onReset={() => hotkey.actionId && void saveKey(hotkey.actionId, null)}
 														/>
@@ -419,7 +447,7 @@ export function HotkeysView() {
 													<td colSpan={4} className="px-4 py-2 text-xs text-amber-800 dark:text-amber-200">
 														<div className="flex flex-wrap items-center gap-2">
 															<span>
-																<kbd className="font-mono">{formatHotkeyForDisplay(conflict.key)}</kbd> is already used by{" "}
+																<kbd className="font-mono">{formatHotkeyForDisplay(conflict.recorded)}</kbd> is already used by{" "}
 																{conflict.usedBy.join(", ")}.
 															</span>
 															<button
@@ -454,19 +482,24 @@ export function HotkeysView() {
 
 interface KeyCellProps {
 	hotkey: HotkeyEntry;
-	recording: boolean;
+	/** Set while this row is recording */
+	recording: RecordMode | null;
 	hint: string | null;
-	onRecord: () => void;
+	onRecord: (mode: RecordMode) => void;
 	onReset: () => void;
 }
 
-/** App hotkey: click to record a new key; reset appears once it differs from the default */
+/**
+ * App hotkey: click to record a new key (replacing all its keys), + to add
+ * another key; reset appears once it differs from the default
+ */
 function KeyCell({ hotkey, recording, hint, onRecord, onReset }: KeyCellProps) {
+	const recordingLabel = hint ?? (recording === "add" ? "Press extra key…" : "Press keys…");
 	return (
 		<div data-hotkey-recorder className="flex items-center gap-1.5">
 			<button
 				type="button"
-				onClick={onRecord}
+				onClick={() => onRecord("replace")}
 				title={recording ? "Press the new key combination (Esc cancels)" : "Click to change"}
 				className={`px-2 py-0.5 rounded text-xs font-mono whitespace-nowrap cursor-pointer ${
 					recording
@@ -476,8 +509,18 @@ function KeyCell({ hotkey, recording, hint, onRecord, onReset }: KeyCellProps) {
 							: "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:ring-1 hover:ring-blue-400"
 				}`}
 			>
-				{recording ? hint ?? "Press keys…" : hotkey.keys}
+				{recording ? recordingLabel : hotkey.keys}
 			</button>
+			{!recording && (
+				<button
+					type="button"
+					onClick={() => onRecord("add")}
+					title="Add another key for this action"
+					className="p-0.5 rounded text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer"
+				>
+					<Icons.Plus className="w-3 h-3" />
+				</button>
+			)}
 			{hotkey.customized && !recording && (
 				<button
 					type="button"

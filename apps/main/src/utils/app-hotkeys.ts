@@ -11,6 +11,7 @@
 
 import { DEFAULT_HOTKEYS } from "@/config/default-hotkeys";
 import type { HotkeyMapping } from "@/types";
+import { splitHotkeyKeys } from "@/utils/format-hotkey-key";
 
 /**
  * Parsed hotkey pattern for efficient matching
@@ -43,7 +44,7 @@ function parseHotkeyString(hotkeyStr: string): ParsedHotkey {
 function parseHotkeyMapping(mapping: HotkeyMapping): ParsedHotkey[] {
 	return Object.values(mapping)
 		.filter(config => config.global !== false) // Include all global hotkeys
-		.map(config => parseHotkeyString(config.key));
+		.flatMap(config => splitHotkeyKeys(config.key).map(parseHotkeyString));
 }
 
 /**

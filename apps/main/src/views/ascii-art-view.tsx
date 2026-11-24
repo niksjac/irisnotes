@@ -5,6 +5,7 @@ import { useAsciiArt } from "@/hooks";
 import { hotkeysAtom } from "@/atoms/hotkeys";
 import type { AsciiArtEntry } from "@/atoms/ascii-art";
 import type { HotkeyConfig } from "@/types";
+import { splitHotkeyKeys } from "@/utils/format-hotkey-key";
 
 /**
  * Convert a KeyboardEvent to a normalized hotkey string like "ctrl+shift+a"
@@ -108,7 +109,7 @@ export function AsciiArtView() {
 
 			// Check app hotkeys
 			for (const [, config] of Object.entries(appHotkeys) as [string, HotkeyConfig][]) {
-				if (config?.key && normalizeKeyCombo(config.key) === normalized) {
+				if (config?.key && splitHotkeyKeys(config.key).some((k) => normalizeKeyCombo(k) === normalized)) {
 					return `Conflicts with app shortcut: "${config.description}"`;
 				}
 			}
