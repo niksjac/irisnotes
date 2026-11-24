@@ -1,11 +1,17 @@
 {
-	"version": "1.0.25",
-	"range": "c1892f0..HEAD",
+	"version": "1.0.26",
+	"range": "7e8e57f..HEAD",
 	"sections": [
 		{
 			"title": "Features",
 			"items": [
-				"Layout: Window title bar is hidden only by zen mode, drop its Ctrl+1 toggle"
+				"Hotkeys: Several keys per action; sidebar defaults to Ctrl+3 and Ctrl+G"
+			]
+		},
+		{
+			"title": "Fixes",
+			"items": [
+				"Ui: Vertically center status bar text"
 			]
 		}
 	]
