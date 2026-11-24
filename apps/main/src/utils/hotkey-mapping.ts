@@ -29,7 +29,6 @@ export function mapHotkeyHandlers(
 		toggleLineWrapping: () => void;
 		toggleToolbar: () => void;
 		toggleTitleBar: () => void;
-		toggleWindowTitleBar: () => void;
 		toggleAppToolbar: () => void;
 		toggleStatusBar: () => void;
 		toggleMetadataBar: () => void;
@@ -56,7 +55,6 @@ export function mapHotkeyHandlers(
 ): AppHotkeysProps {
 	return {
 		// Layout hotkeys
-		onToggleWindowTitleBar: handlers.toggleWindowTitleBar,
 		onToggleAppToolbar: handlers.toggleAppToolbar,
 		onToggleSidebar: sidebar.toggle,
 		onToggleStatusBar: handlers.toggleStatusBar,

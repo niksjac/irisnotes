@@ -6,7 +6,6 @@ const LAYOUT_STORAGE_KEY = "irisnotes-layout-state";
 
 interface LayoutState {
 	sidebarWidth: number;
-	windowTitleBarVisible: boolean;
 	appToolbarVisible: boolean;
 	sidebarCollapsed: boolean;
 	statusBarVisible: boolean;
@@ -17,7 +16,6 @@ interface LayoutState {
 
 const DEFAULT_LAYOUT: LayoutState = {
 	sidebarWidth: 300,
-	windowTitleBarVisible: true,
 	appToolbarVisible: true,
 	sidebarCollapsed: false,
 	statusBarVisible: true,
@@ -62,12 +60,8 @@ export const sidebarCollapsed = atom<boolean>(initialLayout.sidebarCollapsed);
 export const sidebarWidth = atom<number>(initialLayout.sidebarWidth);
 export const sidebarHeight = atom<number>(200); // Default height for mobile
 
-// Window chrome: the title bar (logo, active tab title, close) and the app
-// toolbar under it
-export const windowTitleBarVisibleAtom = atom<boolean>(initialLayout.windowTitleBarVisible);
-export const toggleWindowTitleBarAtom = atom(null, (get, set) => {
-	set(windowTitleBarVisibleAtom, !get(windowTitleBarVisibleAtom));
-});
+// Window chrome: the app toolbar under the title bar. The title bar itself
+// (logo, active tab title, close) has no toggle; it's hidden only in zen mode.
 export const appToolbarVisibleAtom = atom<boolean>(initialLayout.appToolbarVisible);
 export const toggleAppToolbarAtom = atom(null, (get, set) => {
 	set(appToolbarVisibleAtom, !get(appToolbarVisibleAtom));
@@ -93,7 +87,6 @@ export const zenModeAtom = atom<boolean>(false);
 // Store previous state to restore when exiting zen mode (title bar not included - stays visible)
 export const zenModePreviousStateAtom = atom<{
 	sidebarCollapsed: boolean;
-	windowTitleBarVisible: boolean;
 	appToolbarVisible: boolean;
 	toolbarVisible: boolean;
 	metadataBarVisible: boolean;

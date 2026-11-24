@@ -1,6 +1,5 @@
 import { atom } from "jotai";
 import {
-	windowTitleBarVisibleAtom,
 	appToolbarVisibleAtom,
 	sidebarCollapsed,
 	metadataBarVisibleAtom,
@@ -31,7 +30,6 @@ export const toggleZenModeAtom = atom(null, (get, set) => {
 		// Entering zen mode - save current state and hide everything except title
 		const previousState = {
 			sidebarCollapsed: get(sidebarCollapsed),
-			windowTitleBarVisible: get(windowTitleBarVisibleAtom),
 			appToolbarVisible: get(appToolbarVisibleAtom),
 			toolbarVisible: get(toolbarVisibleAtom),
 			metadataBarVisible: get(metadataBarVisibleAtom),
@@ -42,7 +40,6 @@ export const toggleZenModeAtom = atom(null, (get, set) => {
 		
 		// Hide UI elements (keep title bar visible)
 		set(sidebarCollapsed, true);
-		set(windowTitleBarVisibleAtom, false);
 		set(appToolbarVisibleAtom, false);
 		set(toolbarVisibleAtom, false);
 		set(metadataBarVisibleAtom, false);
@@ -52,7 +49,6 @@ export const toggleZenModeAtom = atom(null, (get, set) => {
 	} else {
 		// Exiting zen mode - always restore full visibility so everything comes back on
 		set(sidebarCollapsed, false);
-		set(windowTitleBarVisibleAtom, true);
 		set(appToolbarVisibleAtom, true);
 		set(toolbarVisibleAtom, true);
 		set(metadataBarVisibleAtom, true);

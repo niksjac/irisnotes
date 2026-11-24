@@ -39,11 +39,6 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHotkeyOptions(hotkeyMapping.toggleSidebar.global)
 	);
 	useHotkeys(
-		hotkeyMapping.toggleWindowTitleBar.key,
-		createHandler(handlers.onToggleWindowTitleBar),
-		createHotkeyOptions(hotkeyMapping.toggleWindowTitleBar.global)
-	);
-	useHotkeys(
 		hotkeyMapping.toggleAppToolbar.key,
 		createHandler(handlers.onToggleAppToolbar),
 		createHotkeyOptions(hotkeyMapping.toggleAppToolbar.global)

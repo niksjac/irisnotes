@@ -25,7 +25,6 @@ import {
 	openSearchSidebarAtom,
 	sidebarCollapsed,
 	toggleTabBarAtom,
-	toggleWindowTitleBarAtom,
 	toggleAppToolbarAtom,
 	toggleStatusBarAtom,
 	toggleNoteConfigBarAtom,
@@ -117,7 +116,6 @@ export function useHotkeyHandlers() {
 		toggleTitleBar,
 
 		// Layout toggles
-		toggleWindowTitleBar: useSetAtom(toggleWindowTitleBarAtom),
 		toggleAppToolbar: useSetAtom(toggleAppToolbarAtom),
 		toggleStatusBar: useSetAtom(toggleStatusBarAtom),
 		toggleMetadataBar,

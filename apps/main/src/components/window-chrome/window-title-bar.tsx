@@ -4,7 +4,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import * as Icons from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
-	windowTitleBarVisibleAtom,
+	zenModeAtom,
 	paneStateAtom,
 	pane0TabsAtom,
 	pane1TabsAtom,
@@ -25,7 +25,7 @@ import { withHotkey } from "./toolbar-button";
  * drag areas; double-click toggles maximize.
  */
 export function WindowTitleBar() {
-	const visible = useAtomValue(windowTitleBarVisibleAtom);
+	const zenMode = useAtomValue(zenModeAtom);
 	const branding = useAtomValue(brandingSettingsAtom);
 	const openAbout = useSetAtom(openBrandingTabAtom);
 	const toggles = useLayoutToggles();
@@ -43,7 +43,7 @@ export function WindowTitleBar() {
 		return (focused ?? active0 ?? active1)?.title || "IrisNotes";
 	}, [paneState, pane0Tabs, pane1Tabs, pane0ActiveTab, pane1ActiveTab]);
 
-	if (!visible) return null;
+	if (zenMode) return null;
 
 	return (
 		<div

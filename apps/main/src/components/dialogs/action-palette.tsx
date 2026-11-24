@@ -6,7 +6,6 @@ import {
 	openTabPaletteAtom,
 	toggleStatusBarAtom,
 	toggleNoteConfigBarAtom,
-	toggleWindowTitleBarAtom,
 	toggleAppToolbarAtom,
 } from "@/atoms";
 import {
@@ -30,7 +29,6 @@ export function ActionPalette() {
 
 	const handlers = useHotkeyHandlers();
 	const { toggleSidebar } = useSidebar();
-	const toggleWindowTitleBar = useSetAtom(toggleWindowTitleBarAtom);
 	const toggleAppToolbar = useSetAtom(toggleAppToolbarAtom);
 	const { toggleMetadataBar } = useEditorLayout();
 	const { setTheme } = useTheme();
@@ -43,7 +41,6 @@ export function ActionPalette() {
 
 	const items: PaletteItem[] = [
 		// View / layout toggles
-		{ id: "toggle-window-title-bar", label: "Toggle Title Bar", hint: "View", icon: icon(Icons.AppWindow), run: toggleWindowTitleBar },
 		{ id: "toggle-app-toolbar", label: "Toggle Toolbar", hint: "View", icon: icon(Icons.PanelTop), run: toggleAppToolbar },
 		{ id: "toggle-sidebar", label: "Toggle Sidebar", hint: "View", icon: icon(Icons.PanelLeft), run: toggleSidebar },
 		{ id: "toggle-toolbar", label: "Toggle Formatting Toolbar", hint: "View", icon: icon(Icons.Wrench), run: handlers.toggleToolbar },

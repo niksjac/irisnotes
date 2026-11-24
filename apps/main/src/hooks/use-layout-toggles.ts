@@ -1,8 +1,6 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import * as Icons from "lucide-react";
 import {
-	windowTitleBarVisibleAtom,
-	toggleWindowTitleBarAtom,
 	appToolbarVisibleAtom,
 	toggleAppToolbarAtom,
 	statusBarVisibleAtom,
@@ -16,7 +14,7 @@ import { useSidebar } from "./use-sidebar";
 import { useEditorLayout } from "./use-editor-layout";
 
 export interface LayoutToggle {
-	/** Hotkey action id; its default key is Ctrl+<position in the list> */
+	/** Hotkey action id; its default key is Ctrl+<position in the list + 1> */
 	id: keyof HotkeyMapping;
 	label: string;
 	icon: Icons.LucideIcon;
@@ -25,7 +23,8 @@ export interface LayoutToggle {
 }
 
 /**
- * The parts of the window that can be shown or hidden, in Ctrl+1–9 order:
+ * The parts of the window that can be shown or hidden, in Ctrl+2–9 order (Ctrl+1 is free;
+ * the window title bar has no toggle, only zen mode hides it):
  * window chrome first, then the bars inside each pane.
  */
 export function useLayoutToggles(): LayoutToggle[] {
@@ -40,13 +39,6 @@ export function useLayoutToggles(): LayoutToggle[] {
 	} = useEditorLayout();
 
 	return [
-		{
-			id: "toggleWindowTitleBar",
-			label: "Title bar",
-			icon: Icons.AppWindow,
-			visible: useAtomValue(windowTitleBarVisibleAtom),
-			toggle: useSetAtom(toggleWindowTitleBarAtom),
-		},
 		{
 			id: "toggleAppToolbar",
 			label: "Toolbar",

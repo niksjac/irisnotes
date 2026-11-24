@@ -5,13 +5,8 @@ import type { HotkeyMapping, HotkeyConfig } from "@/types";
  * These are the default key combinations that can be overridden by user configuration
  */
 export const DEFAULT_HOTKEYS: HotkeyMapping = {
-	// Layout toggles: Ctrl+1–9 show/hide one part of the window each
-	toggleWindowTitleBar: {
-		key: "ctrl+1",
-		description: "Toggle Title Bar",
-		category: "Layout",
-		global: true,
-	},
+	// Layout toggles: Ctrl+2–9 show/hide one part of the window each. Ctrl+1
+	// is free: the window title bar has no toggle, only zen mode hides it.
 	toggleAppToolbar: {
 		key: "ctrl+2",
 		description: "Toggle Toolbar",

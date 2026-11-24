@@ -27,14 +27,9 @@
 #   moveLineUp = "Alt-ArrowUp"    # Alt+↑
 
 # =============================================================================
-# Layout (Ctrl+1 through Ctrl+9 show/hide one part of the window each)
+# Layout (Ctrl+2 through Ctrl+9 show/hide one part of the window each;
+# the window title bar has no toggle — only zen mode hides it)
 # =============================================================================
-
-[toggleWindowTitleBar]
-key = "ctrl+1"
-description = "Toggle Title Bar"
-category = "Layout"
-global = true
 
 [toggleAppToolbar]
 key = "ctrl+2"

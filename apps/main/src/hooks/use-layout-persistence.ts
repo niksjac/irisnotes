@@ -1,7 +1,7 @@
 import { useAtomValue } from "jotai";
 import { useEffect, useRef } from "react";
 import {
-	sidebarWidth, windowTitleBarVisibleAtom, appToolbarVisibleAtom, sidebarCollapsed, statusBarVisibleAtom,
+	sidebarWidth, appToolbarVisibleAtom, sidebarCollapsed, statusBarVisibleAtom,
 	titleBarVisibleAtom, toolbarVisibleAtom, metadataBarVisibleAtom,
 	paneStateAtom, pane0TabsAtom, pane1TabsAtom, pane0ActiveTabAtom, pane1ActiveTabAtom, tabBarVisibleAtom,
 	PANE_STORAGE_KEY,
@@ -9,7 +9,6 @@ import {
 
 interface LayoutState {
 	sidebarWidth: number;
-	windowTitleBarVisible: boolean;
 	appToolbarVisible: boolean;
 	sidebarCollapsed: boolean;
 	statusBarVisible: boolean;
@@ -21,7 +20,6 @@ interface LayoutState {
 const LAYOUT_STORAGE_KEY = "irisnotes-layout-state";
 const DEFAULT_LAYOUT: LayoutState = {
 	sidebarWidth: 300,
-	windowTitleBarVisible: true,
 	appToolbarVisible: true,
 	sidebarCollapsed: false,
 	statusBarVisible: true,
@@ -65,7 +63,6 @@ export const loadLayoutState = (): LayoutState => {
  */
 export const useLayoutPersistence = () => {
 	const sidebarWidthValue = useAtomValue(sidebarWidth);
-	const windowTitleBarVisibleValue = useAtomValue(windowTitleBarVisibleAtom);
 	const appToolbarVisibleValue = useAtomValue(appToolbarVisibleAtom);
 	const sidebarCollapsedValue = useAtomValue(sidebarCollapsed);
 	const statusBarVisibleValue = useAtomValue(statusBarVisibleAtom);
@@ -100,11 +97,7 @@ export const useLayoutPersistence = () => {
 		};
 	}, [sidebarWidthValue]);
 
-	// Immediate save for window title bar and app toolbar visibility
-	useEffect(() => {
-		saveLayoutState({ windowTitleBarVisible: windowTitleBarVisibleValue });
-	}, [windowTitleBarVisibleValue]);
-
+	// Immediate save for app toolbar visibility
 	useEffect(() => {
 		saveLayoutState({ appToolbarVisible: appToolbarVisibleValue });
 	}, [appToolbarVisibleValue]);

@@ -17,14 +17,15 @@ App hotkeys are registered with `useHotkeys` in
 `apps/main/src/hooks/use-app-hotkeys.ts`. Editor keybindings are matched in the
 rich editor's keydown handling. Both are overridden from the same file.
 
-## Layout toggles (Ctrl+1–9)
+## Layout toggles (Ctrl+2–9)
 
 Each number shows or hides one part of the window, in the same scheme as the
-owner's GTK apps (falcon, K9: 1 title bar, 2 toolbar, 3 sidebar, 4 status bar):
+owner's GTK apps (falcon, K9: 1 title bar, 2 toolbar, 3 sidebar, 4 status bar).
+Ctrl+1 is unassigned: the window title bar (logo, tab title, close) has no
+toggle of its own and is hidden only by zen mode (F11).
 
 | Key | Part | Action id |
 |---|---|---|
-| Ctrl+1 | Window title bar (logo, tab title, close) | `toggleWindowTitleBar` |
 | Ctrl+2 | Toolbar | `toggleAppToolbar` |
 | Ctrl+3 | Notes sidebar | `toggleSidebar` |
 | Ctrl+4 | Status bar | `toggleStatusBar` |
@@ -37,9 +38,8 @@ owner's GTK apps (falcon, K9: 1 title bar, 2 toolbar, 3 sidebar, 4 status bar):
 The toolbar's **More** menu (⋯) lists the same toggles with their current keys,
 and the window title bar has one show/hide button per part, in the same order,
 left of Close (dimmed while that part is hidden).
-Visibility is remembered across restarts, except the note hotkey bar. When both
-the title bar and the toolbar are hidden, the keys and the command palette
-(Ctrl+Shift+P) bring them back.
+Visibility is remembered across restarts, except the note hotkey bar. When the
+toolbar is hidden, its key and the command palette (Ctrl+Shift+P) bring it back.
 
 These keys used to focus tabs 1–9; numbered tab focus is gone (use Ctrl+Tab or
 the tab palette). Overrides for action ids that no longer exist are ignored, so

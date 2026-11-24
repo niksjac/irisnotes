@@ -35,8 +35,7 @@ export interface HotkeyConfig {
 }
 
 export interface HotkeyMapping {
-	// Layout toggles (Ctrl+1–9)
-	toggleWindowTitleBar: HotkeyConfig;
+	// Layout toggles (Ctrl+2–9)
 	toggleAppToolbar: HotkeyConfig;
 	toggleSidebar: HotkeyConfig;
 	toggleStatusBar: HotkeyConfig;
@@ -142,7 +141,6 @@ export interface HotkeyMapping {
 
 export interface AppHotkeysProps {
 	// Layout hotkeys
-	onToggleWindowTitleBar?: () => void;
 	onToggleAppToolbar?: () => void;
 	onToggleSidebar?: () => void;
 	onToggleStatusBar?: () => void;
