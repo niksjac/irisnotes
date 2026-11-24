@@ -1,11 +1,11 @@
 {
-	"version": "1.0.24",
-	"range": "05bb9e6..HEAD",
+	"version": "1.0.25",
+	"range": "c1892f0..HEAD",
 	"sections": [
 		{
 			"title": "Features",
 			"items": [
-				"Layout: Show/hide buttons for each window part in the title bar"
+				"Layout: Window title bar is hidden only by zen mode, drop its Ctrl+1 toggle"
 			]
 		}
 	]
