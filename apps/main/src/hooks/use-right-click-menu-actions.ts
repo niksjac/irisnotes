@@ -11,11 +11,31 @@ import {
 	PanelLeft,
 	PanelRight,
 	Hash,
+	ListX,
+	ListCollapse,
+	RemoveFormatting,
+	ArrowDownAZ,
+	ArrowDownZA,
+	ArrowUpDown,
+	ListChecks,
+	WrapText,
 } from "lucide-react";
+import type { Command } from "prosemirror-state";
+import {
+	removeEmptyLines,
+	collapseEmptyLines,
+	trimTrailingWhitespace,
+	sortLinesAscending,
+	sortLinesDescending,
+	reverseLines,
+	removeDuplicateLines,
+	joinLines,
+} from "@/components/editor/plugins/text-block-commands";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { confirmDeleteItem } from "@/utils/confirm-delete";
 import type {
 	MenuGroup,
+	MenuItem,
 	TreeRightClickData,
 	EditorRightClickData,
 } from "@/types/right-click-menu";
@@ -296,6 +316,40 @@ export function useRightClickMenuActions({
 					},
 				],
 			});
+
+			// Line commands: on the selected lines, or the whole note without a selection
+			const view = data.editorView;
+			if (view) {
+				const scope = data.hasSelection ? "" : " (whole note)";
+				const lineItem = (id: string, label: string, icon: MenuItem["icon"], command: Command): MenuItem => ({
+					id,
+					label: label + scope,
+					icon,
+					disabled: !command(view.state),
+					action: () => {
+						command(view.state, view.dispatch);
+						view.focus();
+					},
+				});
+				groups.push({
+					id: "lines",
+					items: [
+						lineItem("remove-empty-lines", "Remove empty lines", ListX, removeEmptyLines),
+						lineItem("collapse-empty-lines", "Collapse empty lines", ListCollapse, collapseEmptyLines),
+						lineItem("trim-trailing-whitespace", "Trim trailing spaces", RemoveFormatting, trimTrailingWhitespace),
+						lineItem("remove-duplicate-lines", "Remove duplicate lines", ListChecks, removeDuplicateLines),
+					],
+				});
+				groups.push({
+					id: "lines-order",
+					items: [
+						lineItem("sort-lines-asc", "Sort lines A→Z", ArrowDownAZ, sortLinesAscending),
+						lineItem("sort-lines-desc", "Sort lines Z→A", ArrowDownZA, sortLinesDescending),
+						lineItem("reverse-lines", "Reverse lines", ArrowUpDown, reverseLines),
+						lineItem("join-lines", "Join lines", WrapText, joinLines),
+					],
+				});
+			}
 
 			// Selection actions
 			groups.push({

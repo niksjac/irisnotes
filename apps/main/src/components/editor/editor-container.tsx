@@ -1,5 +1,6 @@
 import type React from "react";
 import { useRef } from "react";
+import type { EditorView } from "prosemirror-view";
 import { useRightClickMenu, useRightClickMenuActions, useEditorZoom } from "@/hooks";
 import { RightClickMenu } from "../right-click-menu";
 import type { EditorRightClickData } from "@/types/right-click-menu";
@@ -35,7 +36,8 @@ export const EditorContainer: React.FC<EditorContainerProps> = ({
 	titleBar,
 }) => {
 	const containerRef = useRef<HTMLDivElement>(null);
-	const { rightClickMenu, handleRightClickMenu, hideRightClickMenu } =
+	const editorViewRef = useRef<EditorView | null>(null);
+	const { rightClickMenu, handleRightClickMenu, showRightClickMenu, hideRightClickMenu } =
 		useRightClickMenu();
 	const { getEditorMenuGroups } = useRightClickMenuActions();
 	
@@ -43,13 +45,28 @@ export const EditorContainer: React.FC<EditorContainerProps> = ({
 	useEditorZoom(containerRef);
 
 	const handleEditorRightClick = (event: React.MouseEvent) => {
+		const view = defaultView === "source" ? null : editorViewRef.current;
 		const rightClickData: EditorRightClickData = {
 			noteId,
 			selectedText: undefined,
-			hasSelection: false,
+			hasSelection: view ? !view.state.selection.empty : false,
+			editorView: view && view.editable ? view : undefined,
 		};
 
 		const menuGroups = getEditorMenuGroups(rightClickData);
+		// The Menu key reports no pointer position: open the menu at the caret
+		if (view && event.clientX === 0 && event.clientY === 0) {
+			event.preventDefault();
+			event.stopPropagation();
+			const caret = view.coordsAtPos(view.state.selection.head);
+			showRightClickMenu({
+				targetId: noteId,
+				targetType: "editor",
+				menuGroups,
+				position: { x: caret.left, y: caret.bottom },
+			});
+			return;
+		}
 		handleRightClickMenu(event, {
 			targetId: noteId,
 			targetType: "editor",
@@ -82,6 +99,9 @@ export const EditorContainer: React.FC<EditorContainerProps> = ({
 						toolbarVisible={toolbarVisible}
 						autoFocus={autoFocus}
 						titleBar={titleBar}
+						onViewChange={(view) => {
+							editorViewRef.current = view;
+						}}
 					/>
 				)}
 				<ZoomIndicator />

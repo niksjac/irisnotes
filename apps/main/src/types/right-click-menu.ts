@@ -1,4 +1,6 @@
 // Right-click menu types for the application
+import type { EditorView } from "prosemirror-view";
+
 export interface MenuItem {
 	id: string;
 	label: string;
@@ -37,6 +39,8 @@ export type EditorRightClickData = {
 	noteId?: string;
 	selectedText?: string;
 	hasSelection: boolean;
+	/** The rich editor that was clicked; enables the line commands */
+	editorView?: EditorView;
 };
 
 export type RightClickMenuType = "tree-node" | "editor" | "general";

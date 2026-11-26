@@ -106,6 +106,8 @@ interface ProseMirrorEditorProps {
 	initialCursorPosition?: number;
 	autoFocus?: boolean;
 	titleBar?: ReactNode;
+	/** Receives this editor's view on mount and null on unmount (for the right-click menu) */
+	onViewChange?: (view: EditorView | null) => void;
 }
 
 export function ProseMirrorEditor({
@@ -116,6 +118,7 @@ export function ProseMirrorEditor({
 	initialCursorPosition,
 	autoFocus = false,
 	titleBar,
+	onViewChange,
 }: ProseMirrorEditorProps) {
 	const editorRef = useRef<HTMLDivElement>(null);
 	const viewRef = useRef<EditorView | null>(null);
@@ -759,6 +762,7 @@ export function ProseMirrorEditor({
 
 		viewRef.current = view;
 		activeEditorViewStore.set(view);
+		onViewChange?.(view);
 		localizeTransientImages(view, view.state);
 		// Note: Don't auto-focus - let user click or use Ctrl+Alt+1/2 to focus pane
 		// Initial cursor position is set in EditorState.create() above
@@ -906,6 +910,7 @@ export function ProseMirrorEditor({
 			view.destroy();
 			viewRef.current = null;
 			activeEditorViewStore.set(null);
+			onViewChange?.(null);
 		};
 	}, []);
 
