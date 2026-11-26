@@ -121,26 +121,8 @@ export function StatusBar() {
 				)}
 			</div>
 
-			{/* Right side - display settings */}
+			{/* Right side - display settings, then open tabs */}
 			<div className="flex items-center gap-3 tabular-nums flex-shrink-0">
-				{totalTabCount > 0 && (
-					<>
-						<span className="flex items-center gap-1" title={`${totalTabCount} open tab${totalTabCount !== 1 ? "s" : ""}`}>
-							Tabs: {totalTabCount}
-							<button
-								type="button"
-								onClick={() => closeAllTabs()}
-								className="ml-0.5 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-								title="Close all tabs"
-							>
-								<svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor">
-									<path d="M6 4.586L10.293.293a1 1 0 011.414 1.414L7.414 6l4.293 4.293a1 1 0 01-1.414 1.414L6 7.414l-4.293 4.293a1 1 0 01-1.414-1.414L4.586 6 .293 1.707A1 1 0 011.707.293L6 4.586z" />
-								</svg>
-							</button>
-						</span>
-						<span className="text-gray-300 dark:text-gray-600">|</span>
-					</>
-				)}
 				<span title="Base font size (Ctrl+Alt+Up/Down to adjust)">
 					{fontSize}px
 				</span>
@@ -148,6 +130,25 @@ export function StatusBar() {
 				<span title="Zoom level (Ctrl+scroll or Ctrl+Plus/Minus)">
 					{zoomPercent}%
 				</span>
+				{totalTabCount > 0 && (
+					<>
+						<span className="text-gray-300 dark:text-gray-600">|</span>
+						<span className="flex items-center gap-1.5" title={`${totalTabCount} open tab${totalTabCount !== 1 ? "s" : ""}`}>
+							Tabs: {totalTabCount}
+							<button
+								type="button"
+								onClick={() => closeAllTabs()}
+								className="flex items-center gap-1 h-4 px-1.5 rounded border border-gray-300 dark:border-gray-600 bg-white/60 dark:bg-gray-700/60 text-gray-600 dark:text-gray-300 hover:bg-red-500 hover:border-red-500 hover:text-white dark:hover:bg-red-600 dark:hover:border-red-600 transition-colors cursor-pointer"
+								title="Close all tabs"
+							>
+								<svg width="8" height="8" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+									<path d="M6 4.586L10.293.293a1 1 0 011.414 1.414L7.414 6l4.293 4.293a1 1 0 01-1.414 1.414L6 7.414l-4.293 4.293a1 1 0 01-1.414-1.414L4.586 6 .293 1.707A1 1 0 011.707.293L6 4.586z" />
+								</svg>
+								Close all
+							</button>
+						</span>
+					</>
+				)}
 			</div>
 		</div>
 	);
