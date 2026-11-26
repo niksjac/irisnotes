@@ -1,6 +1,6 @@
 {
   "name": "irisnotes-quick",
-  "version": "1.0.27",
+  "version": "1.0.28",
   "description": "Quick Search overlay for IrisNotes",
   "type": "module",
   "scripts": {

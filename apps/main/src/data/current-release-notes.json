@@ -1,13 +1,11 @@
 {
-	"version": "1.0.27",
-	"range": "8426226..HEAD",
+	"version": "1.0.28",
+	"range": "0891c78..HEAD",
 	"sections": [
 		{
 			"title": "Features",
 			"items": [
-				"Hotkeys: Layout toggles move to Ctrl+1–8 now that Ctrl+1 is free",
-				"Ui: Tab count and a clearer close-all button at the right of the status bar",
-				"Editor: Line commands in the right-click menu (remove empty lines, sort, dedupe, join, …)"
+				"Ui: Larger status bar text, icon-only close-all button"
 			]
 		}
 	]
