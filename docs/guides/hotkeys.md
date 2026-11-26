@@ -1,7 +1,7 @@
 # Hotkeys
 
 How keyboard shortcuts are defined and how to override them. Verified against
-source on 2026-11-24.
+source on 2026-11-26.
 
 To see every active shortcut in the app: **Ctrl+Shift+.** opens the Keyboard
 Shortcuts view; **F12** shows a quick reference overlay.
@@ -17,23 +17,22 @@ App hotkeys are registered with `useHotkeys` in
 `apps/main/src/hooks/use-app-hotkeys.ts`. Editor keybindings are matched in the
 rich editor's keydown handling. Both are overridden from the same file.
 
-## Layout toggles (Ctrl+2–9)
+## Layout toggles (Ctrl+1–8)
 
-Each number shows or hides one part of the window, in the same scheme as the
-owner's GTK apps (falcon, K9: 1 title bar, 2 toolbar, 3 sidebar, 4 status bar).
-Ctrl+1 is unassigned: the window title bar (logo, tab title, close) has no
-toggle of its own and is hidden only by zen mode (F11).
+Each number shows or hides one part of the window. The window title bar (logo,
+tab title, close) has no toggle of its own and is hidden only by zen mode (F11),
+so the numbers start at the toolbar; Ctrl+9 is unassigned.
 
 | Key | Part | Action id |
 |---|---|---|
-| Ctrl+2 | Toolbar | `toggleAppToolbar` |
-| Ctrl+3 (also Ctrl+G) | Notes sidebar | `toggleSidebar` |
-| Ctrl+4 | Status bar | `toggleStatusBar` |
-| Ctrl+5 | Tab bar | `toggleTabBar` |
-| Ctrl+6 | Formatting toolbar (per pane) | `toggleToolbar` |
-| Ctrl+7 | Note title (per pane) | `toggleTitleBar` |
-| Ctrl+8 | Note info bar | `toggleMetadataBar` |
-| Ctrl+9 | Note hotkey bar | `toggleNoteConfigBar` |
+| Ctrl+1 | Toolbar | `toggleAppToolbar` |
+| Ctrl+2 (also Ctrl+G) | Notes sidebar | `toggleSidebar` |
+| Ctrl+3 | Status bar | `toggleStatusBar` |
+| Ctrl+4 | Tab bar | `toggleTabBar` |
+| Ctrl+5 | Formatting toolbar (per pane) | `toggleToolbar` |
+| Ctrl+6 | Note title (per pane) | `toggleTitleBar` |
+| Ctrl+7 | Note info bar | `toggleMetadataBar` |
+| Ctrl+8 | Note hotkey bar | `toggleNoteConfigBar` |
 
 The toolbar's **More** menu (⋯) lists the same toggles with their current keys,
 and the window title bar has one show/hide button per part, in the same order,
@@ -45,7 +44,9 @@ These keys used to focus tabs 1–9; numbered tab focus is gone (use Ctrl+Tab or
 the tab palette). Overrides for action ids that no longer exist are ignored, so
 an old `[focusTab1]` entry in `hotkeys.toml` does nothing — but an old
 `[toggleSidebar] key = "ctrl+g"` still wins over the default (which has both
-Ctrl+3 and Ctrl+G); remove it to get both back.
+Ctrl+2 and Ctrl+G); remove it to get both back. The keys moved down by one when
+the title bar lost its toggle, so an override that still names an old number
+(e.g. `ctrl+3` for the sidebar) now collides with the part that took it.
 
 ## Where to override
 
@@ -84,11 +85,11 @@ key = "ctrl+alt+s"
 
 # several keys for one action: an array, or one string separated by ","
 [toggleSidebar]
-key = ["ctrl+3", "ctrl+g"]
+key = ["ctrl+2", "ctrl+g"]
 ```
 
 - An action can have several keys; any of them runs it. Labels show them as
-  `Ctrl+3 / Ctrl+G`. An override replaces all default keys, so list every key
+  `Ctrl+2 / Ctrl+G`. An override replaces all default keys, so list every key
   you want to keep.
 - Fields left out (`description`, `category`, `global`) keep their defaults.
 - `global = true` lets the hotkey fire while focus is in the editor or in an

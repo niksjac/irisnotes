@@ -123,7 +123,7 @@ export const Layout: React.FC = () => {
 			{isDev && (
 				<div className="flex-shrink-0 h-0.5 bg-amber-400 dark:bg-amber-500" />
 			)}
-			{/* Window chrome: title bar (hidden only in zen mode) and app toolbar (Ctrl+2) */}
+			{/* Window chrome: title bar (hidden only in zen mode) and app toolbar (Ctrl+1) */}
 			<WindowTitleBar />
 			<AppToolbar />
 			<div className="flex-1 overflow-hidden">

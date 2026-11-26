@@ -5,52 +5,52 @@ import type { HotkeyMapping, HotkeyConfig } from "@/types";
  * These are the default key combinations that can be overridden by user configuration
  */
 export const DEFAULT_HOTKEYS: HotkeyMapping = {
-	// Layout toggles: Ctrl+2–9 show/hide one part of the window each. Ctrl+1
-	// is free: the window title bar has no toggle, only zen mode hides it.
+	// Layout toggles: Ctrl+1–8 show/hide one part of the window each (the
+	// window title bar has no toggle, only zen mode hides it). Ctrl+9 is free.
 	toggleAppToolbar: {
-		key: "ctrl+2",
+		key: "ctrl+1",
 		description: "Toggle Toolbar",
 		category: "Layout",
 		global: true,
 	},
 	toggleSidebar: {
-		key: "ctrl+3,ctrl+g",
+		key: "ctrl+2,ctrl+g",
 		description: "Toggle Notes Sidebar",
 		category: "Layout",
 		global: true,
 	},
 	toggleStatusBar: {
-		key: "ctrl+4",
+		key: "ctrl+3",
 		description: "Toggle Status Bar",
 		category: "Layout",
 		global: true,
 	},
 	toggleTabBar: {
-		key: "ctrl+5",
+		key: "ctrl+4",
 		description: "Toggle Tab Bar",
 		category: "Layout",
 		global: true,
 	},
 	toggleToolbar: {
-		key: "ctrl+6",
+		key: "ctrl+5",
 		description: "Toggle Formatting Toolbar",
 		category: "Layout",
 		global: true,
 	},
 	toggleTitleBar: {
-		key: "ctrl+7",
+		key: "ctrl+6",
 		description: "Toggle Note Title Bar",
 		category: "Layout",
 		global: true,
 	},
 	toggleMetadataBar: {
-		key: "ctrl+8",
+		key: "ctrl+7",
 		description: "Toggle Note Info Bar",
 		category: "Layout",
 		global: true,
 	},
 	toggleNoteConfigBar: {
-		key: "ctrl+9",
+		key: "ctrl+8",
 		description: "Toggle Note Hotkey Bar",
 		category: "Layout",
 		global: true,

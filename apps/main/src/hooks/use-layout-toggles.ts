@@ -14,7 +14,7 @@ import { useSidebar } from "./use-sidebar";
 import { useEditorLayout } from "./use-editor-layout";
 
 export interface LayoutToggle {
-	/** Hotkey action id; its default key is Ctrl+<position in the list + 1> */
+	/** Hotkey action id; its default key is Ctrl+<position in the list> */
 	id: keyof HotkeyMapping;
 	label: string;
 	icon: Icons.LucideIcon;
@@ -23,8 +23,8 @@ export interface LayoutToggle {
 }
 
 /**
- * The parts of the window that can be shown or hidden, in Ctrl+2–9 order (Ctrl+1 is free;
- * the window title bar has no toggle, only zen mode hides it):
+ * The parts of the window that can be shown or hidden, in Ctrl+1–8 order (the
+ * window title bar has no toggle, only zen mode hides it):
  * window chrome first, then the bars inside each pane.
  */
 export function useLayoutToggles(): LayoutToggle[] {

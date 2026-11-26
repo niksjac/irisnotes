@@ -10,7 +10,7 @@
 #   category = "Category for grouping in UI"
 #   global = true  # Whether hotkey works when editor is focused
 
-# Layout: Ctrl+2–9 toggle the window parts (defaults, see hotkeys-template.toml)
+# Layout: Ctrl+1–8 toggle the window parts (defaults, see hotkeys-template.toml)
 
 # Tabs
 [closeTab]
