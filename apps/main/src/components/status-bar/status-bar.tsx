@@ -121,18 +121,10 @@ export function StatusBar() {
 				)}
 			</div>
 
-			{/* Right side - display settings, then open tabs */}
+			{/* Right side - open tabs, then display settings */}
 			<div className="flex items-center gap-3 tabular-nums flex-shrink-0">
-				<span title="Base font size (Ctrl+Alt+Up/Down to adjust)">
-					{fontSize}px
-				</span>
-				<span className="text-gray-300 dark:text-gray-600">|</span>
-				<span title="Zoom level (Ctrl+scroll or Ctrl+Plus/Minus)">
-					{zoomPercent}%
-				</span>
 				{totalTabCount > 0 && (
 					<>
-						<span className="text-gray-300 dark:text-gray-600">|</span>
 						<span className="flex items-center gap-1.5" title={`${totalTabCount} open tab${totalTabCount !== 1 ? "s" : ""}`}>
 							Tabs: {totalTabCount}
 							<button
@@ -147,8 +139,16 @@ export function StatusBar() {
 								</svg>
 							</button>
 						</span>
+						<span className="text-gray-300 dark:text-gray-600">|</span>
 					</>
 				)}
+				<span title="Base font size (Ctrl+Alt+Up/Down to adjust)">
+					{fontSize}px
+				</span>
+				<span className="text-gray-300 dark:text-gray-600">|</span>
+				<span title="Zoom level (Ctrl+scroll or Ctrl+Plus/Minus)">
+					{zoomPercent}%
+				</span>
 			</div>
 		</div>
 	);
