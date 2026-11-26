@@ -1,11 +1,11 @@
 {
-	"version": "1.0.29",
-	"range": "a74b903..HEAD",
+	"version": "1.0.30",
+	"range": "2bbe66c..HEAD",
 	"sections": [
 		{
 			"title": "Fixes",
 			"items": [
-				"Ui: Status bar tab count back before font size"
+				"Editor: Pasted HTML takes the note's font; Ctrl+Shift+Alt+V pastes keeping source formatting"
 			]
 		}
 	]
