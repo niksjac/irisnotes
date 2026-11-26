@@ -31,6 +31,7 @@ import {
 	removeDuplicateLines,
 	joinLines,
 } from "@/components/editor/plugins/text-block-commands";
+import { pasteKeepingSourceFormatting } from "@/components/editor/paste-html";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { confirmDeleteItem } from "@/utils/confirm-delete";
 import type {
@@ -314,6 +315,23 @@ export function useRightClickMenuActions({
 							document.execCommand("paste");
 						},
 					},
+					...(data.editorView
+						? [
+								{
+									id: "paste-keep-formatting",
+									label: "Paste keeping source formatting",
+									icon: ClipboardPaste,
+									shortcut: "Ctrl+Shift+Alt+V",
+									action: () => {
+										const view = data.editorView;
+										if (!view) return;
+										pasteKeepingSourceFormatting(view).catch((err) =>
+											console.error("Paste keeping formatting failed:", err),
+										);
+									},
+								},
+							]
+						: []),
 				],
 			});
 

@@ -48,6 +48,7 @@ import {
 	saveFilePathAndInsertImage,
 	shouldLocalizeImageSrc,
 } from "./image-utils";
+import { normalizePastedHtml, pasteKeepingSourceFormatting } from "./paste-html";
 import type { EditorKeybindings } from "@/config/default-editor-keybindings";
 import { open } from "@tauri-apps/plugin-dialog";
 import "prosemirror-view/style/prosemirror.css";
@@ -55,16 +56,6 @@ import "@/styles/prosemirror.css";
 
 // Use the extended schema from schema.ts
 const mySchema = editorSchema;
-
-function normalizePastedHtml(html: string): string {
-	return html
-		.replace(/<br\s*\/?>\s*<\/p>/gi, "</p>")
-		.replace(/<br\s*\/?>/gi, "</p><p>")
-		.replace(/<p>\s*&nbsp;\s*<\/p>/gi, "<p></p>")
-		.replace(/\s*color:\s*rgb\(0,\s*0,\s*0\);?/gi, "")
-		.replace(/\s*color:\s*#000000;?/gi, "")
-		.replace(/\s*style="\s*"/g, "");
-}
 
 /**
  * Match a DOM KeyboardEvent against a ProseMirror key notation string.
@@ -327,7 +318,25 @@ export function ProseMirrorEditor({
 		};
 
 		// Ctrl+Alt+V: Paste as code block with VS Code language detection
+		// Ctrl+Shift+Alt+V: Paste keeping source formatting (fonts and sizes)
 		const handlePasteAsCodeBlock = async (e: KeyboardEvent) => {
+			const isV = e.key === "v" || e.key === "V" || e.code === "KeyV";
+			if (isV && (e.ctrlKey || e.metaKey) && e.altKey && e.shiftKey) {
+				// Only the focused editor pastes
+				const target = viewRef.current;
+				if (!target || !target.hasFocus()) return;
+				e.preventDefault();
+				e.stopPropagation();
+				pasteKeepingSourceFormatting(target)
+					.then((failed) => {
+						if (failed > 0) showError(`Failed to import ${failed} pasted image${failed === 1 ? "" : "s"}.`);
+					})
+					.catch((err) => {
+						console.error("Paste keeping formatting failed:", err);
+						showError(`Paste failed: ${err}`);
+					});
+				return;
+			}
 			if ((e.key === "v" || e.key === "V") && (e.ctrlKey || e.metaKey) && e.altKey) {
 				e.preventDefault();
 				e.stopPropagation();
@@ -523,14 +532,8 @@ export function ProseMirrorEditor({
 				return true;
 			},
 			transformPastedHTML(html) {
-				// Line-based model: convert <br> to paragraph breaks instead of
-				// relying on ProseMirror's hard_break (which doesn't exist in our schema).
-				// 1. Strip trailing <br> before </p> (prevents extra empty paragraphs)
-				// 2. Convert remaining <br> to </p><p> (splits into separate lines)
-				// 3. Normalize <p>&nbsp;</p> to <p></p> (nbsp is just a browser hack
-				//    to keep empty paragraphs visible; ProseMirror handles empty <p> fine)
-				// 4. Strip default-black color that browsers inject into clipboard HTML
-				// 5. Clean up empty style attributes
+				// Line-based model clean-up; also drops font-size/font-family from HTML
+				// copied outside IrisNotes so pasted text takes the note's font (see paste-html.ts)
 				return normalizePastedHtml(html);
 			},
 			// Image paste: intercept clipboard image data or file paths

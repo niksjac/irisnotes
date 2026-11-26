@@ -102,6 +102,11 @@ export const SYSTEM_HOTKEYS: EditorHotkeyConfig[] = [
 		category: "Clipboard",
 	},
 	{
+		key: "Ctrl+Shift+Alt+V",
+		description: "Paste Keeping Source Formatting (fonts and sizes)",
+		category: "Clipboard",
+	},
+	{
 		key: "Ctrl+A",
 		description: "Smart Select All (line → paragraph → all)",
 		category: "Selection",
