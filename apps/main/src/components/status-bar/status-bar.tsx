@@ -80,11 +80,11 @@ export function StatusBar() {
 	// Hide status bar when not visible (e.g., in zen mode)
 	if (!statusBarVisible) return null;
 
-	// 21px with line-height 1: the 1px top border plus an even inner height
-	// leaves DejaVu Sans' capitals and digits exactly centered (measured; the
-	// default 1.5 line-height put them 1.5px high)
+	// 12px text in 22px with line-height 1: leaves DejaVu Sans' capitals and
+	// digits exactly centered below the 1px top border (measured; the default
+	// 1.5 line-height put them high)
 	return (
-		<div className="flex-shrink-0 h-[21px] px-3 flex items-center justify-between gap-4 text-[11px] leading-none text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 select-none overflow-hidden">
+		<div className="flex-shrink-0 h-[22px] px-3 flex items-center justify-between gap-4 text-[12px] leading-none text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 select-none overflow-hidden">
 			{/* Left side - editor stats */}
 			<div className="flex items-center gap-3 tabular-nums overflow-hidden min-w-0">
 				{isDev && (
@@ -138,13 +138,13 @@ export function StatusBar() {
 							<button
 								type="button"
 								onClick={() => closeAllTabs()}
-								className="flex items-center gap-1 h-4 px-1.5 rounded border border-gray-300 dark:border-gray-600 bg-white/60 dark:bg-gray-700/60 text-gray-600 dark:text-gray-300 hover:bg-red-500 hover:border-red-500 hover:text-white dark:hover:bg-red-600 dark:hover:border-red-600 transition-colors cursor-pointer"
+								aria-label="Close all tabs"
+								className="flex items-center justify-center w-4 h-4 rounded border border-gray-300 dark:border-gray-600 bg-white/60 dark:bg-gray-700/60 text-gray-600 dark:text-gray-300 hover:bg-red-500 hover:border-red-500 hover:text-white dark:hover:bg-red-600 dark:hover:border-red-600 transition-colors cursor-pointer"
 								title="Close all tabs"
 							>
 								<svg width="8" height="8" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
 									<path d="M6 4.586L10.293.293a1 1 0 011.414 1.414L7.414 6l4.293 4.293a1 1 0 01-1.414 1.414L6 7.414l-4.293 4.293a1 1 0 01-1.414-1.414L4.586 6 .293 1.707A1 1 0 011.707.293L6 4.586z" />
 								</svg>
-								Close all
 							</button>
 						</span>
 					</>
