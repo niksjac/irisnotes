@@ -1,17 +1,13 @@
 {
-	"version": "1.0.26",
-	"range": "7e8e57f..HEAD",
+	"version": "1.0.27",
+	"range": "8426226..HEAD",
 	"sections": [
 		{
 			"title": "Features",
 			"items": [
-				"Hotkeys: Several keys per action; sidebar defaults to Ctrl+3 and Ctrl+G"
-			]
-		},
-		{
-			"title": "Fixes",
-			"items": [
-				"Ui: Vertically center status bar text"
+				"Hotkeys: Layout toggles move to Ctrl+1–8 now that Ctrl+1 is free",
+				"Ui: Tab count and a clearer close-all button at the right of the status bar",
+				"Editor: Line commands in the right-click menu (remove empty lines, sort, dedupe, join, …)"
 			]
 		}
 	]
