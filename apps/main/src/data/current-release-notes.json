@@ -1,11 +1,11 @@
 {
-	"version": "1.0.28",
-	"range": "0891c78..HEAD",
+	"version": "1.0.29",
+	"range": "a74b903..HEAD",
 	"sections": [
 		{
-			"title": "Features",
+			"title": "Fixes",
 			"items": [
-				"Ui: Larger status bar text, icon-only close-all button"
+				"Ui: Status bar tab count back before font size"
 			]
 		}
 	]
