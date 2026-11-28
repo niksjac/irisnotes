@@ -519,6 +519,12 @@ li.pm-tight-selection-list-item .pm-tight-selection-list-start::before {
   text-decoration-thickness: 2px;
 }
 
+/* Format painter armed: the next selection or click gets the copied formatting */
+.ProseMirror.format-painter-armed,
+.ProseMirror.format-painter-armed a {
+  cursor: copy;
+}
+
 /* Text color marks (for future implementation) */
 .ProseMirror .text-color {
   /* Color applied via inline style */

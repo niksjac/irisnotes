@@ -25,6 +25,7 @@ import { customCursorPlugin } from "./plugins/custom-cursor";
 import { activeLinePlugin } from "./plugins/active-line";
 import { buildLineCommandsKeymap, resetSmartSelectLevel } from "./plugins/line-commands";
 import { cycleCase } from "./plugins/case-commands";
+import { formatPainterPlugin, copyFormatting, applyFormatting } from "./plugins/format-painter";
 import { searchPlugin } from "./plugins/search";
 import { autocorrectPlugin } from "./plugins/autocorrect";
 import { deleteChunkBackward, deleteChunkForward, jumpParagraphDown, jumpParagraphUp } from "./plugins/chunk-commands";
@@ -232,6 +233,10 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		appShortcutBindings[key] = () => false; // Return false to let event bubble
 	});
 	plugins.push(keymap(appShortcutBindings));
+
+	// Format painter: before the keymaps so its Escape (cancel) wins while armed
+	plugins.push(formatPainterPlugin());
+	plugins.push(keymap({ [kb.copyFormatting.key]: copyFormatting, [kb.applyFormatting.key]: applyFormatting }));
 
 	// No built-in input rules — all text replacements are handled by
 	// the autocorrect plugin via autocorrect.toml
@@ -804,9 +809,10 @@ export function customSetup(options: SetupOptions): Plugin[] {
 		customKeybindings["Mod-Alt-ArrowDown"] = decreaseFontSizeMark(options.schema);
 	}
 
-	// ── Alignment (Ctrl+Shift+E/R) — table position when in table, text otherwise ──
-	customKeybindings["Mod-Shift-e"] = chainCommands(setTableAlign("center"), setTextAlign("center"));
-	customKeybindings["Mod-Shift-r"] = chainCommands(setTableAlign("right"), setTextAlign("right"));
+	// ── Alignment (Shift+Alt+L/E/R) — table position when in table, text otherwise ──
+	customKeybindings[kb.alignLeft.key] = chainCommands(setTableAlign(null), setTextAlign(null));
+	customKeybindings[kb.alignCenter.key] = chainCommands(setTableAlign("center"), setTextAlign("center"));
+	customKeybindings[kb.alignRight.key] = chainCommands(setTableAlign("right"), setTextAlign("right"));
 
 	// ── Alt+X: convert character before cursor to/from Unicode hex code ──
 	customKeybindings["Alt-x"] = reverseUnicodeLookup;

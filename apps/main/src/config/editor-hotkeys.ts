@@ -34,8 +34,6 @@ const STRUCTURAL_HOTKEYS: EditorHotkeyConfig[] = [
 	{ key: "Alt+Enter", description: "Open Link (when cursor on link)", category: "Links" },
 	{ key: "Shift+Delete", description: "Delete Row (in table) / Delete Line", category: "Tables" },
 	{ key: "Ctrl+Shift+Delete", description: "Delete Column (in table)", category: "Tables" },
-	{ key: "Ctrl+Shift+E", description: "Align Center", category: "Alignment" },
-	{ key: "Ctrl+Shift+R", description: "Align Right", category: "Alignment" },
 ];
 
 /**

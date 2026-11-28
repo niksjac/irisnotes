@@ -37,6 +37,10 @@ export type EditorKeybindingId =
 	| "codeBlock"
 	// Tables
 	| "insertTable"
+	// Alignment
+	| "alignLeft"
+	| "alignCenter"
+	| "alignRight"
 	// Indentation
 	| "indent"
 	| "outdent"
@@ -61,6 +65,9 @@ export type EditorKeybindingId =
 	| "fontSizePicker"
 	| "fontFamilyPicker"
 	| "clearFormatting"
+	// Format painter
+	| "copyFormatting"
+	| "applyFormatting"
 	// Direct Text Colors (Alt+1-9, positional matching grid order)
 	| "textColor1"
 	| "textColor2"
@@ -146,6 +153,13 @@ export const DEFAULT_EDITOR_KEYBINDINGS: EditorKeybindings = {
 		description: "Insert Table",
 		category: "Tables",
 	},
+
+	// Alignment: text alignment, or the table's position when the cursor is in a
+	// table. Shift+Alt+L/E/R (Word's L/E/R letters); Ctrl+Shift+E is taken by the
+	// tree-view hotkeys and Ctrl+Shift+L by Convert URL to Link.
+	alignLeft: { key: "Shift-Alt-l", description: "Align Left", category: "Alignment" },
+	alignCenter: { key: "Shift-Alt-e", description: "Align Center", category: "Alignment" },
+	alignRight: { key: "Shift-Alt-r", description: "Align Right", category: "Alignment" },
 
 	// Indentation (Mod key shortcuts; Tab/Shift-Tab are structural and always bound)
 	indent: { key: "Mod-]", description: "Indent", category: "Indentation" },
@@ -234,6 +248,18 @@ export const DEFAULT_EDITOR_KEYBINDINGS: EditorKeybindings = {
 		key: "Mod-\\",
 		description: "Clear All Formatting",
 		category: "Format Pickers",
+	},
+
+	// Format painter: copy, then select or click the target (or press apply)
+	copyFormatting: {
+		key: "Shift-Alt-c",
+		description: "Copy Formatting (then select or click the target)",
+		category: "Formatting",
+	},
+	applyFormatting: {
+		key: "Shift-Alt-v",
+		description: "Apply Copied Formatting",
+		category: "Formatting",
 	},
 
 	// Direct Text Colors (positional, matching grid order)

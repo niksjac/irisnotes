@@ -19,6 +19,7 @@ import {
 	ArrowUpDown,
 	ListChecks,
 	WrapText,
+	Paintbrush,
 } from "lucide-react";
 import type { Command } from "prosemirror-state";
 import {
@@ -32,6 +33,7 @@ import {
 	joinLines,
 } from "@/components/editor/plugins/text-block-commands";
 import { pasteKeepingSourceFormatting } from "@/components/editor/paste-html";
+import { copyFormatting, applyFormatting, getFormatPainterState } from "@/components/editor/plugins/format-painter";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { confirmDeleteItem } from "@/utils/confirm-delete";
 import type {
@@ -348,6 +350,32 @@ export function useRightClickMenuActions({
 						command(view.state, view.dispatch);
 						view.focus();
 					},
+				});
+				groups.push({
+					id: "format-painter",
+					items: [
+						{
+							id: "copy-formatting",
+							label: "Copy formatting",
+							icon: Paintbrush,
+							shortcut: "Shift+Alt+C",
+							action: () => {
+								copyFormatting(view.state, view.dispatch);
+								view.focus();
+							},
+						},
+						{
+							id: "apply-formatting",
+							label: "Apply copied formatting",
+							icon: Paintbrush,
+							shortcut: "Shift+Alt+V",
+							disabled: !getFormatPainterState(view.state)?.marks,
+							action: () => {
+								applyFormatting(view.state, view.dispatch);
+								view.focus();
+							},
+						},
+					],
 				});
 				groups.push({
 					id: "lines",

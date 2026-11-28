@@ -6,9 +6,12 @@ import { createPortal } from "react-dom";
 import type { MarkType, NodeType } from "prosemirror-model";
 import { useAtom, useAtomValue } from "jotai";
 import { editorSettingsAtom } from "@/atoms/settings";
+import { editorKeybindingsAtom } from "@/atoms/editor-keybindings";
+import { pmKeyToDisplay } from "@/config/default-editor-keybindings";
 import { EDITOR_SETTINGS_CONSTRAINTS } from "@/types/editor-settings";
 import { setTextAlign, setTableAlign, setCellContentAlign, fitColumnWidths, resetTableFormatting } from "./format-commands";
 import { insertTableWithSize } from "./prosemirror-setup";
+import { copyFormatting, cancelFormatPainter, getFormatPainterState } from "./plugins/format-painter";
 import { isInTable, addRowAfter, addColumnAfter, deleteRow, deleteColumn, deleteTable, setCellAttr, CellSelection, mergeCells, splitCell } from "prosemirror-tables";
 import {
 	PRESET_COLORS,
@@ -31,6 +34,7 @@ import {
 	Palette,
 	Highlighter,
 	RemoveFormatting,
+	Paintbrush,
 	BoxSelect,
 	ALargeSmall,
 	SquareCode,
@@ -741,6 +745,8 @@ function TableFloatingToolbar({ editorView, onClose, focused }: { editorView: Ed
 }
 
 export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
+	const keybindings = useAtomValue(editorKeybindingsAtom);
+	const painterArmed = editorView ? getFormatPainterState(editorView.state)?.armed ?? false : false;
 	const [showColorPicker, setShowColorPicker] = useState<"text" | "highlight" | null>(null);
 	const [colorPickerPos, setColorPickerPos] = useState<{ top: number; left: number } | null>(null);
 	const [, setUpdateTrigger] = useState(0);
@@ -1260,9 +1266,9 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 			{/* Alignment group — table position when in table, text alignment otherwise */}
 			<div className="flex items-center gap-0.5">
 				{([
-					{ align: null, icon: AlignLeft, label: "Align Left", shortcut: "" },
-					{ align: "center" as const, icon: AlignCenter, label: "Align Center", shortcut: "Ctrl+Shift+E" },
-					{ align: "right" as const, icon: AlignRight, label: "Align Right", shortcut: "Ctrl+Shift+R" },
+					{ align: null, icon: AlignLeft, label: "Align Left", shortcut: pmKeyToDisplay(keybindings.alignLeft.key) },
+					{ align: "center" as const, icon: AlignCenter, label: "Align Center", shortcut: pmKeyToDisplay(keybindings.alignCenter.key) },
+					{ align: "right" as const, icon: AlignRight, label: "Align Right", shortcut: pmKeyToDisplay(keybindings.alignRight.key) },
 				]).map(({ align, icon: Icon, label, shortcut }) => {
 					const inTbl = editorView ? isInTable(editorView.state) : false;
 					const currentAlign = (() => {
@@ -1378,6 +1384,28 @@ export function EditorToolbar({ editorView, schema }: EditorToolbarProps) {
 						</div>
 					)}
 				</div>
+
+				{/* Format painter: copy the selection's formatting, then select or click the target */}
+				<button
+					type="button"
+					tabIndex={0}
+					className={`relative flex-shrink-0 w-7 h-7 flex items-center justify-center rounded transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ${
+						painterArmed
+							? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
+							: "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+					}`}
+					onMouseDown={(e) => e.preventDefault()}
+					onClick={() => {
+						if (!editorView) return;
+						const command = painterArmed ? cancelFormatPainter : copyFormatting;
+						command(editorView.state, editorView.dispatch);
+						editorView.focus();
+					}}
+					aria-pressed={painterArmed}
+					title={`${painterArmed ? "Cancel format painter (Esc)" : "Copy formatting, then select or click the target"} (${pmKeyToDisplay(keybindings.copyFormatting.key)}; apply again: ${pmKeyToDisplay(keybindings.applyFormatting.key)})`}
+				>
+					<Paintbrush size={15} />
+				</button>
 
 				{/* Clear Custom Formatting */}
 				<button
