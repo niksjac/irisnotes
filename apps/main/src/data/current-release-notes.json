@@ -1,11 +1,12 @@
 {
-	"version": "1.0.30",
-	"range": "2bbe66c..HEAD",
+	"version": "1.0.31",
+	"range": "bec873d..HEAD",
 	"sections": [
 		{
-			"title": "Fixes",
+			"title": "Features",
 			"items": [
-				"Editor: Pasted HTML takes the note's font; Ctrl+Shift+Alt+V pastes keeping source formatting"
+				"Editor: Format painter and Shift+Alt+L/E/R alignment keys",
+				"Quick: Resident Alt+Q launcher that creates and captures notes"
 			]
 		}
 	]
