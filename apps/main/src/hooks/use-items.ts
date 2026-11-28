@@ -22,6 +22,7 @@ export const useItems = () => {
 	const treeData = useAtomValue(treeDataAtom);
 
 	const [isLoading, setIsLoading] = useState(false);
+	const [hasLoaded, setHasLoaded] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
 	const { storageAdapter, isInitialized } = useNotesStorage();
@@ -51,6 +52,7 @@ export const useItems = () => {
 			const result = await storageAdapter.getAllItems();
 			if (result.success) {
 				setItems(result.data);
+				setHasLoaded(true);
 			} else {
 				setError(result.error);
 			}
@@ -61,6 +63,13 @@ export const useItems = () => {
 			setIsLoading(false);
 		}
 	}, [storageAdapter, setItems]);
+
+	/** See StorageAdapter.getItemsFingerprint; null when it can't be read */
+	const itemsFingerprint = useCallback(async () => {
+		if (!storageAdapter) return null;
+		const result = await storageAdapter.getItemsFingerprint();
+		return result.success ? result.data : null;
+	}, [storageAdapter]);
 
 	// Auto-load items when storage is initialized
 	useEffect(() => {
@@ -630,6 +639,9 @@ export const useItems = () => {
 		treeData,
 		isLoading,
 		error,
+		/** Storage is open and the items were loaded at least once */
+		hasLoaded,
+		itemsFingerprint,
 
 		// Core CRUD operations
 		loadAllItems,

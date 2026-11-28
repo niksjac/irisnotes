@@ -7,9 +7,9 @@ fn main() {
     // Parse CLI arguments
     let cli = irisnotes_lib::cli::Cli::parse();
 
-    // If --open-note is provided, start the GUI (Tauri handles this argument)
+    // --open-note / --new-note start the GUI (Tauri handles these arguments)
     // If a CLI command was provided, run it and exit
-    if cli.open_note.is_none() && cli.command.is_some() {
+    if cli.open_note.is_none() && cli.new_note.is_none() && cli.command.is_some() {
         if let Err(e) = irisnotes_lib::cli::run_cli(cli) {
             if e != "no-command" {
                 eprintln!("Error: {}", e);
@@ -21,6 +21,6 @@ fn main() {
         }
     }
 
-    // No CLI command or --open-note provided - start the GUI
+    // No CLI command, or a GUI argument - start the GUI
     irisnotes_lib::run()
 }

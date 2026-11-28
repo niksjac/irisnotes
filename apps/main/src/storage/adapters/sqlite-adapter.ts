@@ -67,6 +67,19 @@ export class SQLiteStorageAdapter implements StorageAdapter {
 
 	// ===== FLEXIBLE ITEM OPERATIONS =====
 
+	async getItemsFingerprint(): Promise<StorageResult<string>> {
+		if (!this.db) return { success: false, error: "Database not initialized" };
+		try {
+			const rows = await this.db.select<Array<{ n: number; newest: string | null }>>(
+				"SELECT COUNT(*) AS n, MAX(created_at) AS newest FROM items WHERE deleted_at IS NULL",
+			);
+			const row = rows[0];
+			return { success: true, data: `${row?.n ?? 0}:${row?.newest ?? ""}` };
+		} catch (error) {
+			return { success: false, error: `Failed to read items fingerprint: ${error}` };
+		}
+	}
+
 	async getAllItems(): Promise<StorageResult<FlexibleItem[]>> {
 		if (!this.db) return { success: false, error: "Database not initialized" };
 

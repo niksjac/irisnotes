@@ -327,6 +327,11 @@ export function useAppHotkeys(handlers: AppHotkeysProps) {
 		createHandler(handlers.onOpenConfigFolder),
 		createHotkeyOptions(hotkeyMapping.openConfigFolder.global)
 	);
+	useHotkeys(
+		hotkeyMapping.quitApp.key,
+		createHandler(handlers.onQuitApp),
+		createHotkeyOptions(hotkeyMapping.quitApp.global)
+	);
 
 	// Editor spacing hotkeys (directly mutate editorSettingsAtom)
 	const [, setEditorSettings] = useAtom(editorSettingsAtom);

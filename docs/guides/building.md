@@ -61,7 +61,8 @@ existing release binaries), `-h`.
 
 **Close the installed apps first.** A running binary can't be overwritten
 ("Text file busy"), so the install step fails while `irisnotes` or
-`irisnotes-quick` is running.
+`irisnotes-quick` is running. Both can stay resident: quit the quick app from
+its tray menu and IrisNotes with Ctrl+Q ([quick-launcher.md](quick-launcher.md)).
 
 ## Troubleshooting
 

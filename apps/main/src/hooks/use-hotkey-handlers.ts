@@ -144,6 +144,9 @@ export function useHotkeyHandlers() {
 		openConfigFolder: () => {
 			invoke("open_app_config_folder").catch(console.error);
 		},
+		quitApp: () => {
+			invoke("quit_app").catch(console.error);
+		},
 
 		// Search actions
 		openQuickSearch: useSetAtom(openQuickSearchAtom),

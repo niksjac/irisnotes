@@ -348,6 +348,15 @@ export const DEFAULT_HOTKEYS: HotkeyMapping = {
 		global: true,
 	},
 
+	// Quit for real, also when closing the window only hides it
+	// (Settings → Keep running when the window is closed)
+	quitApp: {
+		key: "ctrl+q",
+		description: "Quit IrisNotes",
+		category: "App",
+		global: true,
+	},
+
 	// Editor spacing hotkeys
 	increaseLineHeight: {
 		key: "ctrl+shift+alt+up",

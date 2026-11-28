@@ -4,7 +4,8 @@ import { useTheme } from "@/hooks";
 import { useConfig } from "@/hooks/use-config";
 import { useAppInfo } from "@/hooks/use-app-info";
 import { useEditorSettings } from "@/hooks/use-editor-settings";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { keepRunningInBackgroundAtom } from "@/atoms/settings";
 import { itemsAtom, notesAtom, booksAtom, sectionsAtom } from "@/atoms/items";
 import { openAsciiArtTabAtom, openAutocorrectTabAtom, openHotkeysTabAtom } from "@/atoms/panes";
 import { exportSettings, importSettings } from "@/storage/settings";
@@ -20,6 +21,7 @@ import { THEMES } from "@/config/themes";
 
 type SettingsSectionId =
 	| "appearance"
+	| "background"
 	| "database"
 	| "storage"
 	| "editor"
@@ -44,6 +46,12 @@ const SETTINGS_SECTIONS: SettingsSectionMeta[] = [
 		title: "Appearance",
 		category: "Interface",
 		keywords: "theme light dark color palette swatch",
+	},
+	{
+		id: "background",
+		title: "Background",
+		category: "Interface",
+		keywords: "background tray close hide quit startup autostart hidden quick launcher resident",
 	},
 	{
 		id: "database",
@@ -140,6 +148,7 @@ export function ConfigView() {
 	const { config } = useConfig();
 	const { appInfo } = useAppInfo();
 	const { settings: editorSettings, updateSetting, resetSettings, constraints } = useEditorSettings();
+	const [keepRunning, setKeepRunning] = useAtom(keepRunningInBackgroundAtom);
 	const openAsciiArtTab = useSetAtom(openAsciiArtTabAtom);
 	const openAutocorrectTab = useSetAtom(openAutocorrectTabAtom);
 	const openHotkeysTab = useSetAtom(openHotkeysTabAtom);
@@ -375,6 +384,43 @@ export function ConfigView() {
 									</button>
 								))}
 							</div>
+						</div>
+					</div>
+				</CollapsibleSection>
+
+				{/* Background Section */}
+				<CollapsibleSection icon={<Icons.MonitorDown className="w-4 h-4" />} title="Background" isVisible={shouldShowSection("background")} forceOpen={isFiltering}>
+					<div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-2">
+						<div className="flex items-center justify-between gap-4">
+							<div>
+								<div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+									Keep running when the window is closed
+								</div>
+								<div className="text-xs text-gray-500 dark:text-gray-400">
+									Closing hides the window; Ctrl+Q quits. Notes opened from the quick launcher then appear instantly.
+								</div>
+							</div>
+							<button
+								type="button"
+								role="switch"
+								aria-checked={keepRunning}
+								aria-label="Keep running when the window is closed"
+								onClick={() => setKeepRunning(!keepRunning)}
+								className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors ${
+									keepRunning ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-600"
+								}`}
+							>
+								<span
+									className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+										keepRunning ? "translate-x-6" : "translate-x-1"
+									}`}
+								/>
+							</button>
+						</div>
+						<div className="text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-200 dark:border-gray-700">
+							To have it ready right after login, start it hidden from your session autostart:{" "}
+							<code className="px-1 rounded bg-gray-200 dark:bg-gray-700">irisnotes --hidden</code> (and{" "}
+							<code className="px-1 rounded bg-gray-200 dark:bg-gray-700">irisnotes-quick --hidden</code> for the quick launcher).
 						</div>
 					</div>
 				</CollapsibleSection>

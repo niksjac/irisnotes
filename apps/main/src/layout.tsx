@@ -64,6 +64,9 @@ export const Layout: React.FC = () => {
 		isLocationDialogOpen,
 		closeLocationDialog,
 		createNoteWithLocation,
+		isReady: noteActionsReady,
+		reloadItems,
+		itemsFingerprint,
 	} = useNoteActions();
 
 	// Quick hotkeys modal state
@@ -73,8 +76,13 @@ export const Layout: React.FC = () => {
 	// Apply theme (adds .dark class to document)
 	useTheme();
 
-	// Listen for signals from quick app to open notes
-	useQuickAppListener();
+	// Open/create notes asked for by the quick launcher or the CLI
+	useQuickAppListener({
+		isReady: noteActionsReady,
+		createNoteInRootWithTitle,
+		reloadItems,
+		itemsFingerprint,
+	});
 
 	// Apply editor settings (cursor, fonts, etc.) at startup
 	useEditorSettings();

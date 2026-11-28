@@ -6,7 +6,9 @@
 - **Recorded:** 2026-10-04, retroactively, from `docs/QUICK_SEARCH.md` (since
   removed)
 - **Supersedes:** —
-- **Related:** [ADR-0003](ADR-0003-single-items-table.md)
+- **Related:** [ADR-0003](ADR-0003-single-items-table.md),
+  [ADR-0011](ADR-0011-resident-quick-launcher-and-capture.md) (2026-11-27: the
+  quick app now also writes notes — quick capture)
 
 ## Context
 

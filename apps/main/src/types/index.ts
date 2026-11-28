@@ -122,6 +122,7 @@ export interface HotkeyMapping {
 
 	// Config folder
 	openConfigFolder: HotkeyConfig;
+	quitApp: HotkeyConfig;
 
 	// Editor spacing hotkeys
 	increaseLineHeight: HotkeyConfig;
@@ -241,6 +242,7 @@ export interface AppHotkeysProps {
 
 	// Config folder
 	onOpenConfigFolder?: () => void;
+	onQuitApp?: () => void;
 }
 
 // Storage configuration types

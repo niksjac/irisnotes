@@ -299,6 +299,12 @@ description = "Reload Window"
 category = "App"
 global = true
 
+[quitApp]  # quits even when closing the window only hides it (Settings → Background)
+key = "ctrl+q"
+description = "Quit IrisNotes"
+category = "App"
+global = true
+
 # =============================================================================
 # Editor Keybindings (ProseMirror)
 # =============================================================================

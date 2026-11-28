@@ -49,6 +49,7 @@ export function mapHotkeyHandlers(
 		openSymbolPicker: () => void;
 		openNerdFontPicker: () => void;
 		openConfigFolder: () => void;
+		quitApp: () => void;
 		openCommandPalette: () => void;
 		openTabPalette: () => void;
 	}
@@ -310,5 +311,6 @@ export function mapHotkeyHandlers(
 
 		// Config folder
 		onOpenConfigFolder: handlers.openConfigFolder,
+		onQuitApp: handlers.quitApp,
 	};
 }

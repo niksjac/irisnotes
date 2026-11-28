@@ -23,6 +23,14 @@ pub struct Cli {
     /// Open a specific note by ID (used by quick app)
     #[arg(long = "open-note", global = true)]
     pub open_note: Option<String>,
+
+    /// Create a root note with this title and open it (used by quick app)
+    #[arg(long = "new-note", global = true)]
+    pub new_note: Option<String>,
+
+    /// Start the GUI without showing its window (autostart, e.g. Hyprland exec-once)
+    #[arg(long = "hidden", global = true)]
+    pub hidden: bool,
     
     #[command(subcommand)]
     pub command: Option<Commands>,

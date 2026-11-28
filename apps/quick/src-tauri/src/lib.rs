@@ -1,12 +1,12 @@
 use rusqlite::{Connection, Result as SqliteResult};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::path::PathBuf;
 use std::sync::Mutex;
 use tauri::{
     image::Image,
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
-    AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, State, WebviewWindow, WindowEvent,
+    AppHandle, Emitter, LogicalSize, Manager, State, WindowEvent,
 };
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
 
@@ -68,6 +68,9 @@ fn strip_html(html: &str) -> String {
     collapsed.trim().to_string()
 }
 
+mod capture;
+mod hyprland;
+
 // Database connection state
 pub struct DbState {
     conn: Mutex<Option<Connection>>,
@@ -82,6 +85,8 @@ impl DbState {
 
     fn init(&self, path: &PathBuf) -> SqliteResult<()> {
         let conn = Connection::open(path)?;
+        // Quick capture writes while the main app may be writing too
+        conn.busy_timeout(std::time::Duration::from_secs(3))?;
         *self.conn.lock().unwrap() = Some(conn);
         Ok(())
     }
@@ -165,93 +170,6 @@ fn get_config_dir() -> PathBuf {
             .unwrap_or_else(|| PathBuf::from("."))
             .join("irisnotes")
     }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct SavedWindowState {
-    width: u32,
-    height: u32,
-    x: i32,
-    y: i32,
-    maximized: bool,
-}
-
-#[derive(Debug, Default, Serialize, Deserialize)]
-struct SavedWindowStates {
-    main: Option<SavedWindowState>,
-    quick: Option<SavedWindowState>,
-}
-
-const WINDOW_STATE_KEY: &str = "quick";
-
-fn window_state_file_path() -> PathBuf {
-    get_config_dir().join(".window-state.json")
-}
-
-fn load_saved_window_state(path: &PathBuf) -> Option<SavedWindowState> {
-    let content = std::fs::read_to_string(path).ok()?;
-    let states = serde_json::from_str::<SavedWindowStates>(&content).ok()?;
-
-    match WINDOW_STATE_KEY {
-        "main" => states.main,
-        "quick" => states.quick,
-        _ => None,
-    }
-}
-
-fn apply_saved_window_state(window: &WebviewWindow, state: &SavedWindowState) {
-    if state.width > 0 && state.height > 0 {
-        let _ = window.set_size(PhysicalSize::new(state.width, state.height));
-    }
-
-    let _ = window.set_position(PhysicalPosition::new(state.x, state.y));
-
-    if state.maximized {
-        let _ = window.maximize();
-    }
-}
-
-fn save_window_state(window: &WebviewWindow, path: &PathBuf) -> Result<(), String> {
-    let size = window
-        .inner_size()
-        .map_err(|e| format!("Failed to read window size: {}", e))?;
-
-    if size.width == 0 || size.height == 0 {
-        return Ok(());
-    }
-
-    let position = window
-        .outer_position()
-        .map_err(|e| format!("Failed to read window position: {}", e))?;
-
-    let state = SavedWindowState {
-        width: size.width,
-        height: size.height,
-        x: position.x,
-        y: position.y,
-        maximized: window.is_maximized().unwrap_or(false),
-    };
-
-    let mut states = if path.exists() {
-        let existing = std::fs::read_to_string(path)
-            .map_err(|e| format!("Failed to read existing window state: {}", e))?;
-
-        serde_json::from_str::<SavedWindowStates>(&existing).unwrap_or_default()
-    } else {
-        SavedWindowStates::default()
-    };
-
-    match WINDOW_STATE_KEY {
-        "main" => states.main = Some(state),
-        "quick" => states.quick = Some(state),
-        _ => {}
-    }
-
-    let content = serde_json::to_string_pretty(&states)
-        .map_err(|e| format!("Failed to serialize window state: {}", e))?;
-
-    std::fs::write(path, content)
-        .map_err(|e| format!("Failed to write window state: {}", e))
 }
 
 // Read config command - reads config.toml and returns JSON
@@ -561,26 +479,46 @@ fn get_main_app_path() -> Option<PathBuf> {
     }
 }
 
-// Open note in main IrisNotes app by launching it with --open-note argument
-// The main app's single-instance plugin will receive this and emit an event
-#[tauri::command]
-fn open_note_in_main_app(note_id: String) -> Result<(), String> {
+/// Launch the main app with one argument. If it's already running, its
+/// single-instance plugin receives the argument and shows its window; if not,
+/// it starts and handles the argument once its UI is ready.
+fn launch_main_app(arg: String) -> Result<(), String> {
     let main_app_path = get_main_app_path()
         .ok_or("Could not find main app executable")?;
-    
+
     if !main_app_path.exists() {
         return Err(format!("Main app not found at: {:?}", main_app_path));
     }
-    
-    // Launch main app with --open-note argument
-    // If main app is already running, single-instance plugin will receive the args
-    // If not running, it will start fresh and receive the args on startup
+
     std::process::Command::new(&main_app_path)
-        .arg(format!("--open-note={}", note_id))
+        .arg(arg)
         .spawn()
         .map_err(|e| format!("Failed to launch main app: {}", e))?;
-    
+
     Ok(())
+}
+
+// Open a note in the main app (--open-note=<id>)
+#[tauri::command]
+fn open_note_in_main_app(note_id: String) -> Result<(), String> {
+    launch_main_app(format!("--open-note={}", note_id))
+}
+
+// Create a root note with this title in the main app and open it (--new-note=<title>)
+#[tauri::command]
+fn create_note_in_main_app(title: String) -> Result<(), String> {
+    launch_main_app(format!("--new-note={}", title))
+}
+
+/// Save a root note straight into the database without opening the main app
+/// ("quick capture"). Mirrors SQLiteStorageAdapter.createItem in the main app:
+/// same id format, appended after the last root note (fractional index), ISO
+/// timestamps so sync picks it up. Returns the new note's id.
+#[tauri::command]
+fn capture_note(title: String, body: String, state: State<DbState>) -> Result<String, String> {
+    let guard = state.conn.lock().map_err(|e| e.to_string())?;
+    let conn = guard.as_ref().ok_or("Database not open")?;
+    capture::insert_root_note(conn, &title, &body).map_err(|e| format!("Failed to save note: {}", e))
 }
 
 // Hide window command for Escape key
@@ -589,12 +527,46 @@ fn hide_window(window: tauri::WebviewWindow) -> Result<(), String> {
     window.hide().map_err(|e| e.to_string())
 }
 
-fn toggle_window(app: &AppHandle) {
+/// Launcher width; the height follows the content (see resize_launcher)
+const LAUNCHER_WIDTH: f64 = 720.0;
+
+/// The frontend sizes the window to its content: just the input until
+/// something is typed, then the result list.
+#[tauri::command]
+fn resize_launcher(height: f64, window: tauri::WebviewWindow) -> Result<(), String> {
+    let height = height.clamp(48.0, 640.0);
+    // Hyprland ignores a floating window resizing itself: ask it directly.
+    // Not also through GTK, whose ignored resize can flash a frame at the
+    // wrong size.
+    if hyprland::resize_keeping_top(LAUNCHER_WIDTH as u32, height.ceil() as u32) {
+        return Ok(());
+    }
+    // Other compositors, and Hyprland while the window is hidden (the size
+    // then applies when it is shown)
+    window
+        .set_size(LogicalSize::new(LAUNCHER_WIDTH, height))
+        .map_err(|e| e.to_string())
+}
+
+fn show_window(app: &AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.show();
         let _ = window.set_focus();
-        // Emit event to clear search field
+        // Clears the input and refreshes the theme
         let _ = window.emit("window-shown", ());
+    }
+}
+
+/// Launcher key (a second `irisnotes-quick`), tray click, global shortcut:
+/// show the launcher, or hide it if it's already up and focused
+fn toggle_window(app: &AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let up = window.is_visible().unwrap_or(false) && window.is_focused().unwrap_or(false);
+        if up {
+            let _ = window.hide();
+        } else {
+            show_window(app);
+        }
     }
 }
 
@@ -720,14 +692,25 @@ pub fn run() {
     let _ = db_state.init(&db_path);
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            // Another instance tried to start - show our window instead
-            toggle_window(app);
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            // Another instance tried to start: toggle the launcher. A second
+            // `--hidden` start (e.g. a re-run autostart) leaves it alone.
+            if !args.iter().any(|a| a == "--hidden") {
+                toggle_window(app);
+            }
         }))
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
         .manage(db_state)
-        .invoke_handler(tauri::generate_handler![search_notes, open_note_in_main_app, hide_window, read_config])
+        .invoke_handler(tauri::generate_handler![
+            search_notes,
+            open_note_in_main_app,
+            create_note_in_main_app,
+            capture_note,
+            hide_window,
+            resize_launcher,
+            read_config
+        ])
         .setup(|app| {
             // Create system tray
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
@@ -745,7 +728,7 @@ pub fn run() {
                         app.exit(0);
                     }
                     "show" => {
-                        toggle_window(app);
+                        show_window(app);
                     }
                     _ => {}
                 })
@@ -778,25 +761,24 @@ pub fn run() {
             });
 
             if let Some(window) = app.get_webview_window("main") {
-                let state_path = window_state_file_path();
-
-                if let Some(state) = load_saved_window_state(&state_path) {
-                    apply_saved_window_state(&window, &state);
-                }
-
                 let window_clone = window.clone();
-                let state_path_for_events = state_path.clone();
-
-                // Handle window close event - hide instead of closing (tray keeps app alive)
-                window.on_window_event(move |event| {
-                    if let WindowEvent::CloseRequested { api, .. } = event {
-                        if let Err(err) = save_window_state(&window_clone, &state_path_for_events) {
-                            eprintln!("Failed to save quick window state on close: {}", err);
-                        }
+                window.on_window_event(move |event| match event {
+                    // Closing hides (the tray keeps the app alive)
+                    WindowEvent::CloseRequested { api, .. } => {
                         api.prevent_close();
                         let _ = window_clone.hide();
                     }
+                    // Like a launcher: clicking elsewhere dismisses it
+                    WindowEvent::Focused(false) => {
+                        let _ = window_clone.hide();
+                    }
+                    _ => {}
                 });
+
+                // `--hidden` (autostart at login) preloads without showing
+                if !std::env::args().any(|a| a == "--hidden") {
+                    show_window(app.handle());
+                }
             }
 
             // Register global shortcut (Ctrl+Shift+Space - more compatible than Super+Space)
@@ -810,18 +792,8 @@ pub fn run() {
 
             Ok(())
         })
-        .build(tauri::generate_context!())
-        .expect("error while building tauri application")
-        .run(|app_handle, event| {
-            if let tauri::RunEvent::Exit = event {
-                if let Some(window) = app_handle.get_webview_window("main") {
-                    let state_path = window_state_file_path();
-                    if let Err(err) = save_window_state(&window, &state_path) {
-                        eprintln!("Failed to save quick window state on exit: {}", err);
-                    }
-                }
-            }
-        });
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }
 
 #[cfg(test)]

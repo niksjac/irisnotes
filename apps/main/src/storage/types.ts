@@ -54,6 +54,8 @@ export interface StorageAdapter {
 
 	// Items operations (books, sections - unified with notes)
 	getAllItems(): Promise<StorageResult<FlexibleItem[]>>;
+	/** Changes when items are added or removed: count + newest created_at */
+	getItemsFingerprint(): Promise<StorageResult<string>>;
 	createItem(params: CreateItemParams): Promise<StorageResult<FlexibleItem>>;
 	updateItem(
 		id: string,

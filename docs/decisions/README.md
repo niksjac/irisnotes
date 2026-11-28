@@ -71,6 +71,7 @@ you want to know what you believed then, not just what you believe now.
 | [0008](adr/ADR-0008-local-first-sync-central-hub.md) | Local-first sync through a central hub | Accepted | 2026-06-25 |
 | [0009](adr/ADR-0009-local-builds-no-ci-no-formatter.md) | Local builds and checks — no hosted CI, formatter or linter | Accepted | 2026-10-04 |
 | [0010](adr/ADR-0010-tailscale-serve-for-first-deployment.md) | Tailscale and `tailscale serve` for the first hub deployment | Accepted | 2026-10-05 |
+| [0011](adr/ADR-0011-resident-quick-launcher-and-capture.md) | Resident quick launcher that can create notes; main app optionally resident | Accepted | 2026-11-27 |
 
 ADRs 0003–0008 were written retroactively on 2026-10-04 from older design docs
 and checked against the code; their **Date** is when the decision was made, and

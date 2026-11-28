@@ -13,6 +13,15 @@ import {
 	type EditorSettings,
 } from "@/types/editor-settings";
 
+// ============ Background mode ============
+
+/**
+ * Keep the app running when its window is closed: closing hides the window,
+ * Ctrl+Q quits. Opening a note from the quick launcher is then instant. The
+ * backend reads it through `set_keep_running` (see useKeepRunning).
+ */
+export const keepRunningInBackgroundAtom = atomWithStorage<boolean>("setting:keepRunningInBackground", false);
+
 // ============ Atom Factory ============
 
 /**

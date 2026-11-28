@@ -10,8 +10,9 @@ or a priority changes.
 
 **Working**
 
-- Desktop app (`apps/main`, whose binary is also the CLI) and the quick-search
-  overlay (`apps/quick`).
+- Desktop app (`apps/main`, whose binary is also the CLI) and the quick
+  launcher (`apps/quick`): search, open, create and capture notes from a key
+  ([quick-launcher.md](guides/quick-launcher.md), ADR-0011).
 - Sync phase 1: local-first clients reconciling `items` with one hub
   ([ADR-0008](decisions/adr/ADR-0008-local-first-sync-central-hub.md)).
 - The hub is live: Contabo VPS (Ubuntu 22.04, shared with another service), on
@@ -80,6 +81,8 @@ and dated; if code and guide disagree, the code wins and the guide needs fixing.
 - [editor.md](guides/editor.md) — editor appearance settings and the custom
   cursor
 - [icons.md](guides/icons.md) — app, launcher and tray icons on Linux
+- [quick-launcher.md](guides/quick-launcher.md) — the Alt+Q launcher: open,
+  create and capture notes; Hyprland setup; keeping IrisNotes running
 - [sync-hub.md](guides/sync-hub.md) — deploying, updating and operating the sync
   hub (`iris-server`)
 

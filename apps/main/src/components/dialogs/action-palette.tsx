@@ -77,6 +77,7 @@ export function ActionPalette() {
 		{ id: "open-autocorrect", label: "Open Autocorrect", hint: "Open", icon: icon(Icons.SpellCheck), run: () => openAutocorrect() },
 		{ id: "open-branding", label: "Open About", hint: "Open", icon: icon(Icons.Palette), run: handlers.openBranding },
 		{ id: "open-config-folder", label: "Open Config Folder", hint: "Open", icon: icon(Icons.FolderOpen), run: handlers.openConfigFolder },
+		{ id: "quit-app", label: "Quit IrisNotes", hint: "App", icon: icon(Icons.Power), run: handlers.quitApp },
 
 		// Search & pickers
 		{ id: "quick-search", label: "Quick Search (notes)", hint: "Search", icon: icon(Icons.Search), run: handlers.openQuickSearch },

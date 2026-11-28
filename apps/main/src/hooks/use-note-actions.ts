@@ -9,7 +9,7 @@ import { locationDialogOpenAtom, closeLocationDialogAtom, newNoteDialogOpenAtom,
  * Provides functions to create notes and open them in tabs.
  */
 export function useNoteActions() {
-	const { createNote, createBook, createSection, items } = useItems();
+	const { createNote, createBook, createSection, items, hasLoaded, loadAllItems, itemsFingerprint } = useItems();
 	const { openItemInTab } = useTabManagement();
 	const [isLocationDialogOpen, setIsLocationDialogOpen] = useAtom(locationDialogOpenAtom);
 	const closeDialogAction = useSetAtom(closeLocationDialogAtom);
@@ -238,6 +238,10 @@ export function useNoteActions() {
 	);
 
 	return {
+		/** Storage is open and items are loaded: the create functions work */
+		isReady: hasLoaded,
+		reloadItems: loadAllItems,
+		itemsFingerprint,
 		createNoteInRoot,
 		createNoteInRootWithTitle,
 		createNoteInLocation,

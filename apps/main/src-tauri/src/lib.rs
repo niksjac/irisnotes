@@ -9,6 +9,81 @@ use std::thread;
 use std::time::{Duration, Instant};
 use std::path::PathBuf;
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewWindow};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex;
+
+// ============ Launch actions (quick app, CLI) ============
+
+/// What another launch asked the GUI to do: `--open-note=<id>` or
+/// `--new-note=<title>` (from the quick launcher or the CLI)
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+enum LaunchAction {
+    Open { id: String },
+    New { title: String },
+}
+
+fn launch_actions(args: &[String]) -> Vec<LaunchAction> {
+    args.iter()
+        .filter_map(|arg| {
+            if let Some(id) = arg.strip_prefix("--open-note=") {
+                Some(LaunchAction::Open { id: id.to_string() })
+            } else {
+                arg.strip_prefix("--new-note=").map(|title| LaunchAction::New { title: title.to_string() })
+            }
+        })
+        .collect()
+}
+
+/// Actions wait here until the frontend says it can handle them (launch_ready),
+/// so a cold start doesn't depend on a fixed delay
+#[derive(Default)]
+struct LaunchQueue {
+    ready: bool,
+    pending: Vec<LaunchAction>,
+}
+
+struct LaunchState(Mutex<LaunchQueue>);
+
+/// Send actions to the frontend now, or queue them until it's ready
+fn dispatch_launch_actions(app: &AppHandle, actions: Vec<LaunchAction>) {
+    if actions.is_empty() {
+        return;
+    }
+    let state = app.state::<LaunchState>();
+    let mut queue = state.0.lock().unwrap_or_else(|e| e.into_inner());
+    if queue.ready {
+        for action in actions {
+            let _ = app.emit("launch-action", action);
+        }
+    } else {
+        queue.pending.extend(actions);
+    }
+}
+
+/// Called by the frontend once it can open and create notes; returns what was
+/// queued before that
+#[tauri::command]
+fn launch_ready(state: tauri::State<LaunchState>) -> Vec<LaunchAction> {
+    let mut queue = state.0.lock().unwrap_or_else(|e| e.into_inner());
+    queue.ready = true;
+    std::mem::take(&mut queue.pending)
+}
+
+/// "Keep running when the window is closed" (Settings): closing hides the
+/// window instead of quitting. Set by the frontend from its setting.
+static KEEP_RUNNING: AtomicBool = AtomicBool::new(false);
+
+#[tauri::command]
+fn set_keep_running(keep: bool) {
+    KEEP_RUNNING.store(keep, Ordering::Relaxed);
+}
+
+/// Quit for real (Ctrl+Q), also when closing only hides the window
+#[tauri::command]
+fn quit_app(app: AppHandle) {
+    app.exit(0);
+}
 
 // Embed the database schema at compile time
 const DATABASE_SCHEMA: &str = include_str!("../../../../schema/base.sql");
@@ -1005,21 +1080,19 @@ pub fn run() {
     }
 
     tauri::Builder::default()
+        .manage(LaunchState(Mutex::new(LaunchQueue::default())))
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
-            // Another instance tried to start - check for --open-note argument
-            for arg in &args {
-                if let Some(note_id) = arg.strip_prefix("--open-note=") {
-                    // Emit to the specific window
-                    if let Some(window) = app.get_webview_window("main") {
-                        let _ = window.emit("open-note-from-quick", note_id.to_string());
-                    }
-                }
-            }
+            // Another instance tried to start: run its --open-note / --new-note
+            let actions = launch_actions(&args);
+            // A repeated `--hidden` autostart with nothing to do leaves the window alone
+            let show = !actions.is_empty() || !args.iter().any(|a| a == "--hidden");
+            dispatch_launch_actions(app, actions);
 
-            // Focus our window
-            if let Some(window) = app.get_webview_window("main") {
-                let _ = window.show();
-                let _ = window.set_focus();
+            if show {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
             }
         }))
         .plugin(tauri_plugin_opener::init())
@@ -1091,33 +1164,40 @@ pub fn run() {
                     let window_clone = window.clone();
                     let state_path_for_events = state_path.clone();
                     window.on_window_event(move |event| {
-                        if let tauri::WindowEvent::CloseRequested { .. } = event {
+                        if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                             if let Err(err) = save_window_state(&window_clone, &state_path_for_events) {
                                 eprintln!("Failed to save window state on close: {}", err);
+                            }
+                            // Keep running in the background: hide instead of quitting
+                            if KEEP_RUNNING.load(Ordering::Relaxed) {
+                                api.prevent_close();
+                                let _ = window_clone.hide();
                             }
                         }
                     });
                 }
             }
 
-            // Check for --open-note argument on startup (from quick app launching us)
+            // --open-note / --new-note on startup (from the quick app or the CLI):
+            // queued until the frontend calls launch_ready
             let args: Vec<String> = std::env::args().collect();
+            dispatch_launch_actions(app.handle(), launch_actions(&args));
 
-            for arg in &args {
-                if let Some(note_id) = arg.strip_prefix("--open-note=") {
-                    let note_id = note_id.to_string();
-                    let app_handle = app.handle().clone();
-                    // Emit event after a short delay to let frontend initialize
-                    std::thread::spawn(move || {
-                        std::thread::sleep(std::time::Duration::from_millis(500));
-                        let _ = app_handle.emit("open-note-from-quick", note_id);
-                    });
-                    break;
+            // The window starts hidden (tauri.conf "visible": false) so the saved
+            // size and position apply before it appears; `--hidden` keeps it
+            // hidden (autostart in the background)
+            if !args.iter().any(|a| a == "--hidden") {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
                 }
             }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            launch_ready,
+            set_keep_running,
+            quit_app,
             greet,
             read_config,
             write_config,
@@ -1153,8 +1233,24 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
-    use super::watched_config_file;
+    use super::{launch_actions, watched_config_file, LaunchAction};
     use std::path::Path;
+
+    #[test]
+    fn reads_launch_actions_from_arguments() {
+        let args: Vec<String> = ["irisnotes", "--hidden", "--open-note=note_1", "--new-note=Idea: x=1"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        assert_eq!(
+            launch_actions(&args),
+            vec![
+                LaunchAction::Open { id: "note_1".into() },
+                LaunchAction::New { title: "Idea: x=1".into() },
+            ]
+        );
+        assert!(launch_actions(&["irisnotes".to_string()]).is_empty());
+    }
 
     #[test]
     fn watches_every_reloadable_config_file() {
